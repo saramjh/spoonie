@@ -2,26 +2,97 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@layer base {
+	:root {
+		--background: 204 10% 98%; /* gray-50 */
+		--foreground: 224 71% 4%; /* gray-900 */
+		--card: 204 10% 98%; /* gray-50 */
+		--card-foreground: 224 71% 4%; /* gray-900 */
+		--popover: 204 10% 98%; /* gray-50 */
+		--popover-foreground: 224 71% 4%; /* gray-900 */
+		--primary: 25 95% 53%; /* orange-500 */
+		--primary-foreground: 30 80% 98%; /* orange-50 */
+		--secondary: 210 40% 96.1%;
+		--secondary-foreground: 222.2 47.4% 11.2%;
+		--muted: 210 40% 96.1%;
+		--muted-foreground: 215.4 16.3% 46.9%;
+		--accent: 210 40% 96.1%;
+		--accent-foreground: 222.2 47.4% 11.2%;
+		--destructive: 0 84.2% 60.2%;
+		--destructive-foreground: 210 40% 98%;
+		--border: 214.3 31.8% 91.4%;
+		--input: 214.3 31.8% 91.4%;
+		--ring: 25 95% 53%; /* orange-500 */
+		--radius: 0.5rem;
+	}
+
+	.dark {
+		--background: 224 71% 4%; /* gray-900 */
+		--foreground: 204 10% 98%; /* gray-50 */
+		--card: 224 71% 4%; /* gray-900 */
+		--card-foreground: 204 10% 98%; /* gray-50 */
+		--popover: 224 71% 4%; /* gray-900 */
+		--popover-foreground: 204 10% 98%; /* gray-50 */
+		--primary: 25 95% 53%; /* orange-500 */
+		--primary-foreground: 30 80% 98%; /* orange-50 */
+		--secondary: 217.2 32.6% 17.5%;
+		--secondary-foreground: 210 40% 98%;
+		--muted: 217.2 32.6% 17.5%;
+		--muted-foreground: 215 20.2% 65.1%;
+		--accent: 217.2 32.6% 17.5%;
+		--accent-foreground: 210 40% 98%;
+		--destructive: 0 62.8% 30.6%;
+		--destructive-foreground: 210 40% 98%;
+		--border: 217.2 32.6% 17.5%;
+		--input: 217.2 32.6% 17.5%;
+		--ring: 25 95% 53%; /* orange-500 */
+	}
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+@layer base {
+	* {
+		@apply border-border;
+	}
+	body {
+		@apply bg-background text-foreground;
+		min-height: 100vh;
+		-ms-overflow-style: none; /* IE and Edge */
+		scrollbar-width: none; /* Firefox */
+		font-feature-settings: "cv11", "ss01";
+		text-rendering: optimizeLegibility;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+	}
+	body::-webkit-scrollbar {
+		display: none; /* Chrome, Safari, and Opera */
+	}
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}
+	/* 바우하우스 디자인 원칙 적용 */
+	.bauhaus-button {
+		@apply transition-all duration-200 transform active:scale-95;
+	}
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+	.bauhaus-card {
+		@apply shadow-bauhaus hover:shadow-bauhaus-lg transition-all duration-300;
+	}
+
+	.bauhaus-input {
+		@apply focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-1;
+	}
+
+	/* 접근성 개선 */
+	.focus-visible {
+		@apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2;
+	}
+
+	/* 애니메이션 최적화 */
+	.smooth-transform {
+		@apply transition-transform duration-300 ease-out;
+	}
+
+	/* 터치 영역 최적화 */
+	.touch-target {
+		min-height: 44px;
+		min-width: 44px;
+	}
 }

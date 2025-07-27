@@ -1,19 +1,150 @@
-import type { Config } from "tailwindcss";
+import type { Config } from "tailwindcss"
+import * as tailwindAnimate from "tailwindcss-animate"
 
 const config: Config = {
-  content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
-  theme: {
-    extend: {
-      colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
-      },
-    },
-  },
-  plugins: [],
-};
-export default config;
+	darkMode: ["class"],
+	content: ["./src/pages/**/*.{js,ts,jsx,tsx,mdx}", "./src/components/**/*.{js,ts,jsx,tsx,mdx}", "./src/app/**/*.{js,ts,jsx,tsx,mdx}"],
+	safelist: [
+		// 레시피 색상 라벨용 클래스들
+		"bg-red-500",
+		"bg-red-200",
+		"bg-red-300",
+		"bg-orange-500",
+		"bg-orange-200",
+		"bg-orange-300",
+		"bg-yellow-500",
+		"bg-yellow-200",
+		"bg-yellow-300",
+		"bg-green-500",
+		"bg-green-200",
+		"bg-green-300",
+		"bg-blue-500",
+		"bg-blue-200",
+		"bg-blue-300",
+		"bg-purple-500",
+		"bg-purple-200",
+		"bg-purple-300",
+		"bg-gray-500",
+		"bg-gray-200",
+		"bg-gray-300",
+		"ring-red-500",
+		"ring-orange-500",
+		"ring-yellow-500",
+		"ring-green-500",
+		"ring-blue-500",
+		"ring-purple-500",
+		"ring-gray-500",
+	],
+	theme: {
+		container: {
+			center: true,
+			padding: "2rem",
+			screens: {
+				"2xl": "1400px",
+			},
+		},
+		extend: {
+			colors: {
+				"orange-50": "#fff7ed",
+				"orange-100": "#ffedd5",
+				"orange-200": "#fed7aa",
+				"orange-300": "#fdba74",
+				"orange-400": "#fb923c",
+				"orange-500": "#f97316",
+				"orange-600": "#ea580c",
+				"orange-700": "#c2410c",
+				"orange-800": "#9a3412",
+				"gray-50": "#f9fafb",
+				"gray-100": "#f3f4f6",
+				"gray-200": "#e5e7eb",
+				"gray-300": "#d1d5db",
+				"gray-400": "#9ca3af",
+				"gray-500": "#6b7280",
+				"gray-600": "#4b5563",
+				"gray-700": "#374151",
+				"gray-800": "#1f2937",
+				"gray-900": "#111827",
+				border: "hsl(var(--border))",
+				input: "hsl(var(--input))",
+				ring: "hsl(var(--ring))",
+				background: "hsl(var(--background))",
+				foreground: "hsl(var(--foreground))",
+				primary: {
+					DEFAULT: "#f97316",
+					foreground: "#FFFFFF",
+				},
+				secondary: {
+					DEFAULT: "#FFFFFF",
+					foreground: "#f97316",
+				},
+				destructive: {
+					DEFAULT: "#ef4444",
+					foreground: "#FFFFFF",
+				},
+				card: {
+					DEFAULT: "hsl(var(--card))",
+					foreground: "hsl(var(--card-foreground))",
+				},
+				popover: {
+					DEFAULT: "hsl(var(--popover))",
+					foreground: "hsl(var(--popover-foreground))",
+				},
+			},
+			spacing: {
+				"space-1": "4px",
+				"space-2": "8px",
+				"space-3": "12px",
+				"space-4": "16px",
+				"space-5": "20px",
+				"space-6": "24px",
+				"space-8": "32px",
+				"space-10": "40px",
+				"space-12": "48px",
+			},
+			borderRadius: {
+				xl: "12px",
+				"2xl": "16px",
+				"3xl": "24px",
+			},
+			boxShadow: {
+				bauhaus: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+				"bauhaus-lg": "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+			},
+			keyframes: {
+				"accordion-down": {
+					from: { height: "0" },
+					to: { height: "var(--radix-accordion-content-height)" },
+				},
+				"accordion-up": {
+					from: { height: "var(--radix-accordion-content-height)" },
+					to: { height: "0" },
+				},
+				"splash-logo-bounce": {
+					"0%": { transform: "translateY(40px) scale(0.8)", opacity: "0" },
+					"60%": { transform: "translateY(-25px) scale(1.1)", opacity: "1" },
+					"80%": { transform: "translateY(10px) scale(0.95)", opacity: "1" },
+					"100%": { transform: "translateY(0) scale(1)", opacity: "1" },
+				},
+				"slogan-fade-in": {
+					"0%": { opacity: "0", transform: "translateY(10px)" },
+					"100%": { opacity: "1", transform: "translateY(0)" },
+				},
+				"pull-to-refresh-jiggle": {
+					"0%, 100%": { transform: "scale(1) rotate(0deg)" },
+					"25%": { transform: "scale(1.1) rotate(-3deg)" },
+					"75%": { transform: "scale(1.1) rotate(3deg)" },
+				},
+			},
+			animation: {
+				"accordion-down": "accordion-down 0.2s ease-out",
+				"accordion-up": "accordion-up 0.2s ease-out",
+				"splash-logo-bounce": "splash-logo-bounce 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
+				"slogan-fade-in": "slogan-fade-in 0.6s ease-out 0.5s forwards",
+				"pull-to-refresh-jiggle": "pull-to-refresh-jiggle 0.5s ease-in-out infinite",
+			},
+		},
+	},
+	plugins: [tailwindAnimate],
+}
+
+export default config

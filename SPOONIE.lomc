@@ -1,0 +1,113 @@
+CREATE:Database:SpoonieDB
+  Purpose:Spoonie 서비스의 모든 데이터를 관리하는 메인 데이터베이스.
+  Tables:
+    CREATE:Table:items
+      Purpose:게시물(Post)과 레시피(Recipe)를 통합하여 관리. 피드 조회 성능 최적화.
+      Columns:
+        id:UUID,PRIMARY KEY
+        user_id:UUID,FOREIGN KEY:profiles.id
+        item_type:ENUM('post', 'recipe'),INDEX
+        created_at:TIMESTAMPZ,INDEX
+        title:TEXT,NULLABLE
+        content:TEXT,NULLABLE
+        description:TEXT,NULLABLE
+        image_urls:TEXT[],NULLABLE
+        tags:TEXT[],NULLABLE
+        is_public:BOOLEAN,DEFAULT:true
+        color_label:TEXT,NULLABLE
+        servings:INTEGER,NULLABLE
+        cooking_time_minutes:INTEGER,NULLABLE
+        recipe_id:UUID,NULLABLE,FOREIGN KEY:items.id
+
+    CREATE:Table:profiles
+      Purpose:사용자 프로필 정보 저장.
+      Columns:
+        id:UUID,PRIMARY KEY,FOREIGN KEY:auth.users.id
+        public_id:TEXT,UNIQUE
+        username:TEXT,UNIQUE
+        display_name:TEXT,NULLABLE
+        avatar_url:TEXT,NULLABLE
+        bio:TEXT,NULLABLE
+        profile_message:TEXT,NULLABLE
+        username_changed_count:INTEGER,DEFAULT:0
+
+    CREATE:Table:ingredients
+      Purpose:레시피에 포함된 재료 정보.
+      Columns:
+        id:UUID,PRIMARY KEY
+        item_id:UUID,FOREIGN KEY:items.id
+        name:TEXT
+        amount:TEXT
+        unit:TEXT
+
+    CREATE:Table:instructions
+      Purpose:레시피의 조리 절차.
+      Columns:
+        id:UUID,PRIMARY KEY
+        item_id:UUID,FOREIGN KEY:items.id
+        step_number:INTEGER
+        description:TEXT
+
+    CREATE:Table:likes
+      Purpose:사용자의 '좋아요' 상호작용 기록.
+      Columns:
+        user_id:UUID,FOREIGN KEY:profiles.id
+        item_id:UUID,FOREIGN KEY:items.id
+        created_at:TIMESTAMPZ,DEFAULT:NOW(),INDEX
+      Primary_Key:
+        PK:(user_id, item_id)
+      Indexes:
+        idx_likes_created_at:created_at
+        idx_likes_item_created:(item_id, created_at)
+        idx_likes_user_created:(user_id, created_at)
+
+    CREATE:Table:comments
+      Purpose:사용자 댓글.
+      Columns:
+        id:UUID,PRIMARY KEY
+        user_id:UUID,FOREIGN KEY:profiles.id
+        item_id:UUID,FOREIGN KEY:items.id
+        parent_comment_id:UUID,NULLABLE,FOREIGN KEY:comments.id
+        content:TEXT
+        created_at:TIMESTAMPZ
+
+    CREATE:Table:follows
+      Purpose:사용자 간 팔로우 관계.
+      Columns:
+        follower_id:UUID,FOREIGN KEY:profiles.id
+        following_id:UUID,FOREIGN KEY:profiles.id
+      Primary_Key:
+        PK:(follower_id, following_id)
+
+    CREATE:Table:notifications
+      Purpose:사용자 알림.
+      Columns:
+        id:UUID,PRIMARY KEY
+        user_id:UUID,FOREIGN KEY:profiles.id
+        from_user_id:UUID,NULLABLE,FOREIGN KEY:profiles.id
+        item_id:UUID,NULLABLE,FOREIGN KEY:items.id
+        type:ENUM('like', 'comment', 'follow')
+        is_read:BOOLEAN,DEFAULT:false
+        created_at:TIMESTAMPZ
+
+MODIFY:Database:SpoonieDB
+  Status:Migration Complete
+  Summary:posts와 recipes 테이블을 단일 items 테이블로 통합하는 DB 마이그레이션을 완료함.
+  Related_Tables_Updated:ingredients, instructions, likes, comments, notifications 테이블이 모두 새로운 items 테이블을 참조하도록 수정됨.
+
+MODIFY:Codebase:SpoonieApp
+  Status:Refactoring Complete
+  Summary:DB 스키마 변경에 따른 전체 코드베이스 리팩터링을 완료함.
+  Components_Updated:
+    - src/types/item.ts: 새로운 FeedItem 타입 정의 완료.
+    - src/hooks/usePosts.ts: 통합된 items 테이블을 조회하도록 데이터 페칭 로직 전체 리팩터링 완료.
+    - src/components/feed/PostCard.tsx: 변경된 FeedItem 타입에 맞춰 렌더링 로직 수정 완료.
+    - src/components/recipe/RecipeForm.tsx: 'recipe' 타입의 item을 생성/수정하도록 폼 로직 수정 완료.
+    - src/components/feed/PostForm.tsx: 'post' 타입의 item을 생성/수정하도록 폼 로직 수정 완료.
+    - src/app/feed/[id]/page.tsx: 상세 페이지 데이터 조회 로직을 items 테이블 기준으로 수정 완료.
+    - src/app/recipes/[id]/page.tsx: 상세 페이지 데이터 조회 로직을 items 테이블 기준으로 수정 완료.
+    - src/app/recipes/page.tsx: 레시피북 데이터 조회 로직을 items 테이블 기준으로 수정 완료.
+    - src/components/recipe/RecipeCard.tsx: FeedItem 타입을 사용하도록 수정 완료.
+    - src/components/recipe/RecipeListCard.tsx: FeedItem 타입을 사용하도록 수정 완료.
+    - src/app/search/page.tsx: 검색 로직을 items 테이블 기준으로 수정 완료.
+  Pending_Work: None
