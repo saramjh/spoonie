@@ -78,7 +78,7 @@ export default function LikersModal({ isOpen, onClose, itemId, itemType, current
 			}
 
 			const formattedLikers: LikerProfile[] = (data || []).map((like) => {
-				const profile = like.profiles as ProfileData
+				const profile = like.profiles as unknown as ProfileData
 				return {
 					id: profile?.id || like.user_id,
 					username: profile?.username || "익명",

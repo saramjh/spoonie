@@ -43,7 +43,7 @@ export interface RecipeStep {
 	order?: number // Alias for step_number for compatibility
 }
 
-export interface FeedItem {
+export interface Item {
 	id: string
 	item_id: string // Alias for id for compatibility
 	user_id: string
@@ -53,6 +53,7 @@ export interface FeedItem {
 	content: string | null
 	description: string | null
 	image_urls: string[] | null
+	thumbnail_index: number | null
 	tags: string[] | null
 	is_public: boolean
 	color_label: string | null
@@ -78,13 +79,19 @@ export interface FeedItem {
 	is_liked: boolean
 	is_following: boolean
 	comments?: Comment[]
+	
+	// Bookmark fields
+	bookmarks_count?: number
+	is_bookmarked?: boolean
 
 	// Additional fields for compatibility
 	recipe_uuid?: string // Legacy field, maps to recipe_id
 }
 
+
+
 // Extended interface for detailed views
-export interface ItemDetail extends FeedItem {
+export interface ItemDetail extends Item {
 	steps?: RecipeStep[] // For RecipeContentView compatibility
 	comments_data?: Comment[] // Alternative field name
 }

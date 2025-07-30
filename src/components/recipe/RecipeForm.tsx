@@ -12,26 +12,18 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { PlusCircle, Trash2, X, Camera, Clock, Book, RotateCcw } from "lucide-react"
+import { PlusCircle, Trash2, X, Camera, Clock, Book } from "lucide-react"
 import ImageUploader from "@/components/common/ImageUploader"
 import InstructionImageUploader from "@/components/recipe/InstructionImageUploader"
 import CitedRecipeSearch from "@/components/recipe/CitedRecipeSearch"
 import { OptimizedImage } from "@/lib/image-utils"
 import { useToast } from "@/hooks/use-toast"
 import { RECIPE_COLOR_OPTIONS } from "@/lib/color-options"
-import { useRefresh } from "@/contexts/RefreshContext"
-import { useSWRConfig } from "swr"
-import type { FeedItem } from "@/types/item"
-import { uploadImagesOptimized, processExistingImages, ImageUploadMetrics } from "@/utils/image-optimization"
 
-// 간단한 debounce 함수 정의
-function debounce<T extends (...args: any[]) => any>(func: T, wait: number): T {
-	let timeout: NodeJS.Timeout
-	return ((...args: any[]) => {
-		clearTimeout(timeout)
-		timeout = setTimeout(() => func(...args), wait)
-	}) as T
-}
+import { useSWRConfig } from "swr"
+import type { Item } from "@/types/item"
+import { uploadImagesOptimized, ImageUploadMetrics } from "@/utils/image-optimization"
+import { cacheManager } from "@/lib/unified-cache-manager"
 
 // Zod 스키마 업데이트
 const recipeSchema = z.object({
@@ -75,14 +67,14 @@ const recipeSchema = z.object({
 type RecipeFormValues = z.infer<typeof recipeSchema>
 
 interface RecipeFormProps {
-	initialData?: FeedItem | null
+	initialData?: Item | null
 }
 
 export default function RecipeForm({ initialData }: RecipeFormProps) {
 	const router = useRouter()
 	const supabase = createSupabaseBrowserClient()
 	const { toast } = useToast()
-	const { triggerRefresh } = useRefresh()
+
 	const { mutate } = useSWRConfig()
 	const isEditMode = !!initialData
 
@@ -93,8 +85,41 @@ export default function RecipeForm({ initialData }: RecipeFormProps) {
 	const [isSubmitting, setIsSubmitting] = useState(false)
 	const [mainImages, setMainImages] = useState<OptimizedImage[]>([])
 	const [thumbnailIndex, setThumbnailIndex] = useState(0)
+	
+	// 🚀 SSA: 섬네일 변경 시 즉시 캐시 업데이트를 위한 wrapper 함수
+	const handleThumbnailChange = useCallback(async (newIndex: number) => {
+		console.log(`🎯 RecipeForm: Thumbnail changing ${thumbnailIndex} → ${newIndex}`)
+		setThumbnailIndex(newIndex)
+		
+		// 수정 모드이고 itemId가 있는 경우에만 즉시 캐시 업데이트
+		if (isEditMode && initialData?.id) {
+			try {
+				const { data: { user } } = await supabase.auth.getUser()
+				if (user) {
+					const partialUpdate = {
+						thumbnail_index: newIndex,
+						// 기본 정보는 그대로 유지
+						id: initialData.id,
+						item_id: initialData.id,
+					}
+					
+					console.log(`🚀 RecipeForm: Updating thumbnail_index in cache immediately`)
+					await cacheManager.updateItem(initialData.id, partialUpdate)
+					console.log(`✅ RecipeForm: Thumbnail cache updated successfully`)
+					
+					// 캐시 업데이트 후 상태 재확인
+					setTimeout(() => {
+						console.log(`🔍 RecipeForm: After cache update - thumbnailIndex: ${thumbnailIndex}, newIndex: ${newIndex}`)
+					}, 100)
+				}
+			} catch (error) {
+				console.error(`❌ RecipeForm: Failed to update thumbnail cache:`, error)
+				// 캐시 업데이트 실패해도 UI 상태는 유지
+			}
+		}
+	}, [thumbnailIndex, isEditMode, initialData?.id])
 	const [instructionImages, setInstructionImages] = useState<(OptimizedImage | null)[]>([])
-	const [selectedCitedRecipes, setSelectedCitedRecipes] = useState<FeedItem[]>([])
+	const [selectedCitedRecipes, setSelectedCitedRecipes] = useState<Item[]>([])
 
 	const form = useForm<RecipeFormValues>({
 		resolver: zodResolver(recipeSchema),
@@ -136,6 +161,10 @@ export default function RecipeForm({ initialData }: RecipeFormProps) {
 					height: 600, // 기본값 설정
 				}))
 				setMainImages(fetchedImages)
+				// 🚀 업계 표준: 저장된 썸네일 인덱스 복원 또는 기본값(0) 사용
+				const savedThumbnailIndex = (initialData as any).thumbnail_index ?? 0
+				setThumbnailIndex(Math.min(savedThumbnailIndex, fetchedImages.length - 1))
+				console.log(`📌 Restored thumbnail index: ${savedThumbnailIndex} (available: ${fetchedImages.length})`)
 			}
 
 			if (initialData.instructions && initialData.instructions.length > 0) {
@@ -190,7 +219,7 @@ export default function RecipeForm({ initialData }: RecipeFormProps) {
 								user_public_id: authorProfile?.public_id,
 							}
 						})
-						setSelectedCitedRecipes(formattedRecipes as unknown as FeedItem[])
+						setSelectedCitedRecipes(formattedRecipes as unknown as Item[])
 					}
 				}
 				fetchCitedRecipes()
@@ -207,7 +236,7 @@ export default function RecipeForm({ initialData }: RecipeFormProps) {
 		setInstructionImages(newInstructionImages)
 	}
 
-	const handleSelectedCitedRecipesChange = (recipes: FeedItem[]) => {
+	const handleSelectedCitedRecipesChange = (recipes: Item[]) => {
 		setSelectedCitedRecipes(recipes)
 		form.setValue(
 			"cited_recipe_ids",
@@ -239,6 +268,10 @@ export default function RecipeForm({ initialData }: RecipeFormProps) {
 			}
 
 					// 🚀 최적화된 메인 이미지 병렬 업로드 (기존: 순차 → 새로운: 병렬 + 캐싱)
+		// 🚀 업계 표준: 원본 순서 유지 + 썸네일 인덱스 정보 저장 (개선된 Instagram/Facebook 방식)
+		console.log(`📌 Preserving original image order with thumbnail index: ${thumbnailIndex}`)
+		console.log(`📦 Images:`, mainImages.map((img, i) => `${i}: ${img.preview.split('/').pop()}`))
+
 		const uploadStartTime = Date.now()
 		const newImageFiles = mainImages.filter((img) => img.file.size > 0)
 		const existingImageUrls = mainImages.filter((img) => !newImageFiles.includes(img)).map((img) => img.preview)
@@ -279,9 +312,8 @@ export default function RecipeForm({ initialData }: RecipeFormProps) {
 			console.log(`✅ Recipe images upload completed in ${uploadDuration}ms`)
 		}
 		
-		const finalImageUrls = [...existingImageUrls, ...uploadedImageUrls]
-			const thumbnail = finalImageUrls.splice(thumbnailIndex, 1)[0]
-			finalImageUrls.unshift(thumbnail)
+					// 🚀 원본 순서 유지로 최종 URL 배열 생성
+			const finalImageUrls = [...existingImageUrls, ...uploadedImageUrls]
 
 			// Instruction images upload
 			const uploadedInstructionImageUrls = await Promise.all(
@@ -305,6 +337,8 @@ export default function RecipeForm({ initialData }: RecipeFormProps) {
 				image_url: uploadedInstructionImageUrls[index] || undefined,
 			}))
 
+
+
 			const itemPayload = {
 				user_id: user.id,
 				item_type: "recipe" as const,
@@ -317,6 +351,7 @@ export default function RecipeForm({ initialData }: RecipeFormProps) {
 				color_label: values.color_label,
 				tags: values.tags,
 				cited_recipe_ids: values.cited_recipe_ids,
+				thumbnail_index: thumbnailIndex, // 🚀 썸네일 인덱스 저장
 			}
 
 			let itemId: string
@@ -344,28 +379,77 @@ export default function RecipeForm({ initialData }: RecipeFormProps) {
 			const instructionsToInsert = instructionsWithImages.map((inst, index) => ({ ...inst, item_id: itemId, step_number: index + 1 }))
 			await supabase.from("instructions").insert(instructionsToInsert)
 
-			// 홈피드 캐시 무효화하여 새 레시피 즉시 반영 (강화된 버전)
-			console.log(`🔄 RecipeForm: Invalidating home feed cache for new recipe ${itemId}`)
-			
-			// 1. SWR 캐시 무효화
-			await mutate((key) => typeof key === "string" && key.startsWith("items|"))
-			
-			// 2. 홈화면 새로고침 트리거  
-			await triggerRefresh("/")
-			
-			// 3. 추가 캐시 무효화 (optimized_feed_view 반영)
-			await mutate("posts")
-			await mutate("feed")
-			await mutate("recipes")
+			// 🚀 SSA 기반: 통합 캐시 관리로 최신 데이터 보장 (thumbnail_index 포함)
+			if (isEditMode) {
+				console.log(`🚀 RecipeForm: SSA update mode - using updateItem for immediate sync...`)
+				// 🚀 SSA: 아이템 업데이트 - 홈화면에 즉시 반영!
+				const fullItemPayload = {
+					...itemPayload,
+					id: itemId,
+					item_id: itemId,
+					ingredients: values.ingredients,
+					instructions: instructionsWithImages,
+					// 🔧 사용자 정보 추가 (optimized_feed_view 호환)
+					display_name: user.user_metadata?.display_name || user.email?.split('@')[0] || 'Anonymous',
+					username: user.user_metadata?.username || user.email?.split('@')[0] || 'anonymous',
+					avatar_url: user.user_metadata?.avatar_url || null,
+					user_public_id: user.user_metadata?.public_id || null,
+					// 🔧 초기 통계 값 (기존 값 유지)
+					likes_count: initialData?.likes_count || 0,
+					comments_count: initialData?.comments_count || 0,
+					is_liked: initialData?.is_liked || false,
+					is_following: initialData?.is_following || false,
+					created_at: initialData?.created_at || new Date().toISOString(),
+				}
+				console.log(`🔍 RecipeForm: Updating with thumbnail_index: ${thumbnailIndex}`)
+				console.log(`🔍 RecipeForm: fullItemPayload keys:`, Object.keys(fullItemPayload))
+				console.log(`🔍 RecipeForm: Calling updateItem with itemId: "${itemId}" and payload:`, {
+					id: fullItemPayload.id,
+					item_id: fullItemPayload.item_id,
+					title: fullItemPayload.title,
+					thumbnail_index: fullItemPayload.thumbnail_index,
+					image_urls: fullItemPayload.image_urls?.length || 0
+				})
+				await cacheManager.updateItem(itemId, fullItemPayload)
+				
+				// 🔧 Smart Fallback: 필요시에만 부분 무효화 (성능 개선)
+				setTimeout(async () => {
+					console.log(`🔄 RecipeForm: Smart fallback - revalidating home feed only`)
+					await cacheManager.revalidateHomeFeed()
+				}, 200)
+				
+				console.log(`✅ RecipeForm: SSA update completed - all caches synchronized`)
+			} else {
+				console.log(`🚀 RecipeForm: SSA creating recipe via addNewItem...`)
+				const fullItemPayload = {
+					...itemPayload,
+					id: itemId,
+					item_id: itemId,
+					ingredients: values.ingredients,
+					instructions: instructionsWithImages,
+					// 🔧 사용자 정보 추가 (optimized_feed_view 호환) - PostForm과 동일
+					display_name: user.user_metadata?.display_name || user.email?.split('@')[0] || 'Anonymous',
+					username: user.user_metadata?.username || user.email?.split('@')[0] || 'anonymous',
+					avatar_url: user.user_metadata?.avatar_url || null,
+					user_public_id: user.user_metadata?.public_id || null,
+					// 🔧 초기 통계 값
+					likes_count: 0,
+					comments_count: 0,
+					is_liked: false,
+					is_following: false,
+					created_at: new Date().toISOString(),
+				}
+				// 🚀 SSA: 새로운 레시피 추가 - 홈피드 맨 위에 즉시 표시!
+				await cacheManager.addNewItem(fullItemPayload as Item)
+			}
 
-			console.log(`✅ RecipeForm: Recipe ${isEditMode ? "updated" : "created"} successfully: ${itemId}`)
+		console.log(`✅ RecipeForm: Recipe ${isEditMode ? "updated" : "created"} successfully with optimistic update: ${itemId}`)
 
-			toast({ title: `레시피 ${isEditMode ? "수정" : "작성"} 완료`, description: `성공적으로 ${isEditMode ? "수정" : "등록"}되었습니다.` })
-			
-			// 홈화면으로 이동 + 강제 새로고침
-			router.push("/")
-			router.refresh()
-		} catch (error: any) {
+		toast({ title: `레시피 ${isEditMode ? "수정" : "작성"} 완료`, description: `성공적으로 ${isEditMode ? "수정" : "등록"}되었습니다.` })
+		
+		// 홈화면으로 이동 (새로운 아이템이 이미 캐시에 추가됨)
+		router.push("/")
+	} catch (error: any) {
 			toast({ title: `레시피 ${isEditMode ? "수정" : "작성"} 실패`, description: error.message || "오류가 발생했습니다.", variant: "destructive" })
 		} finally {
 			setIsSubmitting(false)
@@ -376,7 +460,7 @@ export default function RecipeForm({ initialData }: RecipeFormProps) {
 		<div className="min-h-screen bg-gray-50">
 			<div className="bg-white border-b sticky top-0 z-40">
 				<div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
-					<Button variant="ghost" onClick={() => router.back()}>
+					<Button type="button" variant="ghost" onClick={() => router.back()}>
 						취소
 					</Button>
 					<h1 className="text-lg font-semibold">{isEditMode ? "레시피 수정" : "새 레시피"}</h1>
@@ -394,7 +478,16 @@ export default function RecipeForm({ initialData }: RecipeFormProps) {
 							</CardTitle>
 						</CardHeader>
 						<CardContent>
-							<ImageUploader images={mainImages} onImagesChange={setMainImages} maxImages={5} placeholder="레시피 사진을 추가해주세요" thumbnailIndex={thumbnailIndex} onThumbnailChange={setThumbnailIndex} showThumbnailSelector={true} />
+							<ImageUploader 
+								images={mainImages} 
+								onImagesChange={setMainImages} 
+								maxImages={5} 
+								placeholder="레시피 사진을 추가해주세요" 
+								thumbnailIndex={thumbnailIndex} 
+								onThumbnailChange={handleThumbnailChange} 
+								showThumbnailSelector={true} 
+								isEditMode={isEditMode} 
+							/>
 						</CardContent>
 					</Card>
 
@@ -402,7 +495,7 @@ export default function RecipeForm({ initialData }: RecipeFormProps) {
 						<Label htmlFor="title" className="text-base font-medium">
 							레시피 제목
 						</Label>
-						<Input id="title" placeholder="예: 맛있는 김치찌개" className="mt-2" {...form.register("title")} />
+						<Input id="title" placeholder="예: 맛있는 김치찌개" className="mt-2 bg-white" {...form.register("title")} />
 						{form.formState.errors.title && <p className="text-red-500 text-sm mt-1">{form.formState.errors.title.message}</p>}
 					</div>
 
@@ -410,7 +503,7 @@ export default function RecipeForm({ initialData }: RecipeFormProps) {
 						<Label htmlFor="description" className="text-base font-medium">
 							레시피 설명
 						</Label>
-						<Textarea id="description" placeholder="레시피에 대한 간단한 설명을 입력하세요" className="mt-2" {...form.register("description")} />
+						<Textarea id="description" placeholder="레시피에 대한 간단한 설명을 입력하세요" className="mt-2 bg-white" {...form.register("description")} />
 					</div>
 
 					<div className="grid grid-cols-2 gap-4">
@@ -430,7 +523,7 @@ export default function RecipeForm({ initialData }: RecipeFormProps) {
 									className="rounded-r-none">
 									-
 								</Button>
-								<Input id="servings" type="number" min="1" className="rounded-none text-center" {...form.register("servings")} />
+								<Input id="servings" type="number" min="1" className="rounded-none text-center bg-white" {...form.register("servings")} />
 								<Button
 									type="button"
 									variant="outline"
@@ -451,8 +544,17 @@ export default function RecipeForm({ initialData }: RecipeFormProps) {
 								<Clock className="w-4 h-4" />
 								조리시간
 							</Label>
-							<Input id="cooking_time_minutes" type="number" min="1" placeholder="30" className="mt-2" {...form.register("cooking_time_minutes")} />
-							<span className="text-xs text-gray-500 mt-1 block">분</span>
+							<div className="flex items-center gap-2 mt-2">
+								<Input 
+									id="cooking_time_minutes" 
+									type="number" 
+									min="1" 
+									placeholder="30" 
+									className="bg-white flex-1" 
+									{...form.register("cooking_time_minutes")} 
+								/>
+								<span className="text-sm text-gray-600 font-medium">분</span>
+							</div>
 							{form.formState.errors.cooking_time_minutes && <p className="text-red-500 text-sm mt-1">{form.formState.errors.cooking_time_minutes.message}</p>}
 						</div>
 					</div>
@@ -463,14 +565,41 @@ export default function RecipeForm({ initialData }: RecipeFormProps) {
 						</CardHeader>
 						<CardContent className="space-y-4">
 							{ingredients.map((field, index) => (
-								<div key={field.id} className="flex flex-col gap-2">
-									<div className="flex items-start gap-2">
-										<Input placeholder="재료명 (예: 돼지고기)" {...form.register(`ingredients.${index}.name`)} className="flex-1" />
-										<Input type="number" placeholder="수량" {...form.register(`ingredients.${index}.amount`)} className="w-20" />
-										<Input placeholder="단위 (예: g)" {...form.register(`ingredients.${index}.unit`)} className="w-24" />
-										<Button type="button" variant="ghost" size="icon" onClick={() => removeIngredient(index)} disabled={ingredients.length === 1} className="p-2 shrink-0">
-											<Trash2 className="h-4 w-4" />
-										</Button>
+								<div key={field.id} className="space-y-2">
+									{/* 🎯 모바일 반응형: 390px 이하에서 2행 구성 */}
+									<div className="flex flex-col sm:flex-row gap-2">
+										{/* 첫 번째 행: 재료명 + 삭제버튼 (모바일) */}
+										<div className="flex gap-2 sm:contents">
+											<Input 
+												placeholder="재료명 (예: 돼지고기)" 
+												{...form.register(`ingredients.${index}.name`)} 
+												className="flex-1 bg-white" 
+											/>
+											<Button 
+												type="button" 
+												variant="ghost" 
+												size="icon" 
+												onClick={() => removeIngredient(index)} 
+												disabled={ingredients.length === 1} 
+												className="p-2 shrink-0 sm:order-last"
+											>
+												<Trash2 className="h-4 w-4" />
+											</Button>
+										</div>
+										{/* 두 번째 행: 재료양 + 단위 (모바일) */}
+										<div className="flex gap-2 sm:contents">
+											<Input 
+												type="number" 
+												placeholder="수량" 
+												{...form.register(`ingredients.${index}.amount`)} 
+												className="w-full sm:w-20 bg-white" 
+											/>
+											<Input 
+												placeholder="단위 (예: g)" 
+												{...form.register(`ingredients.${index}.unit`)} 
+												className="w-full sm:w-24 bg-white" 
+											/>
+										</div>
 									</div>
 									{form.formState.errors.ingredients?.[index] && (
 										<div className="text-red-500 text-sm px-1">
@@ -480,7 +609,7 @@ export default function RecipeForm({ initialData }: RecipeFormProps) {
 									)}
 								</div>
 							))}
-							<Button type="button" variant="outline" onClick={() => appendIngredient({ name: "", amount: 1, unit: "" })} className="w-full mt-4">
+							<Button type="button" variant="outline" onClick={() => appendIngredient({ name: "", amount: 1, unit: "" })} className="w-full mt-4 bg-white">
 								<PlusCircle className="mr-2 h-4 w-4" />
 								재료 추가
 							</Button>
@@ -505,7 +634,7 @@ export default function RecipeForm({ initialData }: RecipeFormProps) {
 									</div>
 									<div className="flex-1 space-y-2">
 										<InstructionImageUploader imageUrl={field.image_url} onImageChange={(image) => handleInstructionImageChange(index, image)} />
-										<Textarea placeholder="조리 과정을 순서대로 설명해주세요" className="min-h-[80px]" {...form.register(`instructions.${index}.description`)} />
+										<Textarea placeholder="조리 과정을 순서대로 설명해주세요" className="min-h-[80px] bg-white" {...form.register(`instructions.${index}.description`)} />
 										{form.formState.errors.instructions?.[index]?.description && <p className="text-red-500 text-sm mt-1">{form.formState.errors.instructions[index].description.message}</p>}
 									</div>
 								</div>
@@ -534,7 +663,7 @@ export default function RecipeForm({ initialData }: RecipeFormProps) {
 						<Label htmlFor="tags" className="text-base font-medium">
 							태그 (쉼표로 구분)
 						</Label>
-						<Input id="tags" placeholder="예: #김치찌개, #한식" className="mt-2" {...form.register("tags")} />
+						<Input id="tags" placeholder="예: #김치찌개, #한식" className="mt-2 bg-white" {...form.register("tags")} />
 						{form.formState.errors.tags && <p className="text-red-500 text-sm mt-1">{form.formState.errors.tags.message}</p>}
 					</div>
 

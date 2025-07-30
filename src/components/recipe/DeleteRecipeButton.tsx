@@ -16,6 +16,8 @@ import {
 } from '@/components/ui/alert-dialog'
 import { createSupabaseBrowserClient } from '@/lib/supabase'
 import { useToast } from "@/hooks/use-toast"
+import { useSWRConfig } from 'swr'
+import { cacheManager } from "@/lib/unified-cache-manager"
 
 interface DeleteRecipeButtonProps {
   recipeId: string;
@@ -23,61 +25,61 @@ interface DeleteRecipeButtonProps {
 
 export default function DeleteRecipeButton({ recipeId }: DeleteRecipeButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const supabase = createSupabaseBrowserClient();
   const router = useRouter();
   const { toast } = useToast();
+  const { mutate } = useSWRConfig();
 
   const handleDelete = async () => {
-    // 1. 레시피 데이터 조회 (이미지 URL 포함)
-    const { data: recipeData, error: fetchError } = await supabase
-      .from('recipes')
-      .select('image_urls, instructions')
-      .eq('id', recipeId)
-      .single();
+    setIsDeleting(true);
+    
+    console.log(`🚀 DeleteRecipeButton: Starting SSA-based deletion of recipe ${recipeId}`)
 
-    if (fetchError || !recipeData) {
-      toast({ title: '레시피 정보 불러오기 실패', description: fetchError?.message || '레시피를 찾을 수 없습니다.', variant: 'destructive' });
-      return;
-    }
-
-    const filesToDelete: string[] = [];
-
-    // 레시피 대표 이미지 URL 추출
-    if (recipeData.image_urls && recipeData.image_urls.length > 0) {
-      recipeData.image_urls.forEach((url: string) => {
-        const path = url.split('/process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET_ITEMS!/')[1];
-        if (path) filesToDelete.push(`process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET_ITEMS!/${path}`);
-      });
-    }
-
-    // 조리법 단계별 이미지 URL 추출
-    if (recipeData.instructions && Array.isArray(recipeData.instructions)) {
-      recipeData.instructions.forEach((instruction: any) => {
-        if (instruction.image_url) {
-          const path = instruction.image_url.split('/process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET_ITEMS!/')[1];
-          if (path) filesToDelete.push(`process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET_ITEMS!/${path}`);
-        }
-      });
-    }
-
-    // 2. Supabase Storage에서 이미지 삭제
-    if (filesToDelete.length > 0) {
-      const { error: storageError } = await supabase.storage.from('process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET_ITEMS!').remove(filesToDelete);
-      if (storageError) {
-        toast({ title: '이미지 삭제 실패', description: storageError.message, variant: 'destructive' });
-        // 이미지 삭제 실패해도 레시피 데이터는 삭제 진행 (데이터 일관성 유지)
+    try {
+      console.log(`🚀 DeleteRecipeButton: SSA optimistic deletion...`);
+      
+      // 🚀 SSA 기반: 즉시 옵티미스틱 업데이트로 모든 캐시에서 제거
+      const rollback = await cacheManager.deleteItem(recipeId);
+      
+      try {
+        // 🚀 SSA 기반: 백그라운드 DB 삭제
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('User not authenticated');
+        
+        const { error } = await supabase
+          .from('items')
+          .delete()
+          .eq('id', recipeId)
+          .eq('user_id', user.id); // 보안: 자신의 아이템만 삭제
+          
+        if (error) throw error;
+        
+        console.log(`✅ DeleteRecipeButton: Recipe deleted successfully via SSA`);
+        
+        toast({
+          title: "레시피가 삭제되었습니다.",
+        })
+        
+        router.push('/')
+      } catch (dbError) {
+        // DB 삭제 실패 시 캐시 롤백
+        console.error(`❌ DeleteRecipeButton: DB deletion failed, rolling back:`, dbError);
+        rollback();
+        throw dbError;
       }
-    }
-
-    // 3. 레시피 데이터 삭제
-    const { error: deleteError } = await supabase.from('recipes').delete().eq('id', recipeId);
-
-    if (deleteError) {
-      toast({ title: '레시피 삭제 실패', description: deleteError.message, variant: 'destructive' });
-    } else {
-      toast({ title: '성공', description: '레시피가 성공적으로 삭제되었습니다.' });
-      router.push('/recipes');
-      router.refresh();
+      
+    } catch (error: any) {
+      console.error("❌ DeleteRecipeButton: SSA delete failed:", error)
+      
+      toast({
+        title: "삭제에 실패했습니다.",
+        description: "잠시 후 다시 시도해주세요.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsDeleting(false);
+      setIsOpen(false);
     }
   };
 
@@ -95,7 +97,9 @@ export default function DeleteRecipeButton({ recipeId }: DeleteRecipeButtonProps
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>취소</AlertDialogCancel>
-          <AlertDialogAction onClick={handleDelete}>삭제</AlertDialogAction>
+          <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+            {isDeleting ? "삭제 중..." : "삭제"}
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

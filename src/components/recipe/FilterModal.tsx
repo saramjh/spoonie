@@ -10,22 +10,33 @@ import { RECIPE_COLOR_OPTIONS } from "@/lib/color-options"
 
 interface FilterModalProps {
 	isOpen: boolean
-	onOpenChange: (isOpen: boolean) => void
+	onClose: () => void
 }
 
-export default function FilterModal({ isOpen, onOpenChange }: FilterModalProps) {
-	const { sortBy, sortOrder, filterCategory, filterColorLabel, setSortBy, setSortOrder, setFilterCategory, setFilterColorLabel, resetFilters } = useRecipeStore()
+export default function FilterModal({ isOpen, onClose }: FilterModalProps) {
+	const { 
+		setSortBy, 
+		setSortOrder, 
+		setFilterCategory, 
+		setFilterColorLabel, 
+		resetCurrentTabFilters,
+		getCurrentTabState 
+	} = useRecipeStore()
+
+	// 현재 탭의 상태를 가져옴
+	const currentTabState = getCurrentTabState()
+	const { sortBy, sortOrder, filterCategory, filterColorLabel } = currentTabState
 
 	const handleApply = () => {
-		onOpenChange(false)
+		onClose()
 	}
 
 	const handleReset = () => {
-		resetFilters()
+		resetCurrentTabFilters()
 	}
 
 	return (
-		<Drawer open={isOpen} onOpenChange={onOpenChange}>
+		<Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
 			<DrawerContent>
 				<div className="mx-auto w-full max-w-md p-4">
 					<DrawerHeader>
@@ -38,7 +49,14 @@ export default function FilterModal({ isOpen, onOpenChange }: FilterModalProps) 
 							<label htmlFor="filter-category" className="block text-sm font-medium text-gray-700 mb-2">
 								태그 필터
 							</label>
-							<Input id="filter-category" type="text" placeholder="태그 입력 (예: 한식)" value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="w-full" />
+							<Input 
+								id="filter-category" 
+								type="text" 
+								placeholder="태그 입력 (예: 한식)" 
+								value={filterCategory} 
+								onChange={(e) => setFilterCategory(e.target.value)} 
+								className="w-full" 
+							/>
 						</div>
 
 						{/* 색상 라벨 필터 */}
@@ -68,7 +86,7 @@ export default function FilterModal({ isOpen, onOpenChange }: FilterModalProps) 
 								<label htmlFor="sort-by" className="block text-sm font-medium text-gray-700 mb-2">
 									정렬 기준
 								</label>
-								<Select onValueChange={(value: any) => setSortBy(value)} defaultValue={sortBy}>
+								<Select onValueChange={(value: string) => setSortBy(value)} defaultValue={sortBy}>
 									<SelectTrigger id="sort-by">
 										<SelectValue placeholder="정렬 기준" />
 									</SelectTrigger>
@@ -85,7 +103,7 @@ export default function FilterModal({ isOpen, onOpenChange }: FilterModalProps) 
 								<label htmlFor="sort-order" className="block text-sm font-medium text-gray-700 mb-2">
 									정렬 순서
 								</label>
-								<Select onValueChange={(value: any) => setSortOrder(value)} defaultValue={sortOrder}>
+								<Select onValueChange={(value: "asc" | "desc") => setSortOrder(value)} defaultValue={sortOrder}>
 									<SelectTrigger id="sort-order">
 										<SelectValue placeholder="정렬 순서" />
 									</SelectTrigger>

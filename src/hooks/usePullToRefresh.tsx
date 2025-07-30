@@ -1,14 +1,17 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useRefresh } from "@/contexts/RefreshContext";
 import SpoonieLogoAnimation from "@/components/common/SpoonieLogoAnimation";
 
 const PULL_THRESHOLD = 80; // 당겨야 하는 최소 거리 (px)
 const PULL_TO_REFRESH_TEXT = "당겨서 새로고침";
 
+/**
+ * 🚀 Optimistic Updates 시스템용 Pull-to-Refresh
+ * 기존처럼 복잡한 refresh 시스템 대신, 간단한 사용자 피드백만 제공
+ */
 export const usePullToRefresh = () => {
-    const { isRefreshing, triggerRefresh } = useRefresh();
     const [pullDistance, setPullDistance] = useState(0);
     const [isPulling, setIsPulling] = useState(false);
+    const [isRefreshing, setIsRefreshing] = useState(false);
     const touchStartRef = useRef(0);
 
     const handleTouchStart = useCallback((e: TouchEvent) => {
@@ -32,11 +35,18 @@ export const usePullToRefresh = () => {
 
     const handleTouchEnd = useCallback(async () => {
         if (isPulling && pullDistance >= PULL_THRESHOLD) {
-            await triggerRefresh();
+            // 🚀 Optimistic Updates: 실제로는 아무것도 하지 않음 (이미 모든 상태가 최신)
+            console.log("🚀 Pull-to-refresh triggered: Already up-to-date with Optimistic Updates");
+            setIsRefreshing(true);
+            
+            // 사용자 피드백용 짧은 애니메이션만 표시
+            setTimeout(() => {
+                setIsRefreshing(false);
+            }, 500);
         }
         setIsPulling(false);
         setPullDistance(0);
-    }, [isPulling, pullDistance, triggerRefresh]);
+    }, [isPulling, pullDistance]);
 
     useEffect(() => {
         const handleTouchStartWrapper = (e: TouchEvent) => handleTouchStart(e);

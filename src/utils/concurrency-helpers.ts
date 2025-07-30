@@ -71,21 +71,33 @@ export async function getCommentCountConcurrencySafe(itemId: string): Promise<nu
 }
 
 /**
- * 동시성 안전한 좋아요 카운트 조회
+ * 동시성 안전한 좋아요 수 조회 (서버 사이드 집계)
  */
 export async function getLikeCountConcurrencySafe(itemId: string): Promise<number> {
+	// itemId 유효성 검사
+	if (!itemId || itemId === 'undefined' || itemId === 'null') {
+		console.warn(`⚠️ getLikeCountConcurrencySafe: Invalid itemId: ${itemId}`)
+		return 0
+	}
+
 	const supabase = createSupabaseBrowserClient()
 
 	try {
+		console.log(`📊 getLikeCountConcurrencySafe: Fetching likes for item ${itemId}`)
 		const { count, error } = await supabase
 			.from("likes")
 			.select("*", { count: "exact", head: true })
 			.eq("item_id", itemId)
 
-		if (error) throw error
+		if (error) {
+			console.error(`❌ getLikeCountConcurrencySafe: Supabase error for item ${itemId}:`, error)
+			throw error
+		}
+		
+		console.log(`✅ getLikeCountConcurrencySafe: Item ${itemId} has ${count || 0} likes`)
 		return count || 0
 	} catch (error) {
-		console.error("❌ Like count failed:", error)
+		console.error(`❌ getLikeCountConcurrencySafe: Error for item ${itemId}:`, error)
 		return 0
 	}
 }
@@ -157,6 +169,28 @@ export async function toggleLikeWithNotification(
 	authorId: string,
 	currentlyLiked: boolean
 ): Promise<{ success: boolean; isLiked: boolean; error?: string }> {
+	// itemId 유효성 검사
+	if (!itemId || itemId === 'undefined' || itemId === 'null') {
+		console.error(`❌ toggleLikeWithNotification: Invalid itemId: ${itemId}`)
+		return { 
+			success: false, 
+			isLiked: currentlyLiked,
+			error: "Invalid item ID" 
+		}
+	}
+
+	// userId 유효성 검사
+	if (!userId || userId === 'undefined' || userId === 'null') {
+		console.error(`❌ toggleLikeWithNotification: Invalid userId: ${userId}`)
+		return { 
+			success: false, 
+			isLiked: currentlyLiked,
+			error: "Invalid user ID" 
+		}
+	}
+
+	console.log(`🔄 toggleLikeWithNotification: Item ${itemId}, User ${userId}, Currently liked: ${currentlyLiked}`)
+
 	const supabase = createSupabaseBrowserClient()
 
 	return executeWithRetry(async () => {
@@ -175,6 +209,7 @@ export async function toggleLikeWithNotification(
 					from_user_id: userId,
 					item_id: itemId,
 					type: "like"
+					// content 필드 제거 - 테이블에 해당 컬럼이 없음
 				})
 			} catch (notificationError) {
 				// 알림 생성 실패는 치명적이지 않으므로 로그만 남김

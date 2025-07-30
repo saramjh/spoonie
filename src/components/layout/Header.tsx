@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Bell } from "lucide-react";
+import { Bell, Bookmark } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import useSWR from 'swr';
 import { useEffect, useState, useCallback } from 'react';
@@ -93,7 +93,12 @@ export default function Header() {
         <NextImage src="/logo-full.svg" alt="Spoonie Logo" width={100} height={40} priority />
       </Link>
 
-      <div className="flex items-center">
+      <div className="flex items-center gap-2">
+        <Link href="/bookmarks">
+          <Button variant="ghost" size="icon" className="rounded-full relative">
+            <Bookmark className="h-6 w-6 text-gray-600" />
+          </Button>
+        </Link>
         <Link href="/notifications">
           <Button variant="ghost" size="icon" className="rounded-full relative">
             <Bell className={`h-6 w-6 text-gray-600 ${isShaking ? 'animate-bell-shake' : ''}`} />

@@ -34,13 +34,13 @@ export default function CreateOptionsModal({ isOpen, onClose }: CreateOptionsMod
 								<p className="text-sm text-gray-500">나만의 레시피를 꼼꼼하게 기록해요.</p>
 							</div>
 						</Button>
-						<Button variant="outline" className="w-full justify-start p-6 text-left h-auto" onClick={() => handleNavigation("/posts/new")}>
-							<ImagePlus className="mr-4 h-8 w-8 text-blue-500" />
-							<div>
-								<p className="font-semibold text-base">새 게시물 작성</p>
-								<p className="text-sm text-gray-500">사진과 함께 간단한 요리 일상을 공유해요.</p>
-							</div>
-						</Button>
+								<Button variant="outline" className="w-full justify-start p-6 text-left h-auto" onClick={() => handleNavigation("/posts/new")}>
+			<ImagePlus className="mr-4 h-8 w-8 text-blue-500" />
+			<div>
+				<p className="font-semibold text-base">새 레시피드 작성</p>
+				<p className="text-sm text-gray-500">사진과 함께 간단한 요리 일상을 공유해요.</p>
+			</div>
+		</Button>
 					</div>
 					<div className="mt-4 p-4">
 						<Button onClick={onClose} variant="ghost" className="w-full">

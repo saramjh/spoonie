@@ -27,6 +27,11 @@ interface SearchResult {
 	display_name?: string
 	username?: string
 	avatar_url?: string
+	image_urls?: string[]  // 추가: 썸네일을 위한 이미지 URLs
+	likes_count?: number   // 추가: 좋아요 수
+	comments_count?: number // 추가: 댓글 수
+	user_id?: string       // 추가: 사용자 ID
+	is_following?: boolean // 추가: 팔로우 상태
 }
 
 interface CachedSearchResults {
@@ -179,11 +184,16 @@ export class DebouncedSearch {
 	private async performSearch(query: string): Promise<SearchResult[]> {
 		const supabase = createSupabaseBrowserClient()
 
-		// 🚀 전문검색 RPC 함수 사용 (GIN 인덱스 활용)
+		// 현재 사용자 정보 가져오기
+		const { data: { user } } = await supabase.auth.getUser()
+		const currentUserId = user?.id || null
+
+		// 🚀 전문검색 RPC 함수 사용 (GIN 인덱스 활용, 팔로우 상태 포함)
 		const { data, error } = await supabase
 			.rpc('search_items_optimized', { 
 				search_term: query,
-				max_results: 20
+				max_results: 20,
+				current_user_id: currentUserId
 			})
 
 		if (error) {

@@ -1,29 +1,30 @@
 "use client"
 
-import { ItemDetail } from "@/types/item"
-import { useRouter, usePathname } from "next/navigation"
-import { ArrowLeft, MessageCircle, Share2, ArrowUp, MoreHorizontal, Edit, Trash2 } from "lucide-react"
+import { useState, useEffect, useRef, useMemo } from "react"
+import { useRouter } from "next/navigation"
+import { ArrowLeft, MessageCircle, Share2, MoreHorizontal, Edit, Trash2 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
-import FollowButton from "@/components/feed/FollowButton"
-import { LikeButton } from "@/components/feed/LikeButton"
-import CommentsSection from "@/components/feed/CommentsSection"
+import { SimplifiedLikeButton } from "@/components/items/SimplifiedLikeButton"
+import { BookmarkButton } from "@/components/items/BookmarkButton"
+import FollowButton from "@/components/items/FollowButton"
+import SimplifiedCommentsSection from "@/components/items/SimplifiedCommentsSection"
 import ImageCarousel from "@/components/common/ImageCarousel"
-import { timeAgo } from "@/lib/utils"
 import RecipeContentView from "@/components/recipe/RecipeContentView"
+import { timeAgo } from "@/lib/utils"
 import { useShare } from "@/hooks/useShare"
-import { createSupabaseBrowserClient } from "@/lib/supabase-client"
-import Link from "next/link"
-import useSWR, { useSWRConfig } from "swr"
-import { useState, useEffect, useRef } from "react"
 import { useToast } from "@/hooks/use-toast"
-import { useRefresh } from "@/contexts/RefreshContext"
-import { format } from "date-fns"
+import { createSupabaseBrowserClient } from "@/lib/supabase-client"
+import useSWR, { useSWRConfig } from "swr"
+import { Item, ItemDetail } from "@/types/item"
+import Link from "next/link"
+
 import { useCitedRecipes } from "@/hooks/useCitedRecipes"
-import { syncAllCaches } from "@/utils/feed-cache-sync"
+import { useThumbnail } from "@/hooks/useThumbnail"
+import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 
 interface ItemDetailViewProps {
 	item: ItemDetail
@@ -55,10 +56,24 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	const { toast } = useToast()
 	const supabase = createSupabaseBrowserClient()
 	const { mutate } = useSWRConfig()
-	const { registerRefreshFunction, unregisterRefreshFunction, publishItemUpdate, subscribeToItemUpdates } = useRefresh()
-	const pathname = usePathname()
+
+
 
 	const isRecipe = item.item_type === "recipe"
+
+	// 🛡️ Hook 안정성을 위한 값 안정화
+	const stableItemId = useMemo(() => item.item_id || item.id, [item.item_id, item.id])
+	const stableFallbackData = useMemo(() => item, [item])
+
+	// 🚀 SSA 발전: 실시간 캐시 업데이트 구독 (홈화면과 동일)
+	const cachedItem = useSSAItemCache(stableItemId, stableFallbackData)
+	
+	// 🖼️ 썸네일 관리 - 캐시된 아이템의 최신 thumbnail_index 사용
+	const { orderedImages } = useThumbnail({
+		itemId: stableItemId,
+		imageUrls: cachedItem.image_urls || [],
+		thumbnailIndex: cachedItem.thumbnail_index ?? 0
+	})
 
 	// Debug logging
 	console.log("ItemDetailView Debug:", {
@@ -79,15 +94,17 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	// cited_recipe_ids 처리 - 캐싱된 훅 사용
 	const { citedRecipes, isLoading: citedRecipesLoading } = useCitedRecipes(item.cited_recipe_ids)
 
-	const [newComment, setNewComment] = useState("")
+	const [commentsCount, setCommentsCount] = useState(item.comments_count || 0)
+	const [localLikesCount, setLocalLikesCount] = useState(item.likes_count || 0)
+	const [localHasLiked, setLocalHasLiked] = useState(item.is_liked || false)
 	const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
-	const [commentsCount, setCommentsCount] = useState(item.comments_count)
 	const [isAuthLoading, setIsAuthLoading] = useState(true) // 인증 상태 로딩
-	const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+
+	const [showDeleteModal, setShowDeleteModal] = useState(false)
 	const [isDeleting, setIsDeleting] = useState(false)
 	const commentsRef = useRef<HTMLDivElement>(null)
 
-	const comments = item.comments_data || []
+	const comments = useMemo(() => item.comments_data || [], [item.comments_data])
 
 	// 비회원 여부 확인
 	const isGuest = !currentUser && !isAuthLoading
@@ -101,12 +118,65 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		router.push(editPath)
 	}
 	
-	// 삭제 확인 핸들러
+	// 🚀 업계 표준: 삭제 확인 핸들러 (PostCard와 완전히 동일한 방식)
 	const handleDeleteConfirm = async () => {
 		if (!currentUser || !isOwnItem) return
 		
 		setIsDeleting(true)
+		
+		console.log(`🗑️ ItemDetailView: Starting deletion of item ${item.item_id}`);
+		
+		// 🚀 업계 표준: 1. 모든 관련 캐시에서 즉시 제거 (Instagram/Twitter 방식)
+		mutate(
+			(key) => {
+				const isRecipeBook = typeof key === "string" && key.startsWith("recipes||");
+				const isHomeFeed = typeof key === "string" && key.startsWith("items|");
+				console.log(`🔍 ItemDetailView: Checking key "${key}" - recipe book: ${isRecipeBook}, home feed: ${isHomeFeed}`);
+				return isRecipeBook || isHomeFeed;
+			},
+			// Note: Using any type here due to complex SWR cache structure variations
+			(cachedData: any) => {
+				console.log(`🔄 ItemDetailView: Processing cached data:`, cachedData);
+				if (!cachedData || !Array.isArray(cachedData)) {
+					console.log(`❌ ItemDetailView: Invalid cached data`);
+					return cachedData;
+				}
+				
+				// 🚀 더 정확한 구조 감지: useSWRInfinite 페이지 구조 vs 평면 배열
+				const hasPageStructure = cachedData.length > 0 && 
+				                         Array.isArray(cachedData[0]) && 
+				                         (cachedData[0].length === 0 || typeof cachedData[0][0] === 'object');
+				
+				if (hasPageStructure) {
+					console.log(`📄 ItemDetailView: Processing paginated structure with ${cachedData.length} pages`);
+					return cachedData.map((page: any) => 
+						page.filter((feedItem: any) => {
+							const shouldKeep = (feedItem.item_id || feedItem.id) !== item.item_id;
+							if (!shouldKeep) {
+								console.log(`🗑️ ItemDetailView: Removing item ${feedItem.item_id || feedItem.id} from cache`);
+							}
+							return shouldKeep;
+						})
+					);
+				} else {
+					// fallbackData나 평면 배열 구조 처리
+					console.log(`📋 ItemDetailView: Processing flat array with ${cachedData.length} items`);
+					return cachedData.filter((feedItem: any) => {
+						const shouldKeep = (feedItem.item_id || feedItem.id) !== item.item_id;
+						if (!shouldKeep) {
+							console.log(`🗑️ ItemDetailView: Removing item ${feedItem.item_id || feedItem.id} from flat array`);
+						}
+						return shouldKeep;
+					});
+				}
+			},
+			{ revalidate: false }
+		)
+		
 		try {
+			console.log(`🌐 ItemDetailView: Attempting database deletion for item ${item.item_id}`);
+			
+			// 2. 실제 데이터베이스에서 삭제
 			const { error } = await supabase
 				.from("items")
 				.delete()
@@ -115,24 +185,42 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 			
 			if (error) throw error
 			
+			console.log(`✅ ItemDetailView: Database deletion successful`);
+			
+			// 🚀 업계 표준: 3. 성공시 최종 캐시 확정
+			await mutate((key) => typeof key === "string" && (key.startsWith("items|") || key.startsWith("recipes||")))
+			
 			toast({
-				title: `${isRecipe ? "레시피" : "게시물"}가 삭제되었습니다.`,
+				title: `${isRecipe ? "레시피" : "레시피드"}가 삭제되었습니다.`,
 			})
 			
 			router.push("/")
 		} catch (error) {
-			console.error("Error deleting item:", error)
+			console.error("❌ ItemDetailView: Database deletion failed:", error)
+			
+			// 4. 실패시 Optimistic Update 롤백
+			await mutate((key) => typeof key === "string" && (key.startsWith("items|") || key.startsWith("recipes||")))
+			
 			toast({
 				title: "삭제에 실패했습니다.",
+				description: "잠시 후 다시 시도해주세요.",
 				variant: "destructive",
 			})
 		} finally {
 			setIsDeleting(false)
-			setShowDeleteDialog(false)
+			setShowDeleteModal(false)
 		}
 	}
 
 	// cited_recipe_ids는 useCitedRecipes 훅에서 자동으로 관리됨
+
+	// 🔄 item props 변경 시 로컬 상태 동기화 (useItemDetail 새로고침 시 등)
+	useEffect(() => {
+		console.log(`🔄 ItemDetailView: Syncing with item props - likes: ${item.likes_count}, hasLiked: ${item.is_liked}, comments: ${item.comments_count}`)
+		setLocalLikesCount(item.likes_count || 0)
+		setLocalHasLiked(item.is_liked || false)
+		setCommentsCount(item.comments_count || 0)
+	}, [item.likes_count, item.is_liked, item.comments_count])
 
 	useEffect(() => {
 		const fetchCurrentUser = async () => {
@@ -153,37 +241,8 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		fetchCurrentUser()
 	}, [supabase])
 
-	useEffect(() => {
-		const handleRefresh = async () => {
-			await mutate(`item_details_${item.item_id}`)
-		}
-		registerRefreshFunction(pathname, handleRefresh)
-		return () => unregisterRefreshFunction(pathname)
-	}, [pathname, registerRefreshFunction, unregisterRefreshFunction, mutate, item.item_id])
-
-	// 실시간 아이템 업데이트 구독 (상세페이지용)
-	useEffect(() => {
-		const unsubscribe = subscribeToItemUpdates((updateEvent) => {
-			// 현재 아이템과 관련된 업데이트만 처리
-			if (updateEvent.itemId !== item.item_id) return
-
-			console.log(`🔄 ItemDetailView received update for ${item.item_id}:`, updateEvent)
-
-			// 좋아요/댓글 수 즉시 갱신
-			if (updateEvent.updateType === "like_add" || updateEvent.updateType === "like_remove") {
-				// 좋아요 수는 LikeButton에서 자체적으로 관리하므로 SWR 캐시만 갱신
-				mutate(`item_details_${item.item_id}`)
-			} else if (updateEvent.updateType === "comment_add" || updateEvent.updateType === "comment_delete") {
-				// 댓글 수 즉시 갱신
-				setCommentsCount((prev) => Math.max(0, prev + updateEvent.delta))
-
-				// SWR 캐시도 갱신
-				mutate(`item_details_${item.item_id}`)
-			}
-		})
-
-		return unsubscribe
-	}, [subscribeToItemUpdates, item.item_id, mutate])
+	// 🚀 Optimistic Updates 시스템에서는 복잡한 구독/등록 로직 불필요
+	// 모든 상태는 optimisticLikeUpdate, optimisticCommentUpdate에서 즉시 처리됨
 
 	useEffect(() => {
 		if (window.location.hash === "#comments" && commentsRef.current) {
@@ -196,119 +255,34 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	const handleShare = () => {
 		const url = window.location.href
 		const shareData = {
-			title: `Spoonie에서 ${isRecipe ? item.title : (item.display_name || "사용자") + "님의 게시물"} 보기`,
+			title: `Spoonie에서 ${isRecipe ? item.title : (item.display_name || "사용자") + "님의 레시피드"} 보기`,
 			text: isRecipe ? item.description || "" : item.content || "",
 			url: url,
 		}
 		share(shareData)
 	}
 
-	const handleAddComment = async (e: React.FormEvent) => {
-		e.preventDefault()
-		if (!newComment.trim() || !currentUser) return
 
-		const tempId = Date.now().toString()
-		const newCommentData = {
-			id: tempId,
-			content: newComment,
-			created_at: new Date().toISOString(),
-			user: {
-				id: currentUser.id,
-				public_id: "", // 임시값, 서버에서 최신 데이터로 업데이트될 예정
-				username: currentUser.display_name || "사용자",
-				display_name: currentUser.display_name,
-				avatar_url: currentUser.avatar_url,
-			},
-			is_deleted: false,
-		}
 
-		setNewComment("")
-
-		try {
-			const commentPayload = {
-				content: newComment,
-				user_id: currentUser.id,
-				item_id: item.item_id,
-			}
-
-			const { data: insertedComment, error } = await supabase
-				.from("comments")
-				.insert(commentPayload)
-				.select(`
-					id, content, created_at, user_id, parent_comment_id, is_deleted,
-					user:profiles!user_id(public_id, display_name, avatar_url, username)
-				`)
-				.single()
-
-			if (error) throw error
-
-			// 새 댓글을 올바른 형태로 변환
-			const userProfile = Array.isArray(insertedComment.user) ? insertedComment.user[0] : insertedComment.user
-			const transformedNewComment: Comment = {
-				id: insertedComment.id,
-				content: insertedComment.content,
-				created_at: insertedComment.created_at,
-				user_id: insertedComment.user_id,
-				parent_comment_id: insertedComment.parent_comment_id,
-				is_deleted: insertedComment.is_deleted,
-				user: {
-					id: insertedComment.user_id,
-					public_id: userProfile?.public_id || "",
-					username: userProfile?.username || "",
-					display_name: userProfile?.display_name,
-					avatar_url: userProfile?.avatar_url,
-				},
-			}
-
-			// 실제 댓글로 optimistic update 교체
+	// 페이지 언마운트 시 홈화면과 상태 동기화
+	useEffect(() => {
+		return () => {
+			// 🔄 페이지 이동 시 현재 아이템의 상태를 홈화면에 동기화
+			console.log(`🔄 ItemDetailView: Component unmounting, syncing state for ${item.item_id}`)
+			
+			// 🚀 강제로 홈화면 피드 새로고침 (확실한 동기화)
+			console.log(`🚀 Forcing home feed refresh for user ${currentUser?.id || "guest"}`)
+			
+			// 모든 홈 피드 캐시 무효화
 			mutate(
-				`item_details_${item.item_id}`,
-				(currentItem: ItemDetail | undefined) => {
-					if (!currentItem) return currentItem
-					const updatedComments = [...(currentItem.comments_data || [])]
-					// 임시 댓글을 실제 댓글로 교체
-					const tempIndex = updatedComments.findIndex(c => c.id === tempId)
-					if (tempIndex !== -1) {
-						updatedComments[tempIndex] = transformedNewComment
-					} else {
-						updatedComments.push(transformedNewComment)
-					}
-					return {
-						...currentItem,
-						comments_data: updatedComments,
-					}
-				},
-				false
+				(key) => typeof key === "string" && 
+				         key.startsWith(`items|`) && 
+				         key.endsWith(`|${currentUser?.id || "guest"}`),
+				undefined,
+				{ revalidate: true } // 서버에서 다시 가져오기
 			)
-
-			// CommentsSection의 SWR 캐시 새로고침 (댓글이 즉시 표시되도록)
-			mutate(`comments_${item.item_id}`)
-
-			// 🚀 통합 캐시 동기화 시스템 적용
-			syncAllCaches({
-				itemId: item.item_id,
-				updateType: 'comment_add',
-				delta: 1
-			})
-
-			// Publish update to other components
-			publishItemUpdate({
-				itemId: item.item_id,
-				itemType: item.item_type,
-				updateType: "comment_add",
-				delta: 1,
-			})
-
-			toast({ title: "댓글이 추가되었습니다." })
-		} catch (error) {
-			console.error("Error adding comment:", error)
-			toast({ title: "댓글 추가에 실패했습니다.", variant: "destructive" })
-
-			// Rollback optimistic UI
-			mutate(`item_details_${item.item_id}`)
-			setCommentsCount((prev) => prev - 1)
 		}
-	}
+	}, [currentUser?.id, item.item_id, mutate])
 
 	return (
 		<div className="flex flex-col h-full relative">
@@ -319,7 +293,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 						<div className="mb-6">
 							<h2 className="text-2xl font-bold text-gray-900 mb-3">회원만 볼 수 있습니다</h2>
 							<p className="text-gray-600 leading-relaxed">
-								{isRecipe ? "레시피의 전체 내용을" : "게시물의 전체 내용을"} 보시려면 로그인이 필요해요. Spoonie에서 더 많은 {isRecipe ? "레시피" : "게시물"}를 만나보세요!
+								{isRecipe ? "레시피의 전체 내용을" : "레시피드의 전체 내용을"} 보시려면 로그인이 필요해요. Spoonie에서 더 많은 {isRecipe ? "레시피" : "레시피드"}를 만나보세요!
 							</p>
 						</div>
 						<div className="space-y-3">
@@ -368,7 +342,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 										수정
 									</DropdownMenuItem>
 									<DropdownMenuItem 
-										onClick={() => setShowDeleteDialog(true)} 
+										onClick={() => setShowDeleteModal(true)} 
 										className="text-red-600 focus:text-red-600 cursor-pointer"
 									>
 										<Trash2 className="mr-2 h-4 w-4" />
@@ -378,23 +352,38 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 							</DropdownMenu>
 						) : (
 							/* 작성자가 아닌 경우: 팔로우 버튼 */
-							currentUser && <FollowButton userId={item.user_id} initialIsFollowing={item.is_following} />
+							currentUser && <FollowButton 
+								userId={item.user_id} 
+								initialIsFollowing={item.is_following} 
+								className="w-[80px]"
+							/>
 						)}
 					</div>
 				</header>
 
 				<div className="flex-1 overflow-y-auto">
-					{item.image_urls && item.image_urls.length > 0 && <ImageCarousel images={item.image_urls} alt={isRecipe ? item.title || "Recipe image" : `Post by ${item.display_name}`} priority />}
+					{orderedImages.length > 0 && <ImageCarousel images={orderedImages} alt={isRecipe ? item.title || "Recipe image" : `Post by ${item.display_name}`} priority />}
 					<div className="p-4">
 						{isRecipe ? (
 							<>
 								<div className="flex justify-between items-center mb-2">
 									{item.title && <h1 className="text-2xl font-bold text-gray-900">{item.title}</h1>}
-									<Button variant="ghost" size="icon" onClick={handleShare}>
-										<Share2 className="h-6 w-6 text-gray-600" />
-									</Button>
+									<div className="flex items-center gap-1">
+										<BookmarkButton
+											itemId={stableItemId}
+											itemType={isRecipe ? 'recipe' : 'post'}
+											currentUserId={currentUser?.id}
+											initialBookmarksCount={(cachedItem as Item & { bookmarks_count?: number }).bookmarks_count || 0}
+											initialIsBookmarked={(cachedItem as Item & { is_bookmarked?: boolean }).is_bookmarked || false}
+											size="icon"
+											cachedItem={cachedItem}
+										/>
+										<Button variant="ghost" size="icon" onClick={handleShare}>
+											<Share2 className="h-6 w-6 text-gray-600" />
+										</Button>
+									</div>
 								</div>
-								{item.description && <p className="text-sm text-gray-500 mb-2">{item.description}</p>}
+								{item.description && <p className="text-sm text-gray-500 mb-2 whitespace-pre-wrap break-words leading-relaxed">{item.description}</p>}
 
 								{/* 참고 레시피 표시 - 개선된 디자인 */}
 								{citedRecipesLoading && (
@@ -422,7 +411,13 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 											{citedRecipes.map((citedRecipeItem) => {
 												const authorProfile = Array.isArray(citedRecipeItem.author) ? citedRecipeItem.author[0] : citedRecipeItem.author
 												const authorName = authorProfile?.display_name || authorProfile?.username || "익명"
-												const recipeDate = citedRecipeItem.created_at ? format(new Date(citedRecipeItem.created_at), "yyyy.MM.dd") : ""
+												const recipeDate = citedRecipeItem.created_at 
+													? new Date(citedRecipeItem.created_at).toLocaleDateString('ko-KR', { 
+															year: 'numeric', 
+															month: '2-digit', 
+															day: '2-digit' 
+														}).replace(/\./g, '.').replace(/\s/g, '') 
+													: ""
 
 												return (
 													<Link key={citedRecipeItem.id} href={`/recipes/${citedRecipeItem.id}`} className="block group">
@@ -458,7 +453,25 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 							</>
 						) : (
 							<>
-								<p className="text-base text-gray-800 whitespace-pre-wrap">{item.content}</p>
+								<div className="flex justify-between items-start mb-2">
+									<div className="flex-1">
+										<p className="text-base text-gray-800 whitespace-pre-wrap break-words leading-relaxed">{item.content}</p>
+									</div>
+									<div className="flex items-center gap-1 ml-4">
+										<BookmarkButton
+											itemId={stableItemId}
+											itemType="post"
+											currentUserId={currentUser?.id}
+											initialBookmarksCount={(cachedItem as Item & { bookmarks_count?: number }).bookmarks_count || 0}
+											initialIsBookmarked={(cachedItem as Item & { is_bookmarked?: boolean }).is_bookmarked || false}
+											size="icon"
+											cachedItem={cachedItem}
+										/>
+										<Button variant="ghost" size="icon" onClick={handleShare}>
+											<Share2 className="h-6 w-6 text-gray-600" />
+										</Button>
+									</div>
+								</div>
 
 								{/* 포스트에서 태그 표시 */}
 								{item.tags && item.tags.length > 0 && (
@@ -497,7 +510,13 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 											{citedRecipes.map((citedRecipeItem) => {
 												const authorProfile = Array.isArray(citedRecipeItem.author) ? citedRecipeItem.author[0] : citedRecipeItem.author
 												const authorName = authorProfile?.display_name || authorProfile?.username || "익명"
-												const recipeDate = citedRecipeItem.created_at ? format(new Date(citedRecipeItem.created_at), "yyyy.MM.dd") : ""
+												const recipeDate = citedRecipeItem.created_at 
+													? new Date(citedRecipeItem.created_at).toLocaleDateString('ko-KR', { 
+															year: 'numeric', 
+															month: '2-digit', 
+															day: '2-digit' 
+														}).replace(/\./g, '.').replace(/\s/g, '') 
+													: ""
 
 												return (
 													<Link key={citedRecipeItem.id} href={`/recipes/${citedRecipeItem.id}`} className="block group">
@@ -533,13 +552,21 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 										</Link>
 									</div>
 								)}
-								<p className="text-sm text-gray-500 mt-4 text-right">{timeAgo(item.created_at)}</p>
 							</>
 						)}
 					</div>
 					<div className="flex justify-between items-center p-4 border-t">
 						<div className="flex items-center gap-2 text-gray-600">
-							<LikeButton itemId={item.item_id} itemType={item.item_type} authorId={item.user_id} currentUserId={currentUser?.id} />
+							{/* 🎯 기존 검증된 좋아요 버튼 사용 */}
+							<SimplifiedLikeButton 
+								itemId={item.item_id} 
+								itemType={item.item_type}
+								authorId={item.user_id}
+								currentUserId={currentUser?.id}
+								initialLikesCount={cachedItem.likes_count || localLikesCount}
+								initialHasLiked={cachedItem.is_liked || localHasLiked}
+								cachedItem={cachedItem}
+							/>
 							<div className="flex items-center gap-1">
 								<MessageCircle className="h-6 w-6" />
 								<span className="text-base font-medium">{commentsCount}</span>
@@ -548,38 +575,25 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 					</div>
 
 					<div ref={commentsRef} className="p-4">
-						<CommentsSection 
+						<SimplifiedCommentsSection 
 							currentUserId={currentUser?.id} 
 							itemId={item.item_id} 
-							itemType={item.item_type} 
-							onCommentDelete={() => setCommentsCount((prev) => Math.max(0, prev - 1))} 
-							onCommentDeleteRollback={() => setCommentsCount((prev) => prev + 1)}
 							onCommentsCountChange={setCommentsCount}
+							cachedItem={item}
 						/>
 					</div>
 				</div>
 
-				<div className="sticky bottom-0 bg-white dark:bg-gray-950 py-2 px-4 border-t">
-					<form onSubmit={handleAddComment} className="flex items-center gap-2">
-						<Avatar className="h-8 w-8">
-							<AvatarImage src={currentUser?.avatar_url || undefined} />
-							<AvatarFallback>{currentUser?.display_name?.charAt(0) || "U"}</AvatarFallback>
-						</Avatar>
-						<Input placeholder="댓글 추가..." value={newComment} onChange={(e) => setNewComment(e.target.value)} disabled={!currentUser} />
-						<Button type="submit" size="icon" disabled={!newComment.trim() || !currentUser}>
-							<ArrowUp className="h-5 w-5" />
-						</Button>
-					</form>
-				</div>
+				{/* 댓글 입력은 SimplifiedCommentsSection 내부에서 처리됨 */}
 			</div>
 			
 			{/* 삭제 확인 다이얼로그 */}
-			<AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+			<AlertDialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
 				<AlertDialogContent>
 					<AlertDialogHeader>
 						<AlertDialogTitle>삭제 확인</AlertDialogTitle>
 						<AlertDialogDescription>
-							이 {isRecipe ? "레시피를" : "게시물을"} 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+							이 {isRecipe ? "레시피를" : "레시피드를"} 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>

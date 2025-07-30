@@ -1,7 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import FeedList from "@/components/feed/FeedList"
+import ItemList from "@/components/items/ItemList"
 import Image from "next/image"
 
 export default async function FeedPage() {
@@ -21,10 +21,9 @@ export default async function FeedPage() {
 		)
 	}
 
-	// 사용자가 팔로우하는 사람들의 ID 목록 가져오기
-	const { data: followingData } = await supabase.from("follows").select("following_id").eq("follower_id", user.id)
-
-	const followingIds = followingData?.map((follow) => follow.following_id) || []
+	// 사용자가 팔로우하는 사람들의 ID 목록 가져오기 (향후 추천 기능에 사용 예정)
+	// const { data: followingData } = await supabase.from("follows").select("following_id").eq("follower_id", user.id)
+	// const followingIds = followingData?.map((follow) => follow.following_id) || []
 
 	const recommendedRecipes = [
 		{
@@ -88,7 +87,7 @@ export default async function FeedPage() {
 				</div>
 			</section>
 
-			<FeedList initialUser={user} initialFollowingIds={followingIds} />
+			<ItemList />
 		</div>
 	)
 }

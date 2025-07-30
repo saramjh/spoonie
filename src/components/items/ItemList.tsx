@@ -4,19 +4,34 @@ import { useRef, useCallback, useEffect, useState } from "react"
 import { usePosts } from "@/hooks/usePosts"
 import PostCard from "./PostCard"
 import PostCardSkeleton from "./PostCardSkeleton"
-import { useRefresh } from "@/contexts/RefreshContext"
-import { usePathname } from "next/navigation"
+
+
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import type { User } from "@supabase/supabase-js"
+import type { ServerFeedData } from "@/lib/server-data"
 
-export default function FeedList() {
-	const { feedItems, isLoading, isError, size, setSize, isReachingEnd, mutate: swrMutate } = usePosts()
+interface ItemListProps {
+	/**
+	 * 서버에서 미리 로딩된 초기 데이터 (SSR 최적화용)
+	 * null인 경우 클라이언트에서 데이터 페칭
+	 */
+	initialData?: ServerFeedData | null
+}
+
+/**
+ * 🚀 하이브리드 아이템 리스트 컴포넌트 (SSR + CSR)
+ * 레시피(recipe)와 레시피드(post) 모두 포함한 통합 아이템 리스트를 표시합니다
+ * 
+ * @param initialData - 서버에서 미리 로딩된 데이터 (성능 최적화)
+ * @returns 무한 스크롤이 적용된 아이템 리스트 컴포넌트
+ */
+export default function ItemList({ initialData }: ItemListProps) {
+	const { feedItems, isLoading, isError, size, setSize, isReachingEnd, mutate: swrMutate } = usePosts(initialData)
 	const observerElem = useRef<HTMLDivElement>(null)
-	const { registerRefreshFunction, unregisterRefreshFunction, subscribeToItemUpdates } = useRefresh()
-	const pathname = usePathname()
+
 	const supabase = createSupabaseBrowserClient()
 
 	// 사용자 상태 및 가입 유도 모달 관련 상태
@@ -38,25 +53,8 @@ export default function FeedList() {
 		checkUser()
 	}, [supabase])
 
-	useEffect(() => {
-		const refresh = async () => {
-			await swrMutate()
-		}
-		registerRefreshFunction(pathname, refresh)
-		return () => unregisterRefreshFunction(pathname)
-	}, [swrMutate, registerRefreshFunction, unregisterRefreshFunction, pathname])
-
-	// 실시간 아이템 업데이트 구독
-	useEffect(() => {
-		const unsubscribe = subscribeToItemUpdates((updateEvent) => {
-			console.log("🔄 FeedList received update:", updateEvent)
-
-			// 즉시 SWR 캐시 새로고침
-			swrMutate()
-		})
-
-		return unsubscribe
-	}, [subscribeToItemUpdates, swrMutate])
+	// 🚀 Optimistic Updates 시스템에서는 복잡한 등록/구독 로직 불필요
+	// 모든 상태는 optimisticLikeUpdate, optimisticCommentUpdate에서 즉시 처리됨
 
 	// 뒤로가기 및 페이지 포커스 시 자동 새로고침
 	useEffect(() => {
@@ -140,7 +138,7 @@ export default function FeedList() {
 	if (!isLoading && feedItems.length === 0) {
 		return (
 			<div className="p-4 text-center">
-				<p className="text-gray-500">아직 게시물이 없습니다.</p>
+				<p className="text-gray-500">아직 레시피가 없습니다.</p>
 			</div>
 		)
 	}
@@ -166,7 +164,7 @@ export default function FeedList() {
 					<DialogHeader>
 						<DialogTitle className="text-2xl font-bold text-center text-gray-900">이제 가입해보세요! 🍳</DialogTitle>
 						<DialogDescription className="text-center text-gray-600 mt-4 leading-relaxed">
-							마음에 드는 레시피와 게시물들이 많았나요?
+							마음에 드는 레시피들이 많았나요?
 							<br />
 							Spoonie에 가입하시면:
 						</DialogDescription>

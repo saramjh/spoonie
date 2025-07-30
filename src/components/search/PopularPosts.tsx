@@ -1,11 +1,11 @@
 'use client'
 
-import PostCard from '@/components/feed/PostCard'
-import PostCardSkeleton from '@/components/feed/PostCardSkeleton'
-import { FeedItem } from '@/hooks/usePosts'
+import PostCard from '@/components/items/PostCard'
+import PostCardSkeleton from '@/components/items/PostCardSkeleton'
+import { Item } from '@/types/item'
 
 interface PopularPostsProps {
-  posts: FeedItem[] | undefined;
+  	posts: Item[] | undefined;
   isLoading: boolean;
 }
 
@@ -13,7 +13,7 @@ export default function PopularPosts({ posts, isLoading }: PopularPostsProps) {
   if (isLoading) {
     return (
       <div>
-        <h2 className="text-lg font-bold mb-4">인기 게시물</h2>
+        <h2 className="text-lg font-bold mb-4">인기 레시피드</h2>
         <div className="space-y-4">
           <PostCardSkeleton />
           <PostCardSkeleton />
@@ -28,7 +28,7 @@ export default function PopularPosts({ posts, isLoading }: PopularPostsProps) {
 
   return (
     <div>
-      <h2 className="text-lg font-bold mb-4">인기 게시물</h2>
+      <h2 className="text-lg font-bold mb-4">인기 레시피드</h2>
       <div className="space-y-4">
         {posts.map((post) => (
           <PostCard key={`popular-${post.item_id}`} item={post} />

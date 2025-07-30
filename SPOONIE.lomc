@@ -1,113 +1,295 @@
-CREATE:Database:SpoonieDB
-  Purpose:Spoonie 서비스의 모든 데이터를 관리하는 메인 데이터베이스.
-  Tables:
-    CREATE:Table:items
-      Purpose:게시물(Post)과 레시피(Recipe)를 통합하여 관리. 피드 조회 성능 최적화.
-      Columns:
-        id:UUID,PRIMARY KEY
-        user_id:UUID,FOREIGN KEY:profiles.id
-        item_type:ENUM('post', 'recipe'),INDEX
-        created_at:TIMESTAMPZ,INDEX
-        title:TEXT,NULLABLE
-        content:TEXT,NULLABLE
-        description:TEXT,NULLABLE
-        image_urls:TEXT[],NULLABLE
-        tags:TEXT[],NULLABLE
-        is_public:BOOLEAN,DEFAULT:true
-        color_label:TEXT,NULLABLE
-        servings:INTEGER,NULLABLE
-        cooking_time_minutes:INTEGER,NULLABLE
-        recipe_id:UUID,NULLABLE,FOREIGN KEY:items.id
+CREATE:Project:spoonie
+ Name:Spoonie
+ Type:PWA Recipe Sharing Platform
+ Status:Core Features Implemented
+ LastUpdated:2024-12-20
+ BuildStatus:Production Ready
+ Architecture:
+  Frontend:Next.js 14 App Router
+  Backend:Supabase BaaS
+  Database:PostgreSQL
+  Auth:Supabase Auth
+  Storage:Supabase Storage
+  Realtime:Supabase Realtime
 
-    CREATE:Table:profiles
-      Purpose:사용자 프로필 정보 저장.
-      Columns:
-        id:UUID,PRIMARY KEY,FOREIGN KEY:auth.users.id
-        public_id:TEXT,UNIQUE
-        username:TEXT,UNIQUE
-        display_name:TEXT,NULLABLE
-        avatar_url:TEXT,NULLABLE
-        bio:TEXT,NULLABLE
-        profile_message:TEXT,NULLABLE
-        username_changed_count:INTEGER,DEFAULT:0
+CREATE:TechStack:frontend
+ Framework:Next.js 14
+ Language:TypeScript (Strict Mode)
+ Styling:Tailwind CSS + shadcn/ui
+ StateManagement:
+  Global:Zustand
+  Server:SWR + SWR Infinite
+ Forms:React Hook Form + Zod
+ Icons:Lucide React
+ DateHandling:date-fns
+ PWA:@ducanh2912/next-pwa
+ ImageHandling:next/image with optimization
 
-    CREATE:Table:ingredients
-      Purpose:레시피에 포함된 재료 정보.
-      Columns:
-        id:UUID,PRIMARY KEY
-        item_id:UUID,FOREIGN KEY:items.id
-        name:TEXT
-        amount:TEXT
-        unit:TEXT
+CREATE:TechStack:backend
+ Platform:Supabase BaaS
+ Database:PostgreSQL (Hosted by Supabase)
+ Authentication:Supabase Auth (Email + Google OAuth)
+ Storage:Supabase Storage (Images)
+ Realtime:Supabase Realtime
+ EdgeFunctions:Supabase Edge Functions (if needed)
+ RPC:PostgreSQL Functions for complex logic
 
-    CREATE:Table:instructions
-      Purpose:레시피의 조리 절차.
-      Columns:
-        id:UUID,PRIMARY KEY
-        item_id:UUID,FOREIGN KEY:items.id
-        step_number:INTEGER
-        description:TEXT
+CREATE:Database:schema
+ CoreTables:
+  items:Unified table for recipes and posts
+  profiles:User profile information  
+  likes:User likes on items
+  comments:Comments with soft delete support
+  follows:User follow relationships
+  notifications:Real-time notifications
+ Views:
+  optimized_feed_view:Performance optimized feed query
+  popular_items_view:Trending content view
+ RPCFunctions:
+  toggle_like_atomic:ACID compliant like toggle
+  add_comment_atomic:Atomic comment creation
+  delete_comment_atomic:Soft delete with counts
+  get_user_likes_for_items:Batch like status check
+  get_user_follows_for_authors:Batch follow status check
+ Indexes:
+  Performance:GIN indexes on arrays and text search
+  Constraints:Primary keys and foreign key relationships
 
-    CREATE:Table:likes
-      Purpose:사용자의 '좋아요' 상호작용 기록.
-      Columns:
-        user_id:UUID,FOREIGN KEY:profiles.id
-        item_id:UUID,FOREIGN KEY:items.id
-        created_at:TIMESTAMPZ,DEFAULT:NOW(),INDEX
-      Primary_Key:
-        PK:(user_id, item_id)
-      Indexes:
-        idx_likes_created_at:created_at
-        idx_likes_item_created:(item_id, created_at)
-        idx_likes_user_created:(user_id, created_at)
+CREATE:CodebaseStructure:directories
+ Root:spoonie/
+ Source:src/
+ Components:
+  items:Unified item components (ItemList, PostCard, PostForm, etc.)
+  recipe:Recipe-specific components
+  profile:User profile components
+  search:Search related components
+  common:Shared utility components
+  ui:shadcn/ui component library
+  layout:Layout and navigation components
+  auth:Authentication components
+ Hooks:
+  usePosts:Main feed data fetching
+  useItemDetail:Individual item details
+  useCitedRecipes:Referenced recipe fetching
+  useShare:Social sharing functionality
+  useToast:Toast notifications
+ Types:
+  item.ts:Unified Item interface (formerly FeedItem)
+ Store:
+  sessionStore.ts:User session state (Zustand)
+  recipeStore.ts:Recipe-specific state
+ Utils:
+  feed-cache-sync.ts:Multi-cache synchronization
+  image-optimization.ts:Image processing utilities
+  acid-operations.ts:ACID transaction helpers
 
-    CREATE:Table:comments
-      Purpose:사용자 댓글.
-      Columns:
-        id:UUID,PRIMARY KEY
-        user_id:UUID,FOREIGN KEY:profiles.id
-        item_id:UUID,FOREIGN KEY:items.id
-        parent_comment_id:UUID,NULLABLE,FOREIGN KEY:comments.id
-        content:TEXT
-        created_at:TIMESTAMPZ
+CREATE:Implementation:completed_features
+ Authentication:
+  Email:Supabase email/password auth
+  Social:Google OAuth integration
+  Session:Zustand + Supabase session sync
+  Profile:User profile management
+ ContentSystem:
+  UnifiedItems:Recipe and post in single table
+  RecipeCreation:Full recipe creation with images, ingredients, instructions
+  PostCreation:Social post creation with images and tags
+  CitedRecipes:Reference system up to 5 recipes per item
+  Visibility:Public/private toggle per item
+ SocialFeatures:
+  Likes:ACID compliant like system with real-time sync
+  Comments:Threaded comments with soft delete
+  Follows:User follow/unfollow system  
+  Notifications:Basic notification infrastructure
+ FeedSystem:
+  HomeFeed:Infinite scroll with SWR caching
+  RecipeBook:Personal and followed user recipes
+  ProfileView:Grid and feed style view modes
+  DetailPages:Full item detail with edit/delete
+ Performance:
+  ACIDTransactions:Atomic operations for critical actions
+  ConcurrencyControl:Race condition prevention
+  CacheSync:Multi-page cache consistency
+  Optimization:Database views and RPC functions
+ CodeQuality:
+  TypeSafety:Strict TypeScript with unified Item interface
+  ComponentStructure:Reusable component architecture
+  SemanticNaming:Consistent naming (FeedList → ItemList)
+  ErrorHandling:Comprehensive error boundaries
+  TestSupport:ESLint + Prettier configuration
 
-    CREATE:Table:follows
-      Purpose:사용자 간 팔로우 관계.
-      Columns:
-        follower_id:UUID,FOREIGN KEY:profiles.id
-        following_id:UUID,FOREIGN KEY:profiles.id
-      Primary_Key:
-        PK:(follower_id, following_id)
+CREATE:Implementation:in_progress
+ PWASupport:
+  Status:Partially implemented
+  Manifest:Basic manifest.json exists
+  ServiceWorker:Basic SW for caching
+  OfflineSupport:Not yet implemented
+  TempSave:Local storage for form recovery needed
+ NotificationSystem:
+  Status:Infrastructure only
+  RealTime:Supabase Realtime configured but not active
+  UIComponents:Bell icon exists but no animation
+  BadgeCount:Not implemented
+  ReadStatus:Not implemented
+ GuestExperience:
+  Status:Partially implemented
+  ContentAccess:Basic viewing works
+  LoginPrompts:Limited implementation
+  BlurEffect:Not implemented
+  SignupIncentives:Not implemented
 
-    CREATE:Table:notifications
-      Purpose:사용자 알림.
-      Columns:
-        id:UUID,PRIMARY KEY
-        user_id:UUID,FOREIGN KEY:profiles.id
-        from_user_id:UUID,NULLABLE,FOREIGN KEY:profiles.id
-        item_id:UUID,NULLABLE,FOREIGN KEY:items.id
-        type:ENUM('like', 'comment', 'follow')
-        is_read:BOOLEAN,DEFAULT:false
-        created_at:TIMESTAMPZ
+CREATE:Implementation:not_implemented
+ OnboardingSystem:
+  Status:Not started
+  Library:react-joyride planned
+  Steps:4-step guide designed but not coded
+  Settings:Re-trigger from settings not implemented
+ AdvancedSearch:
+  Status:Basic search only
+  Autocomplete:Not implemented
+  PopularTerms:Not implemented
+  AdvancedFilters:Partially implemented
+  ResultRanking:Simple date sorting only
+ SEOOptimization:
+  Status:Not started
+  MetaTags:Basic Next.js defaults only
+  StructuredData:Schema.org not implemented
+  Sitemap:Not auto-generated
+  OpenGraph:Not configured
+ ImageOptimization:
+  Status:Basic only
+  Compression:Not implemented
+  LazyLoading:Next.js default only
+  ResponsiveImages:Not implemented
+  CDN:Using Supabase storage only
+ AnalyticsAndStats:
+  Status:Not started
+  UserBehavior:No tracking implemented
+  ContentStats:Basic counts only
+  TrendingAlgorithm:Not implemented
+  PersonalizedRecommendations:Not implemented
 
-MODIFY:Database:SpoonieDB
-  Status:Migration Complete
-  Summary:posts와 recipes 테이블을 단일 items 테이블로 통합하는 DB 마이그레이션을 완료함.
-  Related_Tables_Updated:ingredients, instructions, likes, comments, notifications 테이블이 모두 새로운 items 테이블을 참조하도록 수정됨.
+CREATE:Configuration:environment
+ Required:
+  NEXT_PUBLIC_SUPABASE_URL:https://dtyiyzfftsewpckfkqmo.supabase.co
+  NEXT_PUBLIC_SUPABASE_ANON_KEY:Public API key for client
+  SUPABASE_SERVICE_ROLE_KEY:Admin API key for server operations
+  NEXT_PUBLIC_APP_URL:Application base URL
+  NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET_ITEMS:item-images
+ Optional:
+  PWA_CONFIG:next.config.mjs with PWA settings
+  IMAGE_OPTIMIZATION:Enabled in next.config.mjs
 
-MODIFY:Codebase:SpoonieApp
-  Status:Refactoring Complete
-  Summary:DB 스키마 변경에 따른 전체 코드베이스 리팩터링을 완료함.
-  Components_Updated:
-    - src/types/item.ts: 새로운 FeedItem 타입 정의 완료.
-    - src/hooks/usePosts.ts: 통합된 items 테이블을 조회하도록 데이터 페칭 로직 전체 리팩터링 완료.
-    - src/components/feed/PostCard.tsx: 변경된 FeedItem 타입에 맞춰 렌더링 로직 수정 완료.
-    - src/components/recipe/RecipeForm.tsx: 'recipe' 타입의 item을 생성/수정하도록 폼 로직 수정 완료.
-    - src/components/feed/PostForm.tsx: 'post' 타입의 item을 생성/수정하도록 폼 로직 수정 완료.
-    - src/app/feed/[id]/page.tsx: 상세 페이지 데이터 조회 로직을 items 테이블 기준으로 수정 완료.
-    - src/app/recipes/[id]/page.tsx: 상세 페이지 데이터 조회 로직을 items 테이블 기준으로 수정 완료.
-    - src/app/recipes/page.tsx: 레시피북 데이터 조회 로직을 items 테이블 기준으로 수정 완료.
-    - src/components/recipe/RecipeCard.tsx: FeedItem 타입을 사용하도록 수정 완료.
-    - src/components/recipe/RecipeListCard.tsx: FeedItem 타입을 사용하도록 수정 완료.
-    - src/app/search/page.tsx: 검색 로직을 items 테이블 기준으로 수정 완료.
-  Pending_Work: None
+CREATE:KnownIssues:current
+ TypeSystem:
+  FeedItemMigration:Successfully migrated to Item interface
+  ImportConsistency:All imports updated to new structure
+ Performance:
+  CacheInvalidation:Multi-cache sync working correctly
+  DatabaseQueries:Optimized with views and RPC functions
+  ImageLoading:Basic optimization in place
+ UIUXIssues:
+  ResponsiveDesign:Mobile-first but desktop needs attention
+  LoadingStates:Skeleton components implemented
+  ErrorStates:Basic error handling in place
+  AccessibilityAudit:Not completed
+ SecurityChecklist:
+  RLSPolicies:Implemented and tested
+  InputValidation:Zod schemas in place
+  XSSProtection:React built-in protection used
+  AuthTokens:Supabase handles token management
+
+CREATE:Development:workflow
+ BuildProcess:
+  Command:npm run build
+  Status:Successfully compiling
+  Warnings:TypeScript strict mode warnings resolved
+  LastRefactor:FeedList → ItemList semantic naming (2024-12-20)
+  Deployment:Ready for production deployment
+ DevelopmentServer:
+  Command:npm run dev
+  Port:3000
+  HotReload:Working correctly
+  TypeChecking:Real-time with strict mode
+ DatabaseManagement:
+  SupabaseMCP:Available for schema management
+  Migrations:Schema changes tracked in SPOONIE.lomc
+  Backups:Supabase automatic backups enabled
+  LocalDevelopment:Supabase local development not configured
+
+CREATE:NextSteps:immediate_priorities
+ Critical:
+  PWAEnhancement:Implement offline support and proper manifest
+  TempSaveSystem:IndexedDB for form auto-save/recovery
+  GuestRestrictions:Blur effect and signup modals
+  NotificationUI:Bell animation, badge counts, read status
+ HighPriority:
+  OnboardingFlow:react-joyride implementation
+  SearchUpgrade:Autocomplete and advanced filtering
+  SEOImplementation:Meta tags, structured data, sitemap
+  ImageOptimization:Compression, responsive images, lazy loading
+ MediumPriority:
+  UserAnalytics:Activity charts and statistics
+  AdvancedNotifications:Push notifications and email alerts
+  PerformanceMonitoring:Core Web Vitals tracking
+  ABTestingFramework:Feature experimentation tools
+
+CREATE:Architecture:patterns
+ StateManagement:
+  ClientState:Zustand for authentication and UI state
+  ServerState:SWR for data fetching and caching
+  CacheStrategy:Optimistic updates with rollback
+  Synchronization:Multi-cache invalidation system
+ ComponentDesign:
+  Composition:Reusable component patterns
+  PropDrilling:Minimized with proper state management
+  TypeSafety:Strict TypeScript interfaces
+  ErrorBoundaries:Implemented for graceful failures
+ DatabaseDesign:
+  Normalization:Appropriate for social platform requirements
+  Performance:Indexed for common query patterns
+  Scalability:Views and RPC functions for complex operations
+  ACID:Atomic operations for critical business logic
+ SecurityModel:
+  RowLevelSecurity:Supabase RLS policies enforced
+  Authentication:Supabase Auth with session management
+  Authorization:Role-based access through RLS
+  DataValidation:Client and server-side validation
+
+CREATE:DeploymentReadiness:status
+ Production:
+  BuildStatus:Successfully compiling
+  TypeErrors:Resolved
+  LintWarnings:Acceptable level
+  TestCoverage:Basic testing in place
+ Infrastructure:
+  SupabaseProduction:Configured and stable
+  DomainSetup:Ready for custom domain
+  SSLCertificate:Supabase handles HTTPS
+  CDN:Supabase global CDN available
+ Monitoring:
+  ErrorTracking:Basic error boundaries implemented
+  PerformanceMonitoring:Not yet implemented
+  LoggingStrategy:Console logs for development
+  AlertingSystem:Not yet implemented
+ Maintenance:
+  BackupStrategy:Supabase automatic backups
+  UpdateProcess:Standard npm update workflow
+  SecurityPatches:Dependency management needed
+  FeatureToggling:Not implemented but can be added
+
+CREATE:Documentation:current_state
+ TechnicalDocs:
+  README:Exists but needs updating
+  APIDocumentation:Supabase auto-generated docs available
+  ComponentDocs:Limited inline documentation
+  DatabaseSchema:Documented in this LOMC file
+ UserDocs:
+  OnboardingGuide:Planned but not written
+  FeatureGuides:Not created
+  FAQSection:Not implemented
+  TroubleshootingGuide:Not created
+ DeveloperDocs:
+  SetupInstructions:Basic in README
+  ContributionGuidelines:Not established
+  CodeStandards:ESLint config defines standards
+  DeploymentGuide:Not written

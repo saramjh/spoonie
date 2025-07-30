@@ -4,115 +4,139 @@ import { useState, useEffect, useCallback } from "react"
 import useSWRInfinite from "swr/infinite"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import type { User } from "@supabase/supabase-js"
-import type { FeedItem } from "@/types/item" // 통합된 타입 정의를 가져옵니다.
+import type { Item } from "@/types/item" // 통합된 타입 정의를 가져옵니다.
+import type { ServerFeedData } from "@/lib/server-data"
 
 
 const PAGE_SIZE = 10
 
 // SWR 키 생성 함수. 이제 userId만 필요합니다.
-const getKey = (pageIndex: number, previousPageData: FeedItem[] | null, userId: string | null) => {
+const getKey = (pageIndex: number, previousPageData: Item[] | null, userId: string | null) => {
   if (previousPageData && !previousPageData.length) return null // 끝에 도달
   return `items|${pageIndex}|${userId || "guest"}`
 }
 
-// 🚀 최적화된 피드 fetcher (기존: 3개 쿼리 → 새로운: 1개 뷰 + 1개 사용자 함수)
-const fetcher = async (key: string): Promise<FeedItem[]> => {
+/**
+ * 홈 피드 데이터 페칭 함수
+ * 레시피(recipe)와 레시피드(post) 모두 포함한 통합 피드를 가져옵니다
+ * 
+ * @param key - SWR 키 (페이지 인덱스와 사용자 ID 포함)
+ * @returns 레시피와 레시피드가 포함된 FeedItem 배열
+ */
+const fetcher = async (key: string): Promise<Item[]> => {
   const supabase = createSupabaseBrowserClient()
   const [, pageIndexStr, userId] = key.split("|")
   const pageIndex = parseInt(pageIndexStr, 10)
   const offset = pageIndex * PAGE_SIZE
 
-  console.log(`🚀 Fetching optimized feed page ${pageIndex} for user ${userId}`)
-  const startTime = Date.now()
-
-  // 1. 최적화된 뷰에서 한 번에 모든 데이터 조회 (통계 포함)
+  // 최적화된 뷰에서 레시피(recipe)와 레시피드(post) 데이터 조회 - RLS가 권한 자동 처리
   const { data: items, error } = await supabase
     .from("optimized_feed_view")
-    .select("*")
+    .select(`
+      *,
+      profiles!user_id (
+        username,
+        display_name,
+        avatar_url,
+        public_id
+      )
+    `)
     .range(offset, offset + PAGE_SIZE - 1)
 
   if (error) {
-    console.error("❌ Error fetching optimized feed:", error)
     throw error
   }
   
   if (!items || items.length === 0) {
-    console.log(`📭 No items found for page ${pageIndex}`)
     return []
   }
 
   const itemIds = items.map((item) => item.id)
+  const authorIds = Array.from(new Set(items.map((item) => item.user_id))) // 중복 제거
   const userLikesMap = new Map<string, boolean>()
+  const userFollowsMap = new Map<string, boolean>()
 
-  // 2. 사용자별 좋아요 상태만 별도 조회 (로그인 시에만)
+  // 사용자별 좋아요 상태와 팔로우 상태 조회 (로그인 시에만)
   if (userId && userId !== "guest") {
     try {
+      // 좋아요 상태 조회
       const { data: userLikes, error: likesError } = await supabase
         .rpc('get_user_likes_for_items', {
           user_id_param: userId,
           item_ids_param: itemIds
         })
 
-      if (likesError) {
-        console.warn("⚠️ Failed to fetch user likes, continuing without:", likesError)
-      } else {
-        userLikes?.forEach((like: { item_id: string; is_liked: boolean }) => {
+      if (!likesError && userLikes) {
+        userLikes.forEach((like: { item_id: string; is_liked: boolean }) => {
           userLikesMap.set(like.item_id, like.is_liked)
         })
       }
-    } catch (error) {
-      console.warn("⚠️ User likes query failed, continuing without:", error)
+
+      // 팔로우 상태 조회
+      const { data: userFollows, error: followsError } = await supabase
+        .rpc('get_user_follows_for_authors', {
+          user_id_param: userId,
+          author_ids_param: authorIds
+        })
+
+      if (!followsError && userFollows) {
+        userFollows.forEach((follow: { author_id: string; is_following: boolean }) => {
+          userFollowsMap.set(follow.author_id, follow.is_following)
+        })
+      }
+    } catch {
+      // 에러 발생 시 조용히 무시하고 기본값 사용
     }
   }
 
-  // 3. 최종 데이터 조합 (뷰에서 미리 계산된 통계 활용)
-  const feedItems: FeedItem[] = items.map((item) => {
+  // 레시피(recipe)와 레시피드(post)를 통합한 FeedItem 배열 생성
+  	const feedItems: Item[] = items.map((item) => {
+    // profiles 데이터 평면화 - 서버와 동일한 방식
+    const profileData = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
+    
+    // 🔧 좋아요 상태를 정확히 구분: undefined(불확실) vs false(확실히 안함) vs true(확실히 함)
+    const userLikeStatus = userLikesMap.get(item.id)
+    const isLikedValue = userId && userId !== "guest" 
+      ? (userLikeStatus !== undefined ? userLikeStatus : false) // 로그인 시: 정확한 상태 또는 false(임시, LikeButton에서 DB 확인)
+      : false // 비로그인 시: 항상 false
+    
     return {
-			id: item.id, // 타입 에러 수정을 위한 id 필드 추가
+			id: item.id,
       item_id: item.id,
       user_id: item.user_id,
-			item_type: item.item_type as "post" | "recipe",
+			item_type: item.item_type as "post" | "recipe", // "recipe": 요리법, "post": 일반 피드
       created_at: item.created_at,
       is_public: item.is_public,
-      display_name: item.display_name || item.username || "사용자",
-      avatar_url: item.avatar_url || null,
-      user_public_id: item.user_public_id || null,
-      user_email: null, // 이메일은 더 이상 직접 가져오지 않음
+      // 🔧 안정적인 작성자 정보 처리 - profiles에서 가져온 데이터 우선 사용
+      display_name: profileData?.display_name || item.display_name || null,
+      username: profileData?.username || item.username || null,
+      avatar_url: profileData?.avatar_url || item.avatar_url || null,
+      user_public_id: profileData?.public_id || item.user_public_id || null,
+      user_email: null,
       title: item.title,
       content: item.content,
       description: item.description,
       image_urls: item.image_urls,
+      thumbnail_index: item.thumbnail_index ?? 0, // 🖼️ 썸네일 인덱스 (기본값 0)
       tags: item.tags,
       color_label: item.color_label,
       servings: item.servings,
       cooking_time_minutes: item.cooking_time_minutes,
       recipe_id: item.recipe_id,
-			cited_recipe_ids: item.cited_recipe_ids, // 🔥 누락된 필드 추가!
-      likes_count: item.likes_count || 0, // 🚀 뷰에서 미리 계산된 값 사용
-      comments_count: item.comments_count || 0, // 🚀 뷰에서 미리 계산된 값 사용
-      is_liked: userLikesMap.get(item.id) || false,
-      is_following: false, // 팔로우 상태는 별도 로직으로 관리 필요
+			cited_recipe_ids: item.cited_recipe_ids, // 참고 레시피 ID 목록
+      likes_count: item.likes_count || 0,
+      comments_count: item.comments_count || 0,
+      is_liked: isLikedValue, // 🔧 null 허용으로 불확실한 상태 표현
+      is_following: userFollowsMap.get(item.user_id) || false,
     }
   })
 
-  const endTime = Date.now()
-  const fetchDuration = endTime - startTime
-  console.log(`✅ Optimized feed fetch completed in ${fetchDuration}ms for ${feedItems.length} items`)
-
-	console.log(
-		"usePosts: final feedItems with cited_recipe_ids",
-		feedItems.map((item) => ({
-			id: item.item_id,
-			title: item.title,
-			cited_recipe_ids: item.cited_recipe_ids,
-		}))
-	) // 🔍 개선된 디버깅 로그
   return feedItems
 }
 
-export function usePosts() {
-  const [user, setUser] = useState<User | null>(null)
-  const [loadingUser, setLoadingUser] = useState(true)
+export function usePosts(initialData?: ServerFeedData | null) {
+  const [user, setUser] = useState<User | null>(initialData?.currentUser || null)
+  const [loadingUser, setLoadingUser] = useState(!initialData)
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -126,19 +150,62 @@ export function usePosts() {
     fetchUser()
   }, [])
 
-	const { data, error, size, setSize, mutate, isValidating } = useSWRInfinite((pageIndex, previousPageData) => getKey(pageIndex, previousPageData, user?.id ?? null), fetcher, {
+	const { data, error, size, setSize, mutate, isValidating } = useSWRInfinite(
+    (pageIndex, previousPageData) => getKey(pageIndex, previousPageData, user?.id ?? null), 
+    fetcher, 
+    {
       revalidateFirstPage: false,
-      revalidateOnFocus: false,
+      revalidateOnFocus: true, // 🎯 홈화면 포커스 시 최신 데이터 자동 업데이트
       dedupingInterval: 5000, // 5초로 단축 - 더 빠른 실시간 반영
-	})
+      // 🚀 서버에서 미리 로딩된 초기 데이터 활용 (SSR 최적화)
+      fallbackData: initialData?.items ? [initialData.items] : undefined,
+    }
+  )
 
-  const feedItems = data ? ([] as FeedItem[]).concat(...data) : []
+  	const feedItems = data ? ([] as Item[]).concat(...data) : []
   const isLoading = loadingUser || (isValidating && feedItems.length === 0)
   const isEmpty = data?.[0]?.length === 0
   const isReachingEnd = isEmpty || (data && data[data.length - 1]?.length < PAGE_SIZE)
 
   const customMutate = useCallback(() => {
     return mutate()
+  }, [mutate])
+
+  // 🔍 백그라운드 스마트 동기화 (30초마다 자동)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log(`🔍 Background sync: Quietly updating home feed cache`)
+      // 🚀 업계 표준: 삭제 직후에는 background sync 건너뛰기 (Instagram/Twitter 방식)
+      // mutate 호출시 revalidate: false로 하여 서버에서 다시 가져오지 않음
+      mutate(undefined, { revalidate: false }) // 캐시만 정리, 서버 재검증 없음
+    }, 30000) // 30초마다
+
+    return () => clearInterval(interval)
+  }, [mutate])
+
+  // 🎯 페이지 가시성 변화 감지 - 상세페이지에서 돌아올 때 즉시 동기화
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log(`👁️ 홈화면이 다시 보임 - 최신 데이터로 동기화 시작`)
+        // 첫 페이지만 빠르게 revalidate하여 최신 변경사항 반영
+        mutate(undefined, { revalidate: true })
+      }
+    }
+
+    const handleFocus = () => {
+      console.log(`🎯 홈화면이 포커스를 받음 - 캐시 새로고침`)
+      mutate(undefined, { revalidate: true })
+    }
+
+    // 이벤트 리스너 등록
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('focus', handleFocus)
+    }
   }, [mutate])
 
   return {

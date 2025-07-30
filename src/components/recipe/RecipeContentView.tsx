@@ -193,18 +193,25 @@ export default function RecipeContentView({ initialServings, ingredients, steps 
 					<CardTitle className="text-lg">재료</CardTitle>
 				</CardHeader>
 				<CardContent className="p-6">
-					<ul className="list-disc list-inside space-y-2">
+					<div className="space-y-3">
 						{scaledIngredients.length > 0 ? (
 							scaledIngredients.map((ing, index) => (
-								<li key={index} className="text-gray-700 p-2 -mx-2 rounded-md odd:bg-gray-50">
-									<span className="font-medium">{ing.name}:</span> {formatQuantity(ing.amount)}
-									{ing.unit}
-								</li>
+								<div key={index} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:border-orange-200 transition-colors bg-gradient-to-r from-gray-50/80 to-white">
+									<div className="flex items-center gap-3">
+										<span className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-3 py-1.5 rounded-full text-sm font-medium shadow-sm">
+											{ing.name}
+										</span>
+									</div>
+									<div className="flex items-center gap-1 text-gray-700 font-medium">
+										<span className="text-lg">{formatQuantity(ing.amount)}</span>
+										<span className="text-sm text-gray-500">{ing.unit}</span>
+									</div>
+								</div>
 							))
 						) : (
-							<p className="text-gray-500">등록된 재료가 없습니다.</p>
+							<p className="text-gray-500 text-center py-4">등록된 재료가 없습니다.</p>
 						)}
-					</ul>
+					</div>
 				</CardContent>
 			</Card>
 
@@ -232,7 +239,7 @@ export default function RecipeContentView({ initialServings, ingredients, steps 
 													<Image src={step.image_url} alt={`Step ${step.order} image`} fill className="object-cover" />
 												</div>
 											)}
-											<p className="text-gray-800 whitespace-pre-wrap leading-relaxed">{step.description}</p>
+											<p className="text-gray-800 whitespace-pre-wrap break-words leading-relaxed">{step.description}</p>
 										</div>
 									</div>
 								</li>

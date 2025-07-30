@@ -19,12 +19,24 @@ interface ImageUploaderProps {
 	thumbnailIndex?: number
 	onThumbnailChange?: (index: number) => void
 	showThumbnailSelector?: boolean
+	isEditMode?: boolean // 🚀 수정 모드 여부
 }
 
-export default function ImageUploader({ images, onImagesChange, maxImages = 5, label = "이미지 업로드", placeholder = "이미지를 추가해주세요", thumbnailIndex = 0, onThumbnailChange, showThumbnailSelector = true }: ImageUploaderProps) {
+export default function ImageUploader({ images, onImagesChange, maxImages = 5, label = "이미지 업로드", placeholder = "이미지를 추가해주세요", thumbnailIndex = 0, onThumbnailChange, showThumbnailSelector = true, isEditMode = false }: ImageUploaderProps) {
 	const fileInputRef = useRef<HTMLInputElement>(null)
 	const { toast } = useToast()
 	const [isProcessing, setIsProcessing] = useState(false)
+	
+	// 🚀 SSA: 썸네일 인덱스 동기화를 위한 내부 상태
+	const [currentThumbnailIndex, setCurrentThumbnailIndex] = useState(thumbnailIndex)
+	
+	// 🚀 SSA: thumbnailIndex prop 변경 감지 및 동기화
+	useEffect(() => {
+		if (thumbnailIndex !== currentThumbnailIndex) {
+			console.log(`🎯 ImageUploader: Syncing thumbnail index ${currentThumbnailIndex} → ${thumbnailIndex}`)
+			setCurrentThumbnailIndex(thumbnailIndex)
+		}
+	}, [thumbnailIndex, currentThumbnailIndex])
 
 	const handleFileSelect = useCallback(
 		async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,15 +94,17 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 			const newImages = images.filter((_, i) => i !== index)
 			onImagesChange(newImages)
 
-			if (onThumbnailChange && thumbnailIndex >= newImages.length && newImages.length > 0) {
-				onThumbnailChange(0)
-			}
-		},
-		[images, onImagesChange, thumbnailIndex, onThumbnailChange]
+					if (onThumbnailChange && currentThumbnailIndex >= newImages.length && newImages.length > 0) {
+			onThumbnailChange(0)
+		}
+	},
+	[images, onImagesChange, currentThumbnailIndex, onThumbnailChange]
 	)
 
 	const setThumbnail = useCallback(
 		(index: number) => {
+			console.log(`🎯 ImageUploader: Setting thumbnail to index ${index}`)
+			setCurrentThumbnailIndex(index)
 			if (onThumbnailChange) {
 				onThumbnailChange(index)
 			}
@@ -116,19 +130,30 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 			{images.length > 0 ? (
 				<div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
 					{images.map((image, index) => (
-						<Card key={image.id || index} className="relative group overflow-hidden aspect-square">
-							{showThumbnailSelector && index === thumbnailIndex && (
-								<div className="absolute top-2 left-2 z-10 bg-orange-500 text-white rounded-full p-1 flex items-center justify-center">
-									<Star className="w-3 h-3 fill-current" />
+						<Card key={`${image.file.name}-${index}`} className={`relative group overflow-hidden aspect-square transition-all duration-200 ${
+							showThumbnailSelector && index === currentThumbnailIndex 
+								? 'ring-4 ring-blue-500 ring-offset-2 shadow-lg scale-105' 
+								: 'hover:shadow-md'
+						}`}>
+							{showThumbnailSelector && index === currentThumbnailIndex && (
+								<div className="absolute top-2 left-2 z-20 bg-blue-500 text-white rounded-full p-1.5 flex items-center justify-center shadow-lg">
+									<Star className="w-4 h-4 fill-current" />
+								</div>
+							)}
+							{showThumbnailSelector && index === currentThumbnailIndex && (
+								<div className="absolute inset-0 bg-blue-500 bg-opacity-20 z-10 flex items-center justify-center">
+									<div className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+										현재 썸네일
+									</div>
 								</div>
 							)}
 
-							<button onClick={() => removeImage(index)} className="absolute top-2 right-2 z-10 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+							<button type="button" onClick={() => removeImage(index)} className="absolute top-2 right-2 z-10 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
 								<X className="w-3 h-3" />
 							</button>
 
-							{showThumbnailSelector && index !== thumbnailIndex && (
-								<button onClick={() => setThumbnail(index)} className="absolute top-2 left-2 z-10 bg-black bg-opacity-50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity" title="썸네일로 설정">
+							{showThumbnailSelector && index !== currentThumbnailIndex && (
+								<button type="button" onClick={() => setThumbnail(index)} className="absolute top-2 left-2 z-10 bg-black bg-opacity-50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity" title="썸네일로 설정">
 									<Star className="w-3 h-3" />
 								</button>
 							)}
@@ -137,7 +162,12 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 
 							<div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-2 opacity-0 group-hover:opacity-100 transition-opacity">
 								<div>{image.width} × {image.height}</div>
-								<div>{formatFileSize(image.file.size)}</div>
+								<div>
+									{image.file.size > 0 
+										? formatFileSize(image.file.size) 
+										: "기존 이미지"
+									}
+								</div>
 							</div>
 						</Card>
 					))}
@@ -168,6 +198,7 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 					<p className="text-xs text-gray-500">JPG, PNG, WEBP 형식의 이미지를 업로드하세요. 자동으로 최적화됩니다.</p>
 				</div>
 			)}
+
 		</div>
 	)
 }

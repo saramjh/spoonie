@@ -1,11 +1,11 @@
 'use client'
 
-import PostCard from '@/components/feed/PostCard'
-import PostCardSkeleton from '@/components/feed/PostCardSkeleton'
-import { FeedItem } from '@/hooks/usePosts'
+import PostCard from '@/components/items/PostCard'
+import PostCardSkeleton from '@/components/items/PostCardSkeleton'
+import { Item } from '@/types/item'
 
 interface SearchResultsProps {
-  results: FeedItem[] | undefined;
+  	results: Item[] | undefined;
   isLoading: boolean;
 }
 

@@ -276,16 +276,33 @@ export default function ProfileEditPage() {
 
 				<div className="space-y-6">
 					<div>
-						<div className="flex items-center justify-between">
-							<Label htmlFor="username">사용자 이름</Label>
+						<Label htmlFor="username">사용자 이름</Label>
+						
+						{/* 입력 필드와 버튼을 함께 감싸는 컨테이너 */}
+						<div className="relative">
+							<Input 
+								id="username" 
+								value={username} 
+								onChange={(e) => setUsername(e.target.value)} 
+								placeholder="한글 10자, 영문 20자 이내" 
+								disabled={!canChangeUsername}
+								className={canChangeUsername ? "pr-20" : ""} // 버튼 공간 확보
+							/>
 							{canChangeUsername && (
-								<Button type="button" variant="outline" size="sm" onClick={handleGenerateUsername} disabled={isGenerating} className="h-8">
-									<RefreshCw className={`w-4 h-4 mr-1 ${isGenerating ? "animate-spin" : ""}`} />
-									자동생성
+								<Button 
+									type="button" 
+									variant="ghost" 
+									size="sm" 
+									onClick={handleGenerateUsername} 
+									disabled={isGenerating} 
+									className="absolute right-1 top-1/2 -translate-y-1/2 h-8 px-3 text-xs hover:bg-orange-50 hover:text-orange-600 transition-colors"
+								>
+									<RefreshCw className={`w-3 h-3 mr-1 ${isGenerating ? "animate-spin" : ""}`} />
+									생성
 								</Button>
 							)}
 						</div>
-						<Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="한글 10자, 영문 20자 이내" disabled={!canChangeUsername} />
+						
 						{!canChangeUsername ? (
 							<p className="text-xs mt-1 text-amber-600">💡 사용자 이름은 1회만 변경 가능합니다. 이미 변경을 완료하셨어요.</p>
 						) : usernameError ? (
@@ -293,7 +310,7 @@ export default function ProfileEditPage() {
 						) : username && username !== (initialProfile?.username || "") ? (
 							<p className="text-xs mt-1 text-orange-600">⚠️ 사용자 이름은 1회만 변경 가능합니다. 신중히 선택해주세요.</p>
 						) : (
-							<p className="text-xs mt-1 text-gray-500">사용자 이름은 1회만 변경할 수 있어요. 자동생성 버튼을 이용해보세요! 🎲</p>
+							<p className="text-xs mt-1 text-gray-500">사용자 이름은 1회만 변경할 수 있어요. 입력 필드의 생성 버튼을 이용해보세요! 🎲</p>
 						)}
 					</div>
 					<div>

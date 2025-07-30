@@ -5,19 +5,19 @@ import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, Command
 import { Badge } from "@/components/ui/badge";
 import { X } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase-client';
-import type { FeedItem } from '@/types/item';
+import type { Item } from '@/types/item';
 import { format } from 'date-fns'; // 날짜 포맷팅을 위해 date-fns 임포트
 
 interface CitedRecipeSearchProps {
-  selectedRecipes: FeedItem[];
-  onSelectedRecipesChange: (recipes: FeedItem[]) => void;
+  selectedRecipes: Item[];
+  onSelectedRecipesChange: (recipes: Item[]) => void;
   maxSelection?: number;
 }
 
 export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesChange, maxSelection = 5 }: CitedRecipeSearchProps) {
   const supabase = createSupabaseBrowserClient();
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<FeedItem[]>([]);
+  const [searchResults, setSearchResults] = useState<Item[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSearch = useCallback(async (query: string) => {
@@ -28,11 +28,25 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
     }
     setIsLoading(true);
 
+    // 검색어 정리: 특수문자 제거 및 정규화
+    const cleanQuery = query
+      .replace(/[,;|\[\]{}()"']/g, ' ') // 특수문자를 공백으로 변경
+      .replace(/\s+/g, ' ') // 연속된 공백을 하나로 정리
+      .trim(); // 앞뒤 공백 제거
+
+    console.log("handleSearch: cleanQuery", cleanQuery); // 정리된 검색어 로그
+
+    if (cleanQuery.length < 2) {
+      setSearchResults([]);
+      setIsLoading(false);
+      return;
+    }
+
     // 1. profiles 테이블에서 검색어에 해당하는 user_id 가져오기
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
       .select('id')
-      .or(`display_name.ilike.%${query}%,username.ilike.%${query}%`)
+      .or(`display_name.ilike.%${cleanQuery}%,username.ilike.%${cleanQuery}%`)
       .limit(10);
 
     console.log("handleSearch: profileData", profileData); // profileData 로그
@@ -49,6 +63,11 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
     console.log("handleSearch: matchingUserIds", matchingUserIds); // matchingUserIds 로그
 
     // 2. items 테이블에서 레시피명 또는 user_id로 검색
+    let itemQuery = `title.ilike.%${cleanQuery}%`;
+    if (matchingUserIds.length > 0) {
+      itemQuery += `,user_id.in.(${matchingUserIds.join(',')})`;
+    }
+
     const { data: itemData, error: itemError } = await supabase
       .from('items')
       .select(
@@ -58,7 +77,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
         `
       )
       .eq('item_type', 'recipe')
-      .or(`title.ilike.%${query}%,user_id.in.(${matchingUserIds.join(',')})`) // user_id.in 필터 사용
+      .or(itemQuery)
       .limit(10);
 
     console.log("handleSearch: itemData", itemData); // itemData 로그
@@ -68,8 +87,8 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
       console.error('Error searching items:', itemError);
       setSearchResults([]);
     } else {
-      // FeedItem 타입에 맞게 데이터 변환
-      const formattedData: FeedItem[] = itemData.map(item => ({
+      // Item 타입에 맞게 데이터 변환
+      const formattedData: Item[] = itemData.map(item => ({
         item_id: item.id,
         user_id: item.user_id,
         item_type: item.item_type,
@@ -100,7 +119,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
     setIsLoading(false);
   }, [supabase]);
 
-  const handleSelectRecipe = (recipe: FeedItem) => {
+  const handleSelectRecipe = (recipe: Item) => {
     if (selectedRecipes.length < maxSelection && !selectedRecipes.some(r => r.item_id === recipe.item_id)) {
       onSelectedRecipesChange([...selectedRecipes, recipe]);
     }

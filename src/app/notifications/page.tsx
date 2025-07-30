@@ -6,7 +6,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { createSupabaseBrowserClient } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
-import { useRefresh } from '@/contexts/RefreshContext'
+
 import { usePathname } from 'next/navigation'
 import { formatDistanceToNowStrict } from 'date-fns'
 import { ko } from 'date-fns/locale'
@@ -22,12 +22,15 @@ interface Notification {
     username: string;
     avatar_url: string;
   } | null;
+  related_item: {
+    item_type: 'recipe' | 'post';
+  } | null;
 }
 
 export default function NotificationsPage() {
   const supabase = createSupabaseBrowserClient();
   const { toast } = useToast();
-  const { registerRefreshFunction, unregisterRefreshFunction } = useRefresh();
+
   const pathname = usePathname();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,7 +56,8 @@ export default function NotificationsPage() {
           type,
           is_read,
           post_id,
-          from_profile:profiles!notifications_from_user_id_fkey ( username, avatar_url )
+          from_profile:profiles!notifications_from_user_id_fkey ( username, avatar_url ),
+          related_item:items!notifications_post_id_fkey ( item_type )
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
@@ -61,14 +65,28 @@ export default function NotificationsPage() {
       if (error) {
         toast({ title: '알림 불러오기 실패', description: "알림을 불러오는 중 오류가 발생했습니다. " + error.message, variant: 'destructive' });
       } else {
-        setNotifications(data as Notification[]);
+        // 데이터 변환 처리
+        const transformedData: Notification[] = (data || []).map((item: any) => ({
+          id: item.id,
+          created_at: item.created_at,
+          type: item.type,
+          is_read: item.is_read,
+          post_id: item.post_id,
+          from_profile: Array.isArray(item.from_profile) 
+            ? item.from_profile[0] || null 
+            : item.from_profile,
+          related_item: Array.isArray(item.related_item) 
+            ? item.related_item[0] || null 
+            : item.related_item,
+        }));
+        setNotifications(transformedData);
       }
       setLoading(false);
     };
 
     fetchUserAndNotifications();
 
-    registerRefreshFunction(pathname, fetchUserAndNotifications);
+    // 🚀 Optimistic Updates 시스템에서는 복잡한 등록 로직 불필요
 
     const channel = supabase
       .channel('realtime-notifications')
@@ -84,7 +102,7 @@ export default function NotificationsPage() {
 
     return () => {
       supabase.removeChannel(channel);
-      unregisterRefreshFunction(pathname);
+      // 🚀 Optimistic Updates: 등록 해제 로직 불필요
     };
   }, [supabase, toast, currentUser?.id]);
 
@@ -104,12 +122,15 @@ export default function NotificationsPage() {
   };
   
   const generateNotificationMessage = (notification: Notification) => {
-    const username = notification.from_profile?.username || '누군가';
+    const itemType = notification.related_item?.item_type;
+    const itemName = itemType === 'recipe' ? '레시피를' : '레시피드를';
+    const itemNameWithParticle = itemType === 'recipe' ? '레시피에' : '레시피드에';
+    
     switch (notification.type) {
       case 'like':
-        return `님이 회원님의 게시물을 좋아합니다.`;
+        return `님이 회원님의 ${itemName} 좋아합니다.`;
       case 'comment':
-        return `님이 회원님의 게시물에 댓글을 남겼습니다.`;
+        return `님이 회원님의 ${itemNameWithParticle} 댓글을 남겼습니다.`;
       case 'follow':
         return `님이 팔로우하기 시작했습니다.`;
       case 'admin':
