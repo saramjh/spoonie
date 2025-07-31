@@ -31,6 +31,7 @@ interface ProfileGridOverlayProps {
 
 function ProfileGridOverlay({ item, sessionUser }: ProfileGridOverlayProps) {
 	const router = useRouter()
+	const { createLinkWithOrigin } = useNavigation()
 	
 	// 🚀 SSA 기반 캐시 연동 (토스식 단순화)
 	const fallbackItem = {
@@ -134,7 +135,8 @@ function ProfileGridOverlay({ item, sessionUser }: ProfileGridOverlayProps) {
 					// 🎯 단일클릭 - 상세페이지 이동 (300ms 후)
 					const timer = setTimeout(() => {
 						const isRecipe = item.item_type === "recipe";
-						const detailUrl = isRecipe ? `/recipes/${item.id}` : `/posts/${item.id}`;
+						const baseUrl = isRecipe ? `/recipes/${item.id}` : `/posts/${item.id}`;
+						const detailUrl = createLinkWithOrigin(baseUrl);
 						router.push(detailUrl);
 						setClickTimer(null);
 					}, 300);

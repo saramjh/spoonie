@@ -154,7 +154,7 @@ const PAGE_SIZE = 12
 
 	// 🔄 SSA 기반: 사용자별 좋아요/팔로우 상태 조회 (프로필 페이지와 동일한 방식)
 	// ✅ SSA 원칙: 홈 피드와 동일한 사용자 상호작용 데이터 처리
-	const itemIds = data.map((item) => item.id)
+	const itemIds = data.map((item: Item) => item.id)
 	const userLikesMap = new Map<string, boolean>()
 	const userFollowsMap = new Map<string, boolean>()
 

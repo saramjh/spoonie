@@ -37,7 +37,22 @@ export function useNavigation(options: NavigationOptions = {}) {
   
   // 🧭 이전 경로 추적 (Smart Navigation용)
   const [previousPath, setPreviousPath] = useState<string | null>(null)
-  const [navigationHistory, setNavigationHistory] = useState<string[]>([])
+  const [navigationHistory, setNavigationHistory] = useState<string[]>(() => {
+    // SessionStorage에서 네비게이션 히스토리 복원
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = sessionStorage.getItem('spoonie_nav_history')
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          console.log(`🔄 Navigation history restored:`, parsed)
+          return Array.isArray(parsed) ? parsed : []
+        }
+      } catch (error) {
+        console.warn('Failed to restore navigation history:', error)
+      }
+    }
+    return []
+  })
 
   // 🧭 이전 경로 추적 - 현재 경로가 변경될 때마다 업데이트
   useEffect(() => {
@@ -45,12 +60,23 @@ export function useNavigation(options: NavigationOptions = {}) {
       setPreviousPath(prevPath => {
         // 첫 방문이 아닌 경우에만 이전 경로 업데이트
         if (prevPath && prevPath !== pathname) {
-          setNavigationHistory(prev => [...prev.slice(-4), prevPath]) // 최근 5개 경로만 유지
+          const newHistory = [...navigationHistory.slice(-4), prevPath] // 최근 5개 경로만 유지
+          setNavigationHistory(newHistory)
+          
+          // 🚀 SessionStorage 영속화 (새로고침/직접 접근 대응)
+          if (typeof window !== 'undefined') {
+            try {
+              sessionStorage.setItem('spoonie_nav_history', JSON.stringify(newHistory))
+              console.log(`🧭 Navigation history saved:`, newHistory)
+            } catch (error) {
+              console.warn('Failed to save navigation history:', error)
+            }
+          }
         }
         return pathname
       })
     }
-  }, [pathname, trackHistory])
+  }, [pathname, trackHistory, navigationHistory])
 
   /**
    * 🚀 인텔리전트 페이지 사전 로딩
@@ -260,13 +286,50 @@ export function useNavigation(options: NavigationOptions = {}) {
   }, [cleanupCache])
 
   /**
+   * 🌐 URL 쿼리에서 origin 정보 추출
+   */
+  const getOriginFromURL = useCallback((): string | null => {
+    if (typeof window === 'undefined') return null
+    
+    const urlParams = new URLSearchParams(window.location.search)
+    return urlParams.get('from')
+  }, [])
+
+  /**
    * 🧭 스마트 리턴 경로 결정 (사용자가 어디서 왔는지 기반)
    */
   const getSmartReturnPath = useCallback((currentItemId?: string): string => {
-    const lastPath = navigationHistory[navigationHistory.length - 1]
+    // 1. URL origin 파라미터 확인 (최우선)
+    const urlOrigin = getOriginFromURL()
+    if (urlOrigin) {
+      console.log(`🎯 Using URL origin: ${urlOrigin}`)
+      return decodeURIComponent(urlOrigin)
+    }
     
-    // 네비게이션 히스토리가 없으면 홈으로
-    if (!lastPath) return "/"
+    // 2. Navigation History 확인
+    const lastPath = navigationHistory[navigationHistory.length - 1]
+    console.log(`📍 Navigation History:`, navigationHistory)
+    console.log(`📍 Last Path:`, lastPath)
+    
+    // 네비게이션 히스토리가 없으면 세션 스토리지에서 확인
+    if (!lastPath) {
+      if (typeof window !== 'undefined') {
+        try {
+          const savedHistory = sessionStorage.getItem('spoonie_nav_history')
+          if (savedHistory) {
+            const parsed = JSON.parse(savedHistory)
+            const savedLastPath = parsed[parsed.length - 1]
+            if (savedLastPath) {
+              console.log(`🔄 Using saved last path: ${savedLastPath}`)
+              return savedLastPath
+            }
+          }
+        } catch (error) {
+          console.warn('Failed to read saved navigation history:', error)
+        }
+      }
+      return "/"
+    }
     
     // 레시피북에서 온 경우 → 레시피북으로
     if (lastPath === "/recipes" || lastPath.startsWith("/recipes?")) {
@@ -290,19 +353,26 @@ export function useNavigation(options: NavigationOptions = {}) {
     
     // 기타 경우 → 브라우저 히스토리 백 또는 홈
     return "/"
-  }, [navigationHistory])
+  }, [navigationHistory, getOriginFromURL])
 
   /**
    * 🚀 스마트 네비게이션 (적절한 곳으로 돌아가기)
    */
-  const navigateBack = useCallback((itemId?: string) => {
+  const navigateBack = useCallback((itemId?: string, options?: { replace?: boolean }) => {
     const returnPath = getSmartReturnPath(itemId)
     
     console.log(`🧭 Smart Navigation: Returning to ${returnPath} from ${pathname}`)
     console.log(`📍 Navigation History:`, navigationHistory)
+    console.log(`🔄 Replace Mode: ${options?.replace ? 'ON' : 'OFF'}`)
     
-    // SSA 시스템이 자동으로 캐시를 갱신하므로 단순히 네비게이션만 수행
-    router.push(returnPath)
+    // 🚀 업계 표준: History Replace를 통한 네비게이션 체인 정리
+    if (options?.replace) {
+      // 수정폼 → 상세페이지: 수정폼을 히스토리에서 제거
+      router.replace(returnPath)
+    } else {
+      // 일반적인 뒤로가기: 히스토리 유지
+      router.push(returnPath)
+    }
   }, [getSmartReturnPath, pathname, navigationHistory, router])
 
   /**
@@ -317,6 +387,17 @@ export function useNavigation(options: NavigationOptions = {}) {
     }
   }, [])
 
+  /**
+   * 🔗 Origin 정보가 포함된 링크 생성
+   */
+  const createLinkWithOrigin = useCallback((path: string, currentPath?: string): string => {
+    const origin = currentPath || pathname
+    if (!origin || origin === path) return path
+    
+    const separator = path.includes('?') ? '&' : '?'
+    return `${path}${separator}from=${encodeURIComponent(origin)}`
+  }, [pathname])
+
   return {
     preloadRoute,
     handleLinkHover,
@@ -328,6 +409,8 @@ export function useNavigation(options: NavigationOptions = {}) {
     getSmartReturnPath,
     navigateBack,
     previousPath,
-    navigationHistory
+    navigationHistory,
+    createLinkWithOrigin,
+    getOriginFromURL
   }
 } 

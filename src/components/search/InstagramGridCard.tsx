@@ -5,6 +5,7 @@ import Image from "next/image"
 import { ChefHat, MessageSquare } from "lucide-react"
 
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
+import { useNavigation } from "@/hooks/useNavigation"
 import type { Item } from "@/types/item"
 
 interface InstagramGridCardProps {
@@ -14,6 +15,7 @@ interface InstagramGridCardProps {
 export default function InstagramGridCard({ item }: InstagramGridCardProps) {
   // 🚀 SSA 기반 캐시 연동 (React Hook을 먼저 호출)
   const itemId = item.item_id || item.id;
+  const { createLinkWithOrigin } = useNavigation()
   const fallbackItem = {
     ...item,
     likes_count: item.likes_count || 0,
@@ -30,7 +32,8 @@ export default function InstagramGridCard({ item }: InstagramGridCardProps) {
   
   // 🚀 SSA 캐시 연동 완료 (통계 정보는 상세페이지에서만)
   
-  const detailUrl = `${item.item_type === 'recipe' ? '/recipes' : '/posts'}/${itemId}`
+  const baseUrl = `${item.item_type === 'recipe' ? '/recipes' : '/posts'}/${itemId}`
+  const detailUrl = createLinkWithOrigin(baseUrl)
   
   return (
     <Link href={detailUrl} className="block group">

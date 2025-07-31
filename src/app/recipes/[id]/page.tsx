@@ -4,12 +4,16 @@ import { useParams } from "next/navigation"
 import ItemDetailView from "@/components/common/ItemDetailView"
 import PostCardSkeleton from "@/components/items/PostCardSkeleton"
 import { useItemDetail } from "@/hooks/useItemDetail"
+import { useNavigation } from "@/hooks/useNavigation"
 
 export default function RecipeDetailPage() {
 	const params = useParams()
 	const itemId = params.id as string
 
 	console.log(`📍 RecipeDetailPage: Loading recipe with ID: ${itemId}`)
+
+	// 🧭 네비게이션 체인 유지 (중간 경유지 역할)
+	useNavigation({ trackHistory: true })
 
 	// 통합 아이템 상세 훅 사용
 	const { item, isLoading, error, refresh } = useItemDetail(itemId)

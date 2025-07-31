@@ -13,6 +13,7 @@ import { Heart, MessageCircle, Clock, Users, ChefHat, Bookmark } from "lucide-re
 import { SimplifiedLikeButton } from "@/components/items/SimplifiedLikeButton"
 import { BookmarkButton } from "@/components/items/BookmarkButton"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
+import { useNavigation } from "@/hooks/useNavigation"
 import { useSessionStore } from "@/store/sessionStore"
 import type { Item } from "@/types/item"
 
@@ -28,6 +29,7 @@ interface RecipeCardProps {
 export default function RecipeCard({ item, isSelectable, isSelected, onSelectChange, onSelect, showAuthor }: RecipeCardProps) {
   const { session } = useSessionStore()
   const router = useRouter()
+  const { createLinkWithOrigin } = useNavigation()
   
   // 🚀 SSA 기반 캐시 연동 (이미지 포함)
   const fallbackItem = {
@@ -50,7 +52,8 @@ export default function RecipeCard({ item, isSelectable, isSelected, onSelectCha
     }
   };
 
-  const detailUrl = `${item.item_type === 'recipe' ? '/recipes' : '/posts'}/${item.item_id}`;
+  const baseUrl = `${item.item_type === 'recipe' ? '/recipes' : '/posts'}/${item.item_id}`;
+  const detailUrl = createLinkWithOrigin(baseUrl);
 
   return (
     <div className="relative">

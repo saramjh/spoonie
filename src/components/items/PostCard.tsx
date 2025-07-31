@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { useShare } from "@/hooks/useShare"
+import { useNavigation } from "@/hooks/useNavigation"
 import { useToast } from "@/hooks/use-toast"
 import type { User } from "@supabase/supabase-js"
 import type { Item } from "@/types/item"
@@ -46,20 +47,22 @@ export default function PostCard({
   const { toast } = useToast()
   const router = useRouter()
   const { share } = useShare()
+  const { createLinkWithOrigin } = useNavigation()
 
   // 🎯 아이템 기본 정보
   const isRecipe = item.item_type === "recipe"
   const detailUrl = isRecipe ? `/recipes/${item.item_id}` : `/posts/${item.item_id}`
   const isOwnItem = currentUser && currentUser.id === item.user_id
 
-  // 🛡️ 안전한 네비게이션 핸들러
+  // 🛡️ 안전한 네비게이션 핸들러 (Origin 정보 포함)
   const handleEditClick = useCallback(async () => {
     try {
-      await router.push(`${detailUrl}/edit`)
+      const editPath = createLinkWithOrigin(`${detailUrl}/edit`)
+      await router.push(editPath)
     } catch (error) {
       console.error('Navigation error:', error)
     }
-  }, [router, detailUrl])
+  }, [router, detailUrl, createLinkWithOrigin])
 
   // 🛡️ Hook 안정성을 위한 값 안정화
   const stableItemId = useMemo(() => item.item_id || item.id, [item.item_id, item.id])

@@ -16,6 +16,7 @@ import ImageCarousel from "@/components/common/ImageCarousel"
 import RecipeContentView from "@/components/recipe/RecipeContentView"
 import { timeAgo } from "@/lib/utils"
 import { useShare } from "@/hooks/useShare"
+import { useNavigation } from "@/hooks/useNavigation"
 import { useToast } from "@/hooks/use-toast"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import useSWR, { useSWRConfig } from "swr"
@@ -52,6 +53,7 @@ const fetcher = async (key: string) => {
 
 export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	const router = useRouter()
+	const { createLinkWithOrigin } = useNavigation()
 	const { share } = useShare()
 	const { toast } = useToast()
 	const supabase = createSupabaseBrowserClient()
@@ -112,9 +114,10 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	// 작성자 여부 확인
 	const isOwnItem = currentUser && currentUser.id === item.user_id
 	
-	// 수정 버튼 핸들러
+	// 수정 버튼 핸들러 (Origin 정보 포함)
 	const handleEdit = () => {
-		const editPath = isRecipe ? `/recipes/${item.item_id}/edit` : `/posts/${item.item_id}/edit`
+		const baseEditPath = isRecipe ? `/recipes/${item.item_id}/edit` : `/posts/${item.item_id}/edit`
+		const editPath = createLinkWithOrigin(baseEditPath)
 		router.push(editPath)
 	}
 	

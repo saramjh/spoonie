@@ -27,7 +27,7 @@ import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 interface PostFormProps {
 	isEditMode?: boolean
 	initialData?: Item
-	onNavigateBack?: (itemId?: string) => void // 🧭 스마트 네비게이션 콜백
+	onNavigateBack?: (itemId?: string, options?: { replace?: boolean }) => void // 🧭 스마트 네비게이션 콜백
 }
 
 const postSchema = z.object({
@@ -403,7 +403,8 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 			
 			// 🧭 스마트 네비게이션: 사용자가 온 곳으로 적절히 돌아가기
 			if (onNavigateBack) {
-				onNavigateBack(itemId)
+				// 🚀 업계 표준: 수정 완료 후 History Replace로 수정폼 제거
+				onNavigateBack(itemId, { replace: isEditMode })
 			} else {
 				// 폴백: 홈화면으로 이동 (새로운 아이템이 이미 캐시에 추가됨)
 				router.push("/")

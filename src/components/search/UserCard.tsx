@@ -3,6 +3,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { User } from "lucide-react"
+import { useNavigation } from "@/hooks/useNavigation"
 import type { Item } from "@/types/item"
 
 // 👤 유저 검색 결과 타입 (search/page.tsx와 동일)
@@ -20,8 +21,11 @@ interface UserCardProps {
 }
 
 export default function UserCard({ user }: UserCardProps) {
+  const { createLinkWithOrigin } = useNavigation()
+  const profileUrl = createLinkWithOrigin(`/profile/${user.user_id}`)
+  
   return (
-    <Link href={`/profile/${user.user_id}`} className="block">
+    <Link href={profileUrl} className="block">
       <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
         <div className="flex items-center space-x-3 mb-3">
           {/* 👤 유저 아바타 */}
