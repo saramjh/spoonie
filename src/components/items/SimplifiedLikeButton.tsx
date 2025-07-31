@@ -110,7 +110,13 @@ export const SimplifiedLikeButton = forwardRef<HTMLButtonElement, SimplifiedLike
   const [showLikersModal, setShowLikersModal] = useState(false)
 
   // 🚀 업계 표준: 완전한 Single Source of Truth
-  const handleLike = useCallback(async () => {
+  const handleLike = useCallback(async (e?: React.MouseEvent) => {
+    // 🛡️ 이벤트 전파 방지 - 상위 링크 클릭 방지
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    
     // 🛡️ 기본 검증
     if (!currentUserId || isAuthLoading || isProcessingRef.current) {
       return
@@ -179,7 +185,11 @@ export const SimplifiedLikeButton = forwardRef<HTMLButtonElement, SimplifiedLike
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => setShowLikersModal(true)}
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            setShowLikersModal(true)
+          }}
           disabled={isAuthLoading}
           className="p-1 text-gray-600 hover:text-gray-800 transition-colors"
         >

@@ -109,7 +109,13 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
   const lastClickTimeRef = useRef(0)
 
   // 🚀 SSA 표준: 완전한 Single Source of Truth
-  const handleBookmark = useCallback(async () => {
+  const handleBookmark = useCallback(async (e?: React.MouseEvent) => {
+    // 🛡️ 이벤트 전파 방지 - 상위 링크 클릭 방지
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    
     // 🛡️ 기본 검증 (SimplifiedLikeButton과 동일)
     if (!currentUserId || isAuthLoading || isProcessingRef.current) {
       return

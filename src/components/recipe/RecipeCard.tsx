@@ -69,11 +69,11 @@ export default function RecipeCard({ item, isSelectable, isSelected, onSelectCha
         </div>
       )}
       
-      {/* 링크 영역 - 체크박스 완전 분리 */}
+      {/* 🎨 전체 카드를 링크로 감싸기 */}
       <Link href={detailUrl} className="block">
         <Card className="relative group overflow-hidden bg-white border-0 rounded-lg sm:rounded-xl shadow-sm hover:shadow-xl transition-all duration-500 transform hover:scale-[1.02] hover:-translate-y-1">
-      {/* 🖼️ 토스 스타일: 대형 이미지 영역 (황금비율 적용) */}
-      <div className="relative w-full aspect-[4/3] overflow-hidden bg-gradient-to-br from-orange-50 to-orange-100">
+        {/* 🖼️ 토스 스타일: 대형 이미지 영역 (황금비율 적용) */}
+        <div className="relative w-full aspect-[4/3] overflow-hidden bg-gradient-to-br from-orange-50 to-orange-100">
         {cachedItem.image_urls && cachedItem.image_urls.length > 0 ? (
           <Image 
             src={cachedItem.image_urls[cachedItem.thumbnail_index || 0]} 
@@ -207,7 +207,7 @@ export default function RecipeCard({ item, isSelectable, isSelected, onSelectCha
           />
         </div>
       </CardContent>
-    </Card>
+        </Card>
       </Link>
     </div>
   )
