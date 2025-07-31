@@ -51,7 +51,7 @@ export default function UserCard({ user }: UserCardProps) {
               <div key={`${user.user_id}-${index}`} className="aspect-square relative rounded overflow-hidden bg-gray-100">
                 {item.image_urls && item.image_urls.length > 0 ? (
                   <Image 
-                    src={item.image_urls[0]} 
+                    src={item.image_urls[item.thumbnail_index || 0]} 
                     alt={item.title || "Preview"} 
                     fill 
                     className="object-cover" 

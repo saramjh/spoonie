@@ -6,10 +6,14 @@ import PostForm from "@/components/items/PostForm"
 import PostCardSkeleton from "@/components/items/PostCardSkeleton"
 import { useItemDetail } from "@/hooks/useItemDetail"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
+import { useNavigation } from "@/hooks/useNavigation"
 
 export default function PostEditPage() {
 	const params = useParams()
 	const itemId = params.id as string
+
+	// 🧭 스마트 네비게이션 (이전 경로 추적)
+	const { navigateBack } = useNavigation({ trackHistory: true })
 
 	// 🚀 SSA: 기본 데이터 로딩 (완전한 상세 정보 포함)
 	const { item: baseItem, isLoading, error } = useItemDetail(itemId)
@@ -109,5 +113,9 @@ export default function PostEditPage() {
 
 	console.log("🎯 PostEditPage: Using initial data with thumbnail_index:", initialData.thumbnail_index)
 
-	return <PostForm isEditMode={true} initialData={initialData} />
+	return <PostForm 
+		isEditMode={true} 
+		initialData={initialData} 
+		onNavigateBack={navigateBack}
+	/>
 }

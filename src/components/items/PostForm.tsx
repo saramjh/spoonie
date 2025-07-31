@@ -27,6 +27,7 @@ import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 interface PostFormProps {
 	isEditMode?: boolean
 	initialData?: Item
+	onNavigateBack?: (itemId?: string) => void // 🧭 스마트 네비게이션 콜백
 }
 
 const postSchema = z.object({
@@ -46,7 +47,7 @@ type PostFormValues = z.infer<typeof postSchema>
  * @param isEditMode - 수정 모드 여부 (true: 수정, false: 생성)
  * @param initialData - 수정 시 초기 데이터 (FeedItem 타입)
  */
-export default function PostForm({ isEditMode = false, initialData }: PostFormProps) {
+export default function PostForm({ isEditMode = false, initialData, onNavigateBack }: PostFormProps) {
 	const router = useRouter()
 	const { toast } = useToast()
 	const supabase = createSupabaseBrowserClient()
@@ -400,8 +401,13 @@ export default function PostForm({ isEditMode = false, initialData }: PostFormPr
 			description: "레시피드가 성공적으로 처리되었습니다.",
 		})
 			
-			// 홈화면으로 이동 (새로운 아이템이 이미 캐시에 추가됨)
-			router.push("/")
+			// 🧭 스마트 네비게이션: 사용자가 온 곳으로 적절히 돌아가기
+			if (onNavigateBack) {
+				onNavigateBack(itemId)
+			} else {
+				// 폴백: 홈화면으로 이동 (새로운 아이템이 이미 캐시에 추가됨)
+				router.push("/")
+			}
 		} catch (error) {
 			console.error("Post submission error:", error)
 			toast({

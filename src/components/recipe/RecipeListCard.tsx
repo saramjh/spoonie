@@ -5,9 +5,14 @@ import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Clock, Heart, MessageCircle, Users, ChefHat, Flame, TrendingUp } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Clock, Heart, MessageCircle, Users, ChefHat, Flame, TrendingUp, Bookmark } from "lucide-react"
 import { getColorClass } from "@/lib/color-options"
 import { formatCount, formatCompactTime } from "@/lib/utils"
+import { SimplifiedLikeButton } from "@/components/items/SimplifiedLikeButton"
+import { BookmarkButton } from "@/components/items/BookmarkButton"
+import { useSSAItemCache } from "@/hooks/useSSAItemCache"
+import { useSessionStore } from "@/store/sessionStore"
 import type { Item } from "@/types/item"
 
 interface RecipeListCardProps {
@@ -27,6 +32,21 @@ export default function RecipeListCard({
   onSelect,
   showAuthor = false
 }: RecipeListCardProps) {
+  const { session } = useSessionStore()
+  
+  // 🚀 SSA 기반 캐시 연동 (이미지 포함)
+  const fallbackItem = {
+    ...item,
+    likes_count: item.likes_count || 0,
+    comments_count: item.comments_count || 0,
+    is_liked: item.is_liked || false,
+    is_bookmarked: (item as Item & { is_bookmarked?: boolean }).is_bookmarked || false,
+    image_urls: item.image_urls || null, // 🖼️ 섬네일 실시간 업데이트 지원
+    thumbnail_index: item.thumbnail_index || 0
+  }
+  const cachedItem = useSSAItemCache(item.item_id, fallbackItem)
+  const stableItemId = item.item_id || item.id
+  
   const handleSelectChange = (checked: boolean) => {
     if (onSelectChange) {
       onSelectChange(checked);
@@ -35,10 +55,10 @@ export default function RecipeListCard({
     }
   };
 
-  // 토스 스타일: 퀄리티 스코어 계산
+  // 토스 스타일: 퀄리티 스코어 계산 (캐시된 데이터 사용)
   const getQualityScore = () => {
-    const likes = item.likes_count || 0;
-    const comments = item.comments_count || 0;
+    const likes = cachedItem.likes_count || 0;
+    const comments = cachedItem.comments_count || 0;
     return likes + (comments * 2); // 댓글을 더 높게 평가
   };
 
@@ -72,9 +92,9 @@ export default function RecipeListCard({
         <div className="flex">
           {/* 🖼️ 토스 스타일: 좌측 이미지 영역 - 브랜드 일관성 */}
           <div className="relative w-20 h-20 sm:w-28 sm:h-28 flex-shrink-0 bg-gradient-to-br from-orange-50 to-orange-100 overflow-hidden">
-            {item.image_urls && item.image_urls.length > 0 ? (
+            {cachedItem.image_urls && cachedItem.image_urls.length > 0 ? (
               <Image 
-                src={item.image_urls[0]} 
+                src={cachedItem.image_urls[cachedItem.thumbnail_index || 0]} 
                 alt={item.title || "Recipe Image"} 
                 fill
                 className="object-cover group-hover:scale-110 transition-transform duration-500" 
@@ -182,23 +202,50 @@ export default function RecipeListCard({
               
               {/* 두 번째 행: 소셜 메트릭스 + 시간 (Instagram 스타일) */}
               <div className="flex items-center justify-between">
-                {/* 소셜 증명 - 축약된 숫자로 안전하게 */}
-                <div className="flex items-center gap-2 sm:gap-3">
-                  {/* 좋아요 - 축약 표시 */}
-                  <div className="flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs">
-                    <Heart className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-red-500 fill-current" />
-                    <span className="font-medium text-gray-700 min-w-[1rem]">
-                      {formatCount(item.likes_count || 0)}
-                    </span>
+                {/* 🚀 SSA 기반 상호작용 가능한 소셜 메트릭스 */}
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  {/* SSA 기반 좋아요 버튼 */}
+                  <div className="scale-75 sm:scale-90">
+                    <SimplifiedLikeButton 
+                      itemId={stableItemId} 
+                      itemType={item.item_type}
+                      authorId={item.user_id}
+                      currentUserId={session?.id}
+                      initialLikesCount={cachedItem.likes_count || 0}
+                      initialHasLiked={cachedItem.is_liked || false}
+                      cachedItem={cachedItem}
+                    />
                   </div>
                   
-                  {/* 댓글 - 축약 표시 */}
-                  <div className="flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs">
-                    <MessageCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-500" />
-                    <span className="font-medium text-gray-700 min-w-[1rem]">
-                      {formatCount(item.comments_count || 0)}
-                    </span>
-                  </div>
+                  {/* 댓글 수 표시 (클릭시 상세페이지로) */}
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={(e) => {
+                      e.preventDefault()
+                      window.location.href = detailUrl
+                    }}
+                    className="h-auto p-0.5 hover:bg-blue-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-0.5 sm:gap-1">
+                      <MessageCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-500" />
+                      <span className="font-medium text-gray-700 text-[10px] sm:text-xs min-w-[1rem]">
+                        {formatCount(cachedItem.comments_count || 0)}
+                      </span>
+                    </div>
+                  </Button>
+                  
+                  {/* SSA 기반 북마크 버튼 */}
+                  <BookmarkButton
+                    itemId={stableItemId}
+                    itemType={item.item_type}
+                    currentUserId={session?.id}
+                    initialBookmarksCount={(cachedItem as any).bookmarks_count || 0}
+                    initialIsBookmarked={(cachedItem as any).is_bookmarked || false}
+                    cachedItem={cachedItem}
+                    size="icon"
+                    className="h-4 w-4 sm:h-5 sm:w-5 p-0.5 hover:bg-orange-100 transition-colors"
+                  />
                 </div>
                 
                 {/* 시간 - 축약 형태 */}

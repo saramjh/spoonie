@@ -6,12 +6,16 @@ import RecipeForm from "@/components/recipe/RecipeForm"
 import PostCardSkeleton from "@/components/items/PostCardSkeleton"
 import { useItemDetail } from "@/hooks/useItemDetail"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
+import { useNavigation } from "@/hooks/useNavigation"
 
 export default function RecipeEditPage() {
   const params = useParams()
   const itemId = params.id as string
 
   console.log("RecipeEditPage: Loading recipe with ID:", itemId)
+
+  // 🧭 스마트 네비게이션 (이전 경로 추적)
+  const { navigateBack } = useNavigation({ trackHistory: true })
 
   // 🚀 SSA: 기본 데이터 로딩 (완전한 상세 정보 포함)
   const { item: baseItem, isLoading, error } = useItemDetail(itemId)
@@ -115,5 +119,8 @@ export default function RecipeEditPage() {
 
   console.log("🎯 RecipeEditPage: Using initial data with thumbnail_index:", initialData.thumbnail_index)
 
-  return <RecipeForm initialData={initialData} />
+  return <RecipeForm 
+    initialData={initialData} 
+    onNavigateBack={navigateBack}
+  />
 }

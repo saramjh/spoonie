@@ -13,6 +13,7 @@
 
 import { useState, useCallback, useMemo, useEffect } from "react"
 import { mutate } from "swr"
+import { cacheManager } from "@/lib/unified-cache-manager"
 
 interface UseThumbnailOptions {
   itemId?: string | null
@@ -122,9 +123,9 @@ export function useThumbnail({
     // 부모 컴포넌트에 알림
     onThumbnailChange?.(newIndex)
 
-    // 전역 캐시 업데이트 (itemId가 있는 경우만)
+    // 🚀 SSA 기반 전역 캐시 업데이트 (itemId가 있는 경우만)
     if (itemId) {
-      await updateGlobalThumbnailCaches(itemId, newIndex, imageUrls)
+      await cacheManager.updateThumbnail(itemId, newIndex, imageUrls)
     }
   }, [currentIndex, imageUrls, itemId, isValidIndex, onThumbnailChange])
 
@@ -167,75 +168,7 @@ function reorderImagesForDisplay(imageUrls: string[], thumbnailIndex: number): s
 }
 
 /**
- * 🌐 전역 캐시의 썸네일 정보 업데이트
+ * 🌐 전역 캐시의 썸네일 정보 업데이트 (레거시 - 이제 UnifiedCacheManager 사용)
+ * @deprecated 이제 cacheManager.updateThumbnail을 사용합니다
  */
-async function updateGlobalThumbnailCaches(
-  itemId: string,
-  thumbnailIndex: number,
-  imageUrls: string[]
-): Promise<void> {
-  
-  console.log(`🔄 Thumbnail: Updating global caches for item ${itemId}, index ${thumbnailIndex}`)
-
-  const updateItem = (item: any) => {
-    if (item && (item.id === itemId || item.item_id === itemId)) {
-      return {
-        ...item,
-        thumbnail_index: thumbnailIndex,
-        image_urls: imageUrls // 이미지 URL도 동기화
-      }
-    }
-    return item
-  }
-
-  // 📱 홈피드 업데이트
-  await mutate(
-    (key) => typeof key === 'string' && key.startsWith('items|'),
-    (data: any[][] | undefined) => {
-      if (!data || !Array.isArray(data)) return data
-      return data.map(page => {
-        // 🔧 page가 배열인지 안전하게 확인
-        if (!Array.isArray(page)) return page
-        return page.map(updateItem)
-      })
-    },
-    { revalidate: false }
-  )
-
-  // 📚 레시피북 업데이트  
-  await mutate(
-    (key) => typeof key === 'string' && key.startsWith('recipes|'),
-    (data: any[][] | undefined) => {
-      if (!data || !Array.isArray(data)) return data
-      return data.map(page => {
-        // 🔧 page가 배열인지 안전하게 확인
-        if (!Array.isArray(page)) return page
-        return page.map(updateItem)
-      })
-    },
-    { revalidate: false }
-  )
-
-  // 👤 프로필 페이지 업데이트
-  await mutate(
-    (key) => typeof key === 'string' && key.includes('user_items_'),
-    (data: any[][] | undefined) => {
-      if (!data || !Array.isArray(data)) return data
-      return data.map(page => {
-        // 🔧 page가 배열인지 안전하게 확인
-        if (!Array.isArray(page)) return page
-        return page.map(updateItem)
-      })
-    },
-    { revalidate: false }
-  )
-
-  // 📄 상세페이지 업데이트
-  await mutate(
-    `item_details_${itemId}`,
-    (data: any) => updateItem(data),
-    { revalidate: false }
-  )
-
-  console.log(`✅ Thumbnail: Global caches updated for item ${itemId}`)
-} 
+// Legacy function - now using UnifiedCacheManager for SSA consistency 

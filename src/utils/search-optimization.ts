@@ -16,6 +16,13 @@ interface PopularPost {
 		username?: string
 		avatar_url?: string
 	}
+	// 🚀 SSA 원칙: 서버에서 정확한 초기 상태 제공
+	is_liked?: boolean
+	likes_count?: number
+	comments_count?: number
+	item_id?: string
+	item_type?: 'recipe' | 'post'
+	user_id?: string
 }
 
 interface SearchResult {
@@ -32,6 +39,7 @@ interface SearchResult {
 	comments_count?: number // 추가: 댓글 수
 	user_id?: string       // 추가: 사용자 ID
 	is_following?: boolean // 추가: 팔로우 상태
+	is_liked?: boolean     // 🚀 SSA 원칙: 좋아요 상태
 }
 
 interface CachedSearchResults {
@@ -90,7 +98,7 @@ export async function getPopularKeywordsCached(): Promise<Array<{ keyword: strin
 }
 
 /**
- * 캐시된 인기 게시물 조회 (데이터베이스 뷰 활용)
+ * 캐시된 인기 게시물 조회 (데이터베이스 뷰 활용 + 좋아요 상태 포함)
  */
 export async function getPopularPostsCached(): Promise<PopularPost[]> {
 	const cacheKey = 'popular_posts'
@@ -105,6 +113,10 @@ export async function getPopularPostsCached(): Promise<PopularPost[]> {
 	const supabase = createSupabaseBrowserClient()
 
 	try {
+		// 현재 사용자 정보 가져오기
+		const { data: { user } } = await supabase.auth.getUser()
+		const currentUserId = user?.id || null
+
 		// 🚀 미리 계산된 뷰에서 조회 (인덱스 최적화됨)
 		const { data, error } = await supabase
 			.from('popular_items_view')
@@ -116,7 +128,39 @@ export async function getPopularPostsCached(): Promise<PopularPost[]> {
 			return cached?.popularPosts || []
 		}
 
-		const result = data || []
+		let result = data || []
+
+		// 🚀 SSA 원칙: 서버에서 정확한 is_liked 초기 상태 제공
+		if (currentUserId && result.length > 0) {
+			const itemIds = result.map(item => item.item_id || item.id).filter(Boolean)
+			
+			if (itemIds.length > 0) {
+				const { data: likes } = await supabase
+					.from('likes')
+					.select('item_id')
+					.eq('user_id', currentUserId)
+					.in('item_id', itemIds)
+					
+				const likedItemIds = new Set(likes?.map(like => like.item_id) || [])
+				
+				console.log(`🔍 [getPopularPostsCached] Like status for user ${currentUserId}:`, {
+					totalItems: result.length,
+					likedItems: Array.from(likedItemIds),
+					likedCount: likedItemIds.size
+				})
+				
+				result = result.map(item => {
+					const isLiked = likedItemIds.has(item.item_id || item.id)
+					console.log(`🔍 [PopularPost ${item.item_id || item.id}] ${item.title?.substring(0, 20)}: is_liked=${isLiked}`)
+					return {
+						...item,
+						is_liked: isLiked
+					}
+				})
+			}
+		} else {
+			console.log(`🔍 [getPopularPostsCached] No user or no results:`, { currentUserId, resultCount: result.length })
+		}
 		
 		// 캐시 업데이트
 		const currentCache = searchCache.get(cacheKey) || { 

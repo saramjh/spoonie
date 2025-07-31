@@ -4,10 +4,15 @@ import Link from "next/link"
 import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Button } from "@/components/ui/button"
 import { timeAgo, formatCount } from "@/lib/utils"
 import clsx from "clsx"
 import { getColorClass } from "@/lib/color-options"
-import { Heart, MessageCircle, Clock, Users, ChefHat } from "lucide-react"
+import { Heart, MessageCircle, Clock, Users, ChefHat, Bookmark } from "lucide-react"
+import { SimplifiedLikeButton } from "@/components/items/SimplifiedLikeButton"
+import { BookmarkButton } from "@/components/items/BookmarkButton"
+import { useSSAItemCache } from "@/hooks/useSSAItemCache"
+import { useSessionStore } from "@/store/sessionStore"
 import type { Item } from "@/types/item"
 
 interface RecipeCardProps {
@@ -20,6 +25,21 @@ interface RecipeCardProps {
 }
 
 export default function RecipeCard({ item, isSelectable, isSelected, onSelectChange, onSelect, showAuthor }: RecipeCardProps) {
+  const { session } = useSessionStore()
+  
+  // 🚀 SSA 기반 캐시 연동 (이미지 포함)
+  const fallbackItem = {
+    ...item,
+    likes_count: item.likes_count || 0,
+    comments_count: item.comments_count || 0,
+    is_liked: item.is_liked || false,
+    is_bookmarked: (item as Item & { is_bookmarked?: boolean }).is_bookmarked || false,
+    image_urls: item.image_urls || null, // 🖼️ 섬네일 실시간 업데이트 지원
+    thumbnail_index: item.thumbnail_index || 0
+  }
+  const cachedItem = useSSAItemCache(item.item_id, fallbackItem)
+  const stableItemId = item.item_id || item.id
+  
   const handleSelectChange = (checked: boolean) => {
     if (onSelectChange) {
       onSelectChange(checked);
@@ -52,9 +72,9 @@ export default function RecipeCard({ item, isSelectable, isSelected, onSelectCha
         <Card className="relative group overflow-hidden bg-white border-0 rounded-lg sm:rounded-xl shadow-sm hover:shadow-xl transition-all duration-500 transform hover:scale-[1.02] hover:-translate-y-1">
       {/* 🖼️ 토스 스타일: 대형 이미지 영역 (황금비율 적용) */}
       <div className="relative w-full aspect-[4/3] overflow-hidden bg-gradient-to-br from-orange-50 to-orange-100">
-        {item.image_urls && item.image_urls.length > 0 ? (
+        {cachedItem.image_urls && cachedItem.image_urls.length > 0 ? (
           <Image 
-            src={item.image_urls[0]} 
+            src={cachedItem.image_urls[cachedItem.thumbnail_index || 0]} 
             alt={item.title || "Recipe Image"} 
             fill 
             className="object-cover group-hover:scale-110 transition-transform duration-700" 
@@ -137,16 +157,52 @@ export default function RecipeCard({ item, isSelectable, isSelected, onSelectCha
           </div>
         </div>
         
-        {/* 소셜 메트릭스 - 카드 하단 */}
-        <div className="flex items-center gap-2 mt-1.5 sm:mt-2">
-          <div className="flex items-center gap-0.5 text-[8px] sm:text-[10px]">
-            <Heart className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-red-500 fill-current" />
-            <span className="font-medium text-gray-700 min-w-[1rem]">{formatCount(item.likes_count || 0)}</span>
+        {/* 🚀 SSA 기반 상호작용 가능한 소셜 메트릭스 */}
+        <div className="flex items-center justify-between mt-1.5 sm:mt-2">
+          <div className="flex items-center gap-1">
+            {/* SSA 기반 좋아요 버튼 */}
+            <div className="scale-75 sm:scale-90">
+              <SimplifiedLikeButton 
+                itemId={stableItemId} 
+                itemType={item.item_type}
+                authorId={item.user_id}
+                currentUserId={session?.id}
+                initialLikesCount={cachedItem.likes_count || 0}
+                initialHasLiked={cachedItem.is_liked || false}
+                cachedItem={cachedItem}
+              />
+            </div>
+            
+            {/* 댓글 수 표시 (클릭시 상세페이지로) */}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={(e) => {
+                e.preventDefault()
+                window.location.href = detailUrl
+              }}
+              className="h-auto p-0.5 hover:bg-blue-100 transition-colors"
+            >
+              <div className="flex items-center gap-0.5">
+                <MessageCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-500" />
+                <span className="font-medium text-gray-700 text-[8px] sm:text-[10px] min-w-[1rem]">
+                  {formatCount(cachedItem.comments_count || 0)}
+                </span>
+              </div>
+            </Button>
           </div>
-          <div className="flex items-center gap-0.5 text-[8px] sm:text-[10px]">
-            <MessageCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-500" />
-            <span className="font-medium text-gray-700 min-w-[1rem]">{formatCount(item.comments_count || 0)}</span>
-          </div>
+          
+          {/* SSA 기반 북마크 버튼 */}
+          <BookmarkButton
+            itemId={stableItemId}
+            itemType={item.item_type}
+            currentUserId={session?.id}
+            initialBookmarksCount={(cachedItem as any).bookmarks_count || 0}
+            initialIsBookmarked={(cachedItem as any).is_bookmarked || false}
+            cachedItem={cachedItem}
+            size="icon"
+            className="h-5 w-5 sm:h-6 sm:w-6 p-0.5 hover:bg-orange-100 transition-colors"
+          />
         </div>
       </CardContent>
     </Card>

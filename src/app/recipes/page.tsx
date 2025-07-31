@@ -173,6 +173,7 @@ const PAGE_SIZE = 12
 			content: item.content,
 			description: item.description,
 			image_urls: item.image_urls,
+			thumbnail_index: item.thumbnail_index || null, // 🔧 누락된 필드 추가
 			tags: item.tags,
 			color_label: item.color_label,
 			servings: item.servings,
@@ -184,6 +185,8 @@ const PAGE_SIZE = 12
 			comments_count: item.comments_count || (item._count_comments?.[0]?.count ?? 0),
 			is_liked: false, // 레시피북에서는 상호작용 없으므로 기본값
 			is_following: false, // 레시피북에서는 팔로우 상태 불필요
+			bookmarks_count: 0, // 🔧 누락된 필드 추가
+			is_bookmarked: false, // 🔧 누락된 필드 추가
 			// 호환성을 위한 author 필드
 			author: profileData
 		}

@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { useParams, useRouter, usePathname } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import type { User } from "@supabase/supabase-js"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { MoreVertical, Grid, List, Edit, LogOut, Calendar, Users, BookOpen } from "lucide-react"
+import { MoreVertical, Grid, List, Edit, LogOut, Calendar, Users, BookOpen, MessageCircle } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import FollowButton from "@/components/items/FollowButton"
 import PostCard from "@/components/items/PostCard"
@@ -18,9 +18,56 @@ import FollowingModal from "@/components/profile/FollowingModal"
 
 import { useSessionStore } from "@/store/sessionStore"
 import { useFollowStore } from "@/store/followStore" // 🚀 업계 표준: 글로벌 팔로우 상태
+import { SimplifiedLikeButton } from "@/components/items/SimplifiedLikeButton"
+import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import useSWR from "swr"
 import type { Item } from "@/types/item"
 
+// 🚀 SSA 기반 프로필 그리드 오버레이 컴포넌트
+interface ProfileGridOverlayProps {
+	item: Item
+	sessionUser: User | null
+}
+
+function ProfileGridOverlay({ item, sessionUser }: ProfileGridOverlayProps) {
+	// 🚀 SSA 기반 캐시 연동
+	const fallbackItem = {
+		...item,
+		likes_count: item.likes_count || 0,
+		comments_count: item.comments_count || 0,
+		is_liked: item.is_liked || false
+	}
+	const cachedItem = useSSAItemCache(item.item_id, fallbackItem)
+	const stableItemId = item.item_id || item.id
+	
+	return (
+		<div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent p-2">
+			<div className="flex items-center gap-3 text-white text-xs">
+				{/* 🚀 SSA 기반 좋아요 (상태만 연동, 페이지 이동 없음) */}
+				<div 
+					className="scale-75" 
+					onClick={(e) => e.stopPropagation()}
+				>
+					<SimplifiedLikeButton 
+						itemId={stableItemId} 
+						itemType={item.item_type}
+						authorId={item.user_id}
+						currentUserId={sessionUser?.id}
+						initialLikesCount={cachedItem.likes_count || 0}
+						initialHasLiked={cachedItem.is_liked || false}
+						cachedItem={cachedItem}
+					/>
+				</div>
+				
+				{/* 🚀 SSA 기반 댓글 수 (단순 표시, 링크 없음) */}
+				<div className="flex items-center gap-1">
+					<MessageCircle className="w-3 h-3 fill-current" />
+					<span className="font-medium">{cachedItem.comments_count || 0}</span>
+				</div>
+			</div>
+		</div>
+	)
+}
 
 interface UserProfile {
 	id: string
@@ -262,7 +309,6 @@ const fetchCitationCount = async (userId: string) => {
 export default function ProfilePage() {
 	const router = useRouter()
 	const params = useParams()
-	const pathname = usePathname()
 	const userId = params.id as string
 	const supabase = createSupabaseBrowserClient()
 
@@ -272,11 +318,11 @@ export default function ProfilePage() {
 
 	// Zustand store에서 프로필 정보 가져오기
 	const { profile: sessionProfile } = useSessionStore()
-	const { isFollowing: globalIsFollowing, setFollowing } = useFollowStore() // 🚀 업계 표준: 글로벌 팔로우 상태
+	const { setFollowing } = useFollowStore() // 🚀 업계 표준: 글로벌 팔로우 상태
 
 	const [profile, setProfile] = useState<UserProfile | null>(null)
 	// 🚀 업계 표준: SWR로 사용자 아이템 관리 (DataManager 연동)
-	const { data: userItems, error: userItemsError, mutate: mutateUserItems } = useSWR(
+	const { data: userItems } = useSWR(
 		profile ? `user_items_${profile.id}` : null,
 		() => fetchUserItems(profile!.id, sessionUser?.id),
 		{
@@ -332,7 +378,7 @@ export default function ProfilePage() {
 			}
 		}
 		loadAllData()
-	}, [userId, supabase.auth])
+	}, [userId, supabase.auth, setFollowing])
 
 	useEffect(() => {
 		const getSessionUser = async () => {
@@ -579,7 +625,7 @@ export default function ProfilePage() {
 											}`}>
 												<div className="relative aspect-square">
 													{item.image_urls && item.image_urls.length > 0 ? (
-														<Image src={item.image_urls[0]} alt={item.title || ''} fill className="object-cover" />
+														<Image src={item.image_urls[item.thumbnail_index || 0]} alt={item.title || ''} fill className="object-cover" />
 													) : (
 														<div className={`w-full h-full flex items-center justify-center ${
 															isRecipe 
@@ -607,6 +653,12 @@ export default function ProfilePage() {
 															비공개
 														</div>
 													)}
+													
+													{/* 🚀 SSA 기반 상호작용 가능한 오버레이 */}
+													<ProfileGridOverlay 
+														item={item} 
+														sessionUser={sessionUser} 
+													/>
 												</div>
 												<div className="p-2 sm:p-3">
 													<h3 className="font-medium text-xs sm:text-sm text-gray-900 line-clamp-2">{item.title || ''}</h3>

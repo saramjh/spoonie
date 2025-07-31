@@ -5,11 +5,15 @@ import { createSupabaseBrowserClient } from '@/lib/supabase-client'
 import { User } from '@supabase/supabase-js'
 import RecipeForm from "@/components/recipe/RecipeForm"
 import CreateContentAuthPrompt from "@/components/auth/CreateContentAuthPrompt"
+import { useNavigation } from "@/hooks/useNavigation"
 
 export default function NewRecipePage() {
 	const [user, setUser] = useState<User | null>(null)
 	const [isLoading, setIsLoading] = useState(true)
 	const supabase = createSupabaseBrowserClient()
+
+	// 🧭 스마트 네비게이션 (이전 경로 추적)
+	const { navigateBack } = useNavigation({ trackHistory: true })
 
 	useEffect(() => {
 		const checkUser = async () => {
@@ -31,10 +35,10 @@ export default function NewRecipePage() {
 	if (!user) {
 		return (
 			<CreateContentAuthPrompt contentType="recipe">
-				<RecipeForm />
+				<RecipeForm onNavigateBack={navigateBack} />
 			</CreateContentAuthPrompt>
 		)
 	}
 
-	return <RecipeForm />
+	return <RecipeForm onNavigateBack={navigateBack} />
 }

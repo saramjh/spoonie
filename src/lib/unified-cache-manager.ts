@@ -14,7 +14,7 @@ import { createSupabaseBrowserClient } from '@/lib/supabase-client'
 import { Item } from '@/types/item'
 
 export interface CacheOperation {
-  type: 'like' | 'comment' | 'follow' | 'bookmark' | 'create' | 'update' | 'delete' | 'add_new'
+  type: 'like' | 'comment' | 'follow' | 'bookmark' | 'create' | 'update' | 'delete' | 'add_new' | 'thumbnail_update'
   itemId: string
   userId?: string | null
   delta?: number
@@ -760,6 +760,17 @@ export class UnifiedCacheManager {
           updates.is_following = delta ? delta > 0 : true
           break
           
+        case 'thumbnail_update':
+          if (data) {
+            console.log(`🖼️ [calculateUpdates] Thumbnail update:`, {
+              thumbnailIndex: data.thumbnail_index,
+              imageUrls: data.image_urls?.length || 0
+            })
+            updates.thumbnail_index = data.thumbnail_index
+            updates.image_urls = data.image_urls
+          }
+          break
+          
         case 'update':
           if (data) {
             console.log(`🔄 SSA: Updating item with data:`, data)
@@ -971,5 +982,25 @@ export const cacheManager = {
       undefined,
       { revalidate: true }
     )
+  },
+  
+  // 🖼️ SSA 기반 썸네일 업데이트 (모든 캐시 동기화)
+  updateThumbnail: async (itemId: string, thumbnailIndex: number, imageUrls: string[]) => {
+    console.log(`🎯 [CacheManager] Updating thumbnail for item ${itemId}:`, {
+      thumbnailIndex,
+      imageCount: imageUrls.length
+    })
+    
+    const manager = getCacheManager()
+    const rollback = await manager.smartUpdate({
+      type: 'thumbnail_update', 
+      itemId, 
+      userId: '', // 썸네일 업데이트는 userId 불필요
+      delta: 0, // 썸네일 업데이트는 delta 불필요
+      data: { thumbnail_index: thumbnailIndex, image_urls: imageUrls }
+    })
+    
+    console.log(`✅ [CacheManager] Thumbnail updated for item ${itemId}`)
+    return rollback
   }
 } 

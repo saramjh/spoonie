@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useCallback, useRef } from "react"
+import { useEffect, useCallback, useRef, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { useSWRConfig } from "swr"
 
@@ -12,6 +12,7 @@ import { useSWRConfig } from "swr"
 interface NavigationOptions {
   preloadDelay?: number // 마우스 호버 후 사전 로딩 지연 시간 (ms)
   cacheRetention?: number // 이전 페이지 캐시 유지 시간 (ms)
+  trackHistory?: boolean // 이전 경로 추적 여부
 }
 
 interface PreloadedRoute {
@@ -27,11 +28,29 @@ export function useNavigation(options: NavigationOptions = {}) {
   
   const {
     preloadDelay = 300,
-    cacheRetention = 5 * 60 * 1000 // 5분
+    cacheRetention = 5 * 60 * 1000, // 5분
+    trackHistory = false
   } = options
 
   const preloadedRoutesRef = useRef<Map<string, PreloadedRoute>>(new Map())
   const hoverTimeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map())
+  
+  // 🧭 이전 경로 추적 (Smart Navigation용)
+  const [previousPath, setPreviousPath] = useState<string | null>(null)
+  const [navigationHistory, setNavigationHistory] = useState<string[]>([])
+
+  // 🧭 이전 경로 추적 - 현재 경로가 변경될 때마다 업데이트
+  useEffect(() => {
+    if (trackHistory && pathname) {
+      setPreviousPath(prevPath => {
+        // 첫 방문이 아닌 경우에만 이전 경로 업데이트
+        if (prevPath && prevPath !== pathname) {
+          setNavigationHistory(prev => [...prev.slice(-4), prevPath]) // 최근 5개 경로만 유지
+        }
+        return pathname
+      })
+    }
+  }, [pathname, trackHistory])
 
   /**
    * 🚀 인텔리전트 페이지 사전 로딩
@@ -241,6 +260,52 @@ export function useNavigation(options: NavigationOptions = {}) {
   }, [cleanupCache])
 
   /**
+   * 🧭 스마트 리턴 경로 결정 (사용자가 어디서 왔는지 기반)
+   */
+  const getSmartReturnPath = useCallback((currentItemId?: string): string => {
+    const lastPath = navigationHistory[navigationHistory.length - 1]
+    
+    // 네비게이션 히스토리가 없으면 홈으로
+    if (!lastPath) return "/"
+    
+    // 레시피북에서 온 경우 → 레시피북으로
+    if (lastPath === "/recipes" || lastPath.startsWith("/recipes?")) {
+      return "/recipes"
+    }
+    
+    // 프로필 페이지에서 온 경우 → 해당 프로필로
+    if (lastPath.startsWith("/profile/")) {
+      return lastPath
+    }
+    
+    // 검색 결과에서 온 경우 → 검색 페이지로
+    if (lastPath.startsWith("/search")) {
+      return lastPath
+    }
+    
+    // 홈피드에서 온 경우 → 홈으로
+    if (lastPath === "/" || lastPath === "/feed") {
+      return "/"
+    }
+    
+    // 기타 경우 → 브라우저 히스토리 백 또는 홈
+    return "/"
+  }, [navigationHistory])
+
+  /**
+   * 🚀 스마트 네비게이션 (적절한 곳으로 돌아가기)
+   */
+  const navigateBack = useCallback((itemId?: string) => {
+    const returnPath = getSmartReturnPath(itemId)
+    
+    console.log(`🧭 Smart Navigation: Returning to ${returnPath} from ${pathname}`)
+    console.log(`📍 Navigation History:`, navigationHistory)
+    
+    // SSA 시스템이 자동으로 캐시를 갱신하므로 단순히 네비게이션만 수행
+    router.push(returnPath)
+  }, [getSmartReturnPath, pathname, navigationHistory, router])
+
+  /**
    * 🧹 컴포넌트 언마운트 시 정리
    */
   useEffect(() => {
@@ -258,6 +323,11 @@ export function useNavigation(options: NavigationOptions = {}) {
     handleLinkHoverEnd,
     navigateOptimized,
     cleanupCache,
-    isPreloaded: (path: string) => preloadedRoutesRef.current.has(path)
+    isPreloaded: (path: string) => preloadedRoutesRef.current.has(path),
+    // 🧭 Smart Navigation 기능들
+    getSmartReturnPath,
+    navigateBack,
+    previousPath,
+    navigationHistory
   }
 } 

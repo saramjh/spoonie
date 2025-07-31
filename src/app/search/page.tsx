@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
-import { Search as SearchIcon, TrendingUp, User, Grid3X3 } from 'lucide-react';
+import { Search as SearchIcon, TrendingUp, User, Grid3X3, X } from 'lucide-react';
 import useSWR from 'swr';
 import useSWRInfinite from 'swr/infinite';
 
@@ -11,7 +11,8 @@ import InstagramGridCard from '@/components/search/InstagramGridCard';
 import UserCard from '@/components/search/UserCard';
 import type { Item } from '@/types/item';
 import { getPopularKeywordsCached, getPopularPostsCached, optimizedSearch, SearchMetrics } from '@/utils/search-optimization';
-import { useFollowStore } from '@/store/followStore'; // �� 업계 표준: 글로벌 팔로우 상태
+import { useFollowStore } from '@/store/followStore';
+// 🚀 업계 표준: 사용하지 않는 import 제거 // �� 업계 표준: 글로벌 팔로우 상태
 
 // 📊 서버 부담 최소화를 위한 페이지 크기
 const PAGE_SIZE = 12;
@@ -101,6 +102,7 @@ interface SearchResultType {
   tags?: string[];
   likes_count?: number;
   comments_count?: number;
+  is_liked?: boolean; // 🔧 추가: 좋아요 상태
   is_following?: boolean; // 🔧 추가: 팔로우 상태
   cooking_time_minutes?: number;
   servings?: number;
@@ -126,7 +128,7 @@ const convertSearchResultToItem = (searchResult: SearchResultType): Item => {
     created_at: searchResult.created_at || new Date().toISOString(),
     likes_count: searchResult.likes_count || 0,
     comments_count: searchResult.comments_count || 0,
-    is_liked: false,
+    is_liked: searchResult.is_liked || false, // 🔧 검색 결과에서 실제 좋아요 상태 사용
     is_following: searchResult.is_following || false, // 🔧 수정: 검색 결과에서 실제 팔로우 상태 사용
     is_public: true,
     display_name: searchResult.display_name || null,
@@ -139,6 +141,7 @@ const convertSearchResultToItem = (searchResult: SearchResultType): Item => {
     cited_recipe_ids: null,
     ingredients: searchResult.ingredients || undefined,
     instructions: searchResult.instructions || undefined,
+    thumbnail_index: 0, // 🔧 기본 썸네일 인덱스
   };
 };
 
@@ -270,7 +273,7 @@ export default function SearchPage() {
   // 🚀 업계 표준: 검색 결과의 팔로우 상태를 글로벌 상태와 동기화 (무한 루프 방지)
   useEffect(() => {
     if (searchResults.length > 0) {
-      searchResults.forEach((item: any) => {
+      searchResults.forEach((item: Item) => {
         if (item.user_id && item.is_following !== undefined) {
           setFollowing(item.user_id, item.is_following);
         }
@@ -278,6 +281,8 @@ export default function SearchPage() {
       console.log(`✅ SearchPage: Synced follow state for ${searchResults.length} search results`);
     }
   }, [searchResults, setFollowing]);
+
+
 
   return (
     <div className="px-2 py-4 pb-20">
@@ -287,10 +292,20 @@ export default function SearchPage() {
         <Input
           type="text"
           placeholder="레시피, 피드, 사용자 검색..."
-          className="pl-12 pr-4 py-3 rounded-xl bg-gray-50 border-transparent focus:border-orange-500 focus:ring-orange-500 h-14 text-base placeholder:text-gray-500"
+          className={`pl-12 ${searchTerm ? 'pr-12' : 'pr-4'} py-3 rounded-xl bg-gray-50 border-transparent focus:border-orange-500 focus:ring-orange-500 h-14 text-base placeholder:text-gray-500`}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
+        {/* 🚀 유튜브 스타일 X 버튼 (검색어가 있을 때만 표시) */}
+        {searchTerm && (
+          <button
+            onClick={() => setSearchTerm('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center bg-gray-300 hover:bg-gray-400 rounded-full transition-colors duration-200"
+            aria-label="검색어 지우기"
+          >
+            <X className="h-3.5 w-3.5 text-gray-600" />
+          </button>
+        )}
       </div>
 
       {debouncedSearchTerm ? (
@@ -384,7 +399,7 @@ export default function SearchPage() {
                 </div>
               ) : (
                 <div className="space-y-5">
-                  {userResults.map((user: any) => (
+                  {userResults.map((user: UserResult) => (
                     <UserCard key={user.user_id} user={user} />
                   ))}
                 </div>
