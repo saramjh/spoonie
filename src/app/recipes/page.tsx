@@ -32,24 +32,24 @@ const PAGE_SIZE = 12
 		const from = parseInt(pageIndex) * PAGE_SIZE
 		const to = from + PAGE_SIZE - 1
 
-		// 🚀 나의 레시피는 비공개 포함, 모두의 레시피는 공개만
+		// ✅ SSA 원칙: 모든 곳에서 정확한 댓글 수 계산
 		let query
 		if (tab === "my_recipes") {
-			// 나의 레시피: items 테이블 직접 사용하여 비공개 레시피도 포함
-			query = supabase.from("items").select(`
-				*,
-				profiles!user_id(display_name, username, avatar_url, public_id),
-				_count_likes:likes(count),
-				_count_comments:comments(count)
-			`).eq("item_type", "recipe")
+			// 나의 레시피: 정확한 댓글 수 계산 RPC 함수 사용 (optimized_feed_view와 동일한 로직)
+			query = supabase.rpc('get_user_recipes_with_accurate_stats', {
+				target_user_id: userId
+			})
 		} else {
-			// 모두의 레시피: optimized_feed_view 사용 (공개만)
-			query = supabase.from("optimized_feed_view").select(`*, profiles!user_id(display_name, username, avatar_url, public_id)`).eq("item_type", "recipe")
+			// 모두의 레시피: 홈 피드와 완전히 동일한 방식
+			query = supabase.from("optimized_feed_view").select(`
+				*,
+				profiles!user_id(display_name, username, avatar_url, public_id)
+			`).eq("item_type", "recipe")
 		}
 
 	if (tab === "my_recipes") {
 		if (!userId) return []
-		query = query.eq("user_id", userId)
+		// RPC 함수는 이미 사용자 필터링 포함
 
 		if (searchTerm) {
 			// 🔍 재료명과 레시피명 통합 검색
@@ -151,10 +151,48 @@ const PAGE_SIZE = 12
 		return []
 	}
 
-	// 홈 피드와 동일한 데이터 변환 로직 적용
+	// 🔄 SSA 기반: 사용자별 좋아요/팔로우 상태 조회 (프로필 페이지와 동일한 방식)
+	// ✅ SSA 원칙: 홈 피드와 동일한 사용자 상호작용 데이터 처리
+	const itemIds = data.map((item) => item.id)
+	const userLikesMap = new Map<string, boolean>()
+	const userFollowsMap = new Map<string, boolean>()
+
+	if (userId && userId !== "guest") {
+		// 좋아요 상태 확인
+		const { data: userLikes } = await supabase
+			.from("likes")
+			.select("item_id")
+			.eq("user_id", userId)
+			.in("item_id", itemIds)
+
+		userLikes?.forEach((like) => {
+			userLikesMap.set(like.item_id, true)
+		})
+
+		// 팔로우 상태 확인 (작성자들에 대한)
+		const authorIds = [...new Set(data.map((item) => item.user_id))]
+		const { data: userFollows } = await supabase
+			.from("follows")
+			.select("following_id")
+			.eq("follower_id", userId)
+			.in("following_id", authorIds)
+
+		userFollows?.forEach((follow) => {
+			userFollowsMap.set(follow.following_id, true)
+		})
+	}
+
+	// ✅ SSA 기반: 홈 피드와 동일한 데이터 변환 로직 적용
 	return data.map((item) => {
-		// profiles 데이터 평면화 - 서버와 동일한 방식
-		const profileData = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
+		// 🎯 나의 레시피(RPC)는 이미 평면화된 데이터, 모두의 레시피는 profiles 관계 데이터
+		const profileData = tab === "my_recipes" 
+			? item  // RPC 함수에서 이미 평면화됨
+			: (Array.isArray(item.profiles) ? item.profiles[0] : item.profiles)
+		
+		const userLikeStatus = userLikesMap.get(item.id)
+		const isLikedValue = userId && userId !== "guest" 
+			? (userLikeStatus !== undefined ? userLikeStatus : false)
+			: false
 		
 		return {
 			id: item.id,
@@ -163,30 +201,32 @@ const PAGE_SIZE = 12
 			item_type: item.item_type as "post" | "recipe",
 			created_at: item.created_at,
 			is_public: item.is_public,
-			// 작성자 정보 처리 - profiles에서 가져온 데이터 우선 사용
+			// 작성자 정보 처리 - 데이터 소스에 따라 다른 방식
 			display_name: profileData?.display_name || item.display_name || null,
 			username: profileData?.username || item.username || null,
 			avatar_url: profileData?.avatar_url || item.avatar_url || null,
-			user_public_id: profileData?.public_id || item.user_public_id || null,
+			user_public_id: profileData?.public_id || profileData?.user_public_id || item.user_public_id || null,
 			user_email: null,
 			title: item.title,
 			content: item.content,
 			description: item.description,
 			image_urls: item.image_urls,
-			thumbnail_index: item.thumbnail_index || null, // 🔧 누락된 필드 추가
+			thumbnail_index: item.thumbnail_index || null,
 			tags: item.tags,
 			color_label: item.color_label,
 			servings: item.servings,
 			cooking_time_minutes: item.cooking_time_minutes,
 			recipe_id: item.recipe_id,
 			cited_recipe_ids: item.cited_recipe_ids,
-			// ✅ 핵심: 데이터 소스에 따른 좋아요/댓글 수 처리
-			likes_count: item.likes_count || (item._count_likes?.[0]?.count ?? 0),
-			comments_count: item.comments_count || (item._count_comments?.[0]?.count ?? 0),
-			is_liked: false, // 레시피북에서는 상호작용 없으므로 기본값
-			is_following: false, // 레시피북에서는 팔로우 상태 불필요
-			bookmarks_count: 0, // 🔧 누락된 필드 추가
-			is_bookmarked: false, // 🔧 누락된 필드 추가
+			// ✅ SSA 원칙: 모든 곳에서 정확한 좋아요/댓글 수 사용
+			likes_count: item.likes_count || 0,
+			comments_count: item.comments_count || 0,  // 🎯 이제 삭제된 댓글 제외된 정확한 값
+			is_liked: tab === "my_recipes" 
+				? (item.is_liked || false)  // RPC 함수에서 이미 계산됨
+				: isLikedValue,             // 별도 계산 필요
+			is_following: userFollowsMap.get(item.user_id) || false,
+			bookmarks_count: 0,
+			is_bookmarked: false,
 			// 호환성을 위한 author 필드
 			author: profileData
 		}

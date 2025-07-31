@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -33,6 +34,7 @@ export default function RecipeListCard({
   showAuthor = false
 }: RecipeListCardProps) {
   const { session } = useSessionStore()
+  const router = useRouter()
   
   // 🚀 SSA 기반 캐시 연동 (이미지 포함)
   const fallbackItem = {
@@ -223,7 +225,7 @@ export default function RecipeListCard({
                     size="sm" 
                     onClick={(e) => {
                       e.preventDefault()
-                      window.location.href = detailUrl
+                      router.push(detailUrl)
                     }}
                     className="h-auto p-0.5 hover:bg-blue-100 transition-colors"
                   >

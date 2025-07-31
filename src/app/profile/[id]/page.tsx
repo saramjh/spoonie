@@ -199,6 +199,7 @@ const fetchUserItems = async (userId: string, currentUserId?: string) => {
 	
 	if (currentUserId === userId) {
 		// 🔒 본인 프로필: items 테이블 직접 사용하여 비공개 게시물도 포함
+		// 🚀 홈 피드와 동일한 댓글 수 계산: items 테이블 + 정확한 집계
 		query = supabase
 			.from("items")
 			.select(`
@@ -209,8 +210,8 @@ const fetchUserItems = async (userId: string, currentUserId?: string) => {
 					avatar_url,
 					public_id
 				),
-				_count_likes:likes(count),
-				_count_comments:comments(count)
+				likes_count:likes(count),
+				comments_count:comments(count).eq(is_deleted, false)
 			`)
 			.eq("user_id", userId)
 			.in("item_type", ["recipe", "post"])
@@ -301,9 +302,13 @@ const fetchUserItems = async (userId: string, currentUserId?: string) => {
 			cooking_time_minutes: item.cooking_time_minutes,
 			recipe_id: item.recipe_id,
 			cited_recipe_ids: item.cited_recipe_ids,
-			// 🚀 업계표준: 데이터 소스에 따른 좋아요/댓글 수 처리 (나의 레시피 패턴)
-			likes_count: item.likes_count || (item._count_likes?.[0]?.count ?? 0),
-			comments_count: item.comments_count || (item._count_comments?.[0]?.count ?? 0),
+					// 🚀 홈 피드와 동일한 정확한 좋아요/댓글 수 처리
+		likes_count: currentUserId === userId 
+			? (item.likes_count?.[0]?.count ?? 0)   // 본인 프로필: items 테이블 집계 결과
+			: (item.likes_count || 0),              // 타인 프로필: optimized_feed_view 결과
+		comments_count: currentUserId === userId 
+			? (item.comments_count?.[0]?.count ?? 0)  // 본인 프로필: items 테이블 집계 결과 (삭제된 댓글 제외)
+			: (item.comments_count || 0),             // 타인 프로필: optimized_feed_view 결과 (이미 삭제된 댓글 제외)
 			view_count: 0,
 			is_liked: isLikedValue,
 			is_following: userFollowsMap.get(userId) || false,
