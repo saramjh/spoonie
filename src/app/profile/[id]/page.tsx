@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
 import Image from "next/image"
 import { useParams, useRouter } from "next/navigation"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
@@ -9,7 +8,7 @@ import type { User } from "@supabase/supabase-js"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { MoreVertical, Grid, List, Edit, LogOut, Calendar, Users, BookOpen, MessageCircle } from "lucide-react"
+import { MoreVertical, Grid, List, Edit, LogOut, Calendar, Users, BookOpen, Heart, MessageCircle } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import FollowButton from "@/components/items/FollowButton"
 import PostCard from "@/components/items/PostCard"
@@ -18,19 +17,21 @@ import FollowingModal from "@/components/profile/FollowingModal"
 
 import { useSessionStore } from "@/store/sessionStore"
 import { useFollowStore } from "@/store/followStore" // 🚀 업계 표준: 글로벌 팔로우 상태
-import { SimplifiedLikeButton } from "@/components/items/SimplifiedLikeButton"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
+import { cacheManager } from "@/lib/unified-cache-manager"
 import useSWR from "swr"
 import type { Item } from "@/types/item"
 
-// 🚀 SSA 기반 프로필 그리드 오버레이 컴포넌트
+// 🚀 개선된 프로필 그리드 오버레이 컴포넌트
 interface ProfileGridOverlayProps {
 	item: Item
 	sessionUser: User | null
 }
 
 function ProfileGridOverlay({ item, sessionUser }: ProfileGridOverlayProps) {
-	// 🚀 SSA 기반 캐시 연동
+	const router = useRouter()
+	
+	// 🚀 SSA 기반 캐시 연동 (토스식 단순화)
 	const fallbackItem = {
 		...item,
 		likes_count: item.likes_count || 0,
@@ -40,32 +41,114 @@ function ProfileGridOverlay({ item, sessionUser }: ProfileGridOverlayProps) {
 	const cachedItem = useSSAItemCache(item.item_id, fallbackItem)
 	const stableItemId = item.item_id || item.id
 	
+	// 🎉 토스식 애니메이션 상태 관리
+	const [showHeartAnimation, setShowHeartAnimation] = useState(false)
+	
+	// 🎯 클릭 타이머 상태 (단일/더블 클릭 구분)
+	const [clickTimer, setClickTimer] = useState<NodeJS.Timeout | null>(null)
+	
+	// 🧹 컴포넌트 언마운트 시 타이머 정리
+	useEffect(() => {
+		return () => {
+			if (clickTimer) {
+				clearTimeout(clickTimer);
+			}
+		};
+	}, [clickTimer]);
+	
 	return (
-		<div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent p-2">
-			<div className="flex items-center gap-3 text-white text-xs">
-				{/* 🚀 SSA 기반 좋아요 (상태만 연동, 페이지 이동 없음) */}
-				<div 
-					className="scale-75" 
-					onClick={(e) => e.stopPropagation()}
-				>
-					<SimplifiedLikeButton 
-						itemId={stableItemId} 
-						itemType={item.item_type}
-						authorId={item.user_id}
-						currentUserId={sessionUser?.id}
-						initialLikesCount={cachedItem.likes_count || 0}
-						initialHasLiked={cachedItem.is_liked || false}
-						cachedItem={cachedItem}
-					/>
+		<>
+			{/* 🎯 토스식 미니멀 접근: 핵심만 남기고 모두 제거 */}
+			
+			{/* 📊 사용자가 정말 필요한 정보만 - 극도로 절제된 표시 */}
+			{cachedItem.is_liked && (
+				<div className="absolute top-2 right-2">
+					<div className="w-6 h-6 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg">
+						<Heart className="w-3 h-3 fill-red-500 text-red-500" />
+					</div>
 				</div>
+			)}
+			
+			{/* 🎉 토스식 좋아요 애니메이션 (React 상태 기반) */}
+			{showHeartAnimation && (
+				<div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+					<Heart className="w-12 h-12 fill-red-500 text-red-500 animate-ping" />
+				</div>
+			)}
+			
+					{/* 🚀 토스 철학: 스마트 클릭 처리 (단일클릭=상세페이지, 더블클릭=좋아요) */}
+		<div 
+			className="absolute inset-0 z-10 cursor-pointer"
+			onClick={async (e) => {
+				e.preventDefault();
+				e.stopPropagation();
 				
-				{/* 🚀 SSA 기반 댓글 수 (단순 표시, 링크 없음) */}
-				<div className="flex items-center gap-1">
-					<MessageCircle className="w-3 h-3 fill-current" />
-					<span className="font-medium">{cachedItem.comments_count || 0}</span>
+				// 기존 타이머가 있으면 더블클릭으로 처리
+				if (clickTimer) {
+					clearTimeout(clickTimer);
+					setClickTimer(null);
+					
+					// 🎯 더블클릭 - 좋아요 처리
+					if (!sessionUser?.id) return;
+					
+					// 🎯 햅틱 피드백 (모바일에서)
+					if (navigator.vibrate) {
+						navigator.vibrate(50);
+					}
+					
+					try {
+						const newHasLiked = !cachedItem.is_liked;
+						await cacheManager.like(stableItemId, sessionUser.id, newHasLiked, cachedItem);
+						
+						// 🎉 토스식 마이크로 인터랙션 (React 상태 기반 안전한 애니메이션)
+						if (newHasLiked) {
+							setShowHeartAnimation(true);
+							setTimeout(() => setShowHeartAnimation(false), 600);
+						}
+					} catch (error) {
+						console.error('❌ 좋아요 처리 실패:', error);
+					}
+				} else {
+					// 🎯 단일클릭 - 상세페이지 이동 (300ms 후)
+					const timer = setTimeout(() => {
+						const isRecipe = item.item_type === "recipe";
+						const detailUrl = isRecipe ? `/recipes/${item.id}` : `/posts/${item.id}`;
+						router.push(detailUrl);
+						setClickTimer(null);
+					}, 300);
+					
+					setClickTimer(timer);
+				}
+			}}
+		/>
+			
+			{/* 📱 토스식 정보 밀도: 이미지 위에 명확한 통계 표시 */}
+			{(cachedItem.likes_count > 0 || cachedItem.comments_count > 0) && (
+				<div className="absolute bottom-12 right-2">
+					<div className="bg-black/80 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1">
+						{cachedItem.likes_count > 0 && (
+							<div className="flex items-center gap-1">
+								<Heart className="w-3 h-3 fill-red-500 text-red-500" />
+								<span className="text-white text-xs font-medium">
+									{cachedItem.likes_count}
+								</span>
+							</div>
+						)}
+						{cachedItem.likes_count > 0 && cachedItem.comments_count > 0 && (
+							<span className="text-white/40 text-xs">|</span>
+						)}
+						{cachedItem.comments_count > 0 && (
+							<div className="flex items-center gap-1">
+								<MessageCircle className="w-3 h-3 text-white/70" />
+								<span className="text-white/80 text-xs">
+									{cachedItem.comments_count}
+								</span>
+							</div>
+						)}
+					</div>
 				</div>
-			</div>
-		</div>
+			)}
+		</>
 	)
 }
 
@@ -614,57 +697,69 @@ export default function ProfilePage() {
 							<div className="columns-2 gap-3 sm:gap-4 space-y-3 sm:space-y-4">
 								{userItems.map((item) => {
 									const isRecipe = item.item_type === "recipe"
-									const detailUrl = isRecipe ? `/recipes/${item.id}` : `/posts/${item.id}`
 									
 									return (
-										<Link href={detailUrl} key={item.id} className="break-inside-avoid block">
-											<div className={`rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 mb-3 sm:mb-4 ${
+										<div key={item.id} className="break-inside-avoid mb-3 sm:mb-4">
+											<div className={`rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group relative ${
 												isRecipe 
 													? "bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 hover:border-orange-300" 
 													: "bg-white border border-gray-200 hover:border-gray-300"
 											}`}>
-												<div className="relative aspect-square">
-													{item.image_urls && item.image_urls.length > 0 ? (
-														<Image src={item.image_urls[item.thumbnail_index || 0]} alt={item.title || ''} fill className="object-cover" />
-													) : (
-														<div className={`w-full h-full flex items-center justify-center ${
-															isRecipe 
-																? "bg-gradient-to-br from-orange-100 to-orange-200" 
-																: "bg-gradient-to-br from-gray-100 to-gray-200"
-														}`}>
-															<div className="text-center">
-																{isRecipe ? (
-																	<>
-																		<BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-orange-500 mx-auto mb-1 sm:mb-2" />
-																		<span className="text-orange-600 font-medium text-xs sm:text-sm">레시피</span>
-																	</>
-																) : (
-																	<>
-																		<Users className="w-6 h-6 sm:w-8 sm:h-8 text-gray-500 mx-auto mb-1 sm:mb-2" />
-																		<span className="text-gray-600 font-medium text-xs sm:text-sm">레시피드</span>
-																	</>
-																)}
+																							{/* 🔗 메인 클릭 영역 (오버레이에서 처리) */}
+											<div className="block pointer-events-none">
+													<div className="relative aspect-square cursor-pointer">
+														{item.image_urls && item.image_urls.length > 0 ? (
+															<Image 
+																src={item.image_urls[item.thumbnail_index || 0]} 
+																alt={item.title || ''} 
+																fill 
+																className="object-cover group-hover:scale-105 transition-transform duration-300" 
+															/>
+														) : (
+															<div className={`w-full h-full flex items-center justify-center transition-all duration-300 ${
+																isRecipe 
+																	? "bg-gradient-to-br from-orange-100 to-orange-200 group-hover:from-orange-200 group-hover:to-orange-300" 
+																	: "bg-gradient-to-br from-gray-100 to-gray-200 group-hover:from-gray-200 group-hover:to-gray-300"
+															}`}>
+																<div className="text-center">
+																	{isRecipe ? (
+																		<>
+																			<BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-orange-500 mx-auto mb-1 sm:mb-2 group-hover:scale-110 transition-transform duration-300" />
+																			<span className="text-orange-600 font-medium text-xs sm:text-sm">레시피</span>
+																		</>
+																	) : (
+																		<>
+																			<Users className="w-6 h-6 sm:w-8 sm:h-8 text-gray-500 mx-auto mb-1 sm:mb-2 group-hover:scale-110 transition-transform duration-300" />
+																			<span className="text-gray-600 font-medium text-xs sm:text-sm">레시피드</span>
+																		</>
+																	)}
+																</div>
 															</div>
-														</div>
-													)}
-													{/* 비공개 표시 */}
-													{!item.is_public && (
-														<div className="absolute top-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
-															비공개
-														</div>
-													)}
+														)}
+														
+														{/* 호버 시 어두운 오버레이 */}
+														<div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300 pointer-events-none" />
+														
+														{/* 비공개 표시 */}
+														{!item.is_public && (
+															<div className="absolute top-2 left-2 bg-black/70 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full">
+																비공개
+															</div>
+														)}
+													</div>
 													
-													{/* 🚀 SSA 기반 상호작용 가능한 오버레이 */}
-													<ProfileGridOverlay 
-														item={item} 
-														sessionUser={sessionUser} 
-													/>
+													<div className="p-2 sm:p-3">
+														<h3 className="font-medium text-xs sm:text-sm text-gray-900 line-clamp-2 group-hover:text-orange-600 transition-colors duration-300">{item.title || ''}</h3>
+													</div>
 												</div>
-												<div className="p-2 sm:p-3">
-													<h3 className="font-medium text-xs sm:text-sm text-gray-900 line-clamp-2">{item.title || ''}</h3>
-												</div>
+												
+												{/* 🚀 SSA 기반 상호작용 요소들 (클릭 영역 분리) */}
+												<ProfileGridOverlay 
+													item={item} 
+													sessionUser={sessionUser} 
+												/>
 											</div>
-										</Link>
+										</div>
 									)
 								})}
 							</div>

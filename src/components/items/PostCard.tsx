@@ -63,7 +63,12 @@ export default function PostCard({
 
   // 🛡️ Hook 안정성을 위한 값 안정화
   const stableItemId = useMemo(() => item.item_id || item.id, [item.item_id, item.id])
-  const stableFallbackData = useMemo(() => item, [item])
+  const stableFallbackData = useMemo(() => ({
+    ...item,
+    likes_count: item.likes_count || 0,
+    comments_count: item.comments_count || 0,
+    is_liked: item.is_liked || false
+  }), [item])
 
   // 🖼️ 썸네일 관리 - SSA 캐시된 데이터 사용 (캐시 데이터를 먼저 가져옴)
   const cachedItem = useSSAItemCache(stableItemId, stableFallbackData)
@@ -76,6 +81,13 @@ export default function PostCard({
     originalUrls: item.image_urls,
     cachedUrls: cachedItem?.image_urls,
     fallbackUrls: stableFallbackData?.image_urls
+  })
+  
+  // 💬 CRITICAL DEBUG: 댓글 수 추적
+  console.log(`💬 [PostCard ${stableItemId}] Comments Tracking:`, {
+    originalComments: item.comments_count,
+    cachedComments: cachedItem?.comments_count,
+    fallbackComments: stableFallbackData?.comments_count
   })
   
   const { orderedImages } = useThumbnail({
@@ -375,13 +387,7 @@ export default function PostCard({
         isRecipe ? 'bg-gradient-to-r from-orange-50/50 to-yellow-50/50 border-t border-orange-100' : ''
       }`}>
         <div className="flex items-center gap-1 text-gray-600">
-          {/* 🔍 CRITICAL DEBUG: PostCard 버튼에 전달하는 데이터 확인 */}
-          {console.log(`🔄 [PostCard ${stableItemId}] Passing to buttons:`, {
-            cachedImages: cachedItem?.image_urls?.length || 0,
-            cachedUrls: cachedItem?.image_urls,
-            likes: likesCount,
-            hasLiked: hasLiked
-          })}
+
           {/* 🎯 기존 검증된 좋아요 버튼 사용 */}
           <SimplifiedLikeButton 
             itemId={item.item_id || item.id} 
@@ -396,7 +402,7 @@ export default function PostCard({
             isRecipe ? 'hover:bg-orange-100' : 'hover:bg-gray-100'
           }`}>
             <MessageCircle className="h-5 w-5" />
-            <span className="text-sm font-medium">{item.comments_count || 0}</span>
+            <span className="text-sm font-medium">{cachedItem.comments_count || 0}</span>
           </Button>
         </div>
         <div className="flex items-center gap-1">

@@ -173,8 +173,98 @@ export default function SearchPage() {
   const { setFollowing } = useFollowStore() // 🚀 업계 표준: 글로벌 팔로우 상태 동기화
   const observerRef = useRef<HTMLDivElement>(null);
 
-  const { data: popularKeywords, isLoading: keywordsLoading } = useSWR('popular_keywords', fetcher);
-  const { data: popularPosts, isLoading: postsLoading } = useSWR('popular_posts', fetcher);
+  const { data: popularKeywords, isLoading: keywordsLoading } = useSWR('popular_keywords', fetcher, {
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    dedupingInterval: 60000, // 1분간 중복 요청 방지
+  });
+  const { data: popularPosts, isLoading: postsLoading } = useSWR('popular_posts', fetcher, {
+    revalidateOnFocus: false,    // 🚀 페이지 포커스 시 재검증 방지
+    revalidateOnReconnect: false, // 🚀 네트워크 재연결 시 재검증 방지
+    dedupingInterval: 60000,     // 🚀 1분간 중복 요청 방지
+  });
+  
+  // 🚀 이전 데이터 유지 로직 (SWR v2 호환) - 영구 저장소 활용
+  const [stablePopularPosts, setStablePopularPosts] = useState<Item[] | null>(() => {
+    // 초기 로드 시 sessionStorage에서 복원
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = sessionStorage.getItem('spoonie_popular_posts');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          console.log('🔄 [Init] Restored from sessionStorage:', parsed.length);
+          return parsed;
+        }
+      } catch (error) {
+        console.warn('⚠️ Failed to restore from sessionStorage:', error);
+      }
+    }
+    return null;
+  });
+  const [hasInitialized, setHasInitialized] = useState(false);
+  
+  useEffect(() => {
+    console.log('🔄 [Popular Posts Effect] Checking data:', {
+      popularPosts: popularPosts,
+      isArray: Array.isArray(popularPosts),
+      length: Array.isArray(popularPosts) ? popularPosts.length : 0,
+      hasInitialized: hasInitialized,
+      currentStable: stablePopularPosts ? stablePopularPosts.length : 0
+    });
+
+    if (popularPosts && Array.isArray(popularPosts) && popularPosts.length > 0) {
+      console.log('✅ [Popular Posts Effect] Setting stable data:', popularPosts.length);
+      setStablePopularPosts(popularPosts);
+      setHasInitialized(true);
+      
+      // sessionStorage에 저장 (페이지 새로고침 시에도 유지)
+      try {
+        sessionStorage.setItem('spoonie_popular_posts', JSON.stringify(popularPosts));
+        console.log('💾 [Storage] Saved to sessionStorage');
+      } catch (error) {
+        console.warn('⚠️ Failed to save to sessionStorage:', error);
+      }
+    }
+  }, [popularPosts, hasInitialized, stablePopularPosts]);
+  
+  // 🎯 실제로 사용할 데이터 (더 안전한 fallback)
+  const displayPopularPosts = useMemo(() => {
+    const result = popularPosts || stablePopularPosts || [];
+    console.log('🎯 [Display Posts] Final data:', {
+      fromOriginal: !!popularPosts,
+      fromStable: !popularPosts && !!stablePopularPosts,
+      isEmpty: !popularPosts && !stablePopularPosts,
+      finalLength: Array.isArray(result) ? result.length : 0
+    });
+    return result;
+  }, [popularPosts, stablePopularPosts]);
+  
+  // 🔍 CRITICAL DEBUG: 인기 게시물 상태 추적
+  useEffect(() => {
+    console.log(`🔥 [Search Page] Popular Posts State:`, {
+      isLoading: postsLoading,
+      hasOriginalData: Array.isArray(popularPosts),
+      originalDataLength: Array.isArray(popularPosts) ? popularPosts.length : 0,
+      hasStableData: Array.isArray(stablePopularPosts),
+      stableDataLength: Array.isArray(stablePopularPosts) ? stablePopularPosts.length : 0,
+      hasDisplayData: Array.isArray(displayPopularPosts),
+      displayDataLength: Array.isArray(displayPopularPosts) ? displayPopularPosts.length : 0,
+    });
+  }, [popularPosts, stablePopularPosts, displayPopularPosts, postsLoading]);
+  
+  // 🔍 CRITICAL DEBUG: 페이지 가시성 변화 추적
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      console.log(`👁️ [Search Page] Visibility changed:`, {
+        hidden: document.hidden,
+        popularPostsExists: Array.isArray(displayPopularPosts),
+        popularPostsLength: Array.isArray(displayPopularPosts) ? displayPopularPosts.length : 0
+      });
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [displayPopularPosts]);
   
   // 🚀 무한스크롤 검색 결과
   const {
@@ -422,16 +512,20 @@ export default function SearchPage() {
               <h2 className="text-lg font-semibold text-gray-900">인기 레시피 & 레시피드</h2>
             </div>
             
-            {postsLoading ? (
-              <div className="grid grid-cols-3 gap-1 sm:gap-2">
-                {Array.from({ length: 12 }).map((_, index) => (
-                  <div key={`skeleton-${index}`} className="aspect-square bg-gray-200 rounded-sm animate-pulse" />
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-3 gap-1 sm:gap-2">
-                {Array.isArray(popularPosts) ? 
-                  popularPosts.filter(item => {
+            <div className="grid grid-cols-3 gap-1 sm:gap-2">
+              {/* 🚀 단순화된 렌더링 로직 */}
+              {(() => {
+                console.log('🔥 [Render Logic] State Check:', {
+                  hasDisplayData: Array.isArray(displayPopularPosts) && displayPopularPosts.length > 0,
+                  displayDataLength: Array.isArray(displayPopularPosts) ? displayPopularPosts.length : 0,
+                  isLoading: postsLoading,
+                  hasStableData: Array.isArray(stablePopularPosts) && stablePopularPosts.length > 0,
+                  stableDataLength: Array.isArray(stablePopularPosts) ? stablePopularPosts.length : 0
+                });
+
+                // 1. 표시할 데이터가 있는 경우
+                if (Array.isArray(displayPopularPosts) && displayPopularPosts.length > 0) {
+                  return displayPopularPosts.filter(item => {
                     const hasId = item?.item_id || item?.id;
                     if (!hasId) {
                       console.warn('🚨 Popular post missing ID:', item);
@@ -439,10 +533,33 @@ export default function SearchPage() {
                     return hasId;
                   }).map((item, index) => (
                     <InstagramGridCard key={`popular-${item.item_id || item.id}-${index}`} item={item} />
-                  )) : []
+                  ));
                 }
-              </div>
-            )}
+
+                // 2. 처음 로딩 중인 경우 (안정화된 데이터가 없는 경우)
+                if (postsLoading && (!stablePopularPosts || stablePopularPosts.length === 0)) {
+                  return Array.from({ length: 12 }).map((_, index) => (
+                    <div key={`skeleton-${index}`} className="aspect-square bg-gray-200 rounded-sm animate-pulse" />
+                  ));
+                }
+
+                // 3. 로딩도 끝났고 데이터도 없는 경우만 메시지 표시
+                if (!postsLoading && hasInitialized) {
+                  console.warn('⚠️ No popular posts to display after initialization');
+                  return (
+                    <div className="col-span-3 text-center py-8 text-gray-500">
+                      인기 게시물을 불러올 수 없습니다.
+                    </div>
+                  );
+                }
+
+                // 4. 그 외의 모든 경우 - 빈 상태로 대기 (데이터 로딩 중이거나 초기화 중)
+                console.log('🕐 [Render] Waiting for data...');
+                return Array.from({ length: 6 }).map((_, index) => (
+                  <div key={`waiting-${index}`} className="aspect-square bg-gray-100 rounded-sm animate-pulse" />
+                ));
+              })()}
+            </div>
           </div>
         </div>
       )}
