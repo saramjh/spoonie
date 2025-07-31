@@ -10,8 +10,9 @@ import PopularKeywords from '@/components/search/PopularKeywords';
 import InstagramGridCard from '@/components/search/InstagramGridCard';
 import UserCard from '@/components/search/UserCard';
 import type { Item } from '@/types/item';
-import { getPopularKeywordsCached, getPopularPostsCached, optimizedSearch, SearchMetrics } from '@/utils/search-optimization';
+import { getPopularKeywordsCached, getPopularPostsCached, optimizedSearch, searchUsers, SearchMetrics, type UserSearchResult } from '@/utils/search-optimization';
 import { useFollowStore } from '@/store/followStore';
+import { useNavigation } from '@/hooks/useNavigation';
 // 🚀 업계 표준: 사용하지 않는 import 제거 // �� 업계 표준: 글로벌 팔로우 상태
 
 // 📊 서버 부담 최소화를 위한 페이지 크기
@@ -61,7 +62,7 @@ const fetcher = async (key: string): Promise<unknown> => {
     case 'search':
       if (!query) return [];
       
-      // 🚀 디바운싱된 최적화 검색
+      // 🚀 디바운싱된 최적화 검색 (콘텐츠용)
       const searchStartTime = performance.now();
       try {
         const results = await optimizedSearch.search(query);
@@ -71,6 +72,22 @@ const fetcher = async (key: string): Promise<unknown> => {
       } catch (error) {
         SearchMetrics.recordError();
         console.error('❌ Optimized search failed:', error);
+        return [];
+      }
+
+    case 'search_users':
+      if (!query) return [];
+      
+      // 👤 유저네임 전용 검색
+      const userSearchStartTime = performance.now();
+      try {
+        const userResults = await searchUsers(query);
+        const userSearchEndTime = performance.now();
+        SearchMetrics.recordSearch(userSearchEndTime - userSearchStartTime, false);
+        return userResults;
+      } catch (error) {
+        SearchMetrics.recordError();
+        console.error('❌ User search failed:', error);
         return [];
       }
 
@@ -167,6 +184,9 @@ const infiniteSearchFetcher = async (key: string): Promise<Item[]> => {
 };
 
 export default function SearchPage() {
+  // 🧭 Smart Navigation: 이 페이지를 거쳐간 navigation history 추적
+  useNavigation({ trackHistory: true })
+
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<SearchTab>('content'); // 🔄 탭 상태
@@ -290,6 +310,19 @@ export default function SearchPage() {
     return () => clearTimeout(handler);
   }, [searchTerm]);
 
+  // 👤 사용자 검색 결과 (유저네임 전용)
+  const userSearchKey = debouncedSearchTerm ? `search_users|${debouncedSearchTerm}` : null;
+  console.log(`🔍 [SearchPage] User search SWR key:`, userSearchKey);
+  
+  const { data: userSearchResults, isLoading: userSearchLoading } = useSWR(
+    userSearchKey,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 30000, // 30초간 중복 요청 방지
+    }
+  );
+
   // 🔧 검색어가 변경될 때 캐시 클리어 및 페이지 리셋
   useEffect(() => {
     if (debouncedSearchTerm) {
@@ -321,32 +354,16 @@ export default function SearchPage() {
     setSearchTerm(keyword);
   };
 
-  // 👤 검색 결과에서 유저들을 추출하고 그룹화
-  const processUserResults = (searchResults: Item[]): UserResult[] => {
-    const userMap = new Map<string, UserResult>();
-    
-    searchResults.forEach(item => {
-      if (!item.user_id || !item.username) return;
-      
-      if (userMap.has(item.user_id)) {
-        const user = userMap.get(item.user_id)!;
-        user.items_count++;
-        if (user.latest_items.length < 3) {
-          user.latest_items.push(item);
-        }
-      } else {
-        userMap.set(item.user_id, {
-          user_id: item.user_id,
-          username: item.username,
-          display_name: item.display_name || undefined,
-          avatar_url: item.avatar_url || undefined,
-          items_count: 1,
-          latest_items: [item],
-        });
-      }
-    });
-    
-    return Array.from(userMap.values());
+  // 👤 유저네임 검색 결과를 UserResult 인터페이스에 맞게 변환
+  const convertUserSearchResults = (results: UserSearchResult[]): UserResult[] => {
+    return results.map(user => ({
+      user_id: user.user_id,
+      username: user.username,
+      display_name: user.display_name || undefined,
+      avatar_url: user.avatar_url || undefined,
+      items_count: user.items_count,
+      latest_items: [], // 유저네임 검색에서는 latest_items 불필요
+    }));
   };
 
   // 검색 결과 평면화 (메모이제이션으로 무한 루프 방지)
@@ -357,8 +374,19 @@ export default function SearchPage() {
   const isLoadingMore = searchLoading || searchValidating;
   const isReachingEnd = searchPages && searchPages.length > 0 && searchPages[searchPages.length - 1]?.length < PAGE_SIZE;
 
-  // 👤 유저 검색 결과 처리
-  const userResults = useMemo(() => processUserResults(searchResults), [searchResults]);
+  // 👤 유저 검색 결과 처리 (유저네임 전용 검색 결과 사용)
+  const userResults = useMemo(() => {
+    console.log(`🔍 [SearchPage] Processing user search results:`, {
+      userSearchResults,
+      isArray: Array.isArray(userSearchResults),
+      length: Array.isArray(userSearchResults) ? userSearchResults.length : 0
+    });
+    
+    if (!userSearchResults || !Array.isArray(userSearchResults)) {
+      return [];
+    }
+    return convertUserSearchResults(userSearchResults);
+  }, [userSearchResults]);
 
   // 🚀 업계 표준: 검색 결과의 팔로우 상태를 글로벌 상태와 동기화 (무한 루프 방지)
   useEffect(() => {
@@ -482,7 +510,11 @@ export default function SearchPage() {
                 <h2 className="text-lg font-semibold text-gray-900">사용자</h2>
               </div>
               
-              {userResults.length === 0 && !searchLoading ? (
+              {userSearchLoading ? (
+                <div className="text-center py-12">
+                  <div className="text-gray-500 text-lg mb-2">사용자 검색 중...</div>
+                </div>
+              ) : userResults.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="text-gray-500 text-lg mb-2">사용자 검색 결과가 없습니다</div>
                   <div className="text-gray-400 text-sm">다른 키워드로 검색해 보세요</div>

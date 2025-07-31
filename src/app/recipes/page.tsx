@@ -18,6 +18,7 @@ import RecipeListCard from "@/components/recipe/RecipeListCard"
 import type { User } from "@supabase/supabase-js"
 import type { Item } from "@/types/item"
 import { useToast } from "@/hooks/use-toast"
+import { useNavigation } from "@/hooks/useNavigation"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 
 type Tab = "my_recipes" | "all_recipes"
@@ -245,6 +246,9 @@ export default function RecipesPage() {
 	const searchParams = useSearchParams()
 	const { toast } = useToast()
 	const { mutate } = useSWRConfig()
+
+	// 🧭 Smart Navigation: 레시피북 navigation history 추적
+	useNavigation({ trackHistory: true })
 
 	const [currentUser, setCurrentUser] = useState<User | null>(null)
 	const [userLoading, setUserLoading] = useState(true)

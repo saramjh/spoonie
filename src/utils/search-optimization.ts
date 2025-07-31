@@ -308,4 +308,53 @@ export class SearchMetrics {
 			errors: 0
 		}
 	}
+}
+
+// ==========================================
+// 👤 유저네임 전용 검색 인터페이스 및 함수
+// ==========================================
+
+export interface UserSearchResult {
+	user_id: string;
+	username: string;
+	display_name: string | null;
+	avatar_url: string | null;
+	items_count: number;
+	is_following: boolean;
+}
+
+/**
+ * 유저네임 기반 사용자 검색 (콘텐츠 검색과 완전 분리)
+ */
+export async function searchUsers(query: string): Promise<UserSearchResult[]> {
+	if (!query || query.trim().length === 0) {
+		return []
+	}
+
+	const supabase = createSupabaseBrowserClient()
+
+	// 현재 사용자 정보 가져오기
+	const { data: { user } } = await supabase.auth.getUser()
+	const currentUserId = user?.id || null
+
+	console.log(`🔍 [UserSearch] Searching for users: "${query}"`, {
+		currentUserId,
+		trimmedQuery: query.trim()
+	})
+
+	// 🎯 유저네임 전용 RPC 함수 호출
+	const { data, error } = await supabase
+		.rpc('search_users', {
+			search_term: query.trim(),
+			max_results: 20,
+			current_user_id: currentUserId
+		})
+
+	if (error) {
+		console.error('❌ User search failed:', error)
+		return []
+	}
+
+	console.log(`✅ [UserSearch] Found ${data?.length || 0} users for: "${query}"`, data)
+	return data || []
 } 

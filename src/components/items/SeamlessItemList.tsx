@@ -15,6 +15,7 @@ import type { ServerFeedData } from "@/lib/server-data"
 import { useRealtimeSync } from "@/hooks/useRealtimeSync"
 import { usePageVisibility } from "@/hooks/usePageVisibility"
 import { useHistorySync } from "@/hooks/useHistorySync"
+import { useNavigation } from "@/hooks/useNavigation"
 // 🚀 통합 캐시 매니저가 모든 동기화를 처리
 
 
@@ -39,6 +40,9 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
 
   const pathname = usePathname()
   const supabase = createSupabaseBrowserClient()
+
+  // 🧭 Smart Navigation: 홈피드 navigation history 추적
+  useNavigation({ trackHistory: true })
 
   // 실시간 동기화 훅
   const { applyOptimisticUpdate } = useRealtimeSync()

@@ -19,6 +19,7 @@ import { useSessionStore } from "@/store/sessionStore"
 import { useFollowStore } from "@/store/followStore" // 🚀 업계 표준: 글로벌 팔로우 상태
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import { cacheManager } from "@/lib/unified-cache-manager"
+import { useNavigation } from "@/hooks/useNavigation"
 import useSWR from "swr"
 import type { Item } from "@/types/item"
 
@@ -43,6 +44,7 @@ function ProfileGridOverlay({ item, sessionUser }: ProfileGridOverlayProps) {
 	
 	// 🎉 토스식 애니메이션 상태 관리
 	const [showHeartAnimation, setShowHeartAnimation] = useState(false)
+	const [isTouching, setIsTouching] = useState(false)
 	
 	// 🎯 클릭 타이머 상태 (단일/더블 클릭 구분)
 	const [clickTimer, setClickTimer] = useState<NodeJS.Timeout | null>(null)
@@ -62,7 +64,7 @@ function ProfileGridOverlay({ item, sessionUser }: ProfileGridOverlayProps) {
 			
 			{/* 📊 사용자가 정말 필요한 정보만 - 극도로 절제된 표시 */}
 			{cachedItem.is_liked && (
-				<div className="absolute top-2 right-2">
+				<div className="absolute top-2 right-2 z-30">
 					<div className="w-6 h-6 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg">
 						<Heart className="w-3 h-3 fill-red-500 text-red-500" />
 					</div>
@@ -71,14 +73,34 @@ function ProfileGridOverlay({ item, sessionUser }: ProfileGridOverlayProps) {
 			
 			{/* 🎉 토스식 좋아요 애니메이션 (React 상태 기반) */}
 			{showHeartAnimation && (
-				<div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+				<div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
 					<Heart className="w-12 h-12 fill-red-500 text-red-500 animate-ping" />
 				</div>
 			)}
 			
-					{/* 🚀 토스 철학: 스마트 클릭 처리 (단일클릭=상세페이지, 더블클릭=좋아요) */}
+					{/* 🎨 터치 시 어두운 오버레이 - 이미지 위에 확실히 표시 */}
+			{isTouching && (
+				<div className="absolute inset-0 bg-black/30 z-10" />
+			)}
+
+			{/* 🚀 토스 철학: 스마트 클릭 처리 (단일클릭=상세페이지, 더블클릭=좋아요) */}
 		<div 
-			className="absolute inset-0 z-10 cursor-pointer"
+			className="absolute inset-0 z-20 cursor-pointer select-none"
+			onTouchStart={() => setIsTouching(true)}
+			onTouchEnd={() => setIsTouching(false)}
+			onTouchCancel={() => setIsTouching(false)}
+			onMouseDown={(e) => {
+				e.preventDefault();
+				setIsTouching(true);
+			}}
+			onMouseUp={(e) => {
+				e.preventDefault();
+				setIsTouching(false);
+			}}
+			onMouseLeave={(e) => {
+				e.preventDefault();
+				setIsTouching(false);
+			}}
 			onClick={async (e) => {
 				e.preventDefault();
 				e.stopPropagation();
@@ -124,7 +146,7 @@ function ProfileGridOverlay({ item, sessionUser }: ProfileGridOverlayProps) {
 			
 			{/* 📱 토스식 정보 밀도: 이미지 위에 명확한 통계 표시 */}
 			{(cachedItem.likes_count > 0 || cachedItem.comments_count > 0) && (
-				<div className="absolute bottom-12 right-2">
+				<div className="absolute bottom-2 right-2 z-30">
 					<div className="bg-black/80 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1">
 						{cachedItem.likes_count > 0 && (
 							<div className="flex items-center gap-1">
@@ -399,6 +421,9 @@ export default function ProfilePage() {
 	const params = useParams()
 	const userId = params.id as string
 	const supabase = createSupabaseBrowserClient()
+
+	// 🧭 Smart Navigation: 이 페이지를 거쳐간 navigation history 추적
+	useNavigation({ trackHistory: true })
 
 	const [sessionUser, setSessionUser] = useState<User | null>(null)
 	const [viewMode, setViewMode] = useState<"grid" | "feed">("grid")
@@ -705,14 +730,14 @@ export default function ProfilePage() {
 									
 									return (
 										<div key={item.id} className="break-inside-avoid mb-3 sm:mb-4">
-											<div className={`rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group relative ${
+											<div className={`rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group relative select-none ${
 												isRecipe 
 													? "bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 hover:border-orange-300" 
 													: "bg-white border border-gray-200 hover:border-gray-300"
 											}`}>
 																							{/* 🔗 메인 클릭 영역 (오버레이에서 처리) */}
-											<div className="block pointer-events-none">
-													<div className="relative aspect-square cursor-pointer">
+											<div className="block">
+													<div className="relative aspect-square cursor-pointer overflow-hidden">
 														{item.image_urls && item.image_urls.length > 0 ? (
 															<Image 
 																src={item.image_urls[item.thumbnail_index || 0]} 
@@ -751,18 +776,18 @@ export default function ProfilePage() {
 																비공개
 															</div>
 														)}
+														
+														{/* 🚀 SSA 기반 상호작용 요소들 - 이미지 영역에만 적용 */}
+														<ProfileGridOverlay 
+															item={item} 
+															sessionUser={sessionUser} 
+														/>
 													</div>
 													
 													<div className="p-2 sm:p-3">
-														<h3 className="font-medium text-xs sm:text-sm text-gray-900 line-clamp-2 group-hover:text-orange-600 transition-colors duration-300">{item.title || ''}</h3>
+														<h3 className="font-medium text-xs sm:text-sm text-gray-900 line-clamp-2 group-hover:text-orange-600 transition-colors duration-300 select-none">{item.title || ''}</h3>
 													</div>
 												</div>
-												
-												{/* 🚀 SSA 기반 상호작용 요소들 (클릭 영역 분리) */}
-												<ProfileGridOverlay 
-													item={item} 
-													sessionUser={sessionUser} 
-												/>
 											</div>
 										</div>
 									)
