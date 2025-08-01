@@ -30,8 +30,13 @@ export default function GoogleAdSense() {
       src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_PUBLISHER_ID}`}
       crossOrigin="anonymous"
       strategy="afterInteractive"
+      onLoad={() => {
+        console.log('✅ AdSense 스크립트 로드 성공!')
+      }}
       onError={(e) => {
-        console.error('AdSense 로드 실패:', e)
+        console.error('❌ AdSense 로드 실패:', e)
+        console.log('🔍 Publisher ID:', ADSENSE_PUBLISHER_ID)
+        console.log('🔍 Script URL:', `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_PUBLISHER_ID}`)
       }}
     />
   )

@@ -89,6 +89,22 @@ export default function GoogleAnalytics() {
   // GA ID 확인 및 로그
   console.log('🎯 Google Analytics ID:', GA_MEASUREMENT_ID)
   
+  // 🧪 GA 테스트 함수 (글로벌로 노출)
+  if (typeof window !== 'undefined') {
+    (window as any).testGA = () => {
+      if (window.gtag) {
+        window.gtag('event', 'test_event', {
+          event_category: 'Testing',
+          event_label: 'Manual GA Test',
+          value: 1
+        })
+        console.log('✅ GA Test Event Sent!')
+      } else {
+        console.log('❌ GA not loaded')
+      }
+    }
+  }
+  
   // 임시로 모든 환경에서 로드 (테스트용)
   // if (process.env.NODE_ENV !== 'production') {
   //   console.log('🧪 GA disabled in development mode')
@@ -111,6 +127,8 @@ export default function GoogleAnalytics() {
             gtag('js', new Date());
             gtag('config', '${GA_MEASUREMENT_ID}', {
               page_path: window.location.pathname,
+              debug_mode: true,
+              send_page_view: true
             });
           `,
         }}

@@ -35,7 +35,7 @@ export const metadata: Metadata = {
 		siteName: "스푸니 (Spoonie)",
 		images: [
 			{
-				url: "/logo-full.svg",
+				url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'}/logo-full.svg`,
 				width: 1200,
 				height: 630,
 				alt: "스푸니 - 레시피 공유 플랫폼",
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
 		card: "summary_large_image",
 		title: "스푸니 - 레시피 공유 플랫폼",
 		description: "맛있는 레시피를 공유하고 요리 영감을 얻어보세요.",
-		images: ["/logo-full.svg"],
+		images: [`${process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'}/logo-full.svg`],
 	},
 	// 검색엔진 최적화
 	robots: {
@@ -85,6 +85,8 @@ export default function RootLayout({
 				<meta name="author" content="Spoonie Team" />
 				<meta name="format-detection" content="telephone=no" />
 				<link rel="canonical" href={process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'} />
+				{/* 💰 Google AdSense 인증 메타 태그 */}
+				<meta name="google-adsense-account" content="ca-pub-4410729598083068" />
 				{/* 🎯 폰트 최적화 메타 태그 */}
 				<meta name="font-display" content="swap" />
 			</head>

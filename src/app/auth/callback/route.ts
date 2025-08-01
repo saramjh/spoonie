@@ -54,10 +54,14 @@ export async function GET(request: Request) {
 				}
 			}
 
-			return NextResponse.redirect(`${origin}${next}`)
+			// 🎯 올바른 도메인으로 강제 리디렉션
+			const redirectOrigin = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'
+			console.log('🔍 Callback redirect:', { origin, redirectOrigin, next })
+			return NextResponse.redirect(`${redirectOrigin}${next}`)
 		}
 	}
 
 	// return the user to an error page with instructions
-	return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+	const redirectOrigin = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'
+	return NextResponse.redirect(`${redirectOrigin}/auth/auth-code-error`)
 }
