@@ -48,6 +48,17 @@ export default function PostEditPage() {
 	const [initialData, setInitialData] = useState<any>(null)
 
 	useEffect(() => {
+		console.log("🔍 PostEditPage: Data state check", {
+			hasBaseItem: !!baseItem,
+			hasCachedItem: !!cachedItem,
+			hasInitialData: !!initialData,
+			isLoading,
+			error: error?.message || error,
+			baseItemType: baseItem?.item_type,
+			baseItemPublic: baseItem?.is_public,
+			baseItemUserId: baseItem?.user_id
+		})
+
 		if (baseItem && !initialData) {
 			// Selective Merge: 서버 데이터 + 캐시된 실시간 필드
 			const mergedData = {
@@ -75,7 +86,16 @@ export default function PostEditPage() {
 			
 			setInitialData(mergedData)
 		}
-	}, [baseItem, cachedItem, initialData])
+		// 🆘 긴급 fallback: baseItem 없이 cachedItem만 있는 경우 (비공개→공개 전환 시나리오)
+		else if (!baseItem && !isLoading && cachedItem && cachedItem.id && !initialData) {
+			console.warn("⚠️ PostEditPage: Using cached data as fallback (baseItem missing)", {
+				cachedItemType: cachedItem.item_type,
+				cachedItemPublic: cachedItem.is_public
+			})
+			
+			setInitialData(cachedItem)
+		}
+	}, [baseItem, cachedItem, initialData, isLoading, error])
 
 	if (isLoading) {
 		return (
@@ -85,7 +105,9 @@ export default function PostEditPage() {
 		)
 	}
 
-	if (error || !initialData) {
+	// 🚀 개선된 에러 조건: 실제 에러가 있고 baseItem도 없는 경우에만 에러 처리
+	if (error && !baseItem) {
+		console.error("PostEditPage: Error loading item", itemId, error)
 		return (
 			<div className="p-4">
 				<div className="text-center">
@@ -96,6 +118,16 @@ export default function PostEditPage() {
 						요청하신 레시피드가 존재하지 않거나 삭제되었습니다.
 					</p>
 				</div>
+			</div>
+		)
+	}
+
+	// 🎯 로딩 중이거나 initialData가 준비되지 않은 경우 스켈레톤 표시
+	if (!initialData) {
+		console.log("PostEditPage: Waiting for initialData preparation", itemId)
+		return (
+			<div className="p-4">
+				<PostCardSkeleton />
 			</div>
 		)
 	}

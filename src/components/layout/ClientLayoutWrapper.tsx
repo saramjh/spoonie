@@ -20,13 +20,13 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
   const { mutate } = useSWRConfig()
   const pathname = usePathname()
 
-  console.log("🔧 ClientLayoutWrapper: Current state:", { isInitialLoad, initialized })
+
 
   // 🚀 세션과 프로필 초기 로드
   useEffect(() => {
     const initializeAuth = async () => {
       if (isInitialLoad) {
-        console.log("⏳ ClientLayoutWrapper: Loading session and profile")
+
         
         try {
           const supabase = createSupabaseBrowserClient()
@@ -35,17 +35,17 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
           const { data: { user }, error: userError } = await supabase.auth.getUser()
           
           if (userError) {
-            console.log("❌ ClientLayoutWrapper: Session error:", userError)
+
             setSession(null)
             setProfile(null)
           } else if (user) {
-            console.log("✅ ClientLayoutWrapper: Session found:", user.email)
+
             setSession(user)
             
             // 🚀 업계 표준: 팔로우 상태 초기화 (Instagram/Twitter 방식)
             try {
               await initializeFollowState(user.id)
-              console.log("✅ ClientLayoutWrapper: Follow state initialized")
+
             } catch (error) {
               console.error("❌ ClientLayoutWrapper: Follow state initialization failed:", error)
             }
@@ -58,14 +58,12 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
               .single()
             
             if (profileError) {
-              console.log("❌ ClientLayoutWrapper: Profile error:", profileError)
+              console.error("❌ ClientLayoutWrapper: Profile error:", profileError)
               setProfile(null)
             } else {
-              console.log("✅ ClientLayoutWrapper: Profile loaded:", profile.username)
               setProfile(profile)
             }
           } else {
-            console.log("👤 ClientLayoutWrapper: No session found")
             setSession(null)
             setProfile(null)
           }
@@ -80,7 +78,7 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
         setTimeout(() => {
           setStoreInitialLoad(false)
           setInitialized(true)
-          console.log("✅ ClientLayoutWrapper: Initialization complete")
+
         }, 1500) // 1.5초 후 스플래시 화면 숨김
       }
     }
@@ -91,11 +89,11 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
   // 🚀 뒤로가기 감지 시 홈화면 피드 새로고침
   useEffect(() => {
     const handlePopState = () => {
-      console.log(`🔄 ClientLayoutWrapper: Browser back/forward detected, current path: ${pathname}`)
+
       
       // 홈화면으로 돌아갔을 때만 피드 새로고침
       if (pathname === "/" || pathname === "") {
-        console.log(`🚀 ClientLayoutWrapper: Refreshing home feed cache`)
+
         
         // 현재 사용자 정보 가져오기
         const getCurrentUserAndRefresh = async () => {
@@ -105,7 +103,7 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
             const { data: { user } } = await supabase.auth.getUser()
             
             const userId = user?.id || "guest"
-            console.log(`🔄 Refreshing feed for user: ${userId}`)
+
             
             // 모든 홈 피드 캐시 무효화
             mutate(

@@ -1,24 +1,26 @@
 
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { createSupabaseBrowserClient } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
+import { mutate } from 'swr'
 
-import { usePathname } from 'next/navigation'
+
 import { formatDistanceToNowStrict } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { BellRing, BellOff, UserCircle2 } from 'lucide-react'
+import { BellOff, UserCircle2 } from 'lucide-react'
 
 interface Notification {
   id: string;
   created_at: string;
-  type: 'like' | 'comment' | 'follow' | 'admin';
+  type: 'like' | 'comment' | 'follow' | 'recipe_cited' | 'admin';
   is_read: boolean;
-  post_id: string | null;
+  item_id: string | null;
   from_profile: {
+    public_id: string;
     username: string;
     avatar_url: string;
   } | null;
@@ -31,7 +33,6 @@ export default function NotificationsPage() {
   const supabase = createSupabaseBrowserClient();
   const { toast } = useToast();
 
-  const pathname = usePathname();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -55,9 +56,9 @@ export default function NotificationsPage() {
           created_at,
           type,
           is_read,
-          post_id,
-          from_profile:profiles!notifications_from_user_id_fkey ( username, avatar_url ),
-          related_item:items!notifications_post_id_fkey ( item_type )
+          item_id,
+          from_profile:profiles!notifications_from_user_id_fkey ( public_id, username, avatar_url ),
+          related_item:items!notifications_item_id_fkey ( item_type )
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
@@ -71,7 +72,7 @@ export default function NotificationsPage() {
           created_at: item.created_at,
           type: item.type,
           is_read: item.is_read,
-          post_id: item.post_id,
+          item_id: item.item_id,
           from_profile: Array.isArray(item.from_profile) 
             ? item.from_profile[0] || null 
             : item.from_profile,
@@ -86,26 +87,20 @@ export default function NotificationsPage() {
 
     fetchUserAndNotifications();
 
-    // 🚀 Optimistic Updates 시스템에서는 복잡한 등록 로직 불필요
-
-    const channel = supabase
-      .channel('realtime-notifications')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${currentUser?.id}` },
-        (payload) => {
-          fetchUserAndNotifications();
-          toast({ title: '새 알림', description: '새로운 알림이 도착했습니다.' });
-        }
-      )
-      .subscribe();
+    // 🎯 폴링 기반 알림 시스템 (비용 효율적)
+    const pollInterval = setInterval(() => {
+      // 페이지가 활성 상태일 때만 폴링
+      if (!document.hidden && currentUser?.id) {
+        fetchUserAndNotifications();
+      }
+    }, 30000); // 30초마다 체크
 
     return () => {
-      supabase.removeChannel(channel);
-      // 🚀 Optimistic Updates: 등록 해제 로직 불필요
+      clearInterval(pollInterval);
     };
   }, [supabase, toast, currentUser?.id]);
 
+  // 🔔 개별 알림 읽음 처리
   const markAsRead = async (id: string) => {
     const { error } = await supabase
       .from('notifications')
@@ -115,11 +110,69 @@ export default function NotificationsPage() {
     if (error) {
       toast({ title: '읽음 처리 실패', description: error.message, variant: 'destructive' });
     } else {
-      setNotifications((prev) =>
-        prev.map((notif) => (notif.id === id ? { ...notif, is_read: true } : notif))
-      );
+      setNotifications((prev) => {
+        const updated = prev.map((notif) => (notif.id === id ? { ...notif, is_read: true } : notif));
+        
+        // 🔔 Header 뱃지 수 업데이트 (읽지 않은 알림 수 다시 계산)
+        const unreadCount = updated.filter(notif => !notif.is_read).length;
+        if (currentUser?.id) {
+          mutate(`unread_notifications_count_${currentUser.id}`, unreadCount);
+        }
+        
+        return updated;
+      });
     }
   };
+
+  // 🔔 모든 읽지 않은 알림 읽음 처리 (뱃지 초기화)
+  const markAllAsRead = useCallback(async () => {
+    if (!currentUser?.id) return;
+
+    const unreadNotifications = notifications.filter(notif => !notif.is_read);
+    if (unreadNotifications.length === 0) return;
+
+    
+
+    const { error } = await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('user_id', currentUser.id)
+      .eq('is_read', false);
+
+    if (error) {
+      console.error('❌ 모든 알림 읽음 처리 실패:', error);
+    } else {
+      // 🎯 로컬 상태 업데이트
+      setNotifications((prev) =>
+        prev.map((notif) => ({ ...notif, is_read: true }))
+      );
+      
+      // 🔔 Header 뱃지 즉시 업데이트 (SWR 캐시 갱신)
+      mutate(`unread_notifications_count_${currentUser.id}`, 0);
+      
+      
+    }
+  }, [currentUser?.id, notifications, supabase]);
+
+  // 🔔 알림 페이지 접속 즉시 뱃지 초기화 (UX 개선)
+  useEffect(() => {
+    if (currentUser?.id) {
+      // 🚀 즉시 뱃지를 0으로 만들어서 사용자에게 빠른 피드백 제공
+      mutate(`unread_notifications_count_${currentUser.id}`, 0);
+    }
+  }, [currentUser?.id]);
+
+  // 🔔 알림 페이지 접근 시 모든 읽지 않은 알림 읽음 처리 (백그라운드)
+  useEffect(() => {
+    if (currentUser?.id && notifications.length > 0) {
+      // 2초 후에 실제 읽음 처리 (사용자가 알림을 확인할 시간 제공)
+      const timer = setTimeout(() => {
+        markAllAsRead();
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [currentUser?.id, notifications.length, markAllAsRead]);
   
   const generateNotificationMessage = (notification: Notification) => {
     const itemType = notification.related_item?.item_type;
@@ -133,6 +186,8 @@ export default function NotificationsPage() {
         return `님이 회원님의 ${itemNameWithParticle} 댓글을 남겼습니다.`;
       case 'follow':
         return `님이 팔로우하기 시작했습니다.`;
+      case 'recipe_cited':
+        return `님이 회원님의 레시피를 참고하여 새로운 ${itemName} 작성했습니다.`;
       case 'admin':
         return '관리자로부터 새로운 공지가 있습니다.';
       default:
@@ -140,13 +195,44 @@ export default function NotificationsPage() {
     }
   };
 
+  // 🎯 알림 타입에 따른 올바른 링크 생성
+  const getNotificationLink = (notification: Notification): string => {
+    // 팔로우 알림: 팔로우한 사용자의 프로필로 이동
+    if (notification.type === 'follow') {
+      const fromUserPublicId = notification.from_profile?.public_id;
+      return fromUserPublicId ? `/profile/${fromUserPublicId}` : '/';
+    }
+
+    // 좋아요/댓글/대댓글/참고레시피 알림: item_id가 없으면 홈으로
+    if (!notification.item_id) {
+      return '/';
+    }
+
+    // 좋아요/댓글/대댓글/참고레시피 알림: item_type에 따라 경로 결정
+    const itemType = notification.related_item?.item_type;
+    if (itemType === 'recipe') {
+      return `/recipes/${notification.item_id}`;
+    } else if (itemType === 'post') {
+      return `/posts/${notification.item_id}`;
+    } else {
+      // item_type이 없거나 알 수 없는 경우 홈으로
+      console.warn(`⚠️ 알 수 없는 item_type: ${itemType} for notification ${notification.id}`);
+      return '/';
+    }
+  };
+
   if (loading) {
-    return <div className="container mx-auto max-w-2xl py-12 text-center">알림을 불러오는 중...</div>;
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto max-w-2xl py-12 text-center">알림을 불러오는 중...</div>
+      </div>
+    );
   }
 
   return (
-    <div className="container mx-auto max-w-2xl py-12">
-      <h1 className="text-3xl font-bold mb-8">알림</h1>
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto max-w-2xl py-12">
+        <h1 className="text-3xl font-bold mb-8">알림</h1>
       <div className="space-y-4">
         {notifications.length === 0 ? (
           <div className="text-center text-gray-500 py-8">
@@ -155,7 +241,7 @@ export default function NotificationsPage() {
           </div>
         ) : (
           notifications.map((notification) => (
-            							<Link href={notification.post_id ? `/posts/${notification.post_id}` : '#'} key={notification.id} onClick={() => !notification.is_read && markAsRead(notification.id)}>
+            							            <Link href={getNotificationLink(notification)} key={notification.id} onClick={() => !notification.is_read && markAsRead(notification.id)}>
               <div
                 className={`p-4 rounded-lg shadow-sm flex items-start space-x-4 cursor-pointer transition-colors ${notification.is_read ? 'bg-gray-50 hover:bg-gray-100 text-gray-600' : 'bg-orange-50 hover:bg-orange-100 text-gray-900 font-medium'}`}
               >
@@ -184,6 +270,7 @@ export default function NotificationsPage() {
             </Link>
           ))
         )}
+      </div>
       </div>
     </div>
   );

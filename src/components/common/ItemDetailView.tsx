@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, MessageCircle, Share2, MoreHorizontal, Edit, Trash2 } from "lucide-react"
+import { ArrowLeft, MessageCircle, Share2, MoreVertical, Edit, Trash2 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 
@@ -335,21 +335,21 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 							/* 작성자인 경우: 점3버튼 (드롭다운) */
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
-									<Button variant="ghost" size="icon" className="h-8 w-8">
-										<MoreHorizontal className="h-4 w-4" />
+									<Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+										<MoreVertical className="h-4 w-4" />
 									</Button>
 								</DropdownMenuTrigger>
-								<DropdownMenuContent align="end">
-									<DropdownMenuItem onClick={handleEdit} className="cursor-pointer">
-										<Edit className="mr-2 h-4 w-4" />
-										수정
+								<DropdownMenuContent align="end" className="w-auto min-w-[80px]">
+									<DropdownMenuItem onClick={handleEdit} className="cursor-pointer relative flex items-center justify-start px-3 py-2">
+										<Edit className="h-4 w-4 flex-shrink-0" />
+										<span className="flex-1 text-center">수정</span>
 									</DropdownMenuItem>
 									<DropdownMenuItem 
 										onClick={() => setShowDeleteModal(true)} 
-										className="text-red-600 focus:text-red-600 cursor-pointer"
+										className="text-red-600 cursor-pointer relative flex items-center justify-start px-3 py-2"
 									>
-										<Trash2 className="mr-2 h-4 w-4" />
-										삭제
+										<Trash2 className="h-4 w-4 flex-shrink-0" />
+										<span className="flex-1 text-center">삭제</span>
 									</DropdownMenuItem>
 								</DropdownMenuContent>
 							</DropdownMenu>

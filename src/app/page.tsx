@@ -16,7 +16,7 @@ export default async function HomePage() {
 		console.log(`🏠 HomePage: Server rendered with ${initialData.items.length} items`)
 
 		return (
-			<div>
+			<div className="min-h-screen bg-gray-50">
 				<Suspense fallback={<ItemListSkeleton />}>
 					<SeamlessItemList initialData={initialData} />
 				</Suspense>
@@ -27,7 +27,7 @@ export default async function HomePage() {
 		
 		// 서버 에러 시 클라이언트에서 재시도 가능한 폴백
 		return (
-			<div>
+			<div className="min-h-screen bg-gray-50">
 				<SeamlessItemList initialData={null} />
 			</div>
 		)

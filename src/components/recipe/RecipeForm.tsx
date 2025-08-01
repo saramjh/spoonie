@@ -24,6 +24,7 @@ import { RECIPE_COLOR_OPTIONS } from "@/lib/color-options"
 import type { Item } from "@/types/item"
 import { uploadImagesOptimized, ImageUploadMetrics } from "@/utils/image-optimization"
 import { cacheManager } from "@/lib/unified-cache-manager"
+import { notificationService } from "@/lib/notification-service"
 
 // Zod 스키마 업데이트
 const recipeSchema = z.object({
@@ -456,6 +457,24 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 		console.log(`✅ RecipeForm: Recipe ${isEditMode ? "updated" : "created"} successfully with optimistic update: ${itemId}`)
 
 		toast({ title: `레시피 ${isEditMode ? "수정" : "작성"} 완료`, description: `성공적으로 ${isEditMode ? "수정" : "등록"}되었습니다.` })
+		
+		// 🔔 참고레시피 알림 발송 
+		if (values.cited_recipe_ids && values.cited_recipe_ids.length > 0) {
+			if (!isEditMode) {
+				// 새로 작성하는 경우: 공개 설정 시에만 알림 발송
+				notificationService.notifyRecipeCited(itemId, values.cited_recipe_ids, user.id, values.is_public)
+					.catch(error => console.error('❌ 참고레시피 알림 발송 실패:', error))
+			} else if (initialData) {
+				// 수정하는 경우: 비공개→공개 전환 시에만 알림 발송
+				const wasPrivate = !initialData.is_public
+				const nowPublic = values.is_public
+				if (wasPrivate && nowPublic) {
+					console.log(`🔓 비공개→공개 전환 감지: ${itemId}, 참고레시피 알림 발송`)
+					notificationService.notifyRecipeCited(itemId, values.cited_recipe_ids, user.id, true)
+						.catch(error => console.error('❌ 참고레시피 알림 발송 실패:', error))
+				}
+			}
+		}
 		
 		// 🧭 스마트 네비게이션: 사용자가 온 곳으로 적절히 돌아가기
 		if (onNavigateBack) {

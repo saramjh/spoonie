@@ -14,6 +14,7 @@ import useSWR, { useSWRConfig } from "swr"
 
 import { createSWRKey } from "@/lib/cache-keys"
 import { cacheManager } from "@/lib/unified-cache-manager"
+import { notificationService } from "@/lib/notification-service"
 import { useState, useEffect } from "react"
 import { getCommentCountConcurrencySafe } from "@/utils/concurrency-helpers"
 
@@ -323,6 +324,12 @@ export default function CommentsSection({
 
 			// 🔄 부모 컴포넌트에 댓글 추가를 알림 (상태 동기화는 ItemDetailView에서 처리)
 			onCommentAdd?.(1) // delta = 1
+
+			// 🔔 대댓글 알림 발송 (게시글 작성자 + 원댓글 작성자에게)
+			if (currentUserId) {
+				notificationService.notifyReply(itemId, parentCommentId, currentUserId, newReply.id)
+					.catch(error => console.error('❌ 대댓글 알림 발송 실패:', error))
+			}
 
 			// 🚀 업계 표준 방식: 간단하고 안정적인 Cache Invalidation
 			console.log(`🚀 CommentsSection: === REPLY ADDED - REFRESH HOME FEED ===`)

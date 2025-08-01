@@ -613,12 +613,14 @@ export default function ProfilePage() {
 									<MoreVertical className="h-5 w-5" />
 								</Button>
 							</DropdownMenuTrigger>
-							<DropdownMenuContent align="end" className="w-48">
-								<DropdownMenuItem onSelect={() => router.push(`/profile/${userId}/edit`)} className="cursor-pointer hover:bg-gray-300">
-									<Edit className="mr-2 h-4 w-4" /> 프로필 수정
+							<DropdownMenuContent align="end" className="w-auto min-w-[120px]">
+								<DropdownMenuItem onSelect={() => router.push(`/profile/${userId}/edit`)} className="cursor-pointer relative flex items-center justify-start px-3 py-2">
+									<Edit className="h-4 w-4 flex-shrink-0" />
+									<span className="flex-1 text-center">프로필 수정</span>
 								</DropdownMenuItem>
-								<DropdownMenuItem onSelect={handleLogout} className="cursor-pointer hover:bg-gray-300">
-									<LogOut className="mr-2 h-4 w-4" /> 로그아웃
+								<DropdownMenuItem onSelect={handleLogout} className="cursor-pointer relative flex items-center justify-start px-3 py-2 text-red-600">
+									<LogOut className="h-4 w-4 flex-shrink-0" />
+									<span className="flex-1 text-center">로그아웃</span>
 								</DropdownMenuItem>
 							</DropdownMenuContent>
 						</DropdownMenu>

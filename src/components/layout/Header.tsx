@@ -43,49 +43,24 @@ export default function Header() {
     { refreshInterval: 30000 } // 30초마다 폴링
   );
 
-  const handleNewNotification = useCallback(() => {
-    mutate();
-    setIsShaking(true);
-    setTimeout(() => setIsShaking(false), 500); // 애니메이션 시간과 동일하게 설정
-  }, [mutate]);
+  // 🔔 폴링 기반으로 전환되어 실시간 알림 핸들러 불필요
 
   useEffect(() => {
     if (!user) return;
 
-    const channel = supabase
-      .channel('notifications_count')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
-        handleNewNotification
-      );
-
+    // 🎯 폴링 기반 알림 배지 (실시간 연결 제거)
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        if (channel.state !== 'joined') {
-          channel.subscribe();
-        }
-        mutate(); // 탭이 다시 활성화될 때 데이터 갱신
-      } else {
-        if (channel.state === 'joined') {
-          // 즉시 구독을 해제하는 대신, 잠시 후 해제하여 빠른 탭 전환에 대응
-          setTimeout(() => {
-            if (document.visibilityState === 'hidden') {
-              channel.unsubscribe();
-            }
-          }, 10000); // 10초 후 구독 해제
-        }
+        mutate(); // 탭이 다시 활성화될 때 즉시 데이터 갱신
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    channel.subscribe();
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      supabase.removeChannel(channel);
     };
-  }, [user, supabase, mutate, handleNewNotification]);
+  }, [user, mutate]);
 
   return (
     <header className="flex items-center justify-between p-4 bg-white border-b border-gray-200">

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { cacheManager } from "@/lib/unified-cache-manager"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
+import { notificationService } from "@/lib/notification-service"
 import LikersModal from "./LikersModal"
 import type { Item } from "@/types/item"
 
@@ -140,6 +141,12 @@ export const SimplifiedLikeButton = forwardRef<HTMLButtonElement, SimplifiedLike
       // 🚀 SSA 기반: 완전한 Seamless Sync Architecture 패턴 유지
       // 🔑 이미지 정보 보존하면서 Request Deduplication + Batch Processing 유지
       const rollback = await cacheManager.like(itemId, currentUserId, newHasLiked, cachedItem)
+      
+      // 🔔 알림 발송 (좋아요한 경우에만)
+      if (newHasLiked && currentUserId) {
+        notificationService.notifyLike(itemId, currentUserId)
+          .catch(error => console.error('❌ 좋아요 알림 발송 실패:', error))
+      }
       
       // 📞 부모 컴포넌트에게 알림 (캐시 매니저가 업데이트한 후의 정확한 값 전달)
       // onLikeChange는 cacheManager 업데이트 후 useSSAItemCache를 통해 자동으로 반영됨

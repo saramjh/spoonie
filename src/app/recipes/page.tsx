@@ -171,7 +171,7 @@ const PAGE_SIZE = 12
 		})
 
 		// 팔로우 상태 확인 (작성자들에 대한)
-		const authorIds = [...new Set(data.map((item) => item.user_id))]
+		                const authorIds = Array.from(new Set(data.map((item) => item.user_id)))
 		const { data: userFollows } = await supabase
 			.from("follows")
 			.select("following_id")

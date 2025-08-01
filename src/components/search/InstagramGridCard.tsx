@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { ChefHat, MessageSquare } from "lucide-react"
+import { ChefHat, MessageSquare, Camera } from "lucide-react"
 
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import { useNavigation } from "@/hooks/useNavigation"

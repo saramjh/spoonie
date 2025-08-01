@@ -4,6 +4,8 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { useFollowStore } from "@/store/followStore"
 import { useToast } from "@/hooks/use-toast"
+import { notificationService } from "@/lib/notification-service"
+import { useSessionStore } from "@/store/sessionStore"
 
 interface FollowButtonProps {
 	userId: string
@@ -13,6 +15,7 @@ interface FollowButtonProps {
 
 export default function FollowButton({ userId, initialIsFollowing, className }: FollowButtonProps) {
 	const { toast } = useToast()
+	const { session } = useSessionStore()
 	
 	// 🚀 업계 표준: 글로벌 상태에서 팔로우 상태 참조 (Single Source of Truth)
 	const { isFollowing: globalIsFollowing, follow, unfollow } = useFollowStore()
@@ -47,6 +50,12 @@ export default function FollowButton({ userId, initialIsFollowing, className }: 
 						title: "팔로우 완료", 
 						description: "이제 이 사용자의 게시물을 받아볼 수 있습니다.",
 					})
+					
+					// 🔔 팔로우 알림 발송
+					if (session?.id) {
+						notificationService.notifyFollow(userId, session.id)
+							.catch(error => console.error('❌ 팔로우 알림 발송 실패:', error))
+					}
 				}
 			}
 			

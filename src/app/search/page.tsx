@@ -212,7 +212,7 @@ export default function SearchPage() {
         const saved = sessionStorage.getItem('spoonie_popular_posts');
         if (saved) {
           const parsed = JSON.parse(saved);
-          console.log('🔄 [Init] Restored from sessionStorage:', parsed.length);
+          
           return parsed;
         }
       } catch (error) {
@@ -240,7 +240,7 @@ export default function SearchPage() {
       // sessionStorage에 저장 (페이지 새로고침 시에도 유지)
       try {
         sessionStorage.setItem('spoonie_popular_posts', JSON.stringify(popularPosts));
-        console.log('💾 [Storage] Saved to sessionStorage');
+        
       } catch (error) {
         console.warn('⚠️ Failed to save to sessionStorage:', error);
       }
@@ -250,41 +250,13 @@ export default function SearchPage() {
   // 🎯 실제로 사용할 데이터 (더 안전한 fallback)
   const displayPopularPosts = useMemo(() => {
     const result = popularPosts || stablePopularPosts || [];
-    console.log('🎯 [Display Posts] Final data:', {
-      fromOriginal: !!popularPosts,
-      fromStable: !popularPosts && !!stablePopularPosts,
-      isEmpty: !popularPosts && !stablePopularPosts,
-      finalLength: Array.isArray(result) ? result.length : 0
-    });
+
     return result;
   }, [popularPosts, stablePopularPosts]);
   
-  // 🔍 CRITICAL DEBUG: 인기 게시물 상태 추적
-  useEffect(() => {
-    console.log(`🔥 [Search Page] Popular Posts State:`, {
-      isLoading: postsLoading,
-      hasOriginalData: Array.isArray(popularPosts),
-      originalDataLength: Array.isArray(popularPosts) ? popularPosts.length : 0,
-      hasStableData: Array.isArray(stablePopularPosts),
-      stableDataLength: Array.isArray(stablePopularPosts) ? stablePopularPosts.length : 0,
-      hasDisplayData: Array.isArray(displayPopularPosts),
-      displayDataLength: Array.isArray(displayPopularPosts) ? displayPopularPosts.length : 0,
-    });
-  }, [popularPosts, stablePopularPosts, displayPopularPosts, postsLoading]);
+
   
-  // 🔍 CRITICAL DEBUG: 페이지 가시성 변화 추적
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      console.log(`👁️ [Search Page] Visibility changed:`, {
-        hidden: document.hidden,
-        popularPostsExists: Array.isArray(displayPopularPosts),
-        popularPostsLength: Array.isArray(displayPopularPosts) ? displayPopularPosts.length : 0
-      });
-    };
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [displayPopularPosts]);
+
   
   // 🚀 무한스크롤 검색 결과
   const {
@@ -329,7 +301,7 @@ export default function SearchPage() {
       setSize(1); // 페이지를 첫 페이지로 리셋
       mutateSearch(); // SWR 캐시 클리어
       optimizedSearch.clearCache(); // DebouncedSearch 캐시도 클리어
-      console.log(`🔄 Search term changed to: "${debouncedSearchTerm}" - all caches cleared`);
+
     }
   }, [debouncedSearchTerm, setSize, mutateSearch]);
 
@@ -376,11 +348,7 @@ export default function SearchPage() {
 
   // 👤 유저 검색 결과 처리 (유저네임 전용 검색 결과 사용)
   const userResults = useMemo(() => {
-    console.log(`🔍 [SearchPage] Processing user search results:`, {
-      userSearchResults,
-      isArray: Array.isArray(userSearchResults),
-      length: Array.isArray(userSearchResults) ? userSearchResults.length : 0
-    });
+
     
     if (!userSearchResults || !Array.isArray(userSearchResults)) {
       return [];
@@ -396,14 +364,15 @@ export default function SearchPage() {
           setFollowing(item.user_id, item.is_following);
         }
       });
-      console.log(`✅ SearchPage: Synced follow state for ${searchResults.length} search results`);
+
     }
   }, [searchResults, setFollowing]);
 
 
 
   return (
-    <div className="px-2 py-4 pb-20">
+    <div className="min-h-screen bg-gray-50">
+      <div className="px-2 py-4 pb-20">
       {/* 🔍 Instagram 스타일 검색바 */}
       <div className="relative mb-6">
         <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -577,7 +546,7 @@ export default function SearchPage() {
 
                 // 3. 로딩도 끝났고 데이터도 없는 경우만 메시지 표시
                 if (!postsLoading && hasInitialized) {
-                  console.warn('⚠️ No popular posts to display after initialization');
+
                   return (
                     <div className="col-span-3 text-center py-8 text-gray-500">
                       인기 게시물을 불러올 수 없습니다.
@@ -586,7 +555,7 @@ export default function SearchPage() {
                 }
 
                 // 4. 그 외의 모든 경우 - 빈 상태로 대기 (데이터 로딩 중이거나 초기화 중)
-                console.log('🕐 [Render] Waiting for data...');
+
                 return Array.from({ length: 6 }).map((_, index) => (
                   <div key={`waiting-${index}`} className="aspect-square bg-gray-100 rounded-sm animate-pulse" />
                 ));
@@ -595,6 +564,7 @@ export default function SearchPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

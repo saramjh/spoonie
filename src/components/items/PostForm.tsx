@@ -23,6 +23,7 @@ import { useSWRConfig } from "swr"
 import { uploadImagesOptimized, processExistingImages, ImageUploadMetrics } from "@/utils/image-optimization"
 import { cacheManager } from "@/lib/unified-cache-manager"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
+import { notificationService } from "@/lib/notification-service"
 
 interface PostFormProps {
 	isEditMode?: boolean
@@ -60,7 +61,7 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 	
 	// 🚀 SSA: 섬네일 변경 시 즉시 캐시 업데이트를 위한 wrapper 함수
 	const handleThumbnailChange = useCallback(async (newIndex: number) => {
-		console.log(`🎯 PostForm: Thumbnail changing ${thumbnailIndex} → ${newIndex}`)
+
 		setThumbnailIndex(newIndex)
 		
 		// 수정 모드이고 itemId가 있는 경우에만 즉시 캐시 업데이트
@@ -75,14 +76,9 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 						item_id: initialData.id,
 					}
 					
-					console.log(`🚀 PostForm: Updating thumbnail_index in cache immediately`)
 					await cacheManager.updateItem(initialData.id, partialUpdate)
-					console.log(`✅ PostForm: Thumbnail cache updated successfully`)
 					
-					// 캐시 업데이트 후 상태 재확인
-					setTimeout(() => {
-						console.log(`🔍 PostForm: After cache update - thumbnailIndex: ${thumbnailIndex}, newIndex: ${newIndex}`)
-					}, 100)
+
 				}
 			} catch (error) {
 				console.error(`❌ PostForm: Failed to update thumbnail cache:`, error)
@@ -111,7 +107,7 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 				? initialData.cited_recipe_ids.map(id => String(id)).filter(id => id !== "")
 				: []
 			
-			console.log("🔍 PostForm: Initializing edit mode with cited_recipe_ids:", safeCitedRecipeIds)
+	
 			
 			form.reset({
 				title: initialData.title || "",
@@ -134,7 +130,7 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 				// 🚀 업계 표준: 저장된 썸네일 인덱스 복원 또는 기본값(0) 사용
 				const savedThumbnailIndex = (initialData as any).thumbnail_index ?? 0
 				setThumbnailIndex(Math.min(savedThumbnailIndex, fetchedImages.length - 1))
-				console.log(`📌 Restored thumbnail index: ${savedThumbnailIndex} (available: ${fetchedImages.length})`)
+	
 			}
 
 			// 참고 레시피 초기화
@@ -184,18 +180,8 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 	}, [isEditMode, initialData, form, supabase])
 
 	// 폼 에러 핸들러 추가
-	const onError = (errors: Record<string, unknown>) => {
-		console.log("❌ PostForm: Validation errors:", errors)
-		console.log("🔍 PostForm: Form state:", form.formState)
-		console.log("🔍 PostForm: Form values:", form.getValues())
-		console.log("🔍 PostForm: cited_recipe_ids type:", typeof form.getValues("cited_recipe_ids"))
-		console.log("🔍 PostForm: cited_recipe_ids value:", form.getValues("cited_recipe_ids"))
-		console.log("🔍 PostForm: selectedCitedRecipes:", selectedCitedRecipes)
-		
-		// 각 에러 항목별 상세 정보
-		Object.entries(errors).forEach(([field, error]) => {
-			console.log(`🔍 PostForm: Error in ${field}:`, error)
-		})
+	const onError = () => {
+	
 		
 		toast({
 			title: "입력 오류",
@@ -205,9 +191,7 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 	}
 
 	const onSubmit = async (values: PostFormValues) => {
-		console.log("🚀 PostForm: onSubmit called with values:", values)
-		console.log("🔍 PostForm: mainImages count:", mainImages.length)
-		console.log("🔍 PostForm: Form is valid:", form.formState.isValid)
+	
 		
 		setIsSubmitting(true)
 		try {
@@ -219,7 +203,7 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 				throw new Error("로그인이 필요합니다.")
 			}
 
-			console.log("✅ PostForm: User authenticated:", user.id)
+
 
 					const bucketId = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET_ITEMS
 			
@@ -243,14 +227,12 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 			const existingImageUrls = mainImages.filter((img) => !newImageFiles.includes(img)).map((img) => img.preview)
 			
 			if (newImageFiles.length > 0) {
-				console.log(`📤 Uploading ${newImageFiles.length} new images in parallel...`)
+
 				const uploadResults = await uploadImagesOptimized(
 					newImageFiles, 
 					user.id, 
 					bucketId,
-					(progress) => {
-						console.log(`📊 Upload progress: ${progress.uploaded}/${progress.total} (${progress.currentFile || ''})`)
-					}
+
 				)
 
 				// 업로드 결과 검증 및 URL 추출
@@ -272,14 +254,12 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 			const imagesToUpload = mainImages.filter(img => img.file.size > 0)
 			
 			if (imagesToUpload.length > 0) {
-				console.log(`📤 Uploading ${imagesToUpload.length} images in parallel...`)
+
 				const uploadResults = await uploadImagesOptimized(
 					imagesToUpload, 
 					user.id, 
 					bucketId,
-					(progress) => {
-						console.log(`📊 Upload progress: ${progress.uploaded}/${progress.total} (${progress.currentFile || ''})`)
-					}
+
 				)
 
 				// 결과 검증 및 URL 추출
@@ -308,7 +288,7 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 			}
 		})
 
-		console.log(`✅ Optimized upload completed in ${uploadDuration}ms for ${uploadedImageUrls.length} images`)
+
 
 
 
@@ -334,18 +314,18 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 				if (itemError) throw new Error(`레시피드 수정 실패: ${itemError.message}`)
 				itemId = updatedItem.id
 				
-				console.log(`✅ PostForm: Item updated successfully - ${itemId}`)
+
 			} else {
 				const { data: newItem, error: itemError } = await supabase.from("items").insert(itemPayload).select("*").single()
 
 				if (itemError) throw new Error(`레시피드 생성 실패: ${itemError.message}`)
 				itemId = newItem.id
 				
-				console.log(`✅ PostForm: Item created successfully - ${itemId}`)
+
 			}
 
 			// 🚀 SSA 기반: 통합 캐시 매니저를 통한 완전 자동 동기화
-			console.log(`🚀 PostForm: SSA ${isEditMode ? 'update' : 'create'} mode - using cacheManager...`)
+
 			
 			const fullItemPayload = {
 				...itemPayload,
@@ -366,40 +346,50 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 			
 			if (isEditMode) {
 				// 🚀 SSA: 아이템 업데이트 - 모든 캐시 자동 동기화
-				console.log(`🔍 PostForm: Calling updateItem with itemId: "${itemId}" and payload:`, {
-					id: fullItemPayload.id,
-					item_id: fullItemPayload.item_id,
-					title: fullItemPayload.title,
-					content: fullItemPayload.content,
-					thumbnail_index: fullItemPayload.thumbnail_index,
-					image_urls: fullItemPayload.image_urls?.length || 0
-				})
+
 				await cacheManager.updateItem(itemId, fullItemPayload)
 				
 				// 🔧 Smart Fallback: 필요시에만 부분 무효화 (성능 개선)
 				setTimeout(async () => {
-					console.log(`🔄 PostForm: Smart fallback - revalidating home feed only`)
+
 					await cacheManager.revalidateHomeFeed()
 				}, 200)
 				
-				console.log(`✅ PostForm: SSA update completed - all caches synchronized`)
+
 			} else {
 				// 🚀 SSA: 새로운 아이템 추가 - 홈피드 맨 위에 즉시 표시!
 				await cacheManager.addNewItem(fullItemPayload as Item)
 			}
 			
-			console.log(`✅ PostForm: ${isEditMode ? "수정" : "작성"} 완료 with SSA architecture`)
+
 			
 
 			
 			// DataManager가 모든 캐시 동기화를 처리하므로 추가 작업 불필요
 
-			console.log(`✅ PostForm: Post ${isEditMode ? "updated" : "created"} successfully with optimistic update: ${itemId}`)
+
 			
 					toast({
 			title: `레시피드 ${isEditMode ? "수정" : "작성"} 완료!`,
 			description: "레시피드가 성공적으로 처리되었습니다.",
 		})
+			
+			// 🔔 참고레시피 알림 발송
+			if (values.cited_recipe_ids && values.cited_recipe_ids.length > 0) {
+				if (!isEditMode) {
+					// 새로 작성하는 경우: 공개 설정 시에만 알림 발송
+					notificationService.notifyRecipeCited(itemId, values.cited_recipe_ids, user.id, values.is_public)
+						.catch(error => console.error('❌ 참고레시피 알림 발송 실패:', error))
+				} else if (initialData) {
+					// 수정하는 경우: 비공개→공개 전환 시에만 알림 발송
+					const wasPrivate = !initialData.is_public
+					const nowPublic = values.is_public
+					if (wasPrivate && nowPublic) {
+						notificationService.notifyRecipeCited(itemId, values.cited_recipe_ids, user.id, true)
+							.catch(error => console.error('❌ 참고레시피 알림 발송 실패:', error))
+					}
+				}
+			}
 			
 			// 🧭 스마트 네비게이션: 사용자가 온 곳으로 적절히 돌아가기
 			if (onNavigateBack) {
@@ -485,17 +475,17 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 							<CitedRecipeSearch
 								selectedRecipes={selectedCitedRecipes}
 								onSelectedRecipesChange={(recipes: Item[]) => {
-									console.log("🔍 PostForm: CitedRecipeSearch onChange:", recipes)
+
 									setSelectedCitedRecipes(recipes)
 									
 									// 안전한 string 변환
 									const recipeIds = recipes.map((r: Item) => {
 										const id = String(r.id || r.item_id || "")
-										console.log(`🔍 PostForm: Recipe ${r.title} -> ID: ${id} (type: ${typeof id})`)
+
 										return id
 									}).filter(id => id !== "")
 									
-									console.log("🔍 PostForm: Setting cited_recipe_ids:", recipeIds)
+
 									
 									// 타입 검증
 									if (Array.isArray(recipeIds) && recipeIds.every(id => typeof id === 'string')) {
