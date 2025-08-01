@@ -42,6 +42,6 @@ GEMINI.md
 # LOMC file
 SPOONIE.lomc
 
-/docs
+/docs/
 
-/.GEMINI
+/.gemini/settings.json
