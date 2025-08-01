@@ -1,0 +1,69 @@
+# 🚀 Netlify 빌드 최적화를 위한 제외 파일들
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Next.js
+.next/
+out/
+
+# 환경 설정 파일들 (보안)
+.env*
+!.env.example
+
+# Git 관련
+.git/
+.gitignore
+
+# IDE 설정
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 로그 파일들
+*.log
+
+# 캐시 및 임시 파일들
+.cache/
+*.tgz
+*.tar.gz
+
+# macOS
+.DS_Store
+
+# 개발 도구
+coverage/
+
+# 문서 파일들 (빌드에 불필요)
+README.md
+*.md
+
+# 개발 스크립트
+scripts/
+
+# 테스트 파일들
+**/*.test.*
+**/*.spec.*
+__tests__/
+
+# Supabase 설정 (민감한 정보 제외)
+supabase/
+
+# 프로젝트 설정 파일들 (빌드에 불필요)
+.eslintrc.json
+.gitattributes
+
+# 개발 전용 이미지들
+public/dev/
+
+# 백업 파일들
+*.backup
+*.bak
+
+# 임시 파일들
+tmp/
+temp/
