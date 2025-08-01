@@ -41,9 +41,20 @@ export default function SignupPage() {
 
 	const handleSignUp = async (values: z.infer<typeof formSchema>) => {
 		const username = await generateUniqueUsername()
-		const redirectUrl = process.env.NEXT_PUBLIC_APP_URL 
-			? `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
-			: `${location.origin}/auth/callback`
+		const envUrl = process.env.NEXT_PUBLIC_APP_URL
+		
+		// 🎯 강제로 프로덕션 도메인 사용
+		const redirectUrl = location.hostname === 'spoonie.kr' || location.hostname === 'www.spoonie.kr'
+			? `https://spoonie.kr/auth/callback`
+			: envUrl 
+				? `${envUrl}/auth/callback`
+				: `${location.origin}/auth/callback`
+		
+		console.log('🔍 Signup Redirect Debug:', {
+			hostname: location.hostname,
+			envUrl,
+			finalRedirectUrl: redirectUrl
+		})
 			
 		const { error } = await supabase.auth.signUp({
 			email: values.email,

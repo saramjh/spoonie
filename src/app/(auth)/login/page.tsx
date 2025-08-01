@@ -58,9 +58,22 @@ export default function LoginPage() {
 	}
 
 	const handleGoogleLogin = async () => {
-		const redirectUrl = process.env.NEXT_PUBLIC_APP_URL 
-			? `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
-			: `${location.origin}/auth/callback`
+		const envUrl = process.env.NEXT_PUBLIC_APP_URL
+		
+		// 🎯 강제로 프로덕션 도메인 사용
+		const redirectUrl = location.hostname === 'spoonie.kr' || location.hostname === 'www.spoonie.kr'
+			? `https://spoonie.kr/auth/callback`
+			: envUrl 
+				? `${envUrl}/auth/callback`
+				: `${location.origin}/auth/callback`
+		
+		// 🔍 디버깅용 로그
+		console.log('🔍 OAuth Redirect Debug:', {
+			hostname: location.hostname,
+			envUrl,
+			locationOrigin: location.origin,
+			finalRedirectUrl: redirectUrl
+		})
 			
 		await supabase.auth.signInWithOAuth({
 			provider: "google",
