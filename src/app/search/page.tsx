@@ -224,16 +224,10 @@ export default function SearchPage() {
   const [hasInitialized, setHasInitialized] = useState(false);
   
   useEffect(() => {
-    console.log('🔄 [Popular Posts Effect] Checking data:', {
-      popularPosts: popularPosts,
-      isArray: Array.isArray(popularPosts),
-      length: Array.isArray(popularPosts) ? popularPosts.length : 0,
-      hasInitialized: hasInitialized,
-      currentStable: stablePopularPosts ? stablePopularPosts.length : 0
-    });
+
 
     if (popularPosts && Array.isArray(popularPosts) && popularPosts.length > 0) {
-      console.log('✅ [Popular Posts Effect] Setting stable data:', popularPosts.length);
+
       setStablePopularPosts(popularPosts);
       setHasInitialized(true);
       
@@ -284,7 +278,7 @@ export default function SearchPage() {
 
   // 👤 사용자 검색 결과 (유저네임 전용)
   const userSearchKey = debouncedSearchTerm ? `search_users|${debouncedSearchTerm}` : null;
-  console.log(`🔍 [SearchPage] User search SWR key:`, userSearchKey);
+
   
   const { data: userSearchResults, isLoading: userSearchLoading } = useSWR(
     userSearchKey,
@@ -375,11 +369,11 @@ export default function SearchPage() {
       <div className="px-2 py-4 pb-20">
       {/* 🔍 Instagram 스타일 검색바 */}
       <div className="relative mb-6">
-        <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+        <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
         <Input
           type="text"
           placeholder="레시피, 피드, 사용자 검색..."
-          className={`pl-12 ${searchTerm ? 'pr-12' : 'pr-4'} py-3 rounded-xl bg-gray-50 border-transparent focus:border-orange-500 focus:ring-orange-500 h-14 text-base placeholder:text-gray-500`}
+          className={`pl-12 ${searchTerm ? 'pr-12' : 'pr-4'} py-3 rounded-xl bg-white border-gray-200 shadow-sm focus:border-orange-500 focus:ring-orange-500 focus:shadow-md h-14 text-base placeholder:text-gray-500 transition-all duration-200`}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -387,10 +381,10 @@ export default function SearchPage() {
         {searchTerm && (
           <button
             onClick={() => setSearchTerm('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center bg-gray-300 hover:bg-gray-400 rounded-full transition-colors duration-200"
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-full transition-colors duration-200"
             aria-label="검색어 지우기"
           >
-            <X className="h-3.5 w-3.5 text-gray-600" />
+            <X className="h-3.5 w-3.5 text-gray-500" />
           </button>
         )}
       </div>
@@ -516,13 +510,7 @@ export default function SearchPage() {
             <div className="grid grid-cols-3 gap-1 sm:gap-2">
               {/* 🚀 단순화된 렌더링 로직 */}
               {(() => {
-                console.log('🔥 [Render Logic] State Check:', {
-                  hasDisplayData: Array.isArray(displayPopularPosts) && displayPopularPosts.length > 0,
-                  displayDataLength: Array.isArray(displayPopularPosts) ? displayPopularPosts.length : 0,
-                  isLoading: postsLoading,
-                  hasStableData: Array.isArray(stablePopularPosts) && stablePopularPosts.length > 0,
-                  stableDataLength: Array.isArray(stablePopularPosts) ? stablePopularPosts.length : 0
-                });
+
 
                 // 1. 표시할 데이터가 있는 경우
                 if (Array.isArray(displayPopularPosts) && displayPopularPosts.length > 0) {

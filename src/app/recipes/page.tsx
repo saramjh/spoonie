@@ -72,7 +72,7 @@ const PAGE_SIZE = 12
 					query = query.ilike("title", `%${searchTerm}%`)
 				}
 				
-				console.log(`🔍 나의 레시피 검색: "${searchTerm}" - 재료 매치: ${recipeIdsFromIngredients.length}개`)
+				
 				
 			} catch (error) {
 				console.error("Search error, falling back to title search:", error)
@@ -132,7 +132,7 @@ const PAGE_SIZE = 12
 				
 				query = query.or(conditions.join(","))
 				
-				console.log(`🔍 모든 레시피 검색: "${searchTerm}" - 사용자: ${matchingUserIds.length}개, 재료: ${recipeIdsFromIngredients.length}개`)
+				
 				
 			} catch (error) {
 				console.error("Search error, falling back to title search:", error)
@@ -365,14 +365,14 @@ export default function RecipesPage() {
 		const handleDeleteSelected = async () => {
 		if (selectedRecipes.length === 0) return
 
-		console.log(`🗑️ RecipeBook: Starting deletion of ${selectedRecipes.length} recipes:`, selectedRecipes);
+		
 
 		// 🚀 업계 표준: 1. 레시피북 캐시에서 즉시 제거 (Instagram/Twitter 방식)
 		mutateRecipes(
 			(cachedData: any[] | any[][] | undefined) => {
-				console.log(`🔄 RecipeBook: Processing RECIPE BOOK cached data:`, cachedData);
+				
 				if (!cachedData || !Array.isArray(cachedData)) {
-					console.log(`❌ RecipeBook: Invalid recipe book cached data`);
+					
 					return cachedData;
 				}
 				
@@ -380,23 +380,23 @@ export default function RecipesPage() {
 				const hasPageStructure = cachedData.length > 0 && Array.isArray(cachedData[0]);
 				
 				if (hasPageStructure) {
-					console.log(`📄 RecipeBook: Processing recipe book paginated data with ${cachedData.length} pages`);
+					
 					return cachedData.map((page: any) => 
 						page.filter((recipe: any) => {
 							const shouldKeep = !selectedRecipes.includes(recipe.item_id || recipe.id);
 							if (!shouldKeep) {
-								console.log(`🗑️ RecipeBook: Removing recipe ${recipe.item_id || recipe.id} from recipe book cache`);
+								
 							}
 							return shouldKeep;
 						})
 					);
 				} else {
 					// 평면 배열 구조 처리 (폴백)
-					console.log(`📋 RecipeBook: Processing recipe book flat array with ${cachedData.length} items`);
+					
 					return cachedData.filter((recipe: any) => {
 						const shouldKeep = !selectedRecipes.includes(recipe.item_id || recipe.id);
 						if (!shouldKeep) {
-							console.log(`🗑️ RecipeBook: Removing recipe ${recipe.item_id || recipe.id} from recipe book flat array`);
+							
 						}
 						return shouldKeep;
 					});
@@ -409,13 +409,13 @@ export default function RecipesPage() {
 		mutate(
 			(key) => {
 				const isMatch = typeof key === "string" && key.startsWith("items|");
-				console.log(`🔍 RecipeBook: Checking HOME FEED key "${key}" - matches: ${isMatch}`);
+				
 				return isMatch;
 			},
 			(cachedData: any) => {
-				console.log(`🔄 RecipeBook: Processing HOME FEED cached data for ${selectedRecipes.length} deletions:`, cachedData);
+				
 				if (!cachedData || !Array.isArray(cachedData)) {
-					console.log(`❌ RecipeBook: Invalid home feed cached data`);
+					
 					return cachedData;
 				}
 				
@@ -425,22 +425,22 @@ export default function RecipesPage() {
 				                         (cachedData[0].length === 0 || typeof cachedData[0][0] === 'object');
 				
 				if (hasPageStructure) {
-					console.log(`📄 RecipeBook: Processing home feed paginated data with ${cachedData.length} pages`);
+					
 					return cachedData.map((page: any) => 
 						page.filter((feedItem: any) => {
 							const shouldKeep = !selectedRecipes.includes(feedItem.item_id);
 							if (!shouldKeep) {
-								console.log(`🗑️ RecipeBook: Removing item ${feedItem.item_id} from home feed cache`);
+								
 							}
 							return shouldKeep;
 						})
 					);
 				} else {
-					console.log(`📋 RecipeBook: Processing home feed flat array with ${cachedData.length} items`);
+					
 					return cachedData.filter((feedItem: any) => {
 						const shouldKeep = !selectedRecipes.includes(feedItem.item_id);
 						if (!shouldKeep) {
-							console.log(`🗑️ RecipeBook: Removing item ${feedItem.item_id} from home feed flat array`);
+							
 						}
 						return shouldKeep;
 					});
@@ -450,14 +450,14 @@ export default function RecipesPage() {
 		)
 
 		try {
-			console.log(`🌐 RecipeBook: Attempting database deletion for ${selectedRecipes.length} recipes`);
+			
 			
 			// 3. 실제 데이터베이스에서 레시피 삭제
 			const { error } = await supabase.from("items").delete().in("id", selectedRecipes)
 
 			if (error) throw error
 			
-			console.log(`✅ RecipeBook: Database deletion successful`);
+			
 
 			// 🚀 업계 표준: 4. 성공시 최종 캐시 확정
 			await mutateRecipes() // 레시피북 캐시 확정
@@ -473,7 +473,7 @@ export default function RecipesPage() {
 			console.error("❌ RecipeBook: Database deletion failed:", error)
 			
 			// 🚀 업계 표준: 5. 실패시 Optimistic Update 롤백
-			console.log(`🔄 RecipeBook: Rolling back optimistic updates`);
+			
 			await mutateRecipes() // 레시피북 롤백
 			await mutate((key: string) => typeof key === "string" && key.startsWith("items|")) // 홈화면 롤백
 			
@@ -663,11 +663,27 @@ export default function RecipesPage() {
 							? "grid grid-cols-2 gap-3" 
 							: "space-y-5"
 					}>
-						{recipes.map((item) =>
+						{recipes.map((item, index) =>
 							viewMode === "card" ? (
-								<RecipeCard key={item.item_id} item={item} isSelectable={currentTab === "my_recipes"} isSelected={selectedRecipes.includes(item.item_id)} onSelect={() => handleSelectRecipe(item.item_id)} showAuthor={currentTab === "all_recipes"} />
+								<RecipeCard 
+									key={item.item_id} 
+									item={item} 
+									isSelectable={currentTab === "my_recipes"} 
+									isSelected={selectedRecipes.includes(item.item_id)} 
+									onSelect={() => handleSelectRecipe(item.item_id)} 
+									showAuthor={currentTab === "all_recipes"}
+									priority={index === 0} // 첫 번째 레시피에만 우선순위 부여
+								/>
 							) : (
-								<RecipeListCard key={item.item_id} item={item} isSelectable={currentTab === "my_recipes"} isSelected={selectedRecipes.includes(item.item_id)} onSelect={() => handleSelectRecipe(item.item_id)} showAuthor={currentTab === "all_recipes"} />
+								<RecipeListCard 
+									key={item.item_id} 
+									item={item} 
+									isSelectable={currentTab === "my_recipes"} 
+									isSelected={selectedRecipes.includes(item.item_id)} 
+									onSelect={() => handleSelectRecipe(item.item_id)} 
+									showAuthor={currentTab === "all_recipes"}
+									priority={index === 0} // 첫 번째 레시피에만 우선순위 부여
+								/>
 							)
 						)}
 					</div>

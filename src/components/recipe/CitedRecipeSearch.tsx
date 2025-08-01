@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import { X } from 'lucide-react';
@@ -19,9 +19,11 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<Item[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [showSearch, setShowSearch] = useState(false); // 🚀 검색 표시 상태 추가
+  const inputRef = useRef<HTMLInputElement>(null); // 🎯 input 참조
 
   const handleSearch = useCallback(async (query: string) => {
-    console.log("handleSearch: query", query); // 검색어 로그
+
     if (query.length < 2) {
       setSearchResults([]);
       return;
@@ -34,7 +36,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
       .replace(/\s+/g, ' ') // 연속된 공백을 하나로 정리
       .trim(); // 앞뒤 공백 제거
 
-    console.log("handleSearch: cleanQuery", cleanQuery); // 정리된 검색어 로그
+
 
     if (cleanQuery.length < 2) {
       setSearchResults([]);
@@ -49,8 +51,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
       .or(`display_name.ilike.%${cleanQuery}%,username.ilike.%${cleanQuery}%`)
       .limit(10);
 
-    console.log("handleSearch: profileData", profileData); // profileData 로그
-    console.log("handleSearch: profileError", profileError); // profileError 로그
+    
 
     if (profileError) {
       console.error('Error searching profiles:', profileError);
@@ -60,7 +61,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
     }
 
     const matchingUserIds = profileData.map(p => p.id);
-    console.log("handleSearch: matchingUserIds", matchingUserIds); // matchingUserIds 로그
+    
 
     // 2. items 테이블에서 레시피명 또는 user_id로 검색
     let itemQuery = `title.ilike.%${cleanQuery}%`;
@@ -80,8 +81,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
       .or(itemQuery)
       .limit(10);
 
-    console.log("handleSearch: itemData", itemData); // itemData 로그
-    console.log("handleSearch: itemError", itemError); // itemError 로그
+    
 
     if (itemError) {
       console.error('Error searching items:', itemError);
@@ -113,7 +113,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
         is_following: false, // 검색 결과에서는 팔로우 여부 가져오지 않음
         cited_recipe_ids: item.cited_recipe_ids || [],
       }));
-      console.log("handleSearch: formattedData", formattedData); // formattedData 로그
+  
       setSearchResults(formattedData);
     }
     setIsLoading(false);
@@ -131,50 +131,119 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
     onSelectedRecipesChange(selectedRecipes.filter(r => r.item_id !== recipeId));
   };
 
+  // 🎯 검색창 표시될 때 자동 포커스
+  useEffect(() => {
+    if (showSearch && inputRef.current) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100); // 렌더링 완료 후 포커스
+    }
+  }, [showSearch]);
+
   return (
     <div className="space-y-4">
-      <Command shouldFilter={false}> {/* shouldFilter={false} 추가 */}
-        <CommandInput 
-          placeholder="레시피 검색..." 
-          value={searchTerm}
-          onValueChange={(search) => {
-            setSearchTerm(search);
-            handleSearch(search);
-          }}
-        />
-        <CommandList>
-          {isLoading && <CommandEmpty>검색 중...</CommandEmpty>}
-          {!isLoading && searchTerm.length > 1 && searchResults.length === 0 && <CommandEmpty>검색 결과가 없습니다.</CommandEmpty>} {/* 조건 수정 */}
-          {searchResults.length > 0 && (
-            <CommandGroup heading="검색 결과">
-              {searchResults.map((recipe) => (
-                <CommandItem key={recipe.item_id} onSelect={() => handleSelectRecipe(recipe)}>
-                  <div className="flex justify-between items-center w-full">
-                    <span>
-                      <span className="font-semibold">{recipe.display_name || "익명"}</span>의 {recipe.title}
-                    </span>
-                    {recipe.created_at && (
-                      <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
-                        {format(new Date(recipe.created_at), 'yyyy.MM.dd')}
-                      </span>
-                    )}
-                  </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          )}
-        </CommandList>
-      </Command>
-      <div className="flex flex-wrap gap-2">
-        {selectedRecipes.map(recipe => (
-          <Badge key={recipe.item_id} variant="secondary" className="flex items-center gap-1">
-            <span className="font-semibold">{recipe.display_name || "익명"}</span>의 {recipe.title}
-            <button onClick={() => handleRemoveRecipe(recipe.item_id)} className="rounded-full hover:bg-gray-300 p-0.5">
-              <X className="h-3 w-3" />
-            </button>
-          </Badge>
-        ))}
-      </div>
+      {/* 🚀 토스 스타일: 미니멀한 시작 상태 */}
+      {selectedRecipes.length === 0 && !searchTerm && !showSearch && (
+        <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-orange-300 hover:bg-orange-50/30 transition-all duration-200 cursor-pointer group"
+             onClick={() => setShowSearch(true)}>
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center group-hover:bg-orange-200 transition-colors">
+              <span className="text-lg">🍳</span>
+            </div>
+            <p className="text-sm text-gray-600 group-hover:text-orange-600 transition-colors">
+              참고한 레시피가 있다면 추가해보세요
+            </p>
+            <p className="text-xs text-gray-400">레시피를 검색하고 선택할 수 있어요</p>
+          </div>
+        </div>
+      )}
+
+      {/* 🎯 검색 영역 - 필요할 때만 표시 */}
+      {(searchTerm || selectedRecipes.length > 0 || showSearch) && (
+        <div className="relative">
+          <Command shouldFilter={false} className="border border-gray-200 rounded-xl shadow-sm">
+            <CommandInput 
+              ref={inputRef}
+              id="recipe-search-input"
+              placeholder="어떤 레시피를 참고하셨나요?" 
+              value={searchTerm}
+              onValueChange={(search) => {
+                setSearchTerm(search);
+                handleSearch(search);
+              }}
+              className="border-none bg-gray-50/50"
+            />
+            <CommandList className="max-h-48">
+              {isLoading && <CommandEmpty>검색 중...</CommandEmpty>}
+              {!isLoading && searchTerm.length > 1 && searchResults.length === 0 && <CommandEmpty>검색 결과가 없습니다.</CommandEmpty>}
+              {searchResults.length > 0 && (
+                <CommandGroup>
+                  {searchResults.map((recipe) => (
+                    <CommandItem key={recipe.item_id} onSelect={() => handleSelectRecipe(recipe)} className="cursor-pointer hover:bg-orange-50">
+                      <div className="flex items-center gap-3 w-full">
+                        {/* 🖼️ 썸네일 추가 */}
+                        <div className="w-8 h-8 rounded-lg bg-orange-100 flex-shrink-0 overflow-hidden">
+                          {recipe.image_urls && recipe.image_urls.length > 0 ? (
+                            <img src={recipe.image_urls[0]} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full bg-orange-100 flex items-center justify-center">
+                              <span className="text-xs">🍳</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium truncate">{recipe.title}</div>
+                          <div className="text-xs text-gray-500 truncate">
+                            {recipe.display_name || "익명"} • {recipe.created_at && format(new Date(recipe.created_at), 'MM.dd')}
+                          </div>
+                        </div>
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+            </CommandList>
+          </Command>
+        </div>
+      )}
+
+      {/* 🏷️ 선택된 레시피들 - 토스 스타일 카드 */}
+      {selectedRecipes.length > 0 && (
+        <div className="space-y-2">
+          <div className="text-sm text-gray-600 flex items-center gap-1">
+            <span>📚</span>
+            <span>참고 레시피 {selectedRecipes.length}개</span>
+          </div>
+          <div className="grid gap-2">
+            {selectedRecipes.map(recipe => (
+              <div key={recipe.item_id} className="bg-orange-50 border border-orange-200 rounded-xl p-3 flex items-center gap-3 group hover:bg-orange-100 transition-colors">
+                {/* 썸네일 */}
+                <div className="w-10 h-10 rounded-lg bg-white overflow-hidden flex-shrink-0">
+                  {recipe.image_urls && recipe.image_urls.length > 0 ? (
+                    <img src={recipe.image_urls[0]} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-orange-100 flex items-center justify-center">
+                      <span className="text-sm">🍳</span>
+                    </div>
+                  )}
+                </div>
+                {/* 내용 */}
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-gray-900 truncate">{recipe.title}</div>
+                  <div className="text-sm text-gray-600 truncate">{recipe.display_name || "익명"}의 레시피</div>
+                </div>
+                {/* 삭제 버튼 */}
+                <button 
+                  onClick={() => handleRemoveRecipe(recipe.item_id)} 
+                  className="w-6 h-6 rounded-full bg-white hover:bg-gray-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-sm"
+                >
+                  <X className="h-3 w-3 text-gray-500" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

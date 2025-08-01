@@ -174,7 +174,7 @@ export function usePosts(initialData?: ServerFeedData | null) {
   // 🔍 백그라운드 스마트 동기화 (30초마다 자동)
   useEffect(() => {
     const interval = setInterval(() => {
-      console.log(`🔍 Background sync: Quietly updating home feed cache`)
+
       // 🚀 업계 표준: 삭제 직후에는 background sync 건너뛰기 (Instagram/Twitter 방식)
       // mutate 호출시 revalidate: false로 하여 서버에서 다시 가져오지 않음
       mutate(undefined, { revalidate: false }) // 캐시만 정리, 서버 재검증 없음
@@ -187,14 +187,14 @@ export function usePosts(initialData?: ServerFeedData | null) {
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        console.log(`👁️ 홈화면이 다시 보임 - 최신 데이터로 동기화 시작`)
+  
         // 첫 페이지만 빠르게 revalidate하여 최신 변경사항 반영
         mutate(undefined, { revalidate: true })
       }
     }
 
     const handleFocus = () => {
-      console.log(`🎯 홈화면이 포커스를 받음 - 캐시 새로고침`)
+      
       mutate(undefined, { revalidate: true })
     }
 

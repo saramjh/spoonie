@@ -124,7 +124,7 @@ export const defaultSWRConfig: SWRConfiguration = {
         for (const [pattern, patternConfig] of Object.entries(cacheKeyConfigs)) {
           if (key.startsWith(pattern)) {
             optimizedConfig = { ...optimizedConfig, ...patternConfig }
-            console.log(`🎯 Applied optimized config for key pattern: ${pattern}`)
+        
             break
           }
         }
@@ -224,7 +224,7 @@ export const enableSWRDevtools = () => {
     // 전역 window 객체에 SWR 메트릭 노출
     if (typeof window !== 'undefined') {
       (window as typeof window & { swrMetrics: typeof SWRMetrics }).swrMetrics = SWRMetrics
-      console.log('🔍 SWR Metrics available at window.swrMetrics')
+    
     }
   }
 } 

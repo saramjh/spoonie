@@ -103,7 +103,7 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 
 	const setThumbnail = useCallback(
 		(index: number) => {
-			console.log(`🎯 ImageUploader: Setting thumbnail to index ${index}`)
+			// Debug: Setting thumbnail index
 			setCurrentThumbnailIndex(index)
 			if (onThumbnailChange) {
 				onThumbnailChange(index)
@@ -158,7 +158,14 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 								</button>
 							)}
 
-							<Image src={image.preview} alt={`Preview ${index + 1}`} fill className="object-cover cursor-pointer" onClick={() => showThumbnailSelector && setThumbnail(index)} />
+							<Image 
+							src={image.preview} 
+							alt={`Preview ${index + 1}`} 
+							fill 
+							className="object-cover cursor-pointer" 
+							onClick={() => showThumbnailSelector && setThumbnail(index)}
+							priority={index === 0}
+						/>
 
 							<div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-2 opacity-0 group-hover:opacity-100 transition-opacity">
 								<div>{image.width} × {image.height}</div>

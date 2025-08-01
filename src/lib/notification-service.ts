@@ -73,7 +73,7 @@ class NotificationService implements INotificationService {
       if (error) {
         console.error('❌ 댓글 알림 생성 실패:', error)
       } else {
-        console.log(`✅ 댓글 알림 생성: ${itemId} by ${actorUserId}`)
+    
       }
     } catch (error) {
       console.error('❌ 댓글 알림 처리 중 오류:', error)
@@ -141,7 +141,7 @@ class NotificationService implements INotificationService {
         if (error) {
           console.error(`❌ 대댓글 알림 생성 실패 (${userId}):`, error)
         } else {
-          console.log(`✅ 대댓글 알림 생성: ${itemId} by ${actorUserId} → ${userId}`)
+    
         }
       }
       
@@ -189,7 +189,7 @@ class NotificationService implements INotificationService {
       if (error) {
         console.error('❌ 좋아요 알림 생성 실패:', error)
       } else {
-        console.log(`✅ 좋아요 알림 생성: ${itemId} by ${actorUserId}`)
+    
       }
     } catch (error) {
       console.error('❌ 좋아요 알림 처리 중 오류:', error)
@@ -227,7 +227,7 @@ class NotificationService implements INotificationService {
       if (error) {
         console.error('❌ 팔로우 알림 생성 실패:', error)
       } else {
-        console.log(`✅ 팔로우 알림 생성: ${targetUserId} by ${actorUserId}`)
+    
       }
     } catch (error) {
       console.error('❌ 팔로우 알림 처리 중 오류:', error)
@@ -240,7 +240,7 @@ class NotificationService implements INotificationService {
       
       // 🔒 비공개 게시물인 경우 알림 발송 안함
       if (!isPublic) {
-        console.log(`🔒 비공개 게시물이므로 참고레시피 알림 발송 안함: ${newItemId}`)
+  
         return
       }
       
@@ -279,7 +279,7 @@ class NotificationService implements INotificationService {
           .limit(1)
         
         if (existing && existing.length > 0) {
-          console.log(`⏭️ 이미 참고레시피 알림 발송됨: ${newItemId} → ${userId}`)
+  
           continue
         }
         
@@ -296,7 +296,7 @@ class NotificationService implements INotificationService {
         if (error) {
           console.error(`❌ 참고레시피 알림 생성 실패 (${userId}):`, error)
         } else {
-          console.log(`✅ 참고레시피 알림 생성: ${newItemId} by ${actorUserId} → ${userId}`)
+  
         }
       }
       

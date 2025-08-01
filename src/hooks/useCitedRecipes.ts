@@ -11,7 +11,7 @@ const fetchCitedRecipes = async (citedRecipeIds: string[]): Promise<FeedItem[]> 
 	}
 
 	const supabase = createSupabaseBrowserClient()
-	console.log("📡 useCitedRecipes: Fetching cited recipes from database...")
+
 
 	const { data, error } = await supabase
 		.from("items")
@@ -39,7 +39,7 @@ const fetchCitedRecipes = async (citedRecipeIds: string[]): Promise<FeedItem[]> 
 		throw error
 	}
 
-	console.log("✅ useCitedRecipes: Cited recipes fetched successfully:", data)
+
 
 	// FeedItem 형태로 매핑
 	const mappedData = (data || []).map((recipe: Record<string, unknown>) => {
@@ -107,12 +107,7 @@ export function useCitedRecipes(citedRecipeIds: string[] | null | undefined) {
 		revalidateIfStale: true, // stale 데이터일 때만 재검증
 	})
 
-	console.log(`🔄 useCitedRecipes: Cache status for ${cacheKey}:`, {
-		hasData: !!data,
-		isLoading,
-		dataLength: data?.length || 0,
-		error: !!error,
-	})
+
 
 	return {
 		citedRecipes: data || [],

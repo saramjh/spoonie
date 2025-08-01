@@ -60,13 +60,13 @@ export default function ItemList({ initialData }: ItemListProps) {
 	useEffect(() => {
 		const handleVisibilityChange = () => {
 			if (!document.hidden) {
-				console.log("🔄 Page focused - refreshing feed")
+				
 				swrMutate()
 			}
 		}
 
 		const handlePopState = () => {
-			console.log("🔄 Popstate detected - refreshing feed")
+			
 			setTimeout(() => swrMutate(), 100) // 짧은 딜레이로 안정성 확보
 		}
 

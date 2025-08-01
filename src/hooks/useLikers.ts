@@ -64,7 +64,7 @@ const fetcher = async (key: string): Promise<LikerProfile[]> => {
 		}
 	})
 
-	console.log(`👥 Fetched ${formattedLikers.length} likers for item ${itemId}`)
+	// console.log(`👥 Fetched ${formattedLikers.length} likers for item ${itemId}`)
 	return formattedLikers
 }
 

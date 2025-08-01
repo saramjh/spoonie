@@ -207,15 +207,14 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 
 					const bucketId = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET_ITEMS
 			
-			console.log("🔍 PostForm: bucketId:", bucketId)
+			
 			
 			if (!bucketId) {
 				throw new Error("Storage bucket ID가 설정되지 않았습니다.")
 			}
 
 		// 🚀 업계 표준: 원본 순서 유지 + 썸네일 인덱스 정보 저장 (개선된 Instagram/Facebook 방식)
-		console.log(`📌 Preserving original image order with thumbnail index: ${thumbnailIndex}`)
-		console.log(`📦 Images:`, mainImages.map((img, i) => `${i}: ${img.preview.split('/').pop()}`))
+		
 
 		// 🚀 최적화된 병렬 이미지 업로드 (기존: 순차 → 새로운: 병렬 + 캐싱)
 		const uploadStartTime = Date.now()

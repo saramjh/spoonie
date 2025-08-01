@@ -23,7 +23,7 @@ export interface ServerFeedData {
  * 클라이언트의 3번 요청을 1번의 서버 작업으로 통합
  */
 export async function getInitialFeedData(): Promise<ServerFeedData> {
-  console.log("🏃‍♂️ Server: Fetching initial feed data...")
+
   const startTime = Date.now()
   
   const supabase = createSupabaseServerClient()
@@ -123,12 +123,7 @@ export async function getInitialFeedData(): Promise<ServerFeedData> {
     })
 
     const endTime = Date.now()
-    console.log(`✅ Server: Initial feed data fetched in ${endTime - startTime}ms`, {
-      itemsCount: enrichedItems.length,
-      hasNextPage,
-      totalCount,
-      userInteractions: user ? { likes: userLikes.size, follows: userFollows.size } : 'guest'
-    })
+    // Server: Initial feed data fetched: { itemsCount, hasNextPage, totalCount, userInteractions }
 
     return {
       items: enrichedItems,

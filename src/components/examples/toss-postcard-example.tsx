@@ -38,11 +38,11 @@ export function PostCardExample({ item, currentUser, variant }: PostCardExampleP
   }
 
   const handleComment = () => {
-    console.log('Navigate to comments')
+
   }
 
   const handleShare = () => {
-    console.log('Share post')
+
   }
 
   if (variant === 'before') {

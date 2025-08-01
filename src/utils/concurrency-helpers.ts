@@ -83,7 +83,7 @@ export async function getLikeCountConcurrencySafe(itemId: string): Promise<numbe
 	const supabase = createSupabaseBrowserClient()
 
 	try {
-		console.log(`📊 getLikeCountConcurrencySafe: Fetching likes for item ${itemId}`)
+		// console.log(`📊 getLikeCountConcurrencySafe: Fetching likes for item ${itemId}`)
 		const { count, error } = await supabase
 			.from("likes")
 			.select("*", { count: "exact", head: true })
@@ -94,7 +94,7 @@ export async function getLikeCountConcurrencySafe(itemId: string): Promise<numbe
 			throw error
 		}
 		
-		console.log(`✅ getLikeCountConcurrencySafe: Item ${itemId} has ${count || 0} likes`)
+		// console.log(`✅ getLikeCountConcurrencySafe: Item ${itemId} has ${count || 0} likes`)
 		return count || 0
 	} catch (error) {
 		console.error(`❌ getLikeCountConcurrencySafe: Error for item ${itemId}:`, error)
@@ -117,7 +117,7 @@ export function safeOptimisticUpdate<T>(
 	const lastUpdate = dataWithTimestamp._lastUpdate || 0
 
 	if (timestamp < lastUpdate) {
-		console.log("⚠️ Optimistic update ignored due to newer data")
+		// console.log("⚠️ Optimistic update ignored due to newer data")
 		return currentData
 	}
 
@@ -148,7 +148,7 @@ export async function executeWithRetry<T>(
 			const pgError = error as { code?: string }
 			if (pgError.code === "40001" || pgError.code === "40P01") {
 				if (attempt < maxRetries) {
-					console.log(`🔄 Retrying operation (attempt ${attempt}/${maxRetries})`)
+					// console.log(`🔄 Retrying operation (attempt ${attempt}/${maxRetries})`)
 					await new Promise(resolve => setTimeout(resolve, delayMs * attempt))
 					continue
 				}
@@ -189,7 +189,7 @@ export async function toggleLikeWithNotification(
 		}
 	}
 
-	console.log(`🔄 toggleLikeWithNotification: Item ${itemId}, User ${userId}, Currently liked: ${currentlyLiked}`)
+	// console.log(`🔄 toggleLikeWithNotification: Item ${itemId}, User ${userId}, Currently liked: ${currentlyLiked}`)
 
 	const supabase = createSupabaseBrowserClient()
 

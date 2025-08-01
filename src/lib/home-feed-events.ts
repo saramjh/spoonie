@@ -13,7 +13,7 @@ export interface HomeFeedRefreshEvent {
  * 홈화면 새로고침 요청
  */
 export const requestHomeFeedRefresh = (event: HomeFeedRefreshEvent) => {
-  console.log(`🔄 Requesting home feed refresh:`, event)
+
   
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('home:refresh', { 

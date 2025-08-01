@@ -13,7 +13,7 @@ export default async function HomePage() {
 		// 🏃‍♂️ 서버에서 초기 데이터 미리 로딩 (3번 요청 → 1번으로 통합)
 		const initialData = await getInitialFeedData()
 		
-		console.log(`🏠 HomePage: Server rendered with ${initialData.items.length} items`)
+		
 
 		return (
 			<div className="min-h-screen bg-gray-50">

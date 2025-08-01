@@ -29,7 +29,7 @@ export function useSimplifiedRealtimeSync() {
    * 🚀 실시간 변경사항 처리 (간단화)
    */
   const handleRealtimeChange = useCallback(async (change: RealtimeChange) => {
-    console.log(`🔄 Realtime change detected:`, change)
+    // Realtime change detected
 
     try {
       switch (change.table) {
@@ -58,7 +58,7 @@ export function useSimplifiedRealtimeSync() {
     const itemData = change.new || change.old
     if (!itemData?.id) return
 
-    console.log(`📝 Item ${change.eventType}: ${itemData.id}`)
+            // Item processed
 
     if (change.eventType === 'DELETE') {
       // 아이템 삭제 시 모든 캐시에서 제거
@@ -77,7 +77,7 @@ export function useSimplifiedRealtimeSync() {
     if (!likeData?.item_id) return
 
     const delta = change.eventType === 'INSERT' ? 1 : -1
-    console.log(`❤️ Like ${change.eventType}: ${likeData.item_id} (${delta})`)
+            // Like processed
 
     // 통합 캐시 매니저를 통해 좋아요 상태 업데이트
     await cacheManager.like(likeData.item_id, likeData.user_id, delta > 0)
@@ -91,7 +91,7 @@ export function useSimplifiedRealtimeSync() {
     if (!commentData?.item_id) return
 
     const delta = change.eventType === 'INSERT' ? 1 : -1
-    console.log(`💬 Comment ${change.eventType}: ${commentData.item_id} (${delta})`)
+            // Comment processed
 
     // 통합 캐시 매니저를 통해 댓글 수 업데이트
     await cacheManager.comment(commentData.item_id, commentData.user_id, delta)
@@ -105,7 +105,7 @@ export function useSimplifiedRealtimeSync() {
     if (!followData?.following_id) return
 
     const isFollowing = change.eventType === 'INSERT'
-    console.log(`👥 Follow ${change.eventType}: ${followData.following_id}`)
+            // Follow processed
 
     // 통합 캐시 매니저를 통해 팔로우 상태 업데이트
     await cacheManager.follow(followData.follower_id, followData.following_id, isFollowing)
@@ -115,7 +115,7 @@ export function useSimplifiedRealtimeSync() {
    * 🔌 실시간 구독 설정
    */
   const setupRealtimeSubscription = useCallback(() => {
-    console.log(`🔌 Setting up simplified realtime subscriptions...`)
+    // Setting up simplified realtime subscriptions
 
     // 기존 구독 정리
     channelsRef.current.forEach(channel => {
@@ -147,13 +147,13 @@ export function useSimplifiedRealtimeSync() {
           }
         )
         .subscribe((status) => {
-          console.log(`📡 Realtime ${tableName} subscription:`, status)
+          // Realtime subscription status
         })
 
       channelsRef.current.push(channel)
     })
 
-    console.log(`✅ Simplified realtime sync setup complete`)
+    // Simplified realtime sync setup complete
   }, [handleRealtimeChange, supabase])
 
   // 컴포넌트 마운트 시 실시간 구독 설정
@@ -162,7 +162,7 @@ export function useSimplifiedRealtimeSync() {
 
     // 컴포넌트 언마운트 시 구독 정리
     return () => {
-      console.log(`🧹 Cleaning up realtime subscriptions...`)
+      // Cleaning up realtime subscriptions
       channelsRef.current.forEach(channel => {
         supabase.removeChannel(channel)
       })

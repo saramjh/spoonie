@@ -39,14 +39,7 @@ export const SimplifiedLikeButton = forwardRef<HTMLButtonElement, SimplifiedLike
   onLikeChange
 }, ref) => {
   // 🚀 SSA 표준: 완전한 아이템 데이터를 fallback으로 사용 (이미지 보존)
-  // 🔍 CRITICAL DEBUG: SimplifiedLikeButton 입력 데이터 확인
-  console.log(`🔍 [SimplifiedLikeButton ${itemId}] Input data:`, {
-    providedImages: providedCachedItem?.image_urls?.length || 0,
-    providedUrls: providedCachedItem?.image_urls,
-    providedHasImages: !!providedCachedItem?.image_urls,
-    initialLikes: initialLikesCount,
-    initialHasLiked
-  })
+
   
   // 🚀 SSA 업계표준: 이미지 데이터 완전 보존 + 부분 업데이트
   const fallbackItem: Item = providedCachedItem ? {
@@ -86,15 +79,7 @@ export const SimplifiedLikeButton = forwardRef<HTMLButtonElement, SimplifiedLike
 
   const cachedItem = useSSAItemCache(itemId, fallbackItem)
   
-  // 🔍 CRITICAL DEBUG: SimplifiedLikeButton 최종 데이터 확인
-  console.log(`✅ [SimplifiedLikeButton ${itemId}] Final data:`, {
-    fallbackImages: fallbackItem?.image_urls?.length || 0,
-    cachedImages: cachedItem?.image_urls?.length || 0,
-    finalImages: cachedItem?.image_urls?.length || 0,
-    cachedUrls: cachedItem?.image_urls,
-    likes: cachedItem?.likes_count,
-    liked: cachedItem?.is_liked
-  })
+
   
   // 🚀 SSA 업계표준: 캐시만이 Single Source of Truth (소셜미디어 표준)
   const likesCount = cachedItem.likes_count

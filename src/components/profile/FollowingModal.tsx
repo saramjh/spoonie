@@ -45,7 +45,7 @@ export default function FollowingModal({ isOpen, onClose, userId, currentUserId 
 		setError(null)
 
 		try {
-			console.log(`🔍 Fetching following for user ${userId}`)
+			
 
 			// 팔로잉 목록 가져오기 (이 사용자가 팔로우하는 사람들)
 			const { data, error } = await supabase
@@ -103,7 +103,7 @@ export default function FollowingModal({ isOpen, onClose, userId, currentUserId 
 			}
 
 			setFollowing(followingWithStatus)
-			console.log(`✅ Successfully fetched ${followingWithStatus.length} following`)
+			
 
 		} catch (error) {
 			console.error("❌ Error fetching following:", error)

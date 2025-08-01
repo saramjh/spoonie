@@ -8,13 +8,9 @@ import ClientLayoutWrapper from "@/components/layout/ClientLayoutWrapper"
 const fontSans = localFont({
 	src: "./fonts/GeistVF.woff",
 	variable: "--font-sans",
-	weight: "100 900",
-})
-
-const fontMono = localFont({
-	src: "./fonts/GeistMonoVF.woff",
-	variable: "--font-mono",
-	weight: "100 900",
+	weight: "300 700", // 실제 사용되는 weight 범위로 최적화 (light ~ bold)
+	display: "swap",
+	preload: true,
 })
 
 export const metadata: Metadata = {
@@ -38,7 +34,7 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="en">
-			<body className={cn("min-h-screen bg-background font-sans antialiased", fontSans.variable, fontMono.variable)} suppressHydrationWarning={true}>
+			<body className={cn("min-h-screen bg-background font-sans antialiased", fontSans.variable)} suppressHydrationWarning={true}>
 				<ClientLayoutWrapper>{children}</ClientLayoutWrapper>
 				<Toaster />
 			</body>

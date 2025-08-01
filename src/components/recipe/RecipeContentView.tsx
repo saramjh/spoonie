@@ -21,13 +21,7 @@ interface RecipeContentViewProps {
 
 export default function RecipeContentView({ initialServings, ingredients, steps }: RecipeContentViewProps) {
 	// Debug logging
-	console.log("RecipeContentView Debug:", {
-		initialServings,
-		ingredientsLength: ingredients?.length,
-		ingredients,
-		stepsLength: steps?.length,
-		steps,
-	})
+	// RecipeContentView Debug: { initialServings, ingredientsLength, ingredients, stepsLength, steps }
 
 	const [currentServings, setCurrentServings] = useState(initialServings)
 	const [scaledIngredients, setScaledIngredients] = useState<Ingredient[]>([])
@@ -236,7 +230,13 @@ export default function RecipeContentView({ initialServings, ingredients, steps 
 										<div className="w-full space-y-3">
 											{step.image_url && (
 												<div className="relative w-full h-48 rounded-xl overflow-hidden">
-													<Image src={step.image_url} alt={`Step ${step.order} image`} fill className="object-cover" />
+													              <Image 
+                src={step.image_url} 
+                alt={`Step ${step.order} image`} 
+                fill 
+                className="object-cover" 
+                priority={step.order === 1}
+              />
 												</div>
 											)}
 											<p className="text-gray-800 whitespace-pre-wrap break-words leading-relaxed">{step.description}</p>

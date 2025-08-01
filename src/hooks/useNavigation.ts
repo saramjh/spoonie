@@ -44,7 +44,7 @@ export function useNavigation(options: NavigationOptions = {}) {
         const saved = sessionStorage.getItem('spoonie_nav_history')
         if (saved) {
           const parsed = JSON.parse(saved)
-          console.log(`🔄 Navigation history restored:`, parsed)
+    
           return Array.isArray(parsed) ? parsed : []
         }
       } catch (error) {
@@ -67,7 +67,7 @@ export function useNavigation(options: NavigationOptions = {}) {
           if (typeof window !== 'undefined') {
             try {
               sessionStorage.setItem('spoonie_nav_history', JSON.stringify(newHistory))
-              console.log(`🧭 Navigation history saved:`, newHistory)
+          
             } catch (error) {
               console.warn('Failed to save navigation history:', error)
             }
@@ -83,13 +83,13 @@ export function useNavigation(options: NavigationOptions = {}) {
    * 사용자가 링크에 마우스를 올리면 데이터를 미리 가져옴
    */
   const preloadRoute = useCallback(async (path: string) => {
-    console.log(`🔮 Preloading route: ${path}`)
+    
     
     try {
       // 이미 사전 로딩된 경우 스킵
       const existing = preloadedRoutesRef.current.get(path)
       if (existing && Date.now() - existing.timestamp < cacheRetention) {
-        console.log(`📋 Route already preloaded: ${path}`)
+  
         return
       }
 
@@ -126,7 +126,7 @@ export function useNavigation(options: NavigationOptions = {}) {
       { revalidate: true }
     )
 
-    console.log(`📝 Recipe ${recipeId} preloaded`)
+    
   }, [mutate])
 
   /**
@@ -145,7 +145,7 @@ export function useNavigation(options: NavigationOptions = {}) {
       { revalidate: true }
     )
 
-    console.log(`📱 Post ${postId} preloaded`)
+    
   }, [mutate])
 
   /**
@@ -164,7 +164,7 @@ export function useNavigation(options: NavigationOptions = {}) {
       { revalidate: true }
     )
 
-    console.log(`👤 Profile ${userId} preloaded`)
+    
   }, [mutate])
 
   /**
@@ -180,7 +180,7 @@ export function useNavigation(options: NavigationOptions = {}) {
       { revalidate: true }
     )
 
-    console.log(`🏠 Home feed preloaded`)
+    
   }, [mutate])
 
   /**
@@ -216,7 +216,7 @@ export function useNavigation(options: NavigationOptions = {}) {
     })
 
     if (cleanedCount > 0) {
-      console.log(`🧹 Cleaned up ${cleanedCount} old cache entries`)
+  
     }
   }, [cache, cacheRetention])
 
@@ -254,12 +254,12 @@ export function useNavigation(options: NavigationOptions = {}) {
    * 🧭 최적화된 네비게이션
    */
   const navigateOptimized = useCallback((path: string) => {
-    console.log(`🧭 Optimized navigation to: ${path}`)
+
     
     // 이미 사전 로딩된 데이터가 있으면 즉시 이동
     const preloaded = preloadedRoutesRef.current.get(path)
     if (preloaded) {
-      console.log(`⚡ Using preloaded data for: ${path}`)
+
     }
 
     router.push(path)
@@ -269,7 +269,7 @@ export function useNavigation(options: NavigationOptions = {}) {
    * 📊 현재 페이지 변경 감지 및 캐시 최적화
    */
   useEffect(() => {
-    console.log(`📊 Page changed to: ${pathname}`)
+
     
     // 페이지 변경 시 관련 없는 캐시 정리
     const cleanup = setTimeout(cleanupCache, 1000)
@@ -302,14 +302,13 @@ export function useNavigation(options: NavigationOptions = {}) {
     // 1. URL origin 파라미터 확인 (최우선)
     const urlOrigin = getOriginFromURL()
     if (urlOrigin) {
-      console.log(`🎯 Using URL origin: ${urlOrigin}`)
+  
       return decodeURIComponent(urlOrigin)
     }
     
     // 2. Navigation History 확인
     const lastPath = navigationHistory[navigationHistory.length - 1]
-    console.log(`📍 Navigation History:`, navigationHistory)
-    console.log(`📍 Last Path:`, lastPath)
+
     
     // 네비게이션 히스토리가 없으면 세션 스토리지에서 확인
     if (!lastPath) {
@@ -320,7 +319,7 @@ export function useNavigation(options: NavigationOptions = {}) {
             const parsed = JSON.parse(savedHistory)
             const savedLastPath = parsed[parsed.length - 1]
             if (savedLastPath) {
-              console.log(`🔄 Using saved last path: ${savedLastPath}`)
+        
               return savedLastPath
             }
           }
@@ -361,9 +360,7 @@ export function useNavigation(options: NavigationOptions = {}) {
   const navigateBack = useCallback((itemId?: string, options?: { replace?: boolean }) => {
     const returnPath = getSmartReturnPath(itemId)
     
-    console.log(`🧭 Smart Navigation: Returning to ${returnPath} from ${pathname}`)
-    console.log(`📍 Navigation History:`, navigationHistory)
-    console.log(`🔄 Replace Mode: ${options?.replace ? 'ON' : 'OFF'}`)
+
     
     // 🚀 업계 표준: History Replace를 통한 네비게이션 체인 정리
     if (options?.replace) {

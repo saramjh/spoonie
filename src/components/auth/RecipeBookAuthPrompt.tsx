@@ -18,7 +18,7 @@ export function RecipeBookAuthPrompt({ className }: { className?: string }) {
               src="/logo-full.svg"
               alt="Spoonie Logo"
               width={32}
-              height={32}
+              height={10}
               className="text-orange-500"
             />
           </div>

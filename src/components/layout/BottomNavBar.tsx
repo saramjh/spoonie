@@ -24,32 +24,11 @@ export default function BottomNavBar() {
 	}
 
 	const renderMyPageLink = () => {
-		// 디버깅을 위한 로그
-		console.log("🔍 Navigation Debug:", {
-			hasSession: !!session,
-			hasProfile: !!profile,
-			sessionUser: session
-				? {
-						id: session.id,
-						email: session.email,
-						aud: session.aud,
-				  }
-				: null,
-			profileData: profile
-				? {
-						id: profile.id,
-						public_id: profile.public_id,
-						display_name: profile.display_name,
-						avatar_url: profile.avatar_url,
-						username: profile.username,
-						fullProfile: profile,
-				  }
-				: null,
-		})
+
 
 		// 1. 비로그인 상태
 		if (!session) {
-			console.log("🚪 Navigation: No session - showing login button")
+
 			return (
 				<Link href="/login" className={getLinkClass("/login")}>
 					<User className="w-6 h-6" />
@@ -62,12 +41,7 @@ export default function BottomNavBar() {
 		if (profile) {
 			// public_id가 있으면 사용, 없으면 UUID 사용
 			const profileHref = `/profile/${profile.public_id || profile.id}`
-			console.log("✅ Navigation: Profile loaded - showing avatar", {
-				profileHref,
-				hasPublicId: !!profile.public_id,
-				hasAvatarUrl: !!profile.avatar_url,
-				displayName: profile.display_name,
-			})
+
 
 			return (
 				<Link href={profileHref} className="flex flex-col items-center gap-1">
@@ -80,11 +54,7 @@ export default function BottomNavBar() {
 		}
 
 		// 3. 로그인 상태이나 프로필 로딩 중
-		console.log("⏳ Navigation: Session exists but no profile - showing loading", {
-			sessionId: session?.id,
-			profileNull: profile === null,
-			profileUndefined: profile === undefined,
-		})
+
 		return (
 			<div className={getLinkClass("/profile", true)}>
 				<div className="w-7 h-7 flex items-center justify-center">

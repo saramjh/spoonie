@@ -34,10 +34,10 @@ export default function DeleteRecipeButton({ recipeId }: DeleteRecipeButtonProps
   const handleDelete = async () => {
     setIsDeleting(true);
     
-    console.log(`🚀 DeleteRecipeButton: Starting SSA-based deletion of recipe ${recipeId}`)
+
 
     try {
-      console.log(`🚀 DeleteRecipeButton: SSA optimistic deletion...`);
+  
       
       // 🚀 SSA 기반: 즉시 옵티미스틱 업데이트로 모든 캐시에서 제거
       const rollback = await cacheManager.deleteItem(recipeId);
@@ -55,7 +55,7 @@ export default function DeleteRecipeButton({ recipeId }: DeleteRecipeButtonProps
           
         if (error) throw error;
         
-        console.log(`✅ DeleteRecipeButton: Recipe deleted successfully via SSA`);
+    
         
         toast({
           title: "레시피가 삭제되었습니다.",

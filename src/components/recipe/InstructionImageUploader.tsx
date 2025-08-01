@@ -71,7 +71,7 @@ export default function InstructionImageUploader({ imageUrl, onImageChange, plac
           <button onClick={removeImage} className="absolute top-2 right-2 z-10 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
             <X className="w-3 h-3" />
           </button>
-          <Image src={preview} alt="Instruction preview" fill className="object-cover" />
+                      <Image src={preview} alt="Instruction preview" fill className="object-cover" priority />
         </Card>
       ) : (
         <Card 

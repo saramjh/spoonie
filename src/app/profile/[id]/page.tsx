@@ -22,6 +22,7 @@ import { cacheManager } from "@/lib/unified-cache-manager"
 import { useNavigation } from "@/hooks/useNavigation"
 import useSWR from "swr"
 import type { Item } from "@/types/item"
+import { getCommentCountConcurrencySafe } from "@/utils/concurrency-helpers"
 
 // 🚀 개선된 프로필 그리드 오버레이 컴포넌트
 interface ProfileGridOverlayProps {
@@ -223,7 +224,7 @@ const fetchUserItems = async (userId: string, currentUserId?: string) => {
 	
 	if (currentUserId === userId) {
 		// 🔒 본인 프로필: items 테이블 직접 사용하여 비공개 게시물도 포함
-		// 🚀 홈 피드와 동일한 댓글 수 계산: items 테이블 + 정확한 집계
+		// 🚀 홈 피드와 동일한 정확한 댓글 수 계산 방식 사용
 		query = supabase
 			.from("items")
 			.select(`
@@ -234,8 +235,7 @@ const fetchUserItems = async (userId: string, currentUserId?: string) => {
 					avatar_url,
 					public_id
 				),
-				likes_count:likes(count),
-				comments_count:comments(count).eq(is_deleted, false)
+				likes_count:likes(count)
 			`)
 			.eq("user_id", userId)
 			.in("item_type", ["recipe", "post"])
@@ -263,8 +263,16 @@ const fetchUserItems = async (userId: string, currentUserId?: string) => {
 	if (error) throw new Error(error.message)
 	if (!items || items.length === 0) return []
 
+	// 🚀 정확한 댓글 수 계산 (본인 프로필의 경우에만)
+	const itemsWithAccurateComments = currentUserId === userId 
+		? await Promise.all(items.map(async (item) => {
+			const accurateCommentsCount = await getCommentCountConcurrencySafe(item.id)
+			return { ...item, accurate_comments_count: accurateCommentsCount }
+		}))
+		: items
+
 	// 🔄 홈화면과 동일한 좋아요/팔로우 상태 확인
-	const itemIds = items.map((item) => item.id)
+	const itemIds = itemsWithAccurateComments.map((item) => item.id)
 	const userLikesMap = new Map<string, boolean>()
 	const userFollowsMap = new Map<string, boolean>()
 
@@ -296,7 +304,7 @@ const fetchUserItems = async (userId: string, currentUserId?: string) => {
 	}
 
 	// 🎯 홈화면과 동일한 Item 형태로 변환
-	return items.map((item) => {
+	return itemsWithAccurateComments.map((item) => {
 		const profileData = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
 		const userLikeStatus = userLikesMap.get(item.id)
 		const isLikedValue = currentUserId && currentUserId !== "guest" 
@@ -331,8 +339,8 @@ const fetchUserItems = async (userId: string, currentUserId?: string) => {
 			? (item.likes_count?.[0]?.count ?? 0)   // 본인 프로필: items 테이블 집계 결과
 			: (item.likes_count || 0),              // 타인 프로필: optimized_feed_view 결과
 		comments_count: currentUserId === userId 
-			? (item.comments_count?.[0]?.count ?? 0)  // 본인 프로필: items 테이블 집계 결과 (삭제된 댓글 제외)
-			: (item.comments_count || 0),             // 타인 프로필: optimized_feed_view 결과 (이미 삭제된 댓글 제외)
+			? ('accurate_comments_count' in item ? (item as any).accurate_comments_count : 0)  // 본인 프로필: 정확한 댓글 수 (삭제된 댓글 제외)
+			: (item.comments_count || 0),                   // 타인 프로필: optimized_feed_view 결과 (이미 삭제된 댓글 제외)
 			view_count: 0,
 			is_liked: isLikedValue,
 			is_following: userFollowsMap.get(userId) || false,

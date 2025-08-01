@@ -179,7 +179,7 @@ export default function CommentsSection({
 			false
 		)
 
-		console.log(`✅ CommentsSection: SSA comment delete completed for ${itemId}`)
+		
 
 		// 데이터베이스에서 댓글 soft delete (is_deleted = true)
 		try {
@@ -332,7 +332,7 @@ export default function CommentsSection({
 			}
 
 			// 🚀 업계 표준 방식: 간단하고 안정적인 Cache Invalidation
-			console.log(`🚀 CommentsSection: === REPLY ADDED - REFRESH HOME FEED ===`)
+			
 			
 			// CommentsSection 캐시 새로고침
 			mutate(createSWRKey.comments(itemId))
@@ -340,7 +340,7 @@ export default function CommentsSection({
 			// 🚀 진짜 업계 표준: 백그라운드 스마트 동기화
 			// 🚀 SSA 기반: 통합 캐시 매니저가 자동으로 동기화 처리
 			
-			console.log(`✅ CommentsSection: Background sync triggered for reply ${itemId}`)
+			
 
 			toast({ title: "답글이 추가되었습니다." })
 		} catch {

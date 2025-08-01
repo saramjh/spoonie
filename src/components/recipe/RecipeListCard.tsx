@@ -24,6 +24,7 @@ interface RecipeListCardProps {
   onSelectChange?: (checked: boolean) => void;
   onSelect?: () => void;
   showAuthor?: boolean;
+  priority?: boolean; // LCP 최적화를 위한 이미지 우선순위
 }
 
 export default function RecipeListCard({ 
@@ -32,7 +33,8 @@ export default function RecipeListCard({
   isSelected = false, 
   onSelectChange, 
   onSelect,
-  showAuthor = false
+  showAuthor = false,
+  priority = false
 }: RecipeListCardProps) {
   const { session } = useSessionStore()
   const router = useRouter()
@@ -102,7 +104,8 @@ export default function RecipeListCard({
                 src={cachedItem.image_urls[cachedItem.thumbnail_index || 0]} 
                 alt={item.title || "Recipe Image"} 
                 fill
-                className="object-cover group-hover:scale-110 transition-transform duration-500" 
+                className="object-cover group-hover:scale-110 transition-transform duration-500"
+                priority={priority}
               />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center">

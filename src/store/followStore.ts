@@ -34,7 +34,7 @@ export const useFollowStore = create<FollowStore>((set, get) => ({
       
       const followingSet = new Set(data?.map(f => f.following_id) || [])
       set({ followingUsers: followingSet })
-      console.log(`✅ FollowStore: Initialized with ${followingSet.size} following users`)
+      
     } catch (error) {
       console.error('❌ FollowStore: Failed to initialize follow state:', error)
     } finally {
@@ -65,7 +65,7 @@ export const useFollowStore = create<FollowStore>((set, get) => ({
       
       if (error) throw error
       
-      console.log(`✅ FollowStore: Successfully followed user ${targetUserId} via SSA`)
+  
       return true
     } catch (error) {
       console.error('❌ FollowStore: Follow failed, rolling back via SSA:', error)
@@ -105,7 +105,7 @@ export const useFollowStore = create<FollowStore>((set, get) => ({
       
       if (error) throw error
       
-      console.log(`✅ FollowStore: Successfully unfollowed user ${targetUserId} via SSA`)
+  
       return true
     } catch (error) {
       console.error('❌ FollowStore: Unfollow failed, rolling back via SSA:', error)

@@ -12,7 +12,7 @@ export default function RecipeEditPage() {
   const params = useParams()
   const itemId = params.id as string
 
-  console.log("RecipeEditPage: Loading recipe with ID:", itemId)
+
 
   // 🧭 스마트 네비게이션 (이전 경로 추적)
   const { navigateBack } = useNavigation({ trackHistory: true })
@@ -52,16 +52,7 @@ export default function RecipeEditPage() {
   const [initialData, setInitialData] = useState<any>(null)
 
   useEffect(() => {
-    console.log("🔍 RecipeEditPage: Data state check", {
-      hasBaseItem: !!baseItem,
-      hasCachedItem: !!cachedItem,
-      hasInitialData: !!initialData,
-      isLoading,
-      error: error?.message || error,
-      baseItemType: baseItem?.item_type,
-      baseItemPublic: baseItem?.is_public,
-      baseItemUserId: baseItem?.user_id
-    })
+    // RecipeEditPage: Data state check: { hasBaseItem, hasCachedItem, hasInitialData, isLoading, error, baseItemType, baseItemPublic, baseItemUserId }
 
     if (baseItem && !initialData) {
       // Selective Merge: 서버 데이터 + 캐시된 실시간 필드 
@@ -77,16 +68,7 @@ export default function RecipeEditPage() {
         })
       }
       
-      console.log("🎯 RecipeEditPage: Selective Merge complete", {
-        hasBaseItem: !!baseItem,
-        hasCachedItem: !!cachedItem,
-        baseIngredients: baseItem.ingredients?.length || 0,
-        baseInstructions: baseItem.instructions?.length || 0,
-        baseThumbnail: baseItem.thumbnail_index,
-        cachedThumbnail: cachedItem?.thumbnail_index,
-        finalThumbnail: mergedData.thumbnail_index,
-        dataComplete: !!(mergedData.ingredients && mergedData.instructions)
-      })
+      // RecipeEditPage: Selective Merge complete: { hasBaseItem, hasCachedItem, baseIngredients, baseInstructions, baseThumbnail, cachedThumbnail, finalThumbnail, dataComplete }
       
       setInitialData(mergedData)
     }
@@ -102,7 +84,7 @@ export default function RecipeEditPage() {
   }, [baseItem, cachedItem, initialData, isLoading, error])
 
   if (isLoading) {
-    console.log("RecipeEditPage: Loading item", itemId)
+    
     return (
       <div className="p-4">
         <PostCardSkeleton />
@@ -129,7 +111,7 @@ export default function RecipeEditPage() {
 
   // 🎯 로딩 중이거나 initialData가 준비되지 않은 경우 스켈레톤 표시
   if (!initialData) {
-    console.log("RecipeEditPage: Waiting for initialData preparation", itemId)
+
     return (
       <div className="p-4">
         <PostCardSkeleton />
@@ -148,7 +130,7 @@ export default function RecipeEditPage() {
     )
   }
 
-  console.log("🎯 RecipeEditPage: Using initial data with thumbnail_index:", initialData.thumbnail_index)
+  
 
   return <RecipeForm 
     initialData={initialData} 

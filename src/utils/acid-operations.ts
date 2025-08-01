@@ -43,7 +43,7 @@ export async function addCommentACID(
   content: string,
   parentCommentId?: string
 ): Promise<ACIDCommentResult> {
-  console.log(`🔒 [ACID] Adding comment atomically for item ${itemId}`)
+
   
   const supabase = createSupabaseBrowserClient()
   
@@ -64,7 +64,7 @@ export async function addCommentACID(
     const result = data as ACIDCommentResult
     
     if (result.success) {
-      console.log(`✅ [ACID] Comment added successfully: ${result.comment_id}`)
+    
       
       // 🔄 효율적 캐시 동기화 (DB 연산 후)
       syncAllCaches({
@@ -102,7 +102,7 @@ export async function toggleLikeACID(
   userId: string,
   authorId: string
 ): Promise<ACIDLikeResult> {
-  console.log(`🔒 [ACID] Toggling like atomically for item ${itemId}`)
+
   
   const supabase = createSupabaseBrowserClient()
   
@@ -123,7 +123,7 @@ export async function toggleLikeACID(
     
     if (result.success) {
       const action = result.is_liked ? 'added' : 'removed'
-      console.log(`✅ [ACID] Like ${action} successfully. Count: ${result.new_likes_count}`)
+    
       
       // 🔄 효율적 캐시 동기화
       syncAllCaches({
@@ -166,7 +166,7 @@ export async function deleteCommentACID(
   userId: string,
   itemId: string
 ): Promise<ACIDDeleteResult> {
-  console.log(`🔒 [ACID] Deleting comment atomically: ${commentId}`)
+
   
   const supabase = createSupabaseBrowserClient()
   
@@ -186,7 +186,7 @@ export async function deleteCommentACID(
     const result = data as ACIDDeleteResult
     
     if (result.success) {
-      console.log(`✅ [ACID] Comment deleted successfully. New count: ${result.new_comments_count}`)
+    
       
       // 🔄 효율적 캐시 동기화
       syncAllCaches({
@@ -252,11 +252,7 @@ export function logPerformanceComparison(
 ): void {
   const duration = Date.now() - startTime
   
-  console.log(`📊 [ACID Performance] ${operation}:`, {
-    duration_ms: duration,
-    network_calls: networkCalls,
-    efficiency_score: networkCalls === 1 ? 'Optimal' : 'Can improve'
-  })
+  // ACID Performance tracking completed
 }
 
 /**

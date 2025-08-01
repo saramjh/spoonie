@@ -83,14 +83,14 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
    * 현재 화면에 보이는 아이템들만 선별적으로 동기화
    */
   const performSmartSync = useCallback(async (priority: 'low' | 'normal' | 'high' = 'normal') => {
-    console.log("🎯 Smart sync handled by unified cache manager...")
+    
     
     try {
       // 🚀 통합 캐시 매니저가 자동으로 모든 동기화를 처리
       const result = { success: true, itemsUpdated: 0, syncTime: 0 }
       
       if (result.success) {
-        console.log(`✅ Smart sync completed: ${result.itemsUpdated} items updated in ${result.syncTime}ms`)
+        
       } else {
         console.warn(`⚠️ Smart sync had errors`)
       }
@@ -141,7 +141,7 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
       const visibleIds = Array.from(visibleItemsRef.current)
       if (visibleIds.length > 0) {
         // 🚀 통합 캐시 매니저가 자동으로 통계 동기화를 처리
-        console.log(`📊 Stats sync for ${visibleIds.length} items handled automatically`)
+        
       }
     }, 5000)
 
@@ -158,13 +158,13 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
     
     // 필요시 전체 새로고침
     try {
-      console.log("🔄 Performing silent feed refresh...")
+      
       const syncStartTime = Date.now()
       
       await swrMutate()
       
       const syncDuration = Date.now() - syncStartTime
-      console.log(`✅ Silent refresh completed in ${syncDuration}ms`)
+      
       
     } catch (error) {
       console.error("❌ Silent refresh failed:", error)
@@ -222,13 +222,13 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        console.log("👁️ Page focused - triggering smart sync")
+        
         performSmartSync('high')
       }
     }
 
     const handlePopState = () => {
-      console.log("🔄 Navigation detected - refreshing data")
+      
       setTimeout(() => swrMutate(), 100)
     }
 

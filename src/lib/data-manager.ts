@@ -14,8 +14,8 @@ import { createSupabaseBrowserClient } from './supabase-client'
 import { getCacheManager } from './unified-cache-manager'
 
 // 🚀 임시로 optimistic 함수들을 정의 (기존 코드 호환성을 위해)
-const optimisticCommentUpdate = (...args: any[]) => console.log('🚀 Comment update handled by unified cache manager')
-const updateInfiniteCache = (...args: any[]) => console.log('🚀 Cache update handled by unified cache manager')
+const optimisticCommentUpdate = (...args: any[]) => {} // Handled by unified cache manager
+const updateInfiniteCache = (...args: any[]) => {} // Handled by unified cache manager
 import { createSWRKey, CacheInvalidators } from './cache-keys'
 import type { Item } from '@/types/item'
 
@@ -51,7 +51,7 @@ export class DataManager {
     options: DataManagerOptions = {}
   ): Promise<{ success: boolean; item?: Item; error?: string }> {
     try {
-      console.log(`🚀 DataManager: Creating ${itemData.item_type}...`)
+      // Creating item...
       
       const { data: newItem, error } = await this.supabase
         .from('items')
@@ -71,7 +71,7 @@ export class DataManager {
         await this.addItemToAllCaches(formattedItem)
       }
 
-      console.log(`✅ DataManager: Created ${itemData.item_type} successfully`)
+      // Item created successfully
       return { success: true, item: formattedItem }
       
     } catch (error) {
@@ -92,7 +92,7 @@ export class DataManager {
     options: DataManagerOptions = {}
   ): Promise<{ success: boolean; item?: Item; error?: string }> {
     try {
-      console.log(`🚀 DataManager: Updating item ${itemId}...`)
+      // Updating item...
       
       const { data: updatedItem, error } = await this.supabase
         .from('items')
@@ -113,7 +113,7 @@ export class DataManager {
         await this.updateItemInAllCaches(itemId, formattedItem)
       }
 
-      console.log(`✅ DataManager: Updated item ${itemId} successfully`)
+      // Item updated successfully
       return { success: true, item: formattedItem }
       
     } catch (error) {
@@ -133,7 +133,7 @@ export class DataManager {
     options: DataManagerOptions = {}
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log(`🚀 DataManager: Deleting item ${itemId}...`)
+      // Deleting item...
       
       if (!options.skipOptimistic) {
         // 🚀 옵티미스틱 업데이트: 모든 관련 캐시에서 즉시 제거
@@ -147,7 +147,7 @@ export class DataManager {
 
       if (error) throw error
 
-      console.log(`✅ DataManager: Deleted item ${itemId} successfully`)
+      // Item deleted successfully
       return { success: true }
       
     } catch (error) {
@@ -180,7 +180,7 @@ export class DataManager {
 
       if (!options.skipOptimistic) {
         // 🚀 통합 캐시 매니저가 옵티미스틱 업데이트를 처리
-        console.log(`🚀 Like optimistic update handled by unified cache manager`)
+        // Like optimistic update handled
       }
 
       if (targetAction === 'add') {
@@ -227,8 +227,14 @@ export class DataManager {
   ): Promise<{ success: boolean; comment?: any; error?: string }> {
     try {
       if (!options.skipOptimistic) {
-        // 🚀 통합 캐시 매니저가 옵티미스틱 업데이트를 처리
-        console.log(`🚀 Comment optimistic update handled by unified cache manager`)
+        // 🚀 SSA 기반 옵티미스틱 업데이트: 프로필 캐시 포함 모든 캐시 업데이트
+        const manager = getCacheManager()
+        await manager.smartUpdate({
+          type: 'comment',
+          itemId,
+          userId: this.currentUserId!,
+          delta: 1
+        })
       }
 
       const { data: comment, error } = await this.supabase
@@ -258,9 +264,15 @@ export class DataManager {
     } catch (error) {
       console.error(`❌ DataManager: Add comment failed:`, error)
       
-      // 🔄 롤백
+      // 🔄 롤백: SSA 캐시에서 댓글 수 복원
       if (!options.skipOptimistic) {
-        optimisticCommentUpdate(this.currentUserId, itemId, -1)
+        const manager = getCacheManager()
+        await manager.smartUpdate({
+          type: 'comment',
+          itemId,
+          userId: this.currentUserId!,
+          delta: -1
+        })
       }
       
       return { 
@@ -280,8 +292,14 @@ export class DataManager {
   ): Promise<{ success: boolean; error?: string }> {
     try {
       if (!options.skipOptimistic) {
-        // 🚀 옵티미스틱 업데이트: 댓글 수 -1
-        optimisticCommentUpdate(this.currentUserId, itemId, -1)
+        // 🚀 SSA 기반 옵티미스틱 업데이트: 프로필 캐시 포함 모든 캐시 업데이트
+        const manager = getCacheManager()
+        await manager.smartUpdate({
+          type: 'comment',
+          itemId,
+          userId: this.currentUserId!,
+          delta: -1
+        })
       }
 
       const { error } = await this.supabase
@@ -302,9 +320,15 @@ export class DataManager {
     } catch (error) {
       console.error(`❌ DataManager: Delete comment failed:`, error)
       
-      // 🔄 롤백
+      // 🔄 롤백: SSA 캐시에서 댓글 수 복원
       if (!options.skipOptimistic) {
-        optimisticCommentUpdate(this.currentUserId, itemId, 1)
+        const manager = getCacheManager()
+        await manager.smartUpdate({
+          type: 'comment',
+          itemId,
+          userId: this.currentUserId!,
+          delta: 1
+        })
       }
       
       return { 
@@ -318,7 +342,7 @@ export class DataManager {
    * 🔄 모든 캐시에 아이템 추가 (생성 시)
    */
   private async addItemToAllCaches(item: Item) {
-    console.log(`🚀 DataManager: Adding item to all caches...`)
+    // Adding item to all caches...
     
     // 1. 홈피드 캐시에 추가 (첫 페이지 최상단)
     await mutate(
@@ -354,14 +378,14 @@ export class DataManager {
     // 4. 프로필 공간 캐시 무효화 (현재는 상태 기반이므로 추후 SWR 전환 시 활용)
     await this.invalidateProfileCaches(item.user_id)
 
-    console.log(`✅ DataManager: Item added to all caches`)
+    // Item added to all caches
   }
 
   /**
    * 🔄 모든 캐시에서 아이템 업데이트 (수정 시)
    */
   private async updateItemInAllCaches(itemId: string, updatedItem: Item) {
-    console.log(`🚀 DataManager: Updating item in all caches...`)
+    // Updating item in all caches...
     
     // 1. 홈피드 캐시 업데이트
     updateInfiniteCache(this.currentUserId, itemId, updatedItem)
@@ -390,14 +414,14 @@ export class DataManager {
     // 5. 프로필 공간 캐시 무효화
     await this.invalidateProfileCaches(updatedItem.user_id)
 
-    console.log(`✅ DataManager: Item updated in all caches`)
+    // Item updated in all caches
   }
 
   /**
    * 🔄 모든 캐시에서 아이템 제거 (삭제 시)
    */
   private async removeItemFromAllCaches(itemId: string) {
-    console.log(`🚀 DataManager: Removing item from all caches...`)
+    // Removing item from all caches...
     
     // 삭제 전에 사용자 ID를 추출 (검색/프로필 캐시 무효화용)
     let deletedItemUserId: string | null = null
@@ -447,14 +471,14 @@ export class DataManager {
       await this.invalidateProfileCaches(deletedItemUserId)
     }
 
-    console.log(`✅ DataManager: Item removed from all caches`)
+    // Item removed from all caches
   }
 
   /**
    * 🔄 모든 아이템 관련 캐시 무효화 (에러 복구 시)
    */
   private async invalidateAllItemCaches(itemId: string) {
-    console.log(`🔄 DataManager: Invalidating all caches for item ${itemId}`)
+    // Invalidating all caches for item
     
     const keysToInvalidate = CacheInvalidators.invalidateItem(itemId)
     
@@ -477,7 +501,7 @@ export class DataManager {
    * 🔄 전체 시스템 캐시 무효화 (전면 재동기화)
    */
   async invalidateAllCaches() {
-    console.log(`🔄 DataManager: Invalidating ALL system caches`)
+    // Invalidating ALL system caches
     
     await Promise.all([
       this.invalidateHomeFeedCaches(),
@@ -486,7 +510,7 @@ export class DataManager {
       // 모든 사용자의 프로필 캐시는 개별적으로만 무효화 가능
     ])
     
-    console.log(`✅ DataManager: All caches invalidated`)
+    // All caches invalidated
   }
 
   /**
@@ -515,7 +539,7 @@ export class DataManager {
    * 🔄 검색 공간 캐시 무효화
    */
   private async invalidateSearchCaches() {
-    console.log(`🔄 DataManager: Invalidating search caches`)
+    // Invalidating search caches
     
     // 인기 게시물 캐시 무효화
     await mutate('popular_posts', undefined, { revalidate: true })
@@ -535,7 +559,7 @@ export class DataManager {
    * 🔄 프로필 공간 캐시 무효화
    */
   private async invalidateProfileCaches(userId: string) {
-    console.log(`🔄 DataManager: Invalidating profile caches for user ${userId}`)
+    // Invalidating profile caches for user
     
     // 🚀 프로필 페이지의 사용자 아이템 캐시 무효화
     await mutate(`user_items_${userId}`, undefined, { revalidate: true })

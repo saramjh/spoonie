@@ -88,7 +88,7 @@ export function useLike({
       const newHasLiked = !actualHasLiked // 실제 상태 기준으로 토글
       const newLikesCount = actualHasLiked ? likesCount - 1 : likesCount + 1
       
-      console.log(`🔍 Like state for ${itemId}: checkError=${!!checkError}, currentLike=${!!currentLike}, actualHasLiked=${actualHasLiked}, will ${newHasLiked ? 'add' : 'remove'}`)
+  
       
       // 백업 데이터 업데이트 (실제 상태 기준)
       backup = {
@@ -121,7 +121,7 @@ export function useLike({
         if (error) throw error
       }
 
-      console.log(`✅ Like ${newHasLiked ? 'added' : 'removed'} for item ${itemId}`)
+
 
     } catch (error) {
       // 🚀 STEP 4: 에러 시 완전 롤백
@@ -223,5 +223,5 @@ async function updateGlobalCaches(
     { revalidate: false }
   )
 
-  console.log(`🔄 Global caches updated for item ${itemId}: likes=${likesCount}, liked=${hasLiked}`)
+  
 } 

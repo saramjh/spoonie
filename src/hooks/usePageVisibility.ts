@@ -29,7 +29,7 @@ export function usePageVisibility(options: {
     if (!document.hidden) {
       // 🚀 페이지가 다시 보여질 때 (히스토리 뒤로가기 포함)
       if (debug) {
-        console.log('🔄 PageVisibility: Page became visible - revalidating caches...')
+  
       }
 
       // 업계 표준: 중요한 캐시들만 선별적으로 갱신
@@ -47,12 +47,12 @@ export function usePageVisibility(options: {
       }
 
       if (debug) {
-        console.log('✅ PageVisibility: Cache revalidation completed')
+  
       }
     } else {
       // 📱 페이지가 숨겨질 때 (상세페이지로 이동 등)
       if (debug) {
-        console.log('📱 PageVisibility: Page hidden - preparing for sync...')
+  
       }
     }
   }, [revalidateKeys, debug])

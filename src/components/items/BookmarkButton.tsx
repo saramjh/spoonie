@@ -41,14 +41,7 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
   variant = "ghost",
   cachedItem: providedCachedItem
 }, ref) => {
-  // 🔍 CRITICAL DEBUG: BookmarkButton 입력 데이터 확인
-  console.log(`🔍 [BookmarkButton ${itemId}] Input data:`, {
-    providedImages: providedCachedItem?.image_urls?.length || 0,
-    providedUrls: providedCachedItem?.image_urls,
-    providedHasImages: !!providedCachedItem?.image_urls,
-    initialBookmarks: initialBookmarksCount,
-    initialIsBookmarked
-  })
+
   
   // 🚀 SSA 업계표준: 이미지 데이터 완전 보존 + 부분 업데이트
   const fallbackItem: Item = providedCachedItem ? {
@@ -89,14 +82,7 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
   const cachedItem = useSSAItemCache(itemId, fallbackItem)
   
   // 🔍 CRITICAL DEBUG: BookmarkButton 최종 데이터 확인
-  console.log(`✅ [BookmarkButton ${itemId}] Final data:`, {
-    fallbackImages: fallbackItem?.image_urls?.length || 0,
-    cachedImages: cachedItem?.image_urls?.length || 0,
-    finalImages: cachedItem?.image_urls?.length || 0,
-    cachedUrls: cachedItem?.image_urls,
-    bookmarks: (cachedItem as any)?.bookmarks_count,
-    isBookmarked: (cachedItem as any)?.is_bookmarked
-  })
+
   
   const bookmarksCount = (cachedItem as any).bookmarks_count || initialBookmarksCount
   const isBookmarked = (cachedItem as any).is_bookmarked || initialIsBookmarked
@@ -151,7 +137,7 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
             (currentBookmarks: any[] | undefined) => {
               if (!currentBookmarks || currentBookmarks.length === 0) return currentBookmarks
               const updatedBookmarks = currentBookmarks.filter(item => (item.id || item.item_id) !== itemId)
-              console.log(`🗑️ [BOOKMARK OPTIMISTIC] Immediately removed ${itemId} from bookmarks list (${currentBookmarks.length} → ${updatedBookmarks.length})`)
+
               return updatedBookmarks
             },
             { revalidate: false }
@@ -159,7 +145,7 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
         } else {
           // 북마크 추가 시: 백그라운드에서 새로운 데이터 fetch
           await mutate(bookmarksCacheKey)
-          console.log(`📌 [BOOKMARK] Background refresh for bookmark add: ${itemId}`)
+
         }
       }
       

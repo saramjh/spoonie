@@ -72,7 +72,7 @@ export function RefreshProvider({ children }: { children: React.ReactNode }) {
 
 	// 아이템 업데이트 이벤트 발행
 	const publishItemUpdate = useCallback((event: ItemUpdateEvent) => {
-		console.log("🚀 Publishing item update:", event)
+		// console.log("🚀 Publishing item update:", event)
 
 		// 중복 업데이트 방지를 위한 키 생성
 		const updateKey = `${event.itemId}_${event.updateType}`

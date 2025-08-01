@@ -251,36 +251,25 @@ export class UnifiedCacheManager {
   private async updateAllCaches(operation: CacheOperation): Promise<void> {
     const { type, itemId, userId, delta } = operation
     
-    console.log(`🔄 [updateAllCaches] Starting update for item ${itemId}:`, {
-      type,
-      delta,
-      userId,
-      hasData: !!(operation as any).data
-    })
+    // Debug: updateAllCaches started
     
     try {
       // 1. 홈피드 캐시 업데이트
-      console.log(`🏠 [updateAllCaches] Updating HomeFeedCache for ${itemId}`)
       await this.updateHomeFeedCache(operation)
-      console.log(`✅ [updateAllCaches] HomeFeedCache updated for ${itemId}`)
     } catch (err) {
       console.log(`❌ [updateAllCaches] HomeFeedCache failed for ${itemId}:`, err)
     }
     
     try {
       // 2. 상세페이지 캐시 업데이트
-      console.log(`📄 [updateAllCaches] Updating ItemDetailCache for ${itemId}`)
       await this.updateItemDetailCache(operation)
-      console.log(`✅ [updateAllCaches] ItemDetailCache updated for ${itemId}`)
     } catch (err) {
       console.log(`❌ [updateAllCaches] ItemDetailCache failed for ${itemId}:`, err)
     }
     
     try {
       // 3. 검색 결과 캐시 업데이트
-      console.log(`🔍 [updateAllCaches] Updating SearchCache for ${itemId}`)
       await this.updateSearchCache(operation)
-      console.log(`✅ [updateAllCaches] SearchCache updated for ${itemId}`)
     } catch (err) {
       console.log(`❌ [updateAllCaches] SearchCache failed for ${itemId}:`, err)
     }
@@ -288,11 +277,9 @@ export class UnifiedCacheManager {
     try {
       // 4. 프로필 캐시 업데이트
       if (userId) {
-        console.log(`👤 [updateAllCaches] Updating ProfileCache for ${itemId}`)
         await this.updateProfileCache(operation)
-        console.log(`✅ [updateAllCaches] ProfileCache updated for ${itemId}`)
       } else {
-        console.log(`⏭️ [updateAllCaches] Skipping ProfileCache (no userId) for ${itemId}`)
+        // Debug: Skipping ProfileCache (no userId)
       }
     } catch (err) {
       console.log(`❌ [updateAllCaches] ProfileCache failed for ${itemId}:`, err)
@@ -300,14 +287,12 @@ export class UnifiedCacheManager {
     
     try {
       // 5. 레시피북 캐시 업데이트 (해당하는 경우)
-      console.log(`📚 [updateAllCaches] Updating RecipeBookCache for ${itemId}`)
       await this.updateRecipeBookCache(operation)
-      console.log(`✅ [updateAllCaches] RecipeBookCache updated for ${itemId}`)
     } catch (err) {
       console.log(`❌ [updateAllCaches] RecipeBookCache failed for ${itemId}:`, err)
     }
     
-    console.log(`🎯 [updateAllCaches] All caches updated for item ${itemId}`)
+    // Debug: updateAllCaches completed
   }
 
   /**
@@ -316,33 +301,15 @@ export class UnifiedCacheManager {
   private async updateHomeFeedCache(operation: CacheOperation): Promise<void> {
     const { type, itemId, delta, data } = operation
 
-    console.log(`🔍 [HomeFeedCache] Starting update for item ${itemId}:`, {
-      type,
-      delta,
-      hasData: !!data
-    })
+    // Debug: HomeFeedCache update started
 
     await mutate(
       (key) => typeof key === 'string' && key.startsWith('items|'),
       (cacheData: Item[][] | undefined) => {
-        console.log(`🔍 [HomeFeedCache] Cache data status:`, {
-          hasCacheData: !!cacheData,
-          isArray: Array.isArray(cacheData),
-          pageCount: cacheData?.length || 0,
-          cacheDataType: typeof cacheData,
-          firstPageType: cacheData?.[0] ? typeof cacheData[0] : 'undefined',
-          firstPageIsArray: Array.isArray(cacheData?.[0]),
-          firstPageData: cacheData?.[0],
-          allPageTypes: cacheData?.map((page, i) => ({ 
-            index: i, 
-            type: typeof page, 
-            isArray: Array.isArray(page),
-            length: Array.isArray(page) ? page.length : 'N/A'
-          }))
-        })
+        // Debug: Cache data checked
 
         if (!cacheData || !Array.isArray(cacheData)) {
-          console.log(`❌ [HomeFeedCache] No valid cache data for ${itemId}`)
+          // Debug: No cache data found
           return cacheData
         }
 
@@ -351,10 +318,9 @@ export class UnifiedCacheManager {
         const hasCorruptedPages = cacheData.some(page => !Array.isArray(page));
         
         if (hasCorruptedPages) {
-          console.log(`🔧 [HomeFeedCache] Fixing corrupted cache structure for ${itemId}`);
+          // Debug: Fixing corrupted cache structure
           normalizedCacheData = cacheData.map((page, index) => {
             if (!Array.isArray(page)) {
-              console.log(`🔧 [HomeFeedCache] Converting page ${index} to array:`, typeof page);
               // 페이지가 단일 객체이거나 다른 형태라면 배열로 감싸기
               if (page && typeof page === 'object' && 'id' in page) {
                 return [page as Item]; // 단일 아이템이면 배열로 감싸기
@@ -364,7 +330,7 @@ export class UnifiedCacheManager {
             }
             return page as Item[];
           });
-          console.log(`✅ [HomeFeedCache] Cache structure normalized for ${itemId}`);
+          // Debug: Cache structure normalized
         }
         
         // 🚀 새로운 아이템 추가 (홈피드 맨 위에 즉시 표시)
@@ -390,15 +356,15 @@ export class UnifiedCacheManager {
         let itemFound = false
         let totalItems = 0
 
-        console.log(`🔍 [HomeFeedCache] Searching for item ${itemId} in ${normalizedCacheData.length} pages`)
+        // Debug: Searching for item
 
         const result = normalizedCacheData.map((page, pageIndex) => {
           if (!Array.isArray(page)) {
-            console.log(`⚠️ [HomeFeedCache] Page ${pageIndex} is not an array`)
+            // Debug: Page is not an array
             return page // 🔧 page가 배열인지 안전하게 확인
           }
           
-          console.log(`🔍 [HomeFeedCache] Checking page ${pageIndex} with ${page.length} items`)
+          // Debug: Checking page
           totalItems += page.length
           
           return page.map((item, itemIndex) => {
@@ -410,20 +376,13 @@ export class UnifiedCacheManager {
             
             if (itemMatches) {
               itemFound = true
-              console.log(`🎯 [HomeFeedCache] Found item ${itemId} at page ${pageIndex}, index ${itemIndex}`)
+              // Debug: Found item in cache
               
               const calculateUpdates = this.calculateUpdates(type, delta)
               const updates = calculateUpdates(item)
               
               // 🔍 CRITICAL DEBUG: 업데이트 과정 추적
-              console.log(`🔄 [CacheManager] Updating item ${itemId}:`, {
-                type,
-                delta,
-                originalImages: item.image_urls?.length || 0,
-                originalUrls: item.image_urls,
-                updates,
-                hasImageUrls: 'image_urls' in updates
-              })
+                              // Debug: Updating item in cache
               
               // 🛡️ 핵심 수정: 이미지 데이터 완전 보존
               const updatedItem = { 
@@ -432,12 +391,7 @@ export class UnifiedCacheManager {
               }
               
               // 🔍 CRITICAL DEBUG: 업데이트 결과 확인
-              console.log(`✅ [CacheManager] Updated item ${itemId}:`, {
-                updatedImages: updatedItem.image_urls?.length || 0,
-                updatedUrls: updatedItem.image_urls,
-                likesCount: updatedItem.likes_count,
-                isLiked: updatedItem.is_liked
-              })
+                              // Debug: Item updated successfully
               
               return updatedItem
             }
@@ -445,19 +399,15 @@ export class UnifiedCacheManager {
           })
         })
         
-        console.log(`🎯 [HomeFeedCache] Search complete for ${itemId}:`, {
-          itemFound,
-          totalItems,
-          totalPages: normalizedCacheData.length
-        })
+        // Debug: Search complete
         
         if (!itemFound) {
-          console.log(`❌ [HomeFeedCache] Item ${itemId} not found in cache! (Total items: ${totalItems})`)
+          // Debug: Item not found in cache
           // 🚀 SSA 업계표준: 홈피드에 없어도 정상 (다른 페이지에 있을 수 있음)
           return normalizedCacheData // 정상화된 캐시 반환
         }
         
-        console.log(`✅ [HomeFeedCache] Successfully updated item ${itemId} in cache`)
+        // Debug: Successfully updated cache
         return result
       },
       { revalidate: false, populateCache: true }
@@ -472,38 +422,25 @@ export class UnifiedCacheManager {
     
 
     // 🔍 CRITICAL DEBUG: ItemDetailCache 시작 상태 확인
-    console.log(`🔄 [updateItemDetailCache] Starting for item ${itemId}:`, {
-      type,
-      delta,
-      hasData: !!data
-    })
+    // Debug: ItemDetailCache update started
 
     const updatedItem = await mutate(
       `itemDetail|${itemId}`,
       (currentItem: Item | undefined) => {
         // 🚀 SSA 업계표준: 개별 캐시 없으면 홈피드에서 데이터 가져오기
         if (!currentItem) {
-          console.log(`⚠️ [ItemDetailCache] No cached item found for ${itemId}, searching home feed...`)
+          // Debug: No cached item, searching home feed
           
           // 홈피드 캐시에서 완전한 아이템 데이터 찾기
           let foundItem: Item | null = null
           
           // operation data에서 완전한 아이템 데이터 확인
           try {
-            console.log(`🔍 [ItemDetailCache] Checking operation data for item ${itemId}:`, {
-              hasData: !!data,
-              dataType: typeof data,
-              hasImageUrls: data && typeof data === 'object' && 'image_urls' in data
-            })
+                    // Debug: Checking operation data
             
             // operation data에 완전한 아이템 정보가 있는지 확인
             if (data && typeof data === 'object' && 'image_urls' in data) {
-              console.log(`✅ [ItemDetailCache] Using image data from operation data:`, {
-                itemId,
-                hasImages: !!(data as any).image_urls,
-                imageCount: (data as any).image_urls?.length || 0,
-                imageUrls: (data as any).image_urls
-              })
+              
               foundItem = data as Item
             }
           } catch (error) {
@@ -514,7 +451,7 @@ export class UnifiedCacheManager {
             // 홈피드에서 찾은 완전한 데이터 사용
             currentItem = { ...foundItem }
           } else {
-            console.log(`❌ [ItemDetailCache] Item ${itemId} not found in home feed, creating minimal fallback`)
+            // Debug: Item not found, creating fallback
             // 🎯 최소한의 fallback (좋아요/북마크만 업데이트, 이미지는 없음)
             currentItem = {
               id: itemId,
@@ -545,20 +482,11 @@ export class UnifiedCacheManager {
         }
 
         // Normal update for existing cached item
-        console.log(`🔄 [ItemDetailCache] Updating item ${itemId}:`, {
-          originalImages: currentItem.image_urls?.length || 0,
-          originalUrls: currentItem.image_urls,
-          type,
-          delta
-        })
+
         const calculateUpdates = this.calculateUpdates(type, delta, data)
         const updates = calculateUpdates(currentItem)
         const result = { ...currentItem, ...updates }
-        console.log(`✅ [ItemDetailCache] Updated item ${itemId}:`, {
-          updatedImages: result.image_urls?.length || 0,
-          updatedUrls: result.image_urls,
-          updates
-        })
+
         
         // Only log for like operations
         if (type === 'like') {
@@ -709,13 +637,7 @@ export class UnifiedCacheManager {
     return (currentItem: Item) => {
       const updates: Partial<Item> = {}
       
-      // 🔍 CRITICAL DEBUG: calculateUpdates 입력 확인
-      console.log(`🔄 [calculateUpdates] Input:`, {
-        type,
-        delta,
-        data,
-        itemImages: currentItem.image_urls?.length || 0
-      })
+      // Debug: calculateUpdates processing
       
       switch (type) {
         case 'like':
@@ -762,10 +684,7 @@ export class UnifiedCacheManager {
           
         case 'thumbnail_update':
           if (data) {
-            console.log(`🖼️ [calculateUpdates] Thumbnail update:`, {
-              thumbnailIndex: data.thumbnail_index,
-              imageUrls: data.image_urls?.length || 0
-            })
+            // Debug: Thumbnail update processing
             updates.thumbnail_index = data.thumbnail_index
             updates.image_urls = data.image_urls
           }
@@ -773,20 +692,19 @@ export class UnifiedCacheManager {
           
         case 'update':
           if (data) {
-            console.log(`🔄 SSA: Updating item with data:`, data)
-            Object.assign(updates, data)
-            console.log(`✅ SSA: Applied updates:`, updates)
+            // Debug: Applying SSA update
+            // 🔧 이미지 보존: 기존 이미지가 있고 새 데이터에 이미지가 없으면 기존 이미지 유지
+            if (currentItem.image_urls && currentItem.image_urls.length > 0 && 
+                (!data.image_urls || data.image_urls.length === 0)) {
+              Object.assign(updates, { ...data, image_urls: currentItem.image_urls })
+            } else {
+              Object.assign(updates, data)
+            }
           }
           break
       }
       
-      // 🔍 CRITICAL DEBUG: calculateUpdates 결과 확인
-      console.log(`✅ [calculateUpdates] Output:`, {
-        type,
-        updates,
-        hasImageUrls: 'image_urls' in updates,
-        updateKeys: Object.keys(updates)
-      })
+
       
       return updates
     }
@@ -986,10 +904,7 @@ export const cacheManager = {
   
   // 🖼️ SSA 기반 썸네일 업데이트 (모든 캐시 동기화)
   updateThumbnail: async (itemId: string, thumbnailIndex: number, imageUrls: string[]) => {
-    console.log(`🎯 [CacheManager] Updating thumbnail for item ${itemId}:`, {
-      thumbnailIndex,
-      imageCount: imageUrls.length
-    })
+
     
     const manager = getCacheManager()
     const rollback = await manager.smartUpdate({
@@ -1000,7 +915,7 @@ export const cacheManager = {
       data: { thumbnail_index: thumbnailIndex, image_urls: imageUrls }
     })
     
-    console.log(`✅ [CacheManager] Thumbnail updated for item ${itemId}`)
+
     return rollback
   }
 } 

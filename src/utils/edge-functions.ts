@@ -69,7 +69,7 @@ interface NotificationResult {
 export async function optimizeImagesEdge(
   request: ImageOptimizationRequest
 ): Promise<ImageOptimizationResult> {
-  console.log(`🏃‍♂️ Edge: Optimizing ${request.images.length} images...`)
+  // console.log(`🏃‍♂️ Edge: Optimizing ${request.images.length} images...`)
   const startTime = Date.now()
   
   const supabase = createSupabaseBrowserClient()
@@ -87,11 +87,7 @@ export async function optimizeImagesEdge(
     const endTime = Date.now()
     const duration = endTime - startTime
     
-    console.log(`✅ Edge: Images optimized in ${duration}ms`, {
-      totalImages: data.summary.totalImages,
-      savedMB: data.summary.savedMB,
-      compressionRatio: data.summary.compressionRatio
-    })
+    // Edge: Images optimized
 
     return data
   } catch (error) {
@@ -107,7 +103,7 @@ export async function optimizeImagesEdge(
 export async function sendNotificationEdge(
   request: NotificationRequest
 ): Promise<NotificationResult> {
-  console.log(`🔔 Edge: Sending ${request.type} notification...`)
+  // console.log(`🔔 Edge: Sending ${request.type} notification...`)
   const startTime = Date.now()
   
   const supabase = createSupabaseBrowserClient()
@@ -125,7 +121,7 @@ export async function sendNotificationEdge(
     const endTime = Date.now()
     const duration = endTime - startTime
     
-    console.log(`✅ Edge: Notification sent in ${duration}ms`, {
+    // console.log(`✅ Edge: Notification sent in ${duration}ms`, {
       type: request.type,
       notificationId: data.notificationId,
       processingTime: data.deliveryInfo.processingTimeMs

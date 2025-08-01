@@ -75,7 +75,7 @@ class TempStorageManager {
 					request.onsuccess = () => resolve(request.result)
 					request.onerror = () => reject(request.error)
 				})
-				console.log("✅ Temp data saved to IndexedDB:", data.id)
+				
 				return
 			} catch (error) {
 				console.warn("IndexedDB save failed, falling back to localStorage:", error)
@@ -103,7 +103,7 @@ class TempStorageManager {
 			}
 
 			localStorage.setItem(TEMP_STORAGE_KEY, JSON.stringify(existing))
-			console.log("✅ Temp data saved to localStorage:", data.id)
+			
 		} catch (error) {
 			console.error("❌ Failed to save temp data:", error)
 		}
@@ -151,7 +151,7 @@ class TempStorageManager {
 					request.onsuccess = () => resolve(request.result)
 					request.onerror = () => reject(request.error)
 				})
-				console.log("✅ Temp data deleted from IndexedDB:", id)
+				
 				return
 			} catch (error) {
 				console.warn("IndexedDB delete failed, falling back to localStorage:", error)
@@ -163,7 +163,7 @@ class TempStorageManager {
 			const existing = JSON.parse(localStorage.getItem(TEMP_STORAGE_KEY) || "[]")
 			const filtered = existing.filter((item: TempFormData) => item.id !== id)
 			localStorage.setItem(TEMP_STORAGE_KEY, JSON.stringify(filtered))
-			console.log("✅ Temp data deleted from localStorage:", id)
+			
 		} catch (error) {
 			console.error("❌ Failed to delete temp data:", error)
 		}

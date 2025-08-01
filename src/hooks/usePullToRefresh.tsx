@@ -36,7 +36,7 @@ export const usePullToRefresh = () => {
     const handleTouchEnd = useCallback(async () => {
         if (isPulling && pullDistance >= PULL_THRESHOLD) {
             // 🚀 Optimistic Updates: 실제로는 아무것도 하지 않음 (이미 모든 상태가 최신)
-            console.log("🚀 Pull-to-refresh triggered: Already up-to-date with Optimistic Updates");
+        
             setIsRefreshing(true);
             
             // 사용자 피드백용 짧은 애니메이션만 표시

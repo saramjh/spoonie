@@ -86,7 +86,7 @@ export function useRobustLike({
     }
 
     const actionId = Date.now().toString()
-    console.log(`🎯 [${actionId}] Like toggle START for ${itemId}`)
+    // console.log(`🎯 [${actionId}] Like toggle START for ${itemId}`)
 
     // 현재 상태 백업
     const backupState = { likesCount, hasLiked }
@@ -108,12 +108,12 @@ export function useRobustLike({
       setHasLiked(targetState.hasLiked)
       onStateChange?.(targetState.likesCount, targetState.hasLiked)
       
-      console.log(`🎯 [${actionId}] UI updated: ${backupState.hasLiked} → ${targetState.hasLiked}`)
+      // console.log(`🎯 [${actionId}] UI updated: ${backupState.hasLiked} → ${targetState.hasLiked}`)
 
       // 🚀 STEP 2: 전역 캐시 즉시 업데이트
       await updateAllCaches(itemId, targetState.likesCount, targetState.hasLiked)
       
-      console.log(`🎯 [${actionId}] Caches updated`)
+      // console.log(`🎯 [${actionId}] Caches updated`)
 
       // 🚀 STEP 3: DB 업데이트 (안전한 upsert 방식)
       if (targetState.hasLiked) {
@@ -146,7 +146,7 @@ export function useRobustLike({
         }
       }
 
-      console.log(`✅ [${actionId}] DB updated successfully`)
+      // console.log(`✅ [${actionId}] DB updated successfully`)
       
       // 성공 시 디버그 상태 업데이트
       setDebugState(prev => ({ 
@@ -181,7 +181,7 @@ export function useRobustLike({
         variant: "destructive"
       })
       
-      console.log(`🔄 [${actionId}] Rolled back to: ${backupState.hasLiked}`)
+      // console.log(`🔄 [${actionId}] Rolled back to: ${backupState.hasLiked}`)
     } finally {
       setIsLoading(false)
     }
@@ -254,7 +254,7 @@ async function updateAllCaches(
       )
     ])
     
-    console.log(`🔄 Cache sync completed for item ${itemId}: likes=${likesCount}, liked=${hasLiked}`)
+    // console.log(`🔄 Cache sync completed for item ${itemId}: likes=${likesCount}, liked=${hasLiked}`)
   } catch (error) {
     console.warn(`⚠️ Cache update failed (non-critical):`, error)
   }

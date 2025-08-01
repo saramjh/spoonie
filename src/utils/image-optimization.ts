@@ -48,14 +48,14 @@ async function uploadSingleImage(
 		// 캐시된 URL이 있는지 확인
 		const cachedUrl = imageCache.get(imageHash)
 		if (cachedUrl) {
-			console.log(`🎯 Image cache HIT: ${imageHash.slice(0, 8)}...`)
+			
 			return { url: cachedUrl, success: true, fromCache: true }
 		}
 
 		// 진행중인 업로드가 있는지 확인 (동일한 이미지 동시 업로드 방지)
 		const ongoingUpload = uploadQueue.get(imageHash)
 		if (ongoingUpload) {
-			console.log(`⏳ Waiting for ongoing upload: ${imageHash.slice(0, 8)}...`)
+			
 			return await ongoingUpload
 		}
 
@@ -69,7 +69,7 @@ async function uploadSingleImage(
 			// 성공 시 캐시에 저장
 			if (result.success) {
 				imageCache.set(imageHash, result.url)
-				console.log(`✅ Image uploaded and cached: ${imageHash.slice(0, 8)}...`)
+				
 			}
 
 			return result
@@ -133,7 +133,7 @@ export async function uploadImagesOptimized(
 	const results: UploadResult[] = []
 	let completed = 0
 
-	console.log(`🚀 Starting optimized upload of ${images.length} images (max ${MAX_CONCURRENT} concurrent)`)
+	
 
 	// 청크 단위로 병렬 처리
 	for (let i = 0; i < images.length; i += MAX_CONCURRENT) {
@@ -176,7 +176,7 @@ export async function uploadImagesOptimized(
 	const successCount = results.filter(r => r.success).length
 	const cacheHits = results.filter(r => r.fromCache).length
 	
-	console.log(`✅ Upload completed: ${successCount}/${images.length} successful, ${cacheHits} from cache`)
+	
 
 	return results
 }
@@ -283,7 +283,7 @@ export const ImageCacheManager = {
 	// 캐시 정리 (메모리 관리)
 	clearCache(): void {
 		imageCache.clear()
-		console.log('🧹 Image cache cleared')
+		
 	},
 
 	// 특정 해시 캐시 제거

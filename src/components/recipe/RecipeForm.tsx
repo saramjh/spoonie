@@ -80,9 +80,7 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 
 	const isEditMode = !!initialData
 
-	// 디버깅: initialData 확인
-	console.log("🔍 RecipeForm: initialData", initialData)
-	console.log("🔍 RecipeForm: isEditMode", isEditMode)
+
 
 	const [isSubmitting, setIsSubmitting] = useState(false)
 	const [mainImages, setMainImages] = useState<OptimizedImage[]>([])
@@ -90,7 +88,7 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 	
 	// 🚀 SSA: 섬네일 변경 시 즉시 캐시 업데이트를 위한 wrapper 함수
 	const handleThumbnailChange = useCallback(async (newIndex: number) => {
-		console.log(`🎯 RecipeForm: Thumbnail changing ${thumbnailIndex} → ${newIndex}`)
+
 		setThumbnailIndex(newIndex)
 		
 		// 수정 모드이고 itemId가 있는 경우에만 즉시 캐시 업데이트
@@ -105,14 +103,9 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 						item_id: initialData.id,
 					}
 					
-					console.log(`🚀 RecipeForm: Updating thumbnail_index in cache immediately`)
 					await cacheManager.updateItem(initialData.id, partialUpdate)
-					console.log(`✅ RecipeForm: Thumbnail cache updated successfully`)
 					
-					// 캐시 업데이트 후 상태 재확인
-					setTimeout(() => {
-						console.log(`🔍 RecipeForm: After cache update - thumbnailIndex: ${thumbnailIndex}, newIndex: ${newIndex}`)
-					}, 100)
+
 				}
 			} catch (error) {
 				console.error(`❌ RecipeForm: Failed to update thumbnail cache:`, error)
@@ -169,7 +162,7 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 				// 🚀 업계 표준: 저장된 썸네일 인덱스 복원 또는 기본값(0) 사용
 				const savedThumbnailIndex = initialData.thumbnail_index ?? 0
 				setThumbnailIndex(Math.min(savedThumbnailIndex, fetchedImages.length - 1))
-				console.log(`📌 Restored thumbnail index: ${savedThumbnailIndex} (available: ${fetchedImages.length})`)
+				
 			}
 
 			if (initialData.instructions && initialData.instructions.length > 0) {
@@ -274,8 +267,7 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 
 					// 🚀 최적화된 메인 이미지 병렬 업로드 (기존: 순차 → 새로운: 병렬 + 캐싱)
 		// 🚀 업계 표준: 원본 순서 유지 + 썸네일 인덱스 정보 저장 (개선된 Instagram/Facebook 방식)
-		console.log(`📌 Preserving original image order with thumbnail index: ${thumbnailIndex}`)
-		console.log(`📦 Images:`, mainImages.map((img, i) => `${i}: ${img.preview.split('/').pop()}`))
+		
 
 		const uploadStartTime = Date.now()
 		const newImageFiles = mainImages.filter((img) => img.file.size > 0)
@@ -283,13 +275,13 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 		
 		let uploadedImageUrls: string[] = []
 		if (newImageFiles.length > 0) {
-			console.log(`📤 Uploading ${newImageFiles.length} recipe images in parallel...`)
+			
 			const uploadResults = await uploadImagesOptimized(
 				newImageFiles, 
 				user.id, 
 				bucketId,
 				(progress) => {
-					console.log(`📊 Recipe upload progress: ${progress.uploaded}/${progress.total} (${progress.currentFile || ''})`)
+					
 				}
 			)
 
@@ -314,7 +306,7 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 				)
 			})
 
-			console.log(`✅ Recipe images upload completed in ${uploadDuration}ms`)
+			
 		}
 		
 					// 🚀 원본 순서 유지로 최종 URL 배열 생성
@@ -362,20 +354,20 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 			let itemId: string
 
 			if (isEditMode && initialData) {
-				console.log("Updating existing recipe. initialData:", initialData) // 디버깅 로그
+				
 				const { data: updatedItem, error: itemError } = await supabase.from("items").update(itemPayload).eq("id", initialData.id).select("id").single() // initialData.item_id -> initialData.id로 변경
 				if (itemError) throw new Error(`레시피 수정 실패: ${itemError.message}`)
 				itemId = updatedItem.id
-				console.log("Recipe updated. New itemId:", itemId) // 디버깅 로그
+				
 
 				await supabase.from("ingredients").delete().eq("item_id", itemId)
 				await supabase.from("instructions").delete().eq("item_id", itemId)
 			} else {
-				console.log("Creating new recipe.") // 디버깅 로그
+				
 				const { data: newItem, error: itemError } = await supabase.from("items").insert(itemPayload).select("id").single()
 				if (itemError) throw new Error(`레시피 생성 실패: ${itemError.message}`)
 				itemId = newItem.id
-				console.log("New recipe created. itemId:", itemId) // 디버깅 로그
+				
 			}
 
 			const ingredientsToInsert = values.ingredients.map((ing) => ({ ...ing, item_id: itemId }))
@@ -386,7 +378,7 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 
 			// 🚀 SSA 기반: 통합 캐시 관리로 최신 데이터 보장 (thumbnail_index 포함)
 			if (isEditMode) {
-				console.log(`🚀 RecipeForm: SSA update mode - using updateItem for immediate sync...`)
+				
 				// 🚀 SSA: 아이템 업데이트 - 홈화면에 즉시 반영!
 				const fullItemPayload = {
 					...itemPayload,
@@ -409,26 +401,18 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 					is_following: initialData?.is_following || false,
 					created_at: initialData?.created_at || new Date().toISOString(),
 				}
-				console.log(`🔍 RecipeForm: Updating with thumbnail_index: ${thumbnailIndex}`)
-				console.log(`🔍 RecipeForm: fullItemPayload keys:`, Object.keys(fullItemPayload))
-				console.log(`🔍 RecipeForm: Calling updateItem with itemId: "${itemId}" and payload:`, {
-					id: fullItemPayload.id,
-					item_id: fullItemPayload.item_id,
-					title: fullItemPayload.title,
-					thumbnail_index: fullItemPayload.thumbnail_index,
-					image_urls: fullItemPayload.image_urls?.length || 0
-				})
+				// Debug: { id, item_id, title, thumbnail_index, image_urls }
 				await cacheManager.updateItem(itemId, fullItemPayload)
 				
 				// 🔧 Smart Fallback: 필요시에만 부분 무효화 (성능 개선)
 				setTimeout(async () => {
-					console.log(`🔄 RecipeForm: Smart fallback - revalidating home feed only`)
+					
 					await cacheManager.revalidateHomeFeed()
 				}, 200)
 				
-				console.log(`✅ RecipeForm: SSA update completed - all caches synchronized`)
+				
 			} else {
-				console.log(`🚀 RecipeForm: SSA creating recipe via addNewItem...`)
+				
 				const fullItemPayload = {
 					...itemPayload,
 					id: itemId,
@@ -454,7 +438,7 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 				await cacheManager.addNewItem(fullItemPayload as Item)
 			}
 
-		console.log(`✅ RecipeForm: Recipe ${isEditMode ? "updated" : "created"} successfully with optimistic update: ${itemId}`)
+		
 
 		toast({ title: `레시피 ${isEditMode ? "수정" : "작성"} 완료`, description: `성공적으로 ${isEditMode ? "수정" : "등록"}되었습니다.` })
 		
@@ -469,7 +453,7 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 				const wasPrivate = !initialData.is_public
 				const nowPublic = values.is_public
 				if (wasPrivate && nowPublic) {
-					console.log(`🔓 비공개→공개 전환 감지: ${itemId}, 참고레시피 알림 발송`)
+					
 					notificationService.notifyRecipeCited(itemId, values.cited_recipe_ids, user.id, true)
 						.catch(error => console.error('❌ 참고레시피 알림 발송 실패:', error))
 				}
@@ -506,7 +490,7 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 
 			<div className="max-w-md mx-auto p-4 space-y-6">
 				{/* @ts-expect-error - form 핸들러 타입 변환 처리 */}
-				<form id="recipe-form" onSubmit={form.handleSubmit(onSubmit, (errors) => console.log("Form validation errors:", errors))} className="space-y-6">
+				      <form id="recipe-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
 					<Card>
 						<CardHeader>
 							<CardTitle className="flex items-center gap-2">
@@ -684,17 +668,15 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 						</CardContent>
 					</Card>
 
-					<Card>
-						<CardHeader>
-							<CardTitle className="flex items-center gap-2">
-								<Book className="w-5 h-5 text-orange-500" />
-								참고 레시피
-							</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<CitedRecipeSearch selectedRecipes={selectedCitedRecipes} onSelectedRecipesChange={handleSelectedCitedRecipesChange} />
-						</CardContent>
-					</Card>
+					{/* 🚀 토스 스타일: 더 자연스러운 참고레시피 섹션 */}
+					<div className="space-y-2">
+						<Label className="text-base font-medium flex items-center gap-2">
+							<Book className="w-4 h-4 text-orange-500" />
+							참고 레시피
+							<span className="text-sm font-normal text-gray-500">(선택사항)</span>
+						</Label>
+						<CitedRecipeSearch selectedRecipes={selectedCitedRecipes} onSelectedRecipesChange={handleSelectedCitedRecipesChange} />
+					</div>
 
 					<div>
 						<Label htmlFor="tags" className="text-base font-medium">

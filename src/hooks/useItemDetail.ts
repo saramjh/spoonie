@@ -9,7 +9,7 @@ const itemDetailFetcher = async (key: string): Promise<ItemDetail> => {
 	const supabase = createSupabaseBrowserClient()
 	const itemId = key.replace('item_details_', '')
 
-	console.log(`🔍 ItemDetail: Fetching data for item ${itemId}`)
+
 
 	if (!itemId) {
 		console.error("❌ ItemDetail: Invalid item ID")
@@ -22,7 +22,7 @@ const itemDetailFetcher = async (key: string): Promise<ItemDetail> => {
 		const currentUserId = user?.id
 
 		// 1. 메인 아이템 정보 조회 (작성자 프로필 포함)
-		console.log(`📡 ItemDetail: Fetching main item data for ${itemId}`)
+
 		const { data: itemData, error: itemError } = await supabase
 			.from("items")
 			.select(`
@@ -46,7 +46,7 @@ const itemDetailFetcher = async (key: string): Promise<ItemDetail> => {
 			throw new Error("Item not found")
 		}
 
-		console.log(`✅ ItemDetail: Successfully fetched ${itemData.item_type} item:`, itemData.title)
+
 
 		// 2. 좋아요 상태 조회 (팔로우 상태는 글로벌 상태에서 관리)
 		const [likesCountResult, userLikeResult] = await Promise.all([
@@ -67,7 +67,7 @@ const itemDetailFetcher = async (key: string): Promise<ItemDetail> => {
 		const likesCount = likesCountResult.count || 0
 		const isLiked = !!userLikeResult.data && !userLikeResult.error
 
-		console.log(`💖 ItemDetail: Like status for ${itemId} - count: ${likesCount}, isLiked: ${isLiked} (user: ${currentUserId || 'anonymous'})`)
+
 		// 🚀 업계 표준: 팔로우 상태는 글로벌 상태에서 관리, DB 재조회 불필요
 
 		// 3. 레시피인 경우 재료/조리법 조회 (병렬 처리)
@@ -75,7 +75,7 @@ const itemDetailFetcher = async (key: string): Promise<ItemDetail> => {
 		let instructions: Instruction[] = []
 		
 		if (itemData.item_type === "recipe") {
-			console.log("🍳 ItemDetail: Fetching recipe details for ID:", itemId)
+
 			
 			const [ingredientsResult, instructionsResult] = await Promise.all([
 				supabase.from("ingredients").select("*").eq("item_id", itemId),
@@ -85,7 +85,7 @@ const itemDetailFetcher = async (key: string): Promise<ItemDetail> => {
 			ingredients = ingredientsResult.data || []
 			instructions = instructionsResult.data || []
 			
-			console.log(`📊 ItemDetail: Loaded ${ingredients.length} ingredients, ${instructions.length} instructions`)
+
 		}
 
 		// 4. 댓글 정보 조회 (삭제된 댓글도 포함)
@@ -153,7 +153,7 @@ const itemDetailFetcher = async (key: string): Promise<ItemDetail> => {
 			comments: transformedComments, // 별칭
 		}
 
-		console.log(`✅ ItemDetail: Successfully loaded ${itemData.item_type} with ${transformedComments.length} comments, ${likesCount} likes, liked: ${isLiked}`)
+
 		return itemDetail
 	} catch (error) {
 		console.error("❌ ItemDetail: Error in itemDetailFetcher:", error)

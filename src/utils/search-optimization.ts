@@ -62,11 +62,11 @@ export async function getPopularKeywordsCached(): Promise<Array<{ keyword: strin
 	
 	// 캐시 히트 체크
 	if (cached && Date.now() - cached.lastUpdated < cached.ttl) {
-		console.log('🎯 Cache HIT: popular keywords')
+
 		return cached.popularKeywords
 	}
 
-	console.log('🔄 Cache MISS: fetching popular keywords from DB')
+	
 	const supabase = createSupabaseBrowserClient()
 
 	try {
@@ -105,11 +105,11 @@ export async function getPopularPostsCached(): Promise<PopularPost[]> {
 	const cached = searchCache.get(cacheKey)
 	
 	if (cached && Date.now() - cached.lastUpdated < cached.ttl) {
-		console.log('🎯 Cache HIT: popular posts')
+
 		return cached.popularPosts
 	}
 
-	console.log('🔄 Cache MISS: fetching popular posts from DB')
+	
 	const supabase = createSupabaseBrowserClient()
 
 	try {
@@ -143,15 +143,11 @@ export async function getPopularPostsCached(): Promise<PopularPost[]> {
 					
 				const likedItemIds = new Set(likes?.map(like => like.item_id) || [])
 				
-				console.log(`🔍 [getPopularPostsCached] Like status for user ${currentUserId}:`, {
-					totalItems: result.length,
-					likedItems: Array.from(likedItemIds),
-					likedCount: likedItemIds.size
-				})
+
 				
 				result = result.map(item => {
 					const isLiked = likedItemIds.has(item.item_id || item.id)
-					console.log(`🔍 [PopularPost ${item.item_id || item.id}] ${item.title?.substring(0, 20)}: is_liked=${isLiked}`)
+
 					return {
 						...item,
 						is_liked: isLiked
@@ -159,7 +155,7 @@ export async function getPopularPostsCached(): Promise<PopularPost[]> {
 				})
 			}
 		} else {
-			console.log(`🔍 [getPopularPostsCached] No user or no results:`, { currentUserId, resultCount: result.length })
+
 		}
 		
 		// 캐시 업데이트
@@ -196,7 +192,7 @@ export class DebouncedSearch {
 		// 캐시 체크
 		const cached = this.searchCache.get(query)
 		if (cached && Date.now() - cached.timestamp < this.SEARCH_CACHE_TTL) {
-			console.log(`🎯 Search cache HIT for: "${query}"`)
+		
 			return cached.results
 		}
 
@@ -208,7 +204,7 @@ export class DebouncedSearch {
 
 			this.timeout = setTimeout(async () => {
 				try {
-					console.log(`🔍 Executing search for: "${query}"`)
+					
 					const results = await this.performSearch(query)
 					
 					// 결과 캐싱
@@ -337,10 +333,7 @@ export async function searchUsers(query: string): Promise<UserSearchResult[]> {
 	const { data: { user } } = await supabase.auth.getUser()
 	const currentUserId = user?.id || null
 
-	console.log(`🔍 [UserSearch] Searching for users: "${query}"`, {
-		currentUserId,
-		trimmedQuery: query.trim()
-	})
+	    // [UserSearch] Searching for users: { currentUserId, trimmedQuery }
 
 	// 🎯 유저네임 전용 RPC 함수 호출
 	const { data, error } = await supabase
@@ -355,6 +348,6 @@ export async function searchUsers(query: string): Promise<UserSearchResult[]> {
 		return []
 	}
 
-	console.log(`✅ [UserSearch] Found ${data?.length || 0} users for: "${query}"`, data)
+	
 	return data || []
 } 

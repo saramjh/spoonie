@@ -39,7 +39,14 @@ export default function SpoonieLogoAnimation({
 					style={{
 						filter: isLoading ? "drop-shadow(0 8px 20px rgba(249, 115, 22, 0.35))" : "none",
 					}}>
-					 <Image src={logoSrc} alt="Spoonie Logo" width={width} height={height} priority className="h-auto" /> 
+					 <Image 
+						src={logoSrc} 
+						alt="Spoonie Logo" 
+						width={useFullLogo ? 180 : 120} 
+						height={useFullLogo ? 57 : 120} 
+						priority 
+						className="h-auto"
+					/> 
 				</div>
 			</div>
 			{showSlogan && <p className={sloganClasses}>요리의 즐거움, 한 스푼</p>}

@@ -25,7 +25,7 @@ export async function addNewItemToHomeFeed(
 ): Promise<NewItemResult> {
   const supabase = createSupabaseBrowserClient()
   
-  console.log(`🚀 HomeFeedUpdate: Adding new ${itemType} to home feed: ${itemId}`)
+  // Adding new item to home feed
   
   try {
     // 1단계: 새로 생성된 아이템의 완전한 정보 조회 (재시도 로직 포함)
@@ -34,7 +34,7 @@ export async function addNewItemToHomeFeed(
     
     while (!newItemDetail && attempts < maxRetries) {
       attempts++
-      console.log(`📦 HomeFeedUpdate: Fetching ${itemType} detail (attempt ${attempts}/${maxRetries})`)
+      // Fetching item detail
       
       const { data, error } = await supabase
         .from("optimized_feed_view")
@@ -44,11 +44,11 @@ export async function addNewItemToHomeFeed(
       
       if (!error && data) {
         newItemDetail = data
-        console.log(`✅ HomeFeedUpdate: Successfully fetched ${itemType} detail`)
+        // Successfully fetched item detail
         break
       } else if (attempts < maxRetries) {
         // 짧은 대기 후 재시도 (DB 동기화 대기)
-        console.log(`⏳ HomeFeedUpdate: Waiting for DB sync (${200 * attempts}ms)`)
+        // Waiting for DB sync
         await new Promise(resolve => setTimeout(resolve, 200 * attempts))
       } else {
         console.warn(`⚠️ HomeFeedUpdate: Failed to fetch ${itemType} detail after ${maxRetries} attempts:`, error)
@@ -69,14 +69,14 @@ export async function addNewItemToHomeFeed(
     }
 
     // 2단계: 홈피드 캐시에 새 아이템을 최상단에 추가
-    console.log(`💾 HomeFeedUpdate: Adding ${itemType} to cache...`)
+          // Adding item to cache
     
     await mutate(
       (key) => typeof key === "string" && key.startsWith("items|"),
       async (cachedData: any) => {
         if (!cachedData || cachedData.length === 0) {
           // 첫 번째 페이지가 없으면 새로 생성
-          console.log(`🆕 HomeFeedUpdate: Creating new page with first ${itemType}`)
+          // Creating new page with first item
           return [[newItemDetail]]
         }
         
@@ -85,7 +85,7 @@ export async function addNewItemToHomeFeed(
         
         // 안전한 배열 처리: 첫 번째 페이지가 배열인지 확인
         if (!Array.isArray(updatedData[0])) {
-          console.log(`🔧 HomeFeedUpdate: First page is not array, creating new array`)
+          // First page is not array, creating new array
           updatedData[0] = [newItemDetail]
         } else {
           // 중복 확인 후 추가
@@ -96,9 +96,9 @@ export async function addNewItemToHomeFeed(
           
           if (!exists) {
             updatedData[0] = [newItemDetail, ...updatedData[0]]
-            console.log(`✨ HomeFeedUpdate: Added new ${itemType} to cache, first page now has ${updatedData[0].length} items`)
+            // Added new item to cache
           } else {
-            console.log(`⏭️ HomeFeedUpdate: ${itemType} already exists in cache, skipping duplicate`)
+            // Item already exists in cache, skipping duplicate
           }
         }
         
@@ -107,7 +107,7 @@ export async function addNewItemToHomeFeed(
       { revalidate: false } // 서버 재검증 없이 즉시 업데이트
     )
 
-    console.log(`🎉 HomeFeedUpdate: Successfully added ${itemType} to home feed cache`)
+    // Successfully added item to home feed cache
     
     return {
       success: true,
@@ -147,7 +147,7 @@ export async function updateEditedItemInCache(
 ): Promise<NewItemResult> {
   const supabase = createSupabaseBrowserClient()
   
-  console.log(`🔄 HomeFeedUpdate: Updating edited ${itemType} in cache: ${itemId}`)
+  // Updating edited item in cache
   
   try {
     // 수정된 아이템의 최신 정보 조회
@@ -177,7 +177,7 @@ export async function updateEditedItemInCache(
           
           return page.map(item => {
             if ((item.id && item.id === itemId) || (item.item_id && item.item_id === itemId)) {
-              console.log(`🔄 HomeFeedUpdate: Updated ${itemType} in cache`)
+              // Updated item in cache
               return updatedItemDetail
             }
             return item
@@ -187,7 +187,7 @@ export async function updateEditedItemInCache(
       { revalidate: false }
     )
 
-    console.log(`✅ HomeFeedUpdate: Successfully updated ${itemType} in cache`)
+    // Successfully updated item in cache
     
     return {
       success: true,
@@ -210,7 +210,7 @@ export async function updateEditedItemInCache(
  * 홈피드 전체 갱신 (최후의 수단)
  */
 export async function refreshHomeFeed(): Promise<void> {
-  console.log(`🔄 HomeFeedUpdate: Refreshing entire home feed`)
+  // Refreshing entire home feed
   
   try {
     await mutate(
@@ -219,7 +219,7 @@ export async function refreshHomeFeed(): Promise<void> {
       { revalidate: true }
     )
     
-    console.log(`✅ HomeFeedUpdate: Home feed refreshed successfully`)
+    // Home feed refreshed successfully
   } catch (error) {
     console.error(`❌ HomeFeedUpdate: Error refreshing home feed:`, error)
   }

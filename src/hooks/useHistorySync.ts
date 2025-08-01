@@ -37,13 +37,13 @@ export function useHistorySync(options: {
     )
     
     if (debug) {
-      console.log(`🔄 HistorySync: PopState detected - ${lastPathRef.current} → ${currentPath}`)
+      // console.log(`🔄 HistorySync: PopState detected - ${lastPathRef.current} → ${currentPath}`)
     }
 
     // 🎯 홈페이지로 돌아오는 경우 즉시 동기화
     if (isReturningHome && lastPathRef.current !== currentPath) {
       if (debug) {
-        console.log('🚀 HistorySync: Returning to home - triggering cache sync...')
+        // console.log('🚀 HistorySync: Returning to home - triggering cache sync...')
       }
 
              // 업계 표준: 중요한 캐시만 선별적 갱신
@@ -70,7 +70,7 @@ export function useHistorySync(options: {
        ])
 
       if (debug) {
-        console.log('✅ HistorySync: Home cache revalidation completed')
+        // console.log('✅ HistorySync: Home cache revalidation completed')
       }
     }
 
@@ -97,7 +97,7 @@ export function useHistorySync(options: {
     // 🎯 추가 보장: Next.js 라우터 이벤트도 처리
     const handleRouteChange = (url: string) => {
       if (debug) {
-        console.log(`🔄 HistorySync: Route change detected - ${url}`)
+        // console.log(`🔄 HistorySync: Route change detected - ${url}`)
       }
       lastPathRef.current = url
     }

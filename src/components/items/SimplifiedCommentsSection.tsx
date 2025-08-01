@@ -115,7 +115,7 @@ export default function SimplifiedCommentsSection({
       // 🚀 알림 시스템 연동 - 게시글 작성자에게 알림
       await notificationService.notifyComment(itemId, currentUserId, "new_comment_id")
       
-      console.log(`✅ Comment added to ${itemId}`)
+
       toast({ title: "댓글이 추가되었습니다." })
 
     } catch (error) {
@@ -180,7 +180,7 @@ export default function SimplifiedCommentsSection({
       // 🚀 알림 시스템 연동 - 게시글 작성자 + 원댓글 작성자에게 알림
       await notificationService.notifyReply(itemId, parentCommentId, currentUserId, "new_reply_id")
       
-      console.log(`✅ Reply added to ${parentCommentId} in ${itemId}`)
+
       toast({ title: "답글이 추가되었습니다." })
 
     } catch (error) {
@@ -221,7 +221,7 @@ export default function SimplifiedCommentsSection({
       // 댓글 목록 새로고침
       mutateComments()
       
-      console.log(`✅ Comment deleted from ${itemId}`)
+
       toast({ title: "댓글이 삭제되었습니다." })
 
     } catch (error) {

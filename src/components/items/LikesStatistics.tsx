@@ -52,7 +52,7 @@ export default function LikersModal({ isOpen, onClose, itemId, itemType, current
 		setError(null)
 
 		try {
-			console.log(`🔍 Fetching likers for ${itemType} ${itemId}`)
+			
 
 			const { data, error } = await supabase
 				.from("likes")
@@ -89,7 +89,7 @@ export default function LikersModal({ isOpen, onClose, itemId, itemType, current
 				}
 			})
 
-			console.log(`✅ Found ${formattedLikers.length} likers`)
+			
 			setLikers(formattedLikers)
 		} catch (error) {
 			console.error("❌ Error fetching likers:", error)

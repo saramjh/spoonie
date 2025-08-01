@@ -61,7 +61,7 @@ export function useThumbnail({
     const newIndex = isValidThumbnailIndex(validIndex, imageUrls) ? validIndex : 0
     
     if (newIndex !== currentIndex) {
-      console.log(`🔄 useThumbnail: Syncing prop change ${currentIndex} → ${newIndex}`)
+
       setCurrentIndex(newIndex)
     }
   }, [thumbnailIndex, imageUrls, currentIndex])
@@ -115,7 +115,7 @@ export function useThumbnail({
       return
     }
 
-    console.log(`🎯 Thumbnail: Changing index ${currentIndex} → ${newIndex}`)
+
 
     // 로컬 상태 업데이트
     setCurrentIndex(newIndex)

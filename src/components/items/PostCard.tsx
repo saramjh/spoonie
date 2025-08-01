@@ -76,22 +76,9 @@ export default function PostCard({
   // 🖼️ 썸네일 관리 - SSA 캐시된 데이터 사용 (캐시 데이터를 먼저 가져옴)
   const cachedItem = useSSAItemCache(stableItemId, stableFallbackData)
   
-  // 🔍 CRITICAL DEBUG: 이미지 데이터 정밀 추적
-  console.log(`🖼️ [PostCard ${stableItemId}] Image Tracking:`, {
-    originalImages: item.image_urls?.length || 0,
-    cachedImages: cachedItem?.image_urls?.length || 0,
-    fallbackImages: stableFallbackData?.image_urls?.length || 0,
-    originalUrls: item.image_urls,
-    cachedUrls: cachedItem?.image_urls,
-    fallbackUrls: stableFallbackData?.image_urls
-  })
+
   
-  // 💬 CRITICAL DEBUG: 댓글 수 추적
-  console.log(`💬 [PostCard ${stableItemId}] Comments Tracking:`, {
-    originalComments: item.comments_count,
-    cachedComments: cachedItem?.comments_count,
-    fallbackComments: stableFallbackData?.comments_count
-  })
+
   
   const { orderedImages } = useThumbnail({
     itemId: stableItemId,
@@ -135,7 +122,7 @@ export default function PostCard({
     if (!isOwnItem || isDeleting) return
 
     setIsDeleting(true)
-    console.log(`🚀 PostCard: Starting SSA-based deletion of ${item.item_type} ${item.item_id}`)
+
 
     try {
       // 🚀 SSA STEP 1: 즉시 홈화면에서 제거 (0ms 응답)
@@ -152,7 +139,7 @@ export default function PostCard({
 
         if (error) throw error
 
-        console.log(`✅ PostCard: ${item.item_type} deleted successfully via SSA`)
+
         
         setShowDeleteDialog(false)
         onItemUpdate?.()

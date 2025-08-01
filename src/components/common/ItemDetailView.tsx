@@ -78,18 +78,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	})
 
 	// Debug logging
-	console.log("ItemDetailView Debug:", {
-		item_type: item.item_type,
-		isRecipe,
-		hasSteps: !!item.steps,
-		stepsLength: item.steps?.length,
-		steps: item.steps,
-		hasInstructions: !!item.instructions,
-		instructionsLength: item.instructions?.length,
-		instructions: item.instructions,
-		cited_recipe_ids: item.cited_recipe_ids,
-		hasCitedRecipeIds: !!(item.cited_recipe_ids && item.cited_recipe_ids.length > 0),
-	})
+	// ItemDetailView Debug: { item_type, isRecipe, hasSteps, stepsLength, steps, hasInstructions, instructionsLength, instructions, cited_recipe_ids, hasCitedRecipeIds }
 
 	const { data: citedRecipe } = useSWR(item.item_type === "post" && item.recipe_id ? `recipeTitle:${item.recipe_id}` : null, fetcher)
 
@@ -127,21 +116,19 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		
 		setIsDeleting(true)
 		
-		console.log(`🗑️ ItemDetailView: Starting deletion of item ${item.item_id}`);
+		
 		
 		// 🚀 업계 표준: 1. 모든 관련 캐시에서 즉시 제거 (Instagram/Twitter 방식)
 		mutate(
 			(key) => {
 				const isRecipeBook = typeof key === "string" && key.startsWith("recipes||");
 				const isHomeFeed = typeof key === "string" && key.startsWith("items|");
-				console.log(`🔍 ItemDetailView: Checking key "${key}" - recipe book: ${isRecipeBook}, home feed: ${isHomeFeed}`);
+				
 				return isRecipeBook || isHomeFeed;
 			},
 			// Note: Using any type here due to complex SWR cache structure variations
 			(cachedData: any) => {
-				console.log(`🔄 ItemDetailView: Processing cached data:`, cachedData);
 				if (!cachedData || !Array.isArray(cachedData)) {
-					console.log(`❌ ItemDetailView: Invalid cached data`);
 					return cachedData;
 				}
 				
@@ -151,23 +138,21 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 				                         (cachedData[0].length === 0 || typeof cachedData[0][0] === 'object');
 				
 				if (hasPageStructure) {
-					console.log(`📄 ItemDetailView: Processing paginated structure with ${cachedData.length} pages`);
+					
 					return cachedData.map((page: any) => 
 						page.filter((feedItem: any) => {
 							const shouldKeep = (feedItem.item_id || feedItem.id) !== item.item_id;
 							if (!shouldKeep) {
-								console.log(`🗑️ ItemDetailView: Removing item ${feedItem.item_id || feedItem.id} from cache`);
 							}
 							return shouldKeep;
 						})
 					);
 				} else {
 					// fallbackData나 평면 배열 구조 처리
-					console.log(`📋 ItemDetailView: Processing flat array with ${cachedData.length} items`);
+
 					return cachedData.filter((feedItem: any) => {
 						const shouldKeep = (feedItem.item_id || feedItem.id) !== item.item_id;
 						if (!shouldKeep) {
-							console.log(`🗑️ ItemDetailView: Removing item ${feedItem.item_id || feedItem.id} from flat array`);
 						}
 						return shouldKeep;
 					});
@@ -177,7 +162,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		)
 		
 		try {
-			console.log(`🌐 ItemDetailView: Attempting database deletion for item ${item.item_id}`);
+	
 			
 			// 2. 실제 데이터베이스에서 삭제
 			const { error } = await supabase
@@ -188,7 +173,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 			
 			if (error) throw error
 			
-			console.log(`✅ ItemDetailView: Database deletion successful`);
+
 			
 			// 🚀 업계 표준: 3. 성공시 최종 캐시 확정
 			await mutate((key) => typeof key === "string" && (key.startsWith("items|") || key.startsWith("recipes||")))
@@ -219,7 +204,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 
 	// 🔄 item props 변경 시 로컬 상태 동기화 (useItemDetail 새로고침 시 등)
 	useEffect(() => {
-		console.log(`🔄 ItemDetailView: Syncing with item props - likes: ${item.likes_count}, hasLiked: ${item.is_liked}, comments: ${item.comments_count}`)
+		
 		setLocalLikesCount(item.likes_count || 0)
 		setLocalHasLiked(item.is_liked || false)
 		setCommentsCount(item.comments_count || 0)
@@ -271,10 +256,10 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	useEffect(() => {
 		return () => {
 			// 🔄 페이지 이동 시 현재 아이템의 상태를 홈화면에 동기화
-			console.log(`🔄 ItemDetailView: Component unmounting, syncing state for ${item.item_id}`)
+			
 			
 			// 🚀 강제로 홈화면 피드 새로고침 (확실한 동기화)
-			console.log(`🚀 Forcing home feed refresh for user ${currentUser?.id || "guest"}`)
+			
 			
 			// 모든 홈 피드 캐시 무효화
 			mutate(

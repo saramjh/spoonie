@@ -41,7 +41,7 @@ export function useRealtimeSync() {
    * 사용자 액션을 서버 응답 전에 즉시 UI에 반영
    */
   const applyOptimisticUpdate = useCallback(async (update: OptimisticUpdate) => {
-    console.log(`🚀 Applying optimistic update:`, update)
+    // Applying optimistic update
     
     // 중복 업데이트 방지
     const key = `${update.type}_${update.id}_${update.action}`
@@ -107,7 +107,7 @@ export function useRealtimeSync() {
     // 상세 페이지 캐시도 업데이트
     await mutate(`item_details_${itemId}`, undefined, { revalidate: false })
     
-    console.log(`❤️ Optimistic like ${action} for item ${itemId}`)
+          // Optimistic like update
   }, [mutate])
 
   /**
@@ -150,7 +150,7 @@ export function useRealtimeSync() {
       }, { revalidate: false })
     }
     
-    console.log(`💬 Optimistic comment ${action} for item ${itemId}`)
+          // Optimistic comment update
   }, [mutate])
 
   /**
@@ -180,7 +180,7 @@ export function useRealtimeSync() {
       { revalidate: false }
     )
     
-    console.log(`👥 Optimistic follow ${action} for user ${userId}`)
+          // Optimistic follow update
   }, [mutate])
 
   /**
@@ -205,7 +205,7 @@ export function useRealtimeSync() {
         { revalidate: false }
       )
       
-      console.log(`📝 Optimistic item added:`, data.item.title)
+      // Optimistic item added
     } else if (action === 'remove' && data.itemId) {
       // 아이템을 홈피드에서 제거
       await mutate(
@@ -222,7 +222,7 @@ export function useRealtimeSync() {
         { revalidate: false }
       )
       
-      console.log(`📝 Optimistic item removed: ${data.itemId}`)
+      // Optimistic item removed
     }
   }, [mutate])
 
@@ -231,14 +231,14 @@ export function useRealtimeSync() {
    * 서버에서 확인된 변경사항을 실제 데이터로 반영
    */
   const handleRealtimeChange = useCallback(async (change: RealtimeChange) => {
-    console.log(`🔄 Realtime change received:`, change)
+    // Realtime change received
     
     // 3초 이내의 optimistic 업데이트는 무시 (중복 방지)
     const recentOptimistic = Array.from(optimisticUpdatesRef.current.values())
       .find(opt => Date.now() - opt.timestamp < 3000)
     
     if (recentOptimistic) {
-      console.log(`⏭️ Skipping realtime update (recent optimistic update exists)`)
+      // Skipping realtime update (recent optimistic update exists)
       return
     }
 
@@ -326,7 +326,7 @@ export function useRealtimeSync() {
       )
     }
     
-    console.log(`📝 Item ${eventType} processed: ${newData?.id || oldData?.id}`)
+            // Item processed
   }, [mutate])
 
   /**
@@ -364,7 +364,7 @@ export function useRealtimeSync() {
       { revalidate: false }
     )
     
-    console.log(`❤️ Like ${eventType} processed for item ${itemId}`)
+            // Like processed
   }, [mutate, supabase])
 
   /**
@@ -406,7 +406,7 @@ export function useRealtimeSync() {
     // 댓글 목록 캐시도 업데이트
     await mutate(`comments_${itemId}`, undefined, { revalidate: true })
     
-    console.log(`💬 Comment ${eventType} processed for item ${itemId}`)
+            // Comment processed
   }, [mutate, supabase])
 
   /**
@@ -422,14 +422,14 @@ export function useRealtimeSync() {
       { revalidate: true }
     )
     
-    console.log(`👥 Follow ${eventType} processed`)
+            // Follow processed
   }, [mutate])
 
   /**
    * 🎧 실시간 구독 설정
    */
   const setupRealtimeSubscriptions = useCallback(() => {
-    console.log(`🎧 Setting up realtime subscriptions...`)
+    
     
     // 기존 채널 정리
     channelsRef.current.forEach(channel => {
@@ -503,14 +503,14 @@ export function useRealtimeSync() {
 
     channelsRef.current = [itemsChannel, likesChannel, commentsChannel, followsChannel]
     
-    console.log(`✅ Realtime subscriptions active: ${channelsRef.current.length} channels`)
+    
   }, [handleRealtimeChange])
 
   /**
    * 🧹 정리 함수
    */
   const cleanup = useCallback(() => {
-    console.log(`🧹 Cleaning up realtime subscriptions...`)
+    
     channelsRef.current.forEach(channel => {
       supabase.removeChannel(channel)
     })
