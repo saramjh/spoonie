@@ -703,7 +703,11 @@ export default function ProfilePage() {
 							{/* Profile Message and Info */}
 							<div className="space-y-2">
 								{profile?.display_name && <div className="font-semibold">{profile.display_name}</div>}
-								{profile?.profile_message && <div className="text-sm text-gray-700 whitespace-pre-wrap">{profile.profile_message}</div>}
+								{profile?.profile_message && (
+									<div className="text-sm text-gray-700 leading-relaxed break-words hyphens-auto max-w-full">
+										<p className="whitespace-pre-wrap">{profile.profile_message}</p>
+									</div>
+								)}
 
 								{/* 가입일과 레시피 개수 - 모바일 중앙정렬, 데스크톱 왼쪽정렬 */}
 								<div className="flex items-center justify-center md:justify-start flex-nowrap gap-2 text-sm text-gray-500 overflow-hidden max-w-full">

@@ -637,18 +637,33 @@ export default function TossSeamlessProfileEditor({
 
         {/* 🎯 프로필 메시지 */}
         <div className="space-y-3">
-          <Label htmlFor="profileMessage">프로필 메시지</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="profileMessage">프로필 메시지</Label>
+            <span className={`text-xs transition-colors ${
+              formData.profileMessage.length > 130 
+                ? 'text-orange-600 font-medium' 
+                : 'text-gray-400'
+            }`}>
+              {formData.profileMessage.length} / 150
+            </span>
+          </div>
           <Textarea 
             id="profileMessage" 
             value={formData.profileMessage} 
             onChange={(e) => setFormData(prev => ({ ...prev, profileMessage: e.target.value }))}
-            placeholder="자신을 소개해보세요." 
+            placeholder="자신을 소개해보세요. 줄바꿈을 이용해 읽기 쉽게 작성하면 더 좋아요! ✨" 
             maxLength={150} 
-            className="h-24 resize-none" 
+            className="h-24 resize-none leading-relaxed" 
           />
-          <p className="text-right text-xs text-gray-500">
-            {formData.profileMessage.length} / 150
-          </p>
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-xs text-gray-500 leading-relaxed">
+              💡 <span className="font-medium">토스 팁:</span> 긴 단어나 링크는 자동으로 줄바꿈됩니다. 
+              {formData.profileMessage.length === 0 && "문단을 나누면 더 읽기 쉬워요!"}
+              {formData.profileMessage.length > 0 && formData.profileMessage.length <= 50 && "조금 더 자세히 소개해보세요."}
+              {formData.profileMessage.length > 50 && formData.profileMessage.length <= 130 && "적당한 길이예요! 👍"}
+              {formData.profileMessage.length > 130 && "거의 다 찼어요!"}
+            </p>
+          </div>
         </div>
 
         {/* 🎨 실시간 미리보기 */}
@@ -675,9 +690,13 @@ export default function TossSeamlessProfileEditor({
                   <p className="font-medium text-gray-900 truncate">
                     {preview.data?.username}
                   </p>
-                  <p className="text-sm text-gray-500 truncate">
-                    {preview.data?.profile_message}
-                  </p>
+                  {preview.data?.profile_message && (
+                    <div className="text-sm text-gray-500 leading-relaxed break-words hyphens-auto max-w-full mt-1">
+                      <p className="whitespace-pre-wrap line-clamp-2">
+                        {preview.data.profile_message}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

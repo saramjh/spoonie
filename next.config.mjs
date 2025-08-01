@@ -24,6 +24,20 @@ const nextConfig = {
 		],
 		unoptimized: true, // Supabase 이미지에 대한 Next.js 서버 측 최적화 비활성화
 	},
+	// 🎯 폰트 최적화 설정
+	optimizeFonts: true,
+	// 🔧 실험적 기능: 폰트 로딩 최적화
+	experimental: {
+		optimizePackageImports: ['lucide-react'],
+		fontLoaders: [
+			{
+				loader: '@next/font/local',
+				options: {
+					preload: false, // 선택적 프리로드
+				},
+			},
+		],
+	},
 	// 🌐 개발 환경에서 Cross-Origin 요청 허용 (모바일 테스트용)
 	allowedDevOrigins: [
 		// 로컬 네트워크 IP 범위 허용 (192.168.x.x)

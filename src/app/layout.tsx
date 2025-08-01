@@ -13,6 +13,9 @@ const fontSans = localFont({
 	weight: "300 700", // 실제 사용되는 weight 범위로 최적화 (light ~ bold)
 	display: "swap",
 	preload: true,
+	fallback: ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
+	adjustFontFallback: false, // 폰트 fallback 최적화 비활성화로 프리로드 이슈 방지
+	style: "normal",
 })
 
 export const metadata: Metadata = {
@@ -82,6 +85,8 @@ export default function RootLayout({
 				<meta name="author" content="Spoonie Team" />
 				<meta name="format-detection" content="telephone=no" />
 				<link rel="canonical" href={process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.com'} />
+				{/* 🎯 폰트 최적화 메타 태그 */}
+				<meta name="font-display" content="swap" />
 			</head>
 			<body className={cn("min-h-screen bg-background font-sans antialiased", fontSans.variable)} suppressHydrationWarning={true}>
 				{/* 🎯 Google Analytics */}

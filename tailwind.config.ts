@@ -44,6 +44,9 @@ const config: Config = {
 			},
 		},
 		extend: {
+			fontFamily: {
+				sans: ["var(--font-sans)", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
+			},
 			colors: {
 				"orange-50": "#fff7ed",
 				"orange-100": "#ffedd5",
