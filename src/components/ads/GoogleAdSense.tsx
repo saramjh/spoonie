@@ -15,10 +15,14 @@ import Script from 'next/script'
 const ADSENSE_PUBLISHER_ID = process.env.NEXT_PUBLIC_ADSENSE_ID || 'ca-pub-4410729598083068'
 
 export default function GoogleAdSense() {
-  // 개발환경에서는 로드하지 않음
-  if (process.env.NODE_ENV !== 'production') {
-    return null
-  }
+  // AdSense Publisher ID 확인 및 로그
+  console.log('💰 Google AdSense Publisher ID:', ADSENSE_PUBLISHER_ID)
+  
+  // 임시로 모든 환경에서 로드 (테스트용)
+  // if (process.env.NODE_ENV !== 'production') {
+  //   console.log('🧪 AdSense disabled in development mode')
+  //   return null
+  // }
 
   return (
     <Script
