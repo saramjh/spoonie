@@ -58,10 +58,14 @@ export default function LoginPage() {
 	}
 
 	const handleGoogleLogin = async () => {
+		const redirectUrl = process.env.NEXT_PUBLIC_APP_URL 
+			? `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
+			: `${location.origin}/auth/callback`
+			
 		await supabase.auth.signInWithOAuth({
 			provider: "google",
 			options: {
-				redirectTo: `${location.origin}/auth/callback`,
+				redirectTo: redirectUrl,
 				queryParams: {
 					prompt: "select_account",
 				},

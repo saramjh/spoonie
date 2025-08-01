@@ -27,8 +27,12 @@ export default function ForgotPasswordPage() {
 	})
 
 	const onSubmit = async (values: z.infer<typeof formSchema>) => {
+		const redirectUrl = process.env.NEXT_PUBLIC_APP_URL 
+			? `${process.env.NEXT_PUBLIC_APP_URL}/reset-password`
+			: `${location.origin}/reset-password`
+			
 		const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
-			redirectTo: `${location.origin}/reset-password`,
+			redirectTo: redirectUrl,
 		})
 
 		if (error) {

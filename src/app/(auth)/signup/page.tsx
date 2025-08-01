@@ -41,11 +41,15 @@ export default function SignupPage() {
 
 	const handleSignUp = async (values: z.infer<typeof formSchema>) => {
 		const username = await generateUniqueUsername()
+		const redirectUrl = process.env.NEXT_PUBLIC_APP_URL 
+			? `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
+			: `${location.origin}/auth/callback`
+			
 		const { error } = await supabase.auth.signUp({
 			email: values.email,
 			password: values.password,
 			options: {
-				emailRedirectTo: `${location.origin}/auth/callback`,
+				emailRedirectTo: redirectUrl,
 				data: {
 					username,
 				},
