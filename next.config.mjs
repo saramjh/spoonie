@@ -26,17 +26,9 @@ const nextConfig = {
 	},
 	// 🎯 폰트 최적화 설정
 	optimizeFonts: true,
-	// 🔧 실험적 기능: 폰트 로딩 최적화
+	// 🔧 실험적 기능
 	experimental: {
 		optimizePackageImports: ['lucide-react'],
-		fontLoaders: [
-			{
-				loader: '@next/font/local',
-				options: {
-					preload: false, // 선택적 프리로드
-				},
-			},
-		],
 	},
 	// 🌐 개발 환경에서 Cross-Origin 요청 허용 (모바일 테스트용)
 	allowedDevOrigins: [

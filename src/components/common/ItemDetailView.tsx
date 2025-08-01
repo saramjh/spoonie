@@ -90,7 +90,106 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		return id
 	}, [item?.item_id, item?.id])
 	
-	// 🛡️ ID가 없으면 에러 상태 표시
+	// 🚀 SSA 표준: items 테이블 데이터에 실시간 상태 기본값 추가
+	const stableFallbackData = useMemo(() => ({
+		...item,
+		likes_count: item?.likes_count || 0,
+		comments_count: item?.comments_count || 0,
+		is_liked: item?.is_liked || false,
+		is_bookmarked: item?.is_bookmarked || false,
+		bookmarks_count: item?.bookmarks_count || 0
+	}), [item])
+
+	// 🚀 SSA 발전: 실시간 캐시 업데이트 구독 (홈화면과 동일) - hooks를 조건부 렌더링 전에 호출
+	const cachedItem = useSSAItemCache(stableItemId || 'null', stableFallbackData)
+	
+	// 🖼️ 썸네일 관리 - 캐시된 아이템의 최신 thumbnail_index 사용
+	const { orderedImages } = useThumbnail({
+		itemId: stableItemId || 'null',
+		imageUrls: cachedItem?.image_urls || item?.image_urls || [],
+		thumbnailIndex: cachedItem?.thumbnail_index ?? item?.thumbnail_index ?? 0
+	})
+
+	// SWR 호출 - 조건부 렌더링 전에 호출
+	const { data: citedRecipe } = useSWR(item.item_type === "post" && item.recipe_id ? `recipeTitle:${item.recipe_id}` : null, fetcher)
+
+	// cited_recipe_ids 처리 - 캐싱된 훅 사용
+	const { citedRecipes, isLoading: citedRecipesLoading } = useCitedRecipes(item.cited_recipe_ids)
+
+	// 🚀 SSA 표준: 상태 관리 - 조건부 렌더링 전에 호출
+	const [commentsCount, setCommentsCount] = useState(cachedItem?.comments_count || 0)
+	const [localLikesCount, setLocalLikesCount] = useState(cachedItem?.likes_count || 0)
+	const [localHasLiked, setLocalHasLiked] = useState(cachedItem?.is_liked || false)
+	const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
+	const [isAuthLoading, setIsAuthLoading] = useState(true)
+	const [showDeleteModal, setShowDeleteModal] = useState(false)
+	const [isDeleting, setIsDeleting] = useState(false)
+	const commentsRef = useRef<HTMLDivElement>(null)
+
+	const comments = useMemo(() => item?.comments_data || [], [item?.comments_data])
+	
+	// 🚀 SSA 표준: 캐시 업데이트 시 로컬 상태 동기화
+	useEffect(() => {
+		if (cachedItem) {
+			setCommentsCount(cachedItem.comments_count || 0)
+			setLocalLikesCount(cachedItem.likes_count || 0)
+			setLocalHasLiked(cachedItem.is_liked || false)
+		}
+	}, [cachedItem])
+
+	// 아이템 상태 동기화 useEffect
+	useEffect(() => {
+		setLocalLikesCount(item.likes_count || 0)
+		setLocalHasLiked(item.is_liked || false)
+		setCommentsCount(item.comments_count || 0)
+	}, [item.likes_count, item.is_liked, item.comments_count])
+
+	// 현재 사용자 조회 useEffect
+	useEffect(() => {
+		const fetchCurrentUser = async () => {
+			setIsAuthLoading(true)
+			const {
+				data: { user },
+			} = await supabase.auth.getUser()
+			if (user) {
+				const { data: profile } = await supabase.from("profiles").select("id, avatar_url, display_name, username, public_id").eq("id", user.id).maybeSingle()
+				setCurrentUser({
+					id: user.id,
+					avatar_url: profile?.avatar_url || null,
+					display_name: profile?.username || profile?.display_name || user.email?.split("@")[0] || "User",
+				})
+			}
+			setIsAuthLoading(false)
+		}
+		fetchCurrentUser()
+	}, [supabase])
+
+	// 댓글 스크롤 useEffect
+	useEffect(() => {
+		if (window.location.hash === "#comments" && commentsRef.current) {
+			setTimeout(() => {
+				commentsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+			}, 500)
+		}
+	}, [comments])
+
+	// 페이지 언마운트 시 홈화면과 상태 동기화 useEffect
+	useEffect(() => {
+		return () => {
+			// 🔄 페이지 이동 시 현재 아이템의 상태를 홈화면에 동기화
+			// 🚀 강제로 홈화면 피드 새로고침 (확실한 동기화)
+			// 모든 홈 피드 캐시 무효화
+			mutate(
+				(key) => typeof key === "string" && 
+				         key.startsWith(`items|`) && 
+				         key.endsWith(`|${currentUser?.id || "guest"}`),
+				undefined,
+				{ revalidate: true } // 서버에서 다시 가져오기
+			)
+		}
+	}, [currentUser?.id, mutate])
+	
+	// 🛡️ ID가 없으면 에러 상태 표시 - 모든 hooks 호출 후 조건부 렌더링
 	if (!stableItemId) {
 		return (
 			<div className="flex flex-col h-full items-center justify-center p-8">
@@ -106,57 +205,6 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 			</div>
 		)
 	}
-	
-	// 🚀 SSA 표준: items 테이블 데이터에 실시간 상태 기본값 추가
-	const stableFallbackData = useMemo(() => ({
-		...item,
-		likes_count: item?.likes_count || 0,
-		comments_count: item?.comments_count || 0,
-		is_liked: item?.is_liked || false,
-		is_bookmarked: item?.is_bookmarked || false,
-		bookmarks_count: item?.bookmarks_count || 0
-	}), [item])
-
-	// 🚀 SSA 발전: 실시간 캐시 업데이트 구독 (홈화면과 동일)
-	const cachedItem = useSSAItemCache(stableItemId, stableFallbackData)
-	
-	// 🖼️ 썸네일 관리 - 캐시된 아이템의 최신 thumbnail_index 사용
-	const { orderedImages } = useThumbnail({
-		itemId: stableItemId,
-		imageUrls: cachedItem?.image_urls || item?.image_urls || [],
-		thumbnailIndex: cachedItem?.thumbnail_index ?? item?.thumbnail_index ?? 0
-	})
-
-	// Debug logging
-	// ItemDetailView Debug: { item_type, isRecipe, hasSteps, stepsLength, steps, hasInstructions, instructionsLength, instructions, cited_recipe_ids, hasCitedRecipeIds }
-
-	const { data: citedRecipe } = useSWR(item.item_type === "post" && item.recipe_id ? `recipeTitle:${item.recipe_id}` : null, fetcher)
-
-	// cited_recipe_ids 처리 - 캐싱된 훅 사용
-	const { citedRecipes, isLoading: citedRecipesLoading } = useCitedRecipes(item.cited_recipe_ids)
-
-	// 🚀 SSA 표준: 댓글 개수는 캐시된 데이터에서 실시간 동기화
-	const [commentsCount, setCommentsCount] = useState(cachedItem?.comments_count || 0)
-	// 🚀 SSA 표준: 좋아요 상태도 캐시된 데이터에서 실시간 동기화
-	const [localLikesCount, setLocalLikesCount] = useState(cachedItem?.likes_count || 0)
-	const [localHasLiked, setLocalHasLiked] = useState(cachedItem?.is_liked || false)
-	
-	// 🚀 SSA 표준: 캐시 업데이트 시 로컬 상태 동기화
-	useEffect(() => {
-		if (cachedItem) {
-			setCommentsCount(cachedItem.comments_count || 0)
-			setLocalLikesCount(cachedItem.likes_count || 0)
-			setLocalHasLiked(cachedItem.is_liked || false)
-		}
-	}, [cachedItem])
-	const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
-	const [isAuthLoading, setIsAuthLoading] = useState(true) // 인증 상태 로딩
-
-	const [showDeleteModal, setShowDeleteModal] = useState(false)
-	const [isDeleting, setIsDeleting] = useState(false)
-	const commentsRef = useRef<HTMLDivElement>(null)
-
-	const comments = useMemo(() => item?.comments_data || [], [item?.comments_data])
 
 	// 비회원 여부 확인
 	const isGuest = !currentUser && !isAuthLoading
@@ -266,48 +314,13 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 
 	// cited_recipe_ids는 useCitedRecipes 훅에서 자동으로 관리됨
 
-	// 🔄 item props 변경 시 로컬 상태 동기화 (useItemDetail 새로고침 시 등)
-	useEffect(() => {
-		
-		setLocalLikesCount(item.likes_count || 0)
-		setLocalHasLiked(item.is_liked || false)
-		setCommentsCount(item.comments_count || 0)
-	}, [item.likes_count, item.is_liked, item.comments_count])
-
-	useEffect(() => {
-		const fetchCurrentUser = async () => {
-			setIsAuthLoading(true)
-			const {
-				data: { user },
-			} = await supabase.auth.getUser()
-			if (user) {
-				const { data: profile } = await supabase.from("profiles").select("id, avatar_url, display_name, username, public_id").eq("id", user.id).maybeSingle()
-				setCurrentUser({
-					id: user.id,
-					avatar_url: profile?.avatar_url || null,
-					display_name: profile?.username || profile?.display_name || user.email?.split("@")[0] || "User",
-				})
-			}
-			setIsAuthLoading(false)
-		}
-		fetchCurrentUser()
-	}, [supabase])
-
 	// 🚀 Optimistic Updates 시스템에서는 복잡한 구독/등록 로직 불필요
 	// 모든 상태는 optimisticLikeUpdate, optimisticCommentUpdate에서 즉시 처리됨
-
-	useEffect(() => {
-		if (window.location.hash === "#comments" && commentsRef.current) {
-			setTimeout(() => {
-				commentsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-			}, 500)
-		}
-	}, [comments])
 
 	const handleShare = () => {
 		const url = window.location.href
 		const shareData = {
-			title: `Spoonie에서 ${isRecipe ? item.title : (item.display_name || item.username || item.profiles?.display_name || item.profiles?.username || "사용자") + "님의 레시피드"} 보기`,
+			    title: `Spoonie에서 ${isRecipe ? item.title : (item.display_name || item.username || "사용자") + "님의 레시피드"} 보기`,
 			text: isRecipe ? item.description || "" : item.content || "",
 			url: url,
 		}
@@ -316,25 +329,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 
 
 
-	// 페이지 언마운트 시 홈화면과 상태 동기화
-	useEffect(() => {
-		return () => {
-			// 🔄 페이지 이동 시 현재 아이템의 상태를 홈화면에 동기화
-			
-			
-			// 🚀 강제로 홈화면 피드 새로고침 (확실한 동기화)
-			
-			
-			// 모든 홈 피드 캐시 무효화
-			mutate(
-				(key) => typeof key === "string" && 
-				         key.startsWith(`items|`) && 
-				         key.endsWith(`|${currentUser?.id || "guest"}`),
-				undefined,
-				{ revalidate: true } // 서버에서 다시 가져오기
-			)
-		}
-	}, [currentUser?.id, item?.item_id || item?.id, mutate])
+
 
 	// AI 검색 최적화: FAQ 데이터 준비
 	const itemSpecificFAQs = isRecipe ? [
@@ -356,7 +351,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 			item.servings ?? undefined, 
 			item.cooking_time_minutes ?? undefined
 		)
-		: createTossStyleFAQs.post(item.display_name || item.username || item.profiles?.display_name || item.profiles?.username || '작성자')
+		    : createTossStyleFAQs.post(item.display_name || item.username || '작성자')
 
 	return (
 		<div className="flex flex-col h-full relative">
@@ -400,12 +395,12 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 					</Button>
 					
 					{/* 작성자 정보 (중앙 정렬) */}
-					<Link href={`/profile/${item.user_public_id || item.profiles?.public_id || item.user_id}`} className="flex items-center gap-3 flex-1 ml-3">
+					     <Link href={`/profile/${item.user_public_id || item.user_id}`} className="flex items-center gap-3 flex-1 ml-3">
 						<Avatar className="h-8 w-8">
-							<AvatarImage src={item.avatar_url || item.profiles?.avatar_url || undefined} />
-							<AvatarFallback>{(item.username || item.display_name || item.profiles?.username || item.profiles?.display_name)?.charAt(0) || "U"}</AvatarFallback>
+							<AvatarImage src={item.avatar_url || undefined} />
+							<AvatarFallback>{(item.username || item.display_name)?.charAt(0) || "U"}</AvatarFallback>
 						</Avatar>
-						<span className="font-semibold">{item.display_name || item.username || item.profiles?.display_name || item.profiles?.username || "사용자"}</span>
+						<span className="font-semibold">{item.display_name || item.username || "사용자"}</span>
 					</Link>
 					
 					{/* 우측 액션 버튼 */}
@@ -444,7 +439,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 				</header>
 
 				<div className="flex-1 overflow-y-auto">
-					{orderedImages.length > 0 && <ImageCarousel images={orderedImages} alt={isRecipe ? item.title || "Recipe image" : `Post by ${item.display_name || item.username || item.profiles?.display_name || item.profiles?.username || "작성자"}`} priority />}
+					     {orderedImages.length > 0 && <ImageCarousel images={orderedImages} alt={isRecipe ? item.title || "Recipe image" : `Post by ${item.display_name || item.username || "작성자"}`} priority />}
 					<div className="p-4">
 						{isRecipe ? (
 							<>

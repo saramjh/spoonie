@@ -937,17 +937,7 @@ export const cacheManager = {
     return rollback
   },
   
-  // 팔로우 토글
-  follow: async (userId: string, targetUserId: string, following: boolean) => {
-    const manager = getCacheManager()
-    const rollback = await manager.optimisticUpdate({
-      type: 'follow',
-      itemId: targetUserId,
-      userId,
-      delta: following ? 1 : -1
-    })
-    return rollback
-  },
+  // 팔로우 토글 (removed - duplicate)
   
   // 아이템 업데이트
   updateItem: async (itemId: string, data: Partial<Item>) => {
@@ -1026,7 +1016,7 @@ export const cacheManager = {
 
     
     const manager = getCacheManager()
-    const rollback = await manager.smartUpdate({
+    const rollback = await manager.optimisticUpdate({
       type: 'follow',
       itemId: targetUserId, // itemId를 targetUserId로 사용
       userId: currentUserId,

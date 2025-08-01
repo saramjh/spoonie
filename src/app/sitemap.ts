@@ -7,7 +7,7 @@ import { MetadataRoute } from 'next'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.com'
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'
   
   // 기본 정적 페이지들
   const staticPages = [

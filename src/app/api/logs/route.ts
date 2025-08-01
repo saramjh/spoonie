@@ -20,7 +20,7 @@ const logEntrySchema = z.object({
   sessionId: z.string().optional(),
   userAgent: z.string().optional(),
   url: z.string().url().optional(),
-  context: z.record(z.any()).optional(),
+  context: z.record(z.string(), z.any()).optional(),
   error: z.object({
     name: z.string(),
     message: z.string(),
@@ -35,7 +35,7 @@ const logEntrySchema = z.object({
   userAction: z.object({
     type: z.string(),
     target: z.string(),
-    data: z.record(z.any()).optional()
+    data: z.record(z.string(), z.any()).optional()
   }).optional()
 })
 
@@ -152,11 +152,11 @@ class LogStorage {
     }
 
     if (filters.startTime) {
-      filteredLogs = filteredLogs.filter(log => log.timestamp >= filters.startTime)
+      filteredLogs = filteredLogs.filter(log => log.timestamp >= filters.startTime!)
     }
 
     if (filters.endTime) {
-      filteredLogs = filteredLogs.filter(log => log.timestamp <= filters.endTime)
+      filteredLogs = filteredLogs.filter(log => log.timestamp <= filters.endTime!)
     }
 
     // 최신순 정렬
@@ -367,10 +367,10 @@ async function analyzeErrors(storage: LogStorage): Promise<any> {
   
   const errorAnalysis = {
     totalErrors: allLogs.length,
-    errorsByHour: {},
-    topErrorMessages: {},
-    errorsByUser: {},
-    errorsByPage: {}
+    errorsByHour: {} as Record<number, number>,
+    topErrorMessages: {} as Record<string, number>,
+    errorsByUser: {} as Record<string, number>,
+    errorsByPage: {} as Record<string, number>
   }
 
   for (const log of allLogs) {
@@ -404,9 +404,9 @@ async function generatePerformanceReport(storage: LogStorage): Promise<any> {
   const performanceReport = {
     totalMeasurements: performanceLogs.length,
     averageLoadTime: 0,
-    slowOperations: [],
-    memoryUsage: [],
-    performanceByPage: {}
+    slowOperations: [] as Array<{operation: any, duration: any, timestamp: any, url: any}>,
+    memoryUsage: [] as Array<{timestamp: any, memory: any}>,
+    performanceByPage: {} as Record<string, {count: number, totalDuration: number, averageDuration: number}>
   }
 
   let totalDuration = 0
@@ -461,10 +461,10 @@ async function analyzeUserBehavior(storage: LogStorage): Promise<any> {
 
   const behaviorAnalysis = {
     totalActions: actionLogs.length,
-    actionsByType: {},
-    userJourneys: {},
-    popularPages: {},
-    actionsByHour: {}
+    actionsByType: {} as Record<string, number>,
+    userJourneys: {} as Record<string, Array<{action: any, target: any, timestamp: any, url: any}>>,
+    popularPages: {} as Record<string, number>,
+    actionsByHour: {} as Record<number, number>
   }
 
   for (const log of actionLogs) {

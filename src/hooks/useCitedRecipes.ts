@@ -2,10 +2,10 @@
 
 import useSWR from "swr"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
-import type { FeedItem } from "@/types/item"
+import type { Item, ItemType, Profile } from "@/types/item"
 
 // 참고 레시피 fetcher - SWR용
-const fetchCitedRecipes = async (citedRecipeIds: string[]): Promise<FeedItem[]> => {
+const fetchCitedRecipes = async (citedRecipeIds: string[]): Promise<Item[]> => {
 	if (!citedRecipeIds || citedRecipeIds.length === 0) {
 		return []
 	}
@@ -48,35 +48,50 @@ const fetchCitedRecipes = async (citedRecipeIds: string[]): Promise<FeedItem[]> 
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const { profiles, ...recipeWithoutAuthor } = recipe
 
-		const mappedRecipe = {
-			...recipeWithoutAuthor,
-			item_id: recipe.id,
-			content: "",
-			description: "",
-			tags: [],
-			cited_recipe_ids: [],
+		// 실제 사용되는 필드만 정확하게 매핑 (id, title, created_at, author)
+		const mappedRecipe: Item = {
+			// 🎯 UI에서 실제 사용되는 핵심 필드들
+			id: String(recipe.id),
+			item_id: String(recipe.id), 
+			user_id: String(recipe.user_id),
+			item_type: 'recipe',
+			created_at: String(recipe.created_at),
+			title: String(recipe.title || "제목 없음"),
+			
+			// 🎯 작성자 정보 (UI에서 사용)
+			author: authorProfile ? {
+				id: String(recipe.user_id),
+				public_id: authorProfile.public_id || String(recipe.user_id),
+				username: authorProfile.username || "익명",
+				display_name: authorProfile.display_name,
+				avatar_url: authorProfile.avatar_url,
+			} as Profile : undefined,
+			
+			// 🎯 Item 타입 호환성을 위한 필수 필드들 (안전한 기본값)
+			content: null,
+			description: null,
+			image_urls: Array.isArray(recipe.image_urls) ? recipe.image_urls as string[] : null,
+			thumbnail_index: null,
+			tags: null,
 			is_public: true,
 			color_label: null,
 			servings: null,
 			cooking_time_minutes: null,
 			recipe_id: null,
+			cited_recipe_ids: null,
+			
+			// 🎯 통계/상호작용 정보 (실제 사용되지 않으므로 안전한 기본값)
+			username: authorProfile?.username,
+			display_name: authorProfile?.display_name,
+			avatar_url: authorProfile?.avatar_url,
+			user_public_id: authorProfile?.public_id,
 			comments_count: 0,
 			likes_count: 0,
-			has_liked: false,
 			is_liked: false,
-			username: authorProfile?.username || "익명",
-			display_name: authorProfile?.display_name || authorProfile?.username || "익명",
-			avatar_url: authorProfile?.avatar_url || null,
-			user_public_id: authorProfile?.public_id || null,
 			is_following: false,
-			// UI에서 사용하는 author 필드 추가
-			author: authorProfile || {
-				username: "익명",
-				display_name: null,
-				public_id: null,
-				avatar_url: null,
-			},
-		} as FeedItem
+			bookmarks_count: 0,
+			is_bookmarked: false,
+		}
 
 		// 데이터 매핑 완료
 

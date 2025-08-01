@@ -1,6 +1,6 @@
 "use client"
 
-import { useParams } from "next/navigation"
+// useParams removed - using props instead
 import ItemDetailView from "@/components/common/ItemDetailView"
 import PostCardSkeleton from "@/components/items/PostCardSkeleton"
 import { useItemDetail } from "@/hooks/useItemDetail"

@@ -198,7 +198,7 @@ export default function FAQSchema({ faqs, pageTitle }: FAQSchemaProps) {
 
 ```typescript
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.com'
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'
   
   // 정적 페이지들 우선순위 설정
   const staticPages = [
@@ -245,7 +245,7 @@ User-agent: *
 Allow: /
 
 # 사이트맵 위치
-Sitemap: https://spoonie.com/sitemap.xml
+Sitemap: https://spoonie.kr/sitemap.xml
 
 # 크롤링 제외 경로
 Disallow: /api/

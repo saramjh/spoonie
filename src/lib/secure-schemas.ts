@@ -35,7 +35,7 @@ const secureContent = (minLength: number = 1, maxLength: number = 5000) =>
  */
 const secureNumber = (min: number = 0, max: number = Number.MAX_SAFE_INTEGER) =>
   z.union([z.number(), z.string()])
-    .transform(safeParseInt)
+    .transform((value) => safeParseInt(value))
     .refine(num => num >= min && num <= max, `${min}~${max} 범위의 숫자를 입력해주세요.`)
 
 /**

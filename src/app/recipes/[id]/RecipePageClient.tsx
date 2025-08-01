@@ -81,8 +81,8 @@ export default function RecipePageClient({ recipeId }: RecipePageClientProps) {
           // instructions를 steps로 변환하고 step_number로 정렬
           steps: recipeData.instructions
             ? recipeData.instructions
-                .sort((a, b) => a.step_number - b.step_number)
-                .map(instruction => ({
+                .sort((a: any, b: any) => a.step_number - b.step_number)
+                .map((instruction: any) => ({
                   step_number: instruction.step_number,
                   description: instruction.description,
                   image_url: instruction.image_url

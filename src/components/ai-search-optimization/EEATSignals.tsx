@@ -129,7 +129,7 @@ export default function EEATSignals({ author, content, organization }: EEATSigna
 export const spoonieOrganization = {
   name: "스푸니 (Spoonie)",
   description: "레시피 공유와 요리 커뮤니티 플랫폼. 검증된 요리사와 요리 애호가들이 함께 만드는 신뢰할 수 있는 레시피 정보.",
-  url: process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.com"
+  url: process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
 }
 
 // 일반적인 요리 전문성 카테고리

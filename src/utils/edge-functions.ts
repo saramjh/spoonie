@@ -122,10 +122,10 @@ export async function sendNotificationEdge(
     const duration = endTime - startTime
     
     // console.log(`✅ Edge: Notification sent in ${duration}ms`, {
-      type: request.type,
-      notificationId: data.notificationId,
-      processingTime: data.deliveryInfo.processingTimeMs
-    })
+    //   type: request.type,
+    //   notificationId: data.notificationId,
+    //   processingTime: data.deliveryInfo.processingTimeMs
+    // })
 
     return data
   } catch (error) {

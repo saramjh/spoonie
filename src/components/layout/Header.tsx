@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Bell, Bookmark } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import useSWR from 'swr';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { default as NextImage } from 'next/image';
 
 const fetchUnreadNotificationsCount = async (userId: string) => {

@@ -65,9 +65,9 @@ export default function AdIntegratedItemList({
         // 📱 일반 아이템 렌더링
         return (
           <PostCard
-            key={item.item_id}
-            item={item}
-            currentUserId={currentUserId}
+            key={(item as Item).item_id || (item as Item).id}
+            item={item as Item}
+            currentUser={currentUserId ? { id: currentUserId } as any : null}
           />
         )
       })}

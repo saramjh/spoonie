@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+// React hooks removed - not used in this component
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Bookmark } from "lucide-react"
 import { Button } from "@/components/ui/button"

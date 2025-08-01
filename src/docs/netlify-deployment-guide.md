@@ -33,15 +33,15 @@ npm run start
 현재 필요한 환경변수들:
 ```bash
 # Supabase
-NEXT_PUBLIC_SUPABASE_URL=https://dtyiyzfftsewpckfkqmo.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0eWl5emZmdHNld3Bja2ZrcW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjMxNjg1NywiZXhwIjoyMDY3ODkyODU3fQ.n8M3gqa7bffZEXZMiCvu-Xe73gg8GZpJRo4ISUZ-X2s
+NEXT_PUBLIC_SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
 
 # Google Services  
 NEXT_PUBLIC_GA_ID=G-16DKDXVQ9T
 NEXT_PUBLIC_ADSENSE_ID=ca-pub-4410729598083068
 
 # App
-NEXT_PUBLIC_APP_URL=https://your-site.netlify.app
+NEXT_PUBLIC_APP_URL=https://spoonie-web.netlify.app
 ```
 
 ---
@@ -71,8 +71,8 @@ Netlify가 Next.js 프로젝트를 자동으로 감지하고 `@netlify/plugin-ne
 
 ```bash
 # 🗄️ Supabase 설정
-NEXT_PUBLIC_SUPABASE_URL=https://dtyiyzfftsewpckfkqmo.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0eWl5emZmdHNld3Bja2ZrcW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjMxNjg1NywiZXhwIjoyMDY3ODkyODU3fQ.n8M3gqa7bffZEXZMiCvu-Xe73gg8GZpJRo4ISUZ-X2s
+NEXT_PUBLIC_SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
 
 # 📊 Google Analytics
 NEXT_PUBLIC_GA_ID=G-16DKDXVQ9T
@@ -81,7 +81,7 @@ NEXT_PUBLIC_GA_ID=G-16DKDXVQ9T
 NEXT_PUBLIC_ADSENSE_ID=ca-pub-4410729598083068
 
 # 🌐 앱 URL (배포 후 업데이트)
-NEXT_PUBLIC_APP_URL=https://spoonie.netlify.app
+NEXT_PUBLIC_APP_URL=https://spoonie-web.netlify.app
 
 # 🔧 Node 환경
 NODE_ENV=production
@@ -92,8 +92,8 @@ NODE_ENV=production
 # Supabase 대시보드에서:
 # 1. Settings → API → URL & Keys 확인
 # 2. Authentication → URL Configuration에 Netlify URL 추가:
-#    - Site URL: https://spoonie.netlify.app  
-#    - Redirect URLs: https://spoonie.netlify.app/auth/callback
+#    - Site URL: https://spoonie-web.netlify.app  
+#    - Redirect URLs: https://spoonie-web.netlify.app/auth/callback
 ```
 
 ---

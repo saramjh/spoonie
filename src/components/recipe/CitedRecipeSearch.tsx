@@ -89,19 +89,21 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
     } else {
       // Item 타입에 맞게 데이터 변환
       const formattedData: Item[] = itemData.map(item => ({
+        id: item.id,
         item_id: item.id,
         user_id: item.user_id,
         item_type: item.item_type,
         created_at: item.created_at,
         is_public: true, // 검색 결과에서는 is_public이 항상 true라고 가정
-        display_name: item.author?.display_name || item.author?.username || "익명",
-        avatar_url: item.author?.avatar_url || null,
-        user_public_id: item.author?.public_id || null,
+        display_name: item.author?.[0]?.display_name || item.author?.[0]?.username || "익명",
+        avatar_url: item.author?.[0]?.avatar_url || null,
+        user_public_id: item.author?.[0]?.public_id || null,
         user_email: null, // 이메일은 가져오지 않음
         title: item.title,
         content: null, // 게시물이 아니므로 null
         description: null, // 게시물이 아니므로 null
         image_urls: item.image_urls,
+        thumbnail_index: 0, // 기본값
         tags: [], // 검색 결과에서는 태그를 가져오지 않음
         color_label: null, // 레시피가 아니므로 null
         servings: null, // 레시피가 아니므로 null

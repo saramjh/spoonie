@@ -121,9 +121,9 @@ export class OperationQueue<T = any> {
       )
       
       if (insertIndex === -1) {
-        this.queue.push(queuedOp as QueuedOperation<T>)
+        this.queue.push(queuedOp as unknown as QueuedOperation<T>)
       } else {
-        this.queue.splice(insertIndex, 0, queuedOp as QueuedOperation<T>)
+        this.queue.splice(insertIndex, 0, queuedOp as unknown as QueuedOperation<T>)
       }
 
       this.processQueue()

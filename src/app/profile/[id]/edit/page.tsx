@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { LogOut, Trash2, ArrowLeft } from "lucide-react"
 import TossSeamlessProfileEditor from "@/components/profile/TossSeamlessProfileEditor"
-import { useSessionStore } from "@/store/sessionStore"
+// useSessionStore removed - using local state instead
 
 export default function ProfileEditPage() {
 	const supabase = createSupabaseBrowserClient()

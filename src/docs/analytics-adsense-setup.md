@@ -11,7 +11,7 @@ NEXT_PUBLIC_GA_ID=G-16DKDXVQ9T
 NEXT_PUBLIC_ADSENSE_ID=ca-pub-4410729598083068
 
 # 📱 사이트 기본 URL
-NEXT_PUBLIC_APP_URL=https://spoonie.com
+NEXT_PUBLIC_APP_URL=https://spoonie.kr
 ```
 
 ---

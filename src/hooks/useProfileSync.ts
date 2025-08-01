@@ -3,7 +3,7 @@
 import { useEffect, useCallback } from "react"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import { useSessionStore } from "@/store/sessionStore"
-import { cacheManager } from "@/lib/unified-cache-manager"
+import { cacheManager, getCacheManager } from "@/lib/unified-cache-manager"
 
 /**
  * 🚀 프로필 실시간 동기화 훅
@@ -30,14 +30,22 @@ export function useProfileSync() {
       })
     }
 
-    // 🎯 캐시 매니저를 통해 모든 관련 캐시 업데이트
-    await cacheManager.smartUpdate({
-      type: 'update',
-      itemId: newProfile.id,
-      userId: newProfile.id,
-      data: newProfile,
-      timestamp: Date.now()
-    })
+    // 🎯 캐시 매니저를 통해 프로필 관련 캐시 무효화/갱신
+    try {
+      const manager = getCacheManager()
+      await manager.smartUpdate({
+        type: 'update',
+        itemId: newProfile.id,
+        userId: newProfile.id,
+        data: {
+          display_name: newProfile.display_name,
+          username: newProfile.username,
+          avatar_url: newProfile.avatar_url
+        }
+      })
+    } catch (error) {
+      console.warn('프로필 캐시 업데이트 실패:', error)
+    }
 
     console.log(`🔄 Profile updated in real-time: ${newProfile.username}`)
   }, [profile, setProfile])

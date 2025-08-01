@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "스푸니 - 레시피 공유 플랫폼",
     description: "맛있는 레시피와 요리 이야기를 공유하는 커뮤니티에 참여하세요.",
-    url: process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.com',
+    url: process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr',
     type: 'website',
     images: [
       {
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   },
 
   alternates: {
-    canonical: process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.com',
+    canonical: process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr',
   },
 }
 

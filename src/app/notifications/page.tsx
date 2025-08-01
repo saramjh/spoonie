@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast'
 import { mutate } from 'swr'
 import { formatDistanceToNowStrict } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { BellOff, UserCircle2, X, MoreVertical, Trash2, CheckSquare, Square, Heart, MessageCircle, UserPlus, ChefHat, Bell } from 'lucide-react'
+import { BellOff, UserCircle2, X, Trash2, Heart, MessageCircle, UserPlus, ChefHat, Bell } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface Notification {

@@ -31,7 +31,7 @@ export const metadata: Metadata = {
 	openGraph: {
 		title: "스푸니 - 레시피 공유 플랫폼",
 		description: "맛있는 레시피를 공유하고 요리 영감을 얻어보세요. 개인 레시피북 관리와 요리 커뮤니티 참여.",
-		url: process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.com',
+		url: process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr',
 		siteName: "스푸니 (Spoonie)",
 		images: [
 			{
@@ -65,7 +65,7 @@ export const metadata: Metadata = {
 	},
 	// 언어 설정
 	alternates: {
-		canonical: process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.com',
+		canonical: process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr',
 	},
 }
 
@@ -84,7 +84,7 @@ export default function RootLayout({
 				{/* 추가 SEO 메타 태그 */}
 				<meta name="author" content="Spoonie Team" />
 				<meta name="format-detection" content="telephone=no" />
-				<link rel="canonical" href={process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.com'} />
+				<link rel="canonical" href={process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'} />
 				{/* 🎯 폰트 최적화 메타 태그 */}
 				<meta name="font-display" content="swap" />
 			</head>

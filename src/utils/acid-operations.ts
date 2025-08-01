@@ -1,5 +1,5 @@
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
-import { syncAllCaches } from "./feed-cache-sync"
+import { getCacheManager } from "@/lib/unified-cache-manager"
 
 /**
  * 🔒 ACID + 효율성 통합 연산
@@ -67,9 +67,11 @@ export async function addCommentACID(
     
       
       // 🔄 효율적 캐시 동기화 (DB 연산 후)
-      syncAllCaches({
+      const cacheManager = getCacheManager()
+      await cacheManager.optimisticUpdate({
+        type: 'comment',
         itemId,
-        updateType: 'comment_add',
+        userId,
         delta: 1
       })
       
@@ -126,9 +128,11 @@ export async function toggleLikeACID(
     
       
       // 🔄 효율적 캐시 동기화
-      syncAllCaches({
+      const cacheManager = getCacheManager()
+      await cacheManager.optimisticUpdate({
+        type: 'like',
         itemId,
-        updateType: result.is_liked ? 'like_add' : 'like_remove',
+        userId,
         delta: result.is_liked ? 1 : -1
       })
       
@@ -189,9 +193,11 @@ export async function deleteCommentACID(
     
       
       // 🔄 효율적 캐시 동기화
-      syncAllCaches({
+      const cacheManager = getCacheManager()
+      await cacheManager.optimisticUpdate({
+        type: 'comment',
         itemId,
-        updateType: 'comment_delete',
+        userId,
         delta: -1
       })
       

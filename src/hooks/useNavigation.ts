@@ -198,7 +198,7 @@ export function useNavigation(options: NavigationOptions = {}) {
         // 5분 이상 된 상세 페이지 캐시 정리
         if (key.startsWith('item_details_') || key.startsWith('profile_')) {
           const cacheData = cache.get(key)
-          if (cacheData && now - cacheData.timestamp > cacheRetention) {
+          if (cacheData && (cacheData as any).timestamp && now - (cacheData as any).timestamp > cacheRetention) {
             cache.delete(key)
             cleanedCount++
           }
@@ -207,7 +207,7 @@ export function useNavigation(options: NavigationOptions = {}) {
         // 10분 이상 된 피드 캐시 정리 (첫 페이지 제외)
         if (key.startsWith('items|') && !key.includes('|0|')) {
           const cacheData = cache.get(key)
-          if (cacheData && now - cacheData.timestamp > cacheRetention * 2) {
+          if (cacheData && (cacheData as any).timestamp && now - (cacheData as any).timestamp > cacheRetention * 2) {
             cache.delete(key)
             cleanedCount++
           }
