@@ -86,10 +86,16 @@ export function useGoogleAnalytics() {
 
 // 🎯 메인 GoogleAnalytics 컴포넌트
 export default function GoogleAnalytics() {
-  // 개발환경에서는 로드하지 않음
-  if (process.env.NODE_ENV !== 'production') {
-    return null
+  // GA ID가 없으면 로드하지 않음
+  if (!GA_MEASUREMENT_ID || GA_MEASUREMENT_ID === 'G-16DKDXVQ9T') {
+    console.warn('🚨 GA_MEASUREMENT_ID not configured properly:', GA_MEASUREMENT_ID)
   }
+  
+  // 임시로 모든 환경에서 로드 (테스트용)
+  // if (process.env.NODE_ENV !== 'production') {
+  //   console.log('🧪 GA disabled in development mode')
+  //   return null
+  // }
 
   return (
     <>
