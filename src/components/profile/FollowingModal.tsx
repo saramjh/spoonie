@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { UserPlus, Clock } from "lucide-react"
@@ -121,6 +121,9 @@ export default function FollowingModal({ isOpen, onClose, userId, currentUserId 
 						<UserPlus className="w-5 h-5 text-green-600" />
 						팔로잉
 					</DialogTitle>
+					<DialogDescription>
+						이 사용자가 팔로우하고 있는 사람들의 목록을 확인할 수 있습니다.
+					</DialogDescription>
 				</DialogHeader>
 
 				<div className="flex-1 overflow-y-auto">

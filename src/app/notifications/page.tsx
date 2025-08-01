@@ -1,17 +1,14 @@
-
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
 import { createSupabaseBrowserClient } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
 import { mutate } from 'swr'
-
-
 import { formatDistanceToNowStrict } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { BellOff, UserCircle2 } from 'lucide-react'
+import { BellOff, UserCircle2, X, MoreVertical, Trash2, CheckSquare, Square, Heart, MessageCircle, UserPlus, ChefHat, Bell } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 interface Notification {
   id: string;
@@ -32,10 +29,21 @@ interface Notification {
 export default function NotificationsPage() {
   const supabase = createSupabaseBrowserClient();
   const { toast } = useToast();
+  const router = useRouter();
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  
+  // 복수 선택 관련 상태
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // 편집 모드 토글 (선택 상태 초기화 포함)
+  const toggleEditMode = useCallback(() => {
+    setIsSelecting(prev => !prev);
+    setSelectedIds(new Set());
+  }, []);
 
   useEffect(() => {
     const fetchUserAndNotifications = async () => {
@@ -124,14 +132,131 @@ export default function NotificationsPage() {
     }
   };
 
+  // 🗑️ 개별 알림 삭제 (업계표준 방식)
+  const deleteNotification = useCallback(async (id: string) => {
+    if (!currentUser?.id) return;
+
+    // 🚀 낙관적 업데이트: UI에서 즉시 제거
+    const originalNotifications = notifications;
+    setNotifications(prev => prev.filter(notif => notif.id !== id));
+
+    // 🔔 Header 뱃지 즉시 업데이트
+    const remainingUnreadCount = notifications.filter(notif => notif.id !== id && !notif.is_read).length;
+    mutate(`unread_notifications_count_${currentUser.id}`, remainingUnreadCount);
+
+    try {
+      // 서버에서 실제 삭제
+      const { error, count } = await supabase
+        .from('notifications')
+        .delete({ count: 'exact' })
+        .eq('id', id)
+        .eq('user_id', currentUser.id); // 보안: 본인 알림만 삭제
+
+      if (error) {
+        throw error;
+      }
+
+      if (count === 0) {
+        throw new Error('삭제할 알림을 찾을 수 없습니다. (이미 삭제되었거나 권한이 없습니다)');
+      }
+
+      toast({
+        title: "알림 삭제",
+        description: "알림이 삭제되었습니다.",
+        variant: "default"
+      });
+
+    } catch (error: any) {
+      // 🔄 실패 시 롤백
+      setNotifications(originalNotifications);
+      const originalUnreadCount = originalNotifications.filter(notif => !notif.is_read).length;
+      mutate(`unread_notifications_count_${currentUser.id}`, originalUnreadCount);
+
+      toast({
+        title: "삭제 실패",
+        description: error.message || "알림 삭제 중 오류가 발생했습니다.",
+        variant: "destructive"
+      });
+    }
+  }, [currentUser?.id, notifications, supabase, toast]);
+
+  // 🗑️ 복수 선택 삭제 (업계표준 방식)
+  const deleteBatchNotifications = useCallback(async () => {
+    if (!currentUser?.id || selectedIds.size === 0) return;
+
+    const idsToDelete = Array.from(selectedIds);
+    
+    // 🚀 낙관적 업데이트: UI에서 즉시 제거
+    const originalNotifications = notifications;
+    setNotifications(prev => prev.filter(notif => !selectedIds.has(notif.id)));
+    setSelectedIds(new Set());
+    setIsSelecting(false);
+
+    // 🔔 Header 뱃지 즉시 업데이트
+    const remainingUnreadCount = notifications.filter(notif => !selectedIds.has(notif.id) && !notif.is_read).length;
+    mutate(`unread_notifications_count_${currentUser.id}`, remainingUnreadCount);
+
+    try {
+      const { error, count } = await supabase
+        .from('notifications')
+        .delete({ count: 'exact' })
+        .in('id', idsToDelete)
+        .eq('user_id', currentUser.id);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "알림 삭제",
+        description: `${idsToDelete.length}개의 알림이 삭제되었습니다.`,
+        variant: "default"
+      });
+
+    } catch (error: any) {
+      // 🔄 실패 시 롤백
+      setNotifications(originalNotifications);
+      setSelectedIds(new Set(idsToDelete));
+      setIsSelecting(true);
+      const originalUnreadCount = originalNotifications.filter(notif => !notif.is_read).length;
+      mutate(`unread_notifications_count_${currentUser.id}`, originalUnreadCount);
+
+      toast({
+        title: "삭제 실패",
+        description: error.message || "일괄 삭제 중 오류가 발생했습니다.",
+        variant: "destructive"
+      });
+    }
+  }, [currentUser?.id, notifications, selectedIds, supabase, toast]);
+
+  // ✅ 전체 선택/해제
+  const toggleSelectAll = useCallback(() => {
+    if (selectedIds.size === notifications.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(notifications.map(n => n.id)));
+    }
+  }, [notifications, selectedIds.size]);
+
+  // 📝 개별 선택/해제
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  }, []);
+
   // 🔔 모든 읽지 않은 알림 읽음 처리 (뱃지 초기화)
   const markAllAsRead = useCallback(async () => {
     if (!currentUser?.id) return;
 
     const unreadNotifications = notifications.filter(notif => !notif.is_read);
     if (unreadNotifications.length === 0) return;
-
-    
 
     const { error } = await supabase
       .from('notifications')
@@ -149,8 +274,6 @@ export default function NotificationsPage() {
       
       // 🔔 Header 뱃지 즉시 업데이트 (SWR 캐시 갱신)
       mutate(`unread_notifications_count_${currentUser.id}`, 0);
-      
-      
     }
   }, [currentUser?.id, notifications, supabase]);
 
@@ -178,7 +301,7 @@ export default function NotificationsPage() {
     const itemType = notification.related_item?.item_type;
     const itemName = itemType === 'recipe' ? '레시피를' : '레시피드를';
     const itemNameWithParticle = itemType === 'recipe' ? '레시피에' : '레시피드에';
-    
+  
     switch (notification.type) {
       case 'like':
         return `님이 회원님의 ${itemName} 좋아합니다.`;
@@ -188,10 +311,28 @@ export default function NotificationsPage() {
         return `님이 팔로우하기 시작했습니다.`;
       case 'recipe_cited':
         return `님이 회원님의 레시피를 참고하여 새로운 ${itemName} 작성했습니다.`;
-      case 'admin':
+     case 'admin':
         return '관리자로부터 새로운 공지가 있습니다.';
       default:
         return '새로운 알림이 있습니다.';
+    }
+  };
+
+  // 🎨 토스 스타일 알림 타입별 아이콘과 색상
+  const getNotificationIcon = (type: Notification['type']) => {
+    switch (type) {
+      case 'like':
+        return { icon: Heart, color: 'text-red-500', bgColor: 'bg-red-50', borderColor: 'border-red-200' };
+      case 'comment':
+        return { icon: MessageCircle, color: 'text-blue-500', bgColor: 'bg-blue-50', borderColor: 'border-blue-200' };
+      case 'follow':
+        return { icon: UserPlus, color: 'text-green-500', bgColor: 'bg-green-50', borderColor: 'border-green-200' };
+      case 'recipe_cited':
+        return { icon: ChefHat, color: 'text-orange-500', bgColor: 'bg-orange-50', borderColor: 'border-orange-200' };
+      case 'admin':
+        return { icon: Bell, color: 'text-purple-500', bgColor: 'bg-purple-50', borderColor: 'border-purple-200' };
+      default:
+        return { icon: Bell, color: 'text-gray-500', bgColor: 'bg-gray-50', borderColor: 'border-gray-200' };
     }
   };
 
@@ -216,61 +357,251 @@ export default function NotificationsPage() {
       return `/posts/${notification.item_id}`;
     } else {
       // item_type이 없거나 알 수 없는 경우 홈으로
-      console.warn(`⚠️ 알 수 없는 item_type: ${itemType} for notification ${notification.id}`);
       return '/';
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto max-w-2xl py-12 text-center">알림을 불러오는 중...</div>
+      <div className="min-h-screen bg-white">
+        {/* 🎨 로딩 상태 헤더 */}
+        <div className="sticky top-0 z-10 bg-white border-b border-gray-100">
+          <div className="flex items-center justify-between px-4 py-4">
+            <h1 className="text-xl font-bold text-gray-900">알림</h1>
+            <div className="w-12 h-7 bg-gray-100 rounded-lg animate-pulse"></div>
+          </div>
+        </div>
+        
+        {/* 🔄 토스 스타일 스켈레톤 */}
+        <div className="px-4 pb-6">
+          <div className="space-y-1 mt-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="p-4 flex items-start gap-3">
+                <div className="w-10 h-10 bg-gray-100 rounded-full animate-pulse flex-shrink-0"></div>
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 bg-gray-100 rounded-md animate-pulse w-20"></div>
+                    <div className="h-4 bg-gray-100 rounded-md animate-pulse flex-1"></div>
+                  </div>
+                  <div className="h-3 bg-gray-100 rounded-md animate-pulse w-16"></div>
+                </div>
+                <div className="w-2 h-2 bg-gray-100 rounded-full animate-pulse flex-shrink-0 mt-1"></div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto max-w-2xl py-12">
-        <h1 className="text-3xl font-bold mb-8">알림</h1>
-      <div className="space-y-4">
-        {notifications.length === 0 ? (
-          <div className="text-center text-gray-500 py-8">
-            <BellOff className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <p>새로운 알림이 없습니다.</p>
+    <div className="min-h-screen bg-white">
+      {/* 🎨 토스 스타일 헤더 */}
+      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-100">
+        <div className="flex items-center justify-between px-4 py-4">
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-bold text-gray-900">알림</h1>
+            {notifications.length > 0 && !isSelecting && (
+              <div className="px-2 py-1 bg-gray-100 rounded-full">
+                <span className="text-xs font-medium text-gray-600">{notifications.length}</span>
+              </div>
+            )}
           </div>
-        ) : (
-          notifications.map((notification) => (
-            							            <Link href={getNotificationLink(notification)} key={notification.id} onClick={() => !notification.is_read && markAsRead(notification.id)}>
-              <div
-                className={`p-4 rounded-lg shadow-sm flex items-start space-x-4 cursor-pointer transition-colors ${notification.is_read ? 'bg-gray-50 hover:bg-gray-100 text-gray-600' : 'bg-orange-50 hover:bg-orange-100 text-gray-900 font-medium'}`}
-              >
-                <div className="flex-shrink-0 w-10 h-10">
-                  {notification.from_profile?.avatar_url ? (
-                    <Image src={notification.from_profile.avatar_url} alt={notification.from_profile.username} width={40} height={40} className="rounded-full object-cover w-full h-auto" />
+          {notifications.length > 0 && (
+            <button
+              onClick={toggleEditMode}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                isSelecting 
+                  ? 'text-blue-600 bg-blue-50 hover:bg-blue-100' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              {isSelecting ? '완료' : '편집'}
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="px-4 pb-6">
+        {/* 🎯 토스 스타일 편집 모드 툴바 */}
+        {isSelecting && notifications.length > 0 && (
+          <div className="sticky top-[73px] z-10 mb-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={toggleSelectAll}
+                  className="flex items-center gap-2 text-sm font-medium text-blue-700 hover:text-blue-800"
+                >
+                  {selectedIds.size === notifications.length ? (
+                    <div className="w-5 h-5 bg-blue-600 rounded border flex items-center justify-center">
+                      <div className="w-2 h-2 bg-white rounded-sm"></div>
+                    </div>
                   ) : (
-                    <UserCircle2 className="h-10 w-10 text-gray-400" />
+                    <div className="w-5 h-5 border-2 border-blue-300 rounded bg-white"></div>
                   )}
-                </div>
-                <div className="flex-grow">
-                  <p>
-                    <span className="font-bold">{notification.from_profile?.username || 'Spoonie'}</span>
-                    {generateNotificationMessage(notification)}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {formatDistanceToNowStrict(new Date(notification.created_at), { addSuffix: true, locale: ko })}
-                  </p>
-                </div>
-                {!notification.is_read && (
-                  <div className="flex-shrink-0 self-center">
-                     <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                  </div>
+                  <span>전체선택</span>
+                </button>
+                {selectedIds.size > 0 && (
+                  <div className="h-4 w-px bg-blue-200"></div>
+                )}
+                {selectedIds.size > 0 && (
+                  <span className="text-sm font-medium text-blue-600">
+                    {selectedIds.size}개 선택
+                  </span>
                 )}
               </div>
-            </Link>
-          ))
+              {selectedIds.size > 0 && (
+                <button
+                  onClick={deleteBatchNotifications}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span>삭제</span>
+                </button>
+              )}
+            </div>
+          </div>
         )}
-      </div>
+
+        <div className="mt-4">
+          {notifications.length === 0 ? (
+            <div className="text-center py-16 px-4">
+              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                <BellOff className="h-8 w-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">아직 알림이 없어요</h3>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                새로운 좋아요나 댓글이 있으면<br/>
+                여기서 확인할 수 있어요
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {notifications.map((notification) => {
+                const iconConfig = getNotificationIcon(notification.type);
+                const IconComponent = iconConfig.icon;
+                
+                return (
+                  <div
+                    key={notification.id}
+                    className={`group relative transition-all duration-300 ease-out ${
+                      isSelecting && selectedIds.has(notification.id)
+                        ? 'bg-blue-50 border-blue-200 border rounded-xl scale-[0.98] shadow-sm'
+                        : ''
+                    }`}
+                    onClick={() => {
+                      // 🎯 토스 스타일 햅틱 피드백 (브라우저 지원 시)
+                      if (navigator.vibrate && isSelecting) {
+                        navigator.vibrate(10);
+                      }
+                      
+                      if (isSelecting) {
+                        toggleSelect(notification.id);
+                      } else {
+                        if (!notification.is_read) markAsRead(notification.id);
+                        router.push(getNotificationLink(notification));
+                      }
+                    }}
+                  >
+                    <div className={`p-4 flex items-start gap-3 cursor-pointer transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] ${
+                      isSelecting && selectedIds.has(notification.id)
+                        ? 'bg-transparent'
+                        : notification.is_read 
+                          ? 'hover:bg-gray-50 active:bg-gray-100' 
+                          : 'bg-blue-50/30 hover:bg-blue-50/50 active:bg-blue-50/70'
+                    } ${!isSelecting && !notification.is_read ? 'border-l-4 border-l-blue-400' : ''}`}>
+                      
+                      {/* ✅ 토스 스타일 체크박스 */}
+                      {isSelecting && (
+                        <div className="flex-shrink-0 self-start mt-1">
+                          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                            selectedIds.has(notification.id)
+                              ? 'bg-blue-600 border-blue-600'
+                              : 'border-gray-300 bg-white hover:border-blue-400'
+                          }`}>
+                            {selectedIds.has(notification.id) && (
+                              <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor">
+                                <path d="M10.28 2.28L3.989 8.575 1.695 6.28A1 1 0 00.28 7.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28 2.28z"/>
+                              </svg>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* 🎭 프로필 이미지 + 타입 아이콘 */}
+                      <div className="flex-shrink-0 relative">
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 ring-2 ring-white shadow-sm">
+                          {notification.from_profile?.avatar_url ? (
+                            <Image 
+                              src={notification.from_profile.avatar_url} 
+                              alt={notification.from_profile.username} 
+                              width={40} 
+                              height={40} 
+                              className="w-full h-full object-cover" 
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <UserCircle2 className="h-6 w-6 text-gray-400" />
+                            </div>
+                          )}
+                        </div>
+                        {/* 🎨 타입별 아이콘 배지 */}
+                        <div className={`absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full ${iconConfig.bgColor} ${iconConfig.borderColor} border flex items-center justify-center`}>
+                          <IconComponent className={`h-2.5 w-2.5 ${iconConfig.color}`} />
+                        </div>
+                      </div>
+                      
+                      {/* 📝 알림 내용 */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-sm leading-relaxed ${
+                              notification.is_read ? 'text-gray-600' : 'text-gray-900'
+                            }`}>
+                              <span className={`font-semibold ${
+                                notification.is_read ? 'text-gray-700' : 'text-gray-900'
+                              }`}>
+                                {notification.from_profile?.username || 'Spoonie'}
+                              </span>
+                              <span className="ml-1">
+                                {generateNotificationMessage(notification)}
+                              </span>
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1 font-medium">
+                              {formatDistanceToNowStrict(new Date(notification.created_at), { 
+                                addSuffix: true, 
+                                locale: ko 
+                              })}
+                            </p>
+                          </div>
+                          
+                          {/* 🔴 읽지 않음 표시 & 삭제 버튼 */}
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            {!notification.is_read && (
+                              <div className="w-2 h-2 bg-blue-500 rounded-full shadow-sm"></div>
+                            )}
+                            {!isSelecting && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteNotification(notification.id);
+                                }}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1.5 rounded-full hover:bg-red-50 text-gray-400 hover:text-red-500"
+                                title="알림 삭제"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

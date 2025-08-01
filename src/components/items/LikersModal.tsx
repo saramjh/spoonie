@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Heart, Clock } from "lucide-react"
@@ -99,6 +99,9 @@ export default function LikersModal({ isOpen, onClose, itemId, itemType, current
 						<Heart className="w-5 h-5 text-orange-500" />
 						좋아요 ({likers.length})
 					</DialogTitle>
+					<DialogDescription>
+						이 {itemType === 'recipe' ? '레시피' : '레시피드'}에 좋아요를 누른 사용자들을 확인할 수 있습니다.
+					</DialogDescription>
 				</DialogHeader>
 
 				<div className="max-h-96 overflow-y-auto">

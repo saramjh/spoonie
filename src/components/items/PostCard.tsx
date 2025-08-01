@@ -80,6 +80,8 @@ export default function PostCard({
   
 
   
+
+  
   const { orderedImages } = useThumbnail({
     itemId: stableItemId,
     imageUrls: cachedItem.image_urls || [],

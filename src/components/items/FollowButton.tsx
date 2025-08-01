@@ -21,12 +21,21 @@ export default function FollowButton({ userId, initialIsFollowing, className }: 
 	const { isFollowing: globalIsFollowing, follow, unfollow } = useFollowStore()
 	const [isProcessing, setIsProcessing] = useState(false)
 	
-	// 🎯 업계 표준: 글로벌 상태 우선, 없으면 초기값 사용
-	const isFollowing = globalIsFollowing(userId) || initialIsFollowing || false
+	// 🎯 업계 표준: 글로벌 상태 우선, Store가 로딩중이면 초기값 사용
+	// isFollowing은 항상 boolean을 반환하므로 Store가 초기화되었는지 확인 필요
+	const { isLoading: storeLoading } = useFollowStore()
+	const globalFollowState = globalIsFollowing(userId)
+	const isFollowing = storeLoading ? (initialIsFollowing || false) : globalFollowState
 	
-	// 🚀 업계 표준: Optimistic Updates (Instagram/Twitter 방식)
+	// 🚀 SSA 표준: 모든 상태 관리를 cacheManager에 위임
 	const handleFollowToggle = async () => {
 		if (isProcessing) return
+		
+		console.log(`🔄 [FollowButton] Starting ${isFollowing ? 'unfollow' : 'follow'} operation:`, {
+			targetUserId: userId,
+			currentIsFollowing: isFollowing,
+			sessionId: session?.id
+		})
 		
 		setIsProcessing(true)
 		
@@ -34,8 +43,11 @@ export default function FollowButton({ userId, initialIsFollowing, className }: 
 			let success: boolean
 			
 			if (isFollowing) {
-				// Unfollow with optimistic update
+				// SSA 표준: Unfollow
+				console.log(`🔄 [FollowButton] Calling unfollow for userId: ${userId}`)
 				success = await unfollow(userId)
+				console.log(`📊 [FollowButton] Unfollow result:`, { success, userId })
+				
 				if (success) {
 					toast({
 						title: "언팔로우 완료",
@@ -43,8 +55,11 @@ export default function FollowButton({ userId, initialIsFollowing, className }: 
 					})
 				}
 			} else {
-				// Follow with optimistic update  
+				// SSA 표준: Follow
+				console.log(`🔄 [FollowButton] Calling follow for userId: ${userId}`)
 				success = await follow(userId)
+				console.log(`📊 [FollowButton] Follow result:`, { success, userId })
+				
 				if (success) {
 					toast({
 						title: "팔로우 완료", 
@@ -60,6 +75,7 @@ export default function FollowButton({ userId, initialIsFollowing, className }: 
 			}
 			
 			if (!success) {
+				console.error(`❌ [FollowButton] ${isFollowing ? 'Unfollow' : 'Follow'} failed for userId: ${userId}`)
 				toast({
 					title: "오류",
 					description: isFollowing ? "언팔로우에 실패했습니다." : "팔로우에 실패했습니다.",
@@ -75,6 +91,7 @@ export default function FollowButton({ userId, initialIsFollowing, className }: 
 			})
 		} finally {
 			setIsProcessing(false)
+			console.log(`✅ [FollowButton] ${isFollowing ? 'Unfollow' : 'Follow'} operation finished`)
 		}
 	}
 

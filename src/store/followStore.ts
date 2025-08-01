@@ -21,99 +21,120 @@ export const useFollowStore = create<FollowStore>((set, get) => ({
   followingUsers: new Set(),
   isLoading: false,
   
-  // 🚀 업계 표준: 초기 팔로우 상태 한 번만 로드
+  // 🚀 SSA 표준: 초기 팔로우 상태 한 번만 로드
   initializeFollowState: async (currentUserId: string) => {
     const supabase = createSupabaseBrowserClient()
     set({ isLoading: true })
     
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('follows')
         .select('following_id')
         .eq('follower_id', currentUserId)
+      
+      if (error) throw error
       
       const followingSet = new Set(data?.map(f => f.following_id) || [])
       set({ followingUsers: followingSet })
       
     } catch (error) {
       console.error('❌ FollowStore: Failed to initialize follow state:', error)
+      set({ followingUsers: new Set() })
     } finally {
       set({ isLoading: false })
     }
   },
   
-  // 🚀 SSA 기반: Optimistic Updates + 통합 캐시 관리
+  // 🚀 SSA 표준: 모든 로직을 cacheManager에 위임
   follow: async (targetUserId: string) => {
+    console.log(`🔄 [FollowStore] Starting follow operation:`, { targetUserId })
+    
     const supabase = createSupabaseBrowserClient()
     const { data: { user } } = await supabase.auth.getUser()
     
-    if (!user) return false
+    if (!user) {
+      console.error('❌ [FollowStore] No authenticated user found')
+      return false
+    }
     
-    // 1. 즉시 UI 업데이트 (Optimistic)
-    const state = get()
-    const newFollowingUsers = new Set([...Array.from(state.followingUsers), targetUserId])
-    set({ followingUsers: newFollowingUsers })
-    
-    // 2. SSA 기반: 모든 캐시 옵티미스틱 업데이트
-    const rollback = await cacheManager.follow(user.id, targetUserId, true)
+    console.log(`📊 [FollowStore] User authenticated:`, { userId: user.id, targetUserId })
     
     try {
-      // 3. 서버 요청
-      const { error } = await supabase
-        .from('follows')
-        .insert({ follower_id: user.id, following_id: targetUserId })
+      // 1. 즉시 UI 업데이트 (Optimistic)
+      const state = get()
+      console.log(`📊 [FollowStore] Current following state:`, { 
+        followingCount: state.followingUsers.size,
+        isAlreadyFollowing: state.followingUsers.has(targetUserId)
+      })
       
-      if (error) throw error
+      const newFollowingUsers = new Set(state.followingUsers)
+      newFollowingUsers.add(targetUserId)
+      set({ followingUsers: newFollowingUsers })
       
-  
+      console.log(`✅ [FollowStore] Optimistic update completed, calling cacheManager.follow`)
+      
+      // 2. SSA 표준: cacheManager가 모든 것을 처리 (DB 연산 + 캐시 관리 + 자동 롤백)
+      await cacheManager.follow(user.id, targetUserId, true)
+      
+      console.log(`✅ [FollowStore] Follow operation completed successfully`)
       return true
     } catch (error) {
-      console.error('❌ FollowStore: Follow failed, rolling back via SSA:', error)
+      console.error('❌ FollowStore: Follow failed:', error)
       
-      // 4. 실패 시 SSA 롤백
+      // 3. 실패 시 롤백 (SSA가 캐시는 알아서 롤백함)
+      const state = get()
       const rollbackUsers = new Set(state.followingUsers)
       rollbackUsers.delete(targetUserId)
       set({ followingUsers: rollbackUsers })
-      rollback() // SSA 캐시 롤백
+      
+      console.log(`🔄 [FollowStore] Rollback completed`)
       return false
     }
   },
   
-  // 🚀 SSA 기반: Optimistic Updates + 통합 캐시 관리
+  // 🚀 SSA 표준: 모든 로직을 cacheManager에 위임
   unfollow: async (targetUserId: string) => {
+    console.log(`🔄 [FollowStore] Starting unfollow operation:`, { targetUserId })
+    
     const supabase = createSupabaseBrowserClient()
     const { data: { user } } = await supabase.auth.getUser()
     
-    if (!user) return false
+    if (!user) {
+      console.error('❌ [FollowStore] No authenticated user found')
+      return false
+    }
     
-    // 1. 즉시 UI 업데이트 (Optimistic)
-    const state = get()
-    const newFollowingUsers = new Set(state.followingUsers)
-    newFollowingUsers.delete(targetUserId)
-    set({ followingUsers: newFollowingUsers })
-    
-    // 2. SSA 기반: 모든 캐시 옵티미스틱 업데이트
-    const rollback = await cacheManager.follow(user.id, targetUserId, false)
+    console.log(`📊 [FollowStore] User authenticated:`, { userId: user.id, targetUserId })
     
     try {
-      // 3. 서버 요청
-      const { error } = await supabase
-        .from('follows')
-        .delete()
-        .eq('follower_id', user.id)
-        .eq('following_id', targetUserId)
+      // 1. 즉시 UI 업데이트 (Optimistic)
+      const state = get()
+      console.log(`📊 [FollowStore] Current following state:`, { 
+        followingCount: state.followingUsers.size,
+        isCurrentlyFollowing: state.followingUsers.has(targetUserId)
+      })
       
-      if (error) throw error
+      const newFollowingUsers = new Set(state.followingUsers)
+      newFollowingUsers.delete(targetUserId)
+      set({ followingUsers: newFollowingUsers })
       
-  
+      console.log(`✅ [FollowStore] Optimistic update completed, calling cacheManager.follow(false)`)
+      
+      // 2. SSA 표준: cacheManager가 모든 것을 처리 (DB 연산 + 캐시 관리 + 자동 롤백)
+      await cacheManager.follow(user.id, targetUserId, false)
+      
+      console.log(`✅ [FollowStore] Unfollow operation completed successfully`)
       return true
     } catch (error) {
-      console.error('❌ FollowStore: Unfollow failed, rolling back via SSA:', error)
+      console.error('❌ FollowStore: Unfollow failed:', error)
       
-      // 4. 실패 시 SSA 롤백
-      const rollbackUsers = new Set([...Array.from(state.followingUsers), targetUserId])
+      // 3. 실패 시 롤백 (SSA가 캐시는 알아서 롤백함)
+      const state = get()
+      const rollbackUsers = new Set(state.followingUsers)
+      rollbackUsers.add(targetUserId)
       set({ followingUsers: rollbackUsers })
-      rollback() // SSA 캐시 롤백
+      
+      console.log(`🔄 [FollowStore] Rollback completed`)
       return false
     }
   },

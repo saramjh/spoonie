@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button"
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
+import FAQSchema, { commonRecipeFAQs, commonPostFAQs, platformFAQs } from "@/components/ai-search-optimization/FAQSchema"
+import TossStyleFAQSection, { createTossStyleFAQs } from "@/components/common/TossStyleFAQSection"
+import TossStyleBreadcrumb from "@/components/common/TossStyleBreadcrumb"
 import { SimplifiedLikeButton } from "@/components/items/SimplifiedLikeButton"
 import { BookmarkButton } from "@/components/items/BookmarkButton"
 import FollowButton from "@/components/items/FollowButton"
@@ -28,7 +31,7 @@ import { useThumbnail } from "@/hooks/useThumbnail"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 
 interface ItemDetailViewProps {
-	item: ItemDetail
+	item: ItemDetail | null | undefined
 }
 
 interface CurrentUser {
@@ -59,13 +62,60 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	const supabase = createSupabaseBrowserClient()
 	const { mutate } = useSWRConfig()
 
-
+	// 🛡️ 방어적 프로그래밍: item이 없을 때의 처리
+	if (!item) {
+		return (
+			<div className="flex flex-col h-full items-center justify-center p-8">
+				<div className="text-center space-y-4">
+					<div className="w-16 h-16 bg-gray-200 rounded-full animate-pulse mx-auto"></div>
+					<div className="space-y-2">
+						<div className="h-4 bg-gray-200 rounded animate-pulse w-48"></div>
+						<div className="h-3 bg-gray-200 rounded animate-pulse w-32 mx-auto"></div>
+					</div>
+					<p className="text-gray-500 text-sm">컨텐츠를 불러오는 중...</p>
+				</div>
+			</div>
+		)
+	}
 
 	const isRecipe = item.item_type === "recipe"
 
 	// 🛡️ Hook 안정성을 위한 값 안정화
-	const stableItemId = useMemo(() => item.item_id || item.id, [item.item_id, item.id])
-	const stableFallbackData = useMemo(() => item, [item])
+	const stableItemId = useMemo(() => {
+		const id = item?.item_id || item?.id
+		if (!id) {
+			console.warn('⚠️ ItemDetailView: item에서 ID를 찾을 수 없습니다:', item)
+			return null
+		}
+		return id
+	}, [item?.item_id, item?.id])
+	
+	// 🛡️ ID가 없으면 에러 상태 표시
+	if (!stableItemId) {
+		return (
+			<div className="flex flex-col h-full items-center justify-center p-8">
+				<div className="text-center space-y-4">
+					<div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+						<span className="text-red-500 text-2xl">⚠️</span>
+					</div>
+					<div className="space-y-2">
+						<h3 className="text-lg font-semibold text-gray-900">콘텐츠를 불러올 수 없습니다</h3>
+						<p className="text-gray-500 text-sm">잘못된 링크이거나 삭제된 콘텐츠일 수 있습니다.</p>
+					</div>
+				</div>
+			</div>
+		)
+	}
+	
+	// 🚀 SSA 표준: items 테이블 데이터에 실시간 상태 기본값 추가
+	const stableFallbackData = useMemo(() => ({
+		...item,
+		likes_count: item?.likes_count || 0,
+		comments_count: item?.comments_count || 0,
+		is_liked: item?.is_liked || false,
+		is_bookmarked: item?.is_bookmarked || false,
+		bookmarks_count: item?.bookmarks_count || 0
+	}), [item])
 
 	// 🚀 SSA 발전: 실시간 캐시 업데이트 구독 (홈화면과 동일)
 	const cachedItem = useSSAItemCache(stableItemId, stableFallbackData)
@@ -73,8 +123,8 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	// 🖼️ 썸네일 관리 - 캐시된 아이템의 최신 thumbnail_index 사용
 	const { orderedImages } = useThumbnail({
 		itemId: stableItemId,
-		imageUrls: cachedItem.image_urls || [],
-		thumbnailIndex: cachedItem.thumbnail_index ?? 0
+		imageUrls: cachedItem?.image_urls || item?.image_urls || [],
+		thumbnailIndex: cachedItem?.thumbnail_index ?? item?.thumbnail_index ?? 0
 	})
 
 	// Debug logging
@@ -85,9 +135,20 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	// cited_recipe_ids 처리 - 캐싱된 훅 사용
 	const { citedRecipes, isLoading: citedRecipesLoading } = useCitedRecipes(item.cited_recipe_ids)
 
-	const [commentsCount, setCommentsCount] = useState(item.comments_count || 0)
-	const [localLikesCount, setLocalLikesCount] = useState(item.likes_count || 0)
-	const [localHasLiked, setLocalHasLiked] = useState(item.is_liked || false)
+	// 🚀 SSA 표준: 댓글 개수는 캐시된 데이터에서 실시간 동기화
+	const [commentsCount, setCommentsCount] = useState(cachedItem?.comments_count || 0)
+	// 🚀 SSA 표준: 좋아요 상태도 캐시된 데이터에서 실시간 동기화
+	const [localLikesCount, setLocalLikesCount] = useState(cachedItem?.likes_count || 0)
+	const [localHasLiked, setLocalHasLiked] = useState(cachedItem?.is_liked || false)
+	
+	// 🚀 SSA 표준: 캐시 업데이트 시 로컬 상태 동기화
+	useEffect(() => {
+		if (cachedItem) {
+			setCommentsCount(cachedItem.comments_count || 0)
+			setLocalLikesCount(cachedItem.likes_count || 0)
+			setLocalHasLiked(cachedItem.is_liked || false)
+		}
+	}, [cachedItem])
 	const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
 	const [isAuthLoading, setIsAuthLoading] = useState(true) // 인증 상태 로딩
 
@@ -95,17 +156,20 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	const [isDeleting, setIsDeleting] = useState(false)
 	const commentsRef = useRef<HTMLDivElement>(null)
 
-	const comments = useMemo(() => item.comments_data || [], [item.comments_data])
+	const comments = useMemo(() => item?.comments_data || [], [item?.comments_data])
 
 	// 비회원 여부 확인
 	const isGuest = !currentUser && !isAuthLoading
 	
 	// 작성자 여부 확인
-	const isOwnItem = currentUser && currentUser.id === item.user_id
+	const isOwnItem = currentUser && currentUser.id === item?.user_id
 	
 	// 수정 버튼 핸들러 (Origin 정보 포함)
 	const handleEdit = () => {
-		const baseEditPath = isRecipe ? `/recipes/${item.item_id}/edit` : `/posts/${item.item_id}/edit`
+		const itemId = item?.item_id || item?.id
+		if (!itemId) return
+		
+		const baseEditPath = isRecipe ? `/recipes/${itemId}/edit` : `/posts/${itemId}/edit`
 		const editPath = createLinkWithOrigin(baseEditPath)
 		router.push(editPath)
 	}
@@ -243,7 +307,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	const handleShare = () => {
 		const url = window.location.href
 		const shareData = {
-			title: `Spoonie에서 ${isRecipe ? item.title : (item.display_name || "사용자") + "님의 레시피드"} 보기`,
+			title: `Spoonie에서 ${isRecipe ? item.title : (item.display_name || item.username || item.profiles?.display_name || item.profiles?.username || "사용자") + "님의 레시피드"} 보기`,
 			text: isRecipe ? item.description || "" : item.content || "",
 			url: url,
 		}
@@ -270,10 +334,40 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 				{ revalidate: true } // 서버에서 다시 가져오기
 			)
 		}
-	}, [currentUser?.id, item.item_id, mutate])
+	}, [currentUser?.id, item?.item_id || item?.id, mutate])
+
+	// AI 검색 최적화: FAQ 데이터 준비
+	const itemSpecificFAQs = isRecipe ? [
+		{
+			question: `${item.title || '이 레시피'}는 몇 인분인가요?`,
+			answer: item.servings ? `${item.servings}인분입니다.` : '레시피 정보를 확인해주세요.'
+		},
+		{
+			question: `${item.title || '이 레시피'} 조리 시간은 얼마나 걸리나요?`,
+			answer: item.cooking_time_minutes ? `약 ${item.cooking_time_minutes}분 소요됩니다.` : '조리 시간은 레시피 정보를 참고해주세요.'
+		},
+		...commonRecipeFAQs
+	] : commonPostFAQs
+
+	// 🎨 토스 스타일 FAQ 데이터 준비
+	const tossStyleFAQs = isRecipe 
+		? createTossStyleFAQs.recipe(
+			item.title || '이 레시피', 
+			item.servings ?? undefined, 
+			item.cooking_time_minutes ?? undefined
+		)
+		: createTossStyleFAQs.post(item.display_name || item.username || item.profiles?.display_name || item.profiles?.username || '작성자')
 
 	return (
 		<div className="flex flex-col h-full relative">
+			{/* AI 검색 최적화: FAQ Schema */}
+			<FAQSchema 
+				faqs={[...itemSpecificFAQs, ...platformFAQs]}
+				pageTitle={item.title || (isRecipe ? '레시피' : '레시피드')}
+			/>
+			
+			{/* 🎨 토스 스타일 브레드크럼 네비게이션 */}
+			<TossStyleBreadcrumb />
 			{/* 비회원 블러 오버레이 */}
 			{isGuest && (
 				<div className="absolute inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-6">
@@ -306,12 +400,12 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 					</Button>
 					
 					{/* 작성자 정보 (중앙 정렬) */}
-					<Link href={`/profile/${item.user_public_id || item.user_id}`} className="flex items-center gap-3 flex-1 ml-3">
+					<Link href={`/profile/${item.user_public_id || item.profiles?.public_id || item.user_id}`} className="flex items-center gap-3 flex-1 ml-3">
 						<Avatar className="h-8 w-8">
-							<AvatarImage src={item.avatar_url || undefined} />
-							<AvatarFallback>{(item.username || item.display_name)?.charAt(0) || "U"}</AvatarFallback>
+							<AvatarImage src={item.avatar_url || item.profiles?.avatar_url || undefined} />
+							<AvatarFallback>{(item.username || item.display_name || item.profiles?.username || item.profiles?.display_name)?.charAt(0) || "U"}</AvatarFallback>
 						</Avatar>
-						<span className="font-semibold">{item.username || item.display_name || "사용자"}</span>
+						<span className="font-semibold">{item.display_name || item.username || item.profiles?.display_name || item.profiles?.username || "사용자"}</span>
 					</Link>
 					
 					{/* 우측 액션 버튼 */}
@@ -350,7 +444,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 				</header>
 
 				<div className="flex-1 overflow-y-auto">
-					{orderedImages.length > 0 && <ImageCarousel images={orderedImages} alt={isRecipe ? item.title || "Recipe image" : `Post by ${item.display_name}`} priority />}
+					{orderedImages.length > 0 && <ImageCarousel images={orderedImages} alt={isRecipe ? item.title || "Recipe image" : `Post by ${item.display_name || item.username || item.profiles?.display_name || item.profiles?.username || "작성자"}`} priority />}
 					<div className="p-4">
 						{isRecipe ? (
 							<>
@@ -547,12 +641,12 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 						<div className="flex items-center gap-2 text-gray-600">
 							{/* 🎯 기존 검증된 좋아요 버튼 사용 */}
 							<SimplifiedLikeButton 
-								itemId={item.item_id} 
+								itemId={stableItemId} 
 								itemType={item.item_type}
 								authorId={item.user_id}
 								currentUserId={currentUser?.id}
-								initialLikesCount={cachedItem.likes_count || localLikesCount}
-								initialHasLiked={cachedItem.is_liked || localHasLiked}
+								initialLikesCount={cachedItem?.likes_count || localLikesCount}
+								initialHasLiked={cachedItem?.is_liked || localHasLiked}
 								cachedItem={cachedItem}
 							/>
 							<div className="flex items-center gap-1">
@@ -562,12 +656,27 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 						</div>
 					</div>
 
+					{/* 🎨 토스 스타일 FAQ 섹션 */}
+					<div className="px-4 py-6 bg-gray-50">
+						<TossStyleFAQSection 
+							faqs={tossStyleFAQs}
+							title="자주 묻는 질문"
+						/>
+					</div>
+
 					<div ref={commentsRef} className="p-4">
+						{/* 🔍 디버깅: SimplifiedCommentsSection 렌더링 확인 */}
+						{console.log('🔍 ItemDetailView: SimplifiedCommentsSection 렌더링 시도', {
+							currentUserId: currentUser?.id,
+							stableItemId,
+							commentsCount,
+							hasValidItemId: !!stableItemId
+						})}
 						<SimplifiedCommentsSection 
 							currentUserId={currentUser?.id} 
-							itemId={item.item_id} 
+							itemId={stableItemId} 
 							onCommentsCountChange={setCommentsCount}
-							cachedItem={item}
+							cachedItem={cachedItem || item}
 						/>
 					</div>
 				</div>

@@ -43,9 +43,9 @@ export default function SimplifiedCommentsSection({
   const { toast } = useToast()
   const supabase = createSupabaseBrowserClient()
 
-  // 댓글 데이터 로드
+  // 댓글 데이터 로드 (itemId가 없으면 요청하지 않음)
   const { data: comments, mutate: mutateComments } = useSWR(
-    `comments_${itemId}`,
+    itemId ? `comments_${itemId}` : null,
     async () => {
       const { data, error } = await supabase
         .from('comments')
@@ -62,7 +62,10 @@ export default function SimplifiedCommentsSection({
         .eq('item_id', itemId)
         .order('created_at', { ascending: true })
 
-      if (error) throw error
+      if (error) {
+        console.error('❌ SimplifiedCommentsSection: 댓글 로딩 실패:', error)
+        throw error
+      }
       
       // 🔄 데이터 변환 (user 배열을 단일 객체로 변환)
       return (data || []).map(comment => {
@@ -93,7 +96,7 @@ export default function SimplifiedCommentsSection({
     setIsSubmitting(true)
     setNewComment("")
 
-    // 🚀 STEP 1: 즉시 UI 업데이트 + 모든 캐시 동기화 (0ms)
+    // 🚀 SSA 표준: 즉시 UI 업데이트 + 모든 캐시 동기화 (0ms)
     const rollback = await cacheManager.comment(itemId, currentUserId, 1, cachedItem)
     const activeCommentsCount = (comments || []).filter(c => !c.is_deleted).length
     onCommentsCountChange?.(activeCommentsCount + 1)

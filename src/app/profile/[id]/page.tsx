@@ -441,7 +441,7 @@ export default function ProfilePage() {
 
 	// Zustand store에서 프로필 정보 가져오기
 	const { profile: sessionProfile } = useSessionStore()
-	const { setFollowing } = useFollowStore() // 🚀 업계 표준: 글로벌 팔로우 상태
+	const { setFollowing, isFollowing: getIsFollowing } = useFollowStore() // 🚀 업계 표준: 글로벌 팔로우 상태
 
 	const [profile, setProfile] = useState<UserProfile | null>(null)
 	// 🚀 업계 표준: SWR로 사용자 아이템 관리 (DataManager 연동)
@@ -462,6 +462,9 @@ export default function ProfilePage() {
 	// 모달 상태들
 	const [showFollowersModal, setShowFollowersModal] = useState(false)
 	const [showFollowingModal, setShowFollowingModal] = useState(false)
+	
+	// 현재 팔로우 상태 (글로벌 스토어에서)
+	const isFollowing = profile ? getIsFollowing(profile.id) : false
 
 	useEffect(() => {
 		const loadAllData = async () => {
@@ -649,8 +652,13 @@ export default function ProfilePage() {
 						<div className="flex-1 text-center md:text-left">
 							<div className="flex flex-col md:flex-row items-center gap-4 mb-4">
 								<h1 className="text-2xl font-light">{profile?.username}</h1>
-								{/* 🚀 업계 표준: 글로벌 상태만 사용하는 팔로우 버튼 */}
-								{!isOwner && <FollowButton userId={profile!.id} />}
+								{/* 🚀 업계 표준: 글로벌 상태와 초기값을 모두 활용하는 팔로우 버튼 */}
+								{!isOwner && profile && (
+									<FollowButton 
+										userId={profile.id} 
+										initialIsFollowing={isFollowing}
+									/>
+								)}
 							</div>
 
 							{/* Stats */}

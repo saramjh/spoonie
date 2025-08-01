@@ -1,0 +1,22 @@
+# Spoonie - 레시피 공유 플랫폼
+User-agent: *
+Allow: /
+
+# 사이트맵 위치
+Sitemap: https://spoonie.com/sitemap.xml
+
+# 크롤링 제외 경로
+Disallow: /api/
+Disallow: /auth/
+Disallow: /_next/
+Disallow: /admin/
+
+# 특별 봇 설정
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot  
+Allow: /
+
+# 크롤링 빈도 조절 (서버 부하 방지)
+Crawl-delay: 1
