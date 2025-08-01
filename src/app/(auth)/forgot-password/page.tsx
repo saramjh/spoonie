@@ -27,21 +27,10 @@ export default function ForgotPasswordPage() {
 	})
 
 	const onSubmit = async (values: z.infer<typeof formSchema>) => {
-		const envUrl = process.env.NEXT_PUBLIC_APP_URL
+		const redirectUrl = process.env.NEXT_PUBLIC_APP_URL 
+			? `${process.env.NEXT_PUBLIC_APP_URL}/reset-password`
+			: `${window.location.origin}/reset-password`
 		
-		// 🎯 강제로 프로덕션 도메인 사용
-		const redirectUrl = location.hostname === 'spoonie.kr' || location.hostname === 'www.spoonie.kr'
-			? `https://spoonie.kr/reset-password`
-			: envUrl 
-				? `${envUrl}/reset-password`
-				: `${location.origin}/reset-password`
-		
-		console.log('🔍 Reset Password Redirect Debug:', {
-			hostname: location.hostname,
-			envUrl,
-			finalRedirectUrl: redirectUrl
-		})
-			
 		const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
 			redirectTo: redirectUrl,
 		})
