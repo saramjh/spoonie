@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import type { User } from "@supabase/supabase-js"
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+
 import { Badge } from "@/components/ui/badge"
 import { MoreVertical, Grid, List, Edit, LogOut, Calendar, Users, BookOpen, Heart, MessageCircle } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -339,7 +339,7 @@ const fetchUserItems = async (userId: string, currentUserId?: string) => {
 			? (item.likes_count?.[0]?.count ?? 0)   // 본인 프로필: items 테이블 집계 결과
 			: (item.likes_count || 0),              // 타인 프로필: optimized_feed_view 결과
 		comments_count: currentUserId === userId 
-			? ('accurate_comments_count' in item ? (item as any).accurate_comments_count : 0)  // 본인 프로필: 정확한 댓글 수 (삭제된 댓글 제외)
+			? ('accurate_comments_count' in item ? (item as { accurate_comments_count: number }).accurate_comments_count : 0)  // 본인 프로필: 정확한 댓글 수 (삭제된 댓글 제외)
 			: (item.comments_count || 0),                   // 타인 프로필: optimized_feed_view 결과 (이미 삭제된 댓글 제외)
 			view_count: 0,
 			is_liked: isLikedValue,
@@ -640,12 +640,25 @@ export default function ProfilePage() {
 
 				<div className="max-w-4xl mx-auto px-4 py-8">
 					<div className="flex flex-col md:flex-row items-center md:items-start gap-8">
-						{/* Profile Image */}
+						{/* Profile Image - LCP 최적화를 위해 Next.js Image 사용 */}
 						<div className="flex-shrink-0">
-							<Avatar className="w-32 h-32 md:w-40 md:h-40 border-4 border-gray-200">
-								<AvatarImage src={currentAvatarUrl || undefined} className="object-cover" />
-								<AvatarFallback className="text-4xl font-bold bg-gradient-to-br from-orange-400 to-orange-600 text-white">{profile?.display_name?.charAt(0) || profile?.username?.charAt(0) || "U"}</AvatarFallback>
-							</Avatar>
+							<div className="relative w-32 h-32 md:w-40 md:h-40 border-4 border-gray-200 rounded-full overflow-hidden bg-gradient-to-br from-orange-400 to-orange-600">
+								{currentAvatarUrl && currentAvatarUrl !== "/icon-only.svg" ? (
+									<Image
+										src={currentAvatarUrl}
+										alt={`${profile?.username || 'User'} 프로필 이미지`}
+										fill
+										priority
+										className="object-cover"
+									/>
+								) : (
+									<div className="w-full h-full flex items-center justify-center">
+										<span className="text-4xl font-bold text-white">
+											{profile?.display_name?.charAt(0) || profile?.username?.charAt(0) || "U"}
+										</span>
+									</div>
+								)}
+							</div>
 						</div>
 
 						{/* Profile Info */}
@@ -745,8 +758,10 @@ export default function ProfilePage() {
 						{/* Responsive Grid Layout - 모든 화면에서 2열 통일 (레시피북과 일관성) */}
 						{userItems && userItems.length > 0 ? (
 							<div className="columns-2 gap-3 sm:gap-4 space-y-3 sm:space-y-4">
-								{userItems.map((item) => {
+								{userItems.map((item, index) => {
 									const isRecipe = item.item_type === "recipe"
+									// 🚀 LCP 최적화: 첫 번째 행의 이미지들에 priority 적용 (첫 4개)
+									const isPriorityImage = index < 4
 									
 									return (
 										<div key={item.id} className="break-inside-avoid mb-3 sm:mb-4">
@@ -763,6 +778,7 @@ export default function ProfilePage() {
 																src={item.image_urls[item.thumbnail_index || 0]} 
 																alt={item.title || ''} 
 																fill 
+																priority={isPriorityImage}
 																className="object-cover group-hover:scale-105 transition-transform duration-300" 
 															/>
 														) : (

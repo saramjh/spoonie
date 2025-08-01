@@ -28,12 +28,7 @@ export default function PostPageClient({ postId }: PostPageClientProps) {
         // 🔐 현재 사용자 확인
         const { data: { user } } = await supabase.auth.getUser()
         
-        // 🔍 디버깅: 현재 사용자 정보
-        console.log('🔍 PostPageClient Debug:', {
-          postId,
-          currentUserId: user?.id,
-          isAuthenticated: !!user
-        })
+
         
         // 🚀 클라이언트에서 데이터 조회 (브라우저 세션 인증 사용)
         const { data: postData, error: postError } = await supabase
@@ -52,14 +47,7 @@ export default function PostPageClient({ postId }: PostPageClientProps) {
           .eq('item_type', 'post')
           .single()
         
-        // 🔍 디버깅: 쿼리 결과
-        console.log('🔍 PostPageClient Query Result:', {
-          hasData: !!postData,
-          error: postError?.message,
-          postUserId: postData?.user_id,
-          isPublic: postData?.is_public,
-          title: postData?.title
-        })
+
 
         if (postError) {
           console.error('❌ Post query error:', postError)

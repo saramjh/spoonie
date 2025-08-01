@@ -20,7 +20,7 @@ export default function CreateOptionsModal({ isOpen, onClose }: CreateOptionsMod
 
 	return (
 		<Drawer open={isOpen} onOpenChange={onClose}>
-			<DrawerContent>
+			<DrawerContent className="focus:outline-none">
 				<div className="mx-auto w-full max-w-sm">
 					<DrawerHeader>
 						<DrawerTitle>무엇을 만들까요?</DrawerTitle>

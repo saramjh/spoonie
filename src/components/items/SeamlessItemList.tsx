@@ -325,15 +325,21 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
 
       {/* 아이템 목록 */}
       <div className="space-y-5 px-2 py-2">
-        {feedItems.map((item) => (
-          <div key={item.id || item.item_id} data-item-id={item.id || item.item_id}>
-                            <PostCard 
-              item={item} 
-              currentUser={currentUser}
-              onItemUpdate={() => { swrMutate(); }} // 🚀 삭제시 즉시 업데이트를 위한 mutate 함수 전달
-            />
-          </div>
-        ))}
+        {feedItems.map((item, index) => {
+          // 🚀 LCP 최적화: 첫 번째 3개 포스트에만 priority 적용
+          const isPriorityPost = index < 3
+          
+          return (
+            <div key={item.id || item.item_id} data-item-id={item.id || item.item_id}>
+              <PostCard 
+                item={item} 
+                currentUser={currentUser}
+                priority={isPriorityPost}
+                onItemUpdate={() => { swrMutate(); }} // 🚀 삭제시 즉시 업데이트를 위한 mutate 함수 전달
+              />
+            </div>
+          )
+        })}
       </div>
 
       {/* 무한 스크롤 로딩 */}

@@ -14,6 +14,12 @@ export default function BottomNavBar() {
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 	const [showDebug, setShowDebug] = useState(false)
 
+	const handleCreateButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+		// 🔧 접근성 문제 해결: 모달이 열릴 때 포커스 제거하여 aria-hidden 충돌 방지
+		event.currentTarget.blur()
+		setIsCreateModalOpen(true)
+	}
+
 	const getLinkClass = (href: string, disabled = false) => {
 		const isActive = pathname === href || (href.startsWith("/profile") && pathname.startsWith("/profile"))
 		let classes = `flex flex-col items-center gap-1 ${isActive ? "text-orange-500" : "text-gray-500"}`
@@ -102,7 +108,7 @@ export default function BottomNavBar() {
 					</Link>
 
 					{/* 3. 중앙 생성 버튼 (+) */}
-					<button onClick={() => setIsCreateModalOpen(true)} onDoubleClick={() => setShowDebug(true)} className="flex flex-col items-center gap-1 text-gray-500 transition-all duration-200 hover:text-orange-500 active:scale-95">
+					<button onClick={handleCreateButtonClick} onDoubleClick={() => setShowDebug(true)} className="flex flex-col items-center gap-1 text-gray-500 transition-all duration-200 hover:text-orange-500 active:scale-95">
 						<div className="bg-orange-500 hover:bg-orange-600 active:bg-orange-700 rounded-xl p-3 shadow-bauhaus hover:shadow-bauhaus-lg transition-all duration-200 transform hover:scale-105 active:scale-95">
 							<Plus className="w-6 h-6 text-white" />
 						</div>

@@ -48,16 +48,6 @@ export default function PostEditPage() {
 	const [initialData, setInitialData] = useState<any>(null)
 
 	useEffect(() => {
-		console.log("🔍 PostEditPage: Data state check", {
-			hasBaseItem: !!baseItem,
-			hasCachedItem: !!cachedItem,
-			hasInitialData: !!initialData,
-			isLoading,
-			error: error?.message || error,
-			baseItemType: baseItem?.item_type,
-			baseItemPublic: baseItem?.is_public,
-			baseItemUserId: baseItem?.user_id
-		})
 
 		if (baseItem && !initialData) {
 			// Selective Merge: 서버 데이터 + 캐시된 실시간 필드
@@ -73,25 +63,12 @@ export default function PostEditPage() {
 				})
 			}
 			
-			console.log("🎯 PostEditPage: Selective Merge complete", {
-				hasBaseItem: !!baseItem,
-				hasCachedItem: !!cachedItem,
-				baseCitedRecipes: baseItem.cited_recipe_ids?.length || 0,
-				baseTags: baseItem.tags?.length || 0,
-				baseThumbnail: baseItem.thumbnail_index,
-				cachedThumbnail: cachedItem?.thumbnail_index,
-				finalThumbnail: mergedData.thumbnail_index,
-				dataComplete: !!(mergedData.cited_recipe_ids !== undefined && mergedData.tags !== undefined)
-			})
+
 			
 			setInitialData(mergedData)
 		}
 		// 🆘 긴급 fallback: baseItem 없이 cachedItem만 있는 경우 (비공개→공개 전환 시나리오)
 		else if (!baseItem && !isLoading && cachedItem && cachedItem.id && !initialData) {
-			console.warn("⚠️ PostEditPage: Using cached data as fallback (baseItem missing)", {
-				cachedItemType: cachedItem.item_type,
-				cachedItemPublic: cachedItem.is_public
-			})
 			
 			setInitialData(cachedItem)
 		}
@@ -124,7 +101,6 @@ export default function PostEditPage() {
 
 	// 🎯 로딩 중이거나 initialData가 준비되지 않은 경우 스켈레톤 표시
 	if (!initialData) {
-		console.log("PostEditPage: Waiting for initialData preparation", itemId)
 		return (
 			<div className="p-4">
 				<PostCardSkeleton />
@@ -143,7 +119,7 @@ export default function PostEditPage() {
 		)
 	}
 
-	console.log("🎯 PostEditPage: Using initial data with thumbnail_index:", initialData.thumbnail_index)
+
 
 	return <PostForm 
 		isEditMode={true} 

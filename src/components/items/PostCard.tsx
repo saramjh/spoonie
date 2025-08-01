@@ -37,11 +37,13 @@ import ExpandableText from "@/components/common/ExpandableText"
 export default function PostCard({ 
   item, 
   currentUser, 
-  onItemUpdate 
+  onItemUpdate,
+  priority = false
 }: { 
   item: Item; 
   currentUser?: User | null;
   onItemUpdate?: () => Promise<void> | void;
+  priority?: boolean;
 }) {
   const supabase = createSupabaseBrowserClient()
   const { toast } = useToast()
@@ -272,7 +274,7 @@ export default function PostCard({
             <ImageCarousel 
               images={orderedImages} 
               alt={item.title || `Post by ${item.display_name}`} 
-              priority={true} 
+              priority={priority} 
             />
             {/* 비공개 표시 - 업계표준 Privacy UX */}
             {!item.is_public && (

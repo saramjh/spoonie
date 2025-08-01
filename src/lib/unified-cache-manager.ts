@@ -200,29 +200,24 @@ export class UnifiedCacheManager {
         
       case 'follow':
         const isFollow = delta && delta > 0
-        console.log(`🔄 [executeDbOperation] Processing ${isFollow ? 'follow' : 'unfollow'}:`, {
-          userId,
-          targetUserId: itemId,
-          isFollow,
-          delta
-        })
+
         
         if (isFollow) {
-          console.log(`📝 [executeDbOperation] Inserting follow record`)
+
           const { error, data } = await this.supabase.from('follows').upsert({
             follower_id: userId,
             following_id: itemId // itemId가 targetUserId
           }, { onConflict: 'follower_id,following_id' })
           
-          console.log(`📊 [executeDbOperation] Follow insert result:`, { error: error?.message, data })
+
           if (error) throw error
         } else {
-          console.log(`🗑️ [executeDbOperation] Deleting follow record`)
+
           const { error, count } = await this.supabase.from('follows').delete({ count: 'exact' })
             .eq('follower_id', userId)
             .eq('following_id', itemId)
           
-          console.log(`📊 [executeDbOperation] Follow delete result:`, { error: error?.message, deletedCount: count })
+
           if (error) throw error
           
           if (count === 0) {
@@ -280,63 +275,58 @@ export class UnifiedCacheManager {
   private async updateAllCaches(operation: CacheOperation): Promise<void> {
     const { type, itemId, userId, delta } = operation
     
-    console.log(`🔄 [updateAllCaches] Starting cache updates for ${type}:`, {
-      type,
-      itemId,
-      userId,
-      delta
-    })
+
     
     try {
       // 1. 홈피드 캐시 업데이트
-      console.log(`🔄 [updateAllCaches] Calling updateHomeFeedCache for ${type}`)
+
       await this.updateHomeFeedCache(operation)
-      console.log(`✅ [updateAllCaches] HomeFeedCache completed for ${type}`)
+
     } catch (err) {
-      console.log(`❌ [updateAllCaches] HomeFeedCache failed for ${itemId}:`, err)
+
     }
     
     try {
       // 2. 상세페이지 캐시 업데이트
-      console.log(`🔄 [updateAllCaches] Calling updateItemDetailCache for ${type}`)
+
       await this.updateItemDetailCache(operation)
-      console.log(`✅ [updateAllCaches] ItemDetailCache completed for ${type}`)
+
     } catch (err) {
-      console.log(`❌ [updateAllCaches] ItemDetailCache failed for ${itemId}:`, err)
+
     }
     
     try {
       // 3. 검색 결과 캐시 업데이트
-      console.log(`🔄 [updateAllCaches] Calling updateSearchCache for ${type}`)
+
       await this.updateSearchCache(operation)
-      console.log(`✅ [updateAllCaches] SearchCache completed for ${type}`)
+
     } catch (err) {
-      console.log(`❌ [updateAllCaches] SearchCache failed for ${itemId}:`, err)
+
     }
     
     try {
       // 4. 프로필 캐시 업데이트
       if (userId) {
-        console.log(`🔄 [updateAllCaches] Calling updateProfileCache for ${type}`)
+
         await this.updateProfileCache(operation)
-        console.log(`✅ [updateAllCaches] ProfileCache completed for ${type}`)
+
       } else {
-        console.log(`⚠️ [updateAllCaches] Skipping ProfileCache (no userId) for ${type}`)
+
       }
     } catch (err) {
-      console.log(`❌ [updateAllCaches] ProfileCache failed for ${itemId}:`, err)
+
     }
     
     try {
       // 5. 레시피북 캐시 업데이트 (해당하는 경우)
-      console.log(`🔄 [updateAllCaches] Calling updateRecipeBookCache for ${type}`)
+
       await this.updateRecipeBookCache(operation)
-      console.log(`✅ [updateAllCaches] RecipeBookCache completed for ${type}`)
+
     } catch (err) {
-      console.log(`❌ [updateAllCaches] RecipeBookCache failed for ${itemId}:`, err)
+
     }
     
-    console.log(`✅ [updateAllCaches] All cache updates completed for ${type}`)
+
   }
 
   /**
@@ -345,16 +335,11 @@ export class UnifiedCacheManager {
   private async updateHomeFeedCache(operation: CacheOperation): Promise<void> {
     const { type, itemId, delta, data } = operation
 
-    console.log(`🔄 [updateHomeFeedCache] Processing operation:`, {
-      type,
-      itemId,
-      delta,
-      isFollowType: type === 'follow'
-    })
+
 
     // 🚀 팔로우/언팔로우 시 홈피드 캐시 즉시 무효화 (새로고침 없이 즉시 반영)
     if (type === 'follow') {
-      console.log(`🚀 [updateHomeFeedCache] Follow detected! Invalidating home feed cache`)
+
       
       // 강력한 캐시 무효화: 홈피드 관련 모든 캐시를 완전히 삭제하고 재요청
       const invalidatedKeys: string[] = []
@@ -365,11 +350,11 @@ export class UnifiedCacheManager {
           if (isMatch) {
             invalidatedKeys.push(key)
           }
-          console.log(`🔍 [updateHomeFeedCache] Checking cache key: ${key} - Match: ${isMatch}`)
+
           return isMatch
         },
         async (key) => {
-          console.log(`🔄 [updateHomeFeedCache] Force revalidating key: ${key}`)
+
           return undefined // 강제로 캐시 삭제
         },
         { 
@@ -380,11 +365,11 @@ export class UnifiedCacheManager {
         }
       )
       
-      console.log(`✅ [updateHomeFeedCache] Follow cache invalidation completed for keys:`, invalidatedKeys)
+
       return // 팔로우 액션은 여기서 종료
     }
     
-    console.log(`🔄 [updateHomeFeedCache] Not a follow operation, proceeding with normal cache update`)
+
 
     // Debug: HomeFeedCache update started
 
@@ -529,7 +514,7 @@ export class UnifiedCacheManager {
               foundItem = data as Item
             }
           } catch (error) {
-            console.log(`❌ [ItemDetailCache] Error checking operation data:`, error)
+    
           }
           
           if (foundItem) {
@@ -630,17 +615,11 @@ export class UnifiedCacheManager {
           
           return page.map(item => {
             if (item.id === itemId || item.item_id === itemId) {
-              console.log(`🔄 [ProfileCache] Updating item ${itemId}:`, {
-                originalImages: item.image_urls?.length || 0,
-                originalUrls: item.image_urls
-              })
+
               const calculateUpdates = this.calculateUpdates(operation.type, operation.delta)
               const updates = calculateUpdates(item)
               const updatedItem = { ...item, ...updates }
-              console.log(`✅ [ProfileCache] Updated item ${itemId}:`, {
-                updatedImages: updatedItem.image_urls?.length || 0,
-                updatedUrls: updatedItem.image_urls
-              })
+
               return updatedItem
             }
             return item
@@ -657,16 +636,11 @@ export class UnifiedCacheManager {
   private async updateRecipeBookCache(operation: CacheOperation): Promise<void> {
     const { type, itemId, delta, data } = operation
     
-    console.log(`🔄 [updateRecipeBookCache] Processing operation:`, {
-      type,
-      itemId,
-      delta,
-      isFollowType: type === 'follow'
-    })
+
     
     // 🚀 팔로우/언팔로우 시 "모두의 레시피" 캐시 즉시 무효화 (새로고침 없이 즉시 반영)
     if (type === 'follow') {
-      console.log(`🚀 [updateRecipeBookCache] Follow detected! Invalidating all_recipes cache`)
+
       
       // 강력한 캐시 무효화: all_recipes 관련 모든 캐시를 완전히 삭제하고 재요청
       const invalidatedKeys: string[] = []
@@ -680,11 +654,11 @@ export class UnifiedCacheManager {
           if (isMatch) {
             invalidatedKeys.push(key)
           }
-          console.log(`🔍 [updateRecipeBookCache] Checking cache key: ${key} - Match: ${isMatch}`)
+
           return isMatch
         },
         async (key) => {
-          console.log(`🔄 [updateRecipeBookCache] Force revalidating key: ${key}`)
+
           return undefined // 강제로 캐시 삭제
         },
         { 
@@ -695,16 +669,16 @@ export class UnifiedCacheManager {
         }
       )
       
-      console.log(`✅ [updateRecipeBookCache] Follow cache invalidation completed for keys:`, invalidatedKeys)
+
       
       // 추가: 직접적으로 recipes 페이지 데이터 새로고침 트리거
-      console.log(`🔄 [updateRecipeBookCache] Additional cache refresh for recipes page`)
+
       await mutate((key) => typeof key === 'string' && key.startsWith('recipes||'), undefined, { revalidate: true })
       
       return // 팔로우 액션은 여기서 종료
     }
     
-    console.log(`🔄 [updateRecipeBookCache] Not a follow operation, proceeding with normal cache update`)
+
     
     // 🔧 다른 액션들 (like, comment 등)에 대한 기존 캐시 업데이트 로직
     await mutate(
@@ -743,17 +717,11 @@ export class UnifiedCacheManager {
           
           return page.map(item => {
             if (item.id === itemId || item.item_id === itemId) {
-              console.log(`🔄 [RecipeCache] Updating item ${itemId}:`, {
-                originalImages: item.image_urls?.length || 0,
-                originalUrls: item.image_urls
-              })
+
               const calculateUpdates = this.calculateUpdates(type, delta)
               const updates = calculateUpdates(item)
               const updatedItem = { ...item, ...updates }
-              console.log(`✅ [RecipeCache] Updated item ${itemId}:`, {
-                updatedImages: updatedItem.image_urls?.length || 0,
-                updatedUrls: updatedItem.image_urls
-              })
+
               return updatedItem
             }
             return item
@@ -863,7 +831,7 @@ export class UnifiedCacheManager {
     const rollbackData = this.rollbackStack.get(operationId)
     if (!rollbackData) return
     
-    console.log(`↩️ CacheManager: Rolling back ${rollbackData.operation.type}`)
+    
     
     // 모든 캐시를 이전 상태로 복원
     await this.restorePreviousState(rollbackData)
@@ -902,7 +870,7 @@ export class UnifiedCacheManager {
    * 🔄 전체 캐시 동기화 (긴급 상황용)
    */
   async invalidateAllCaches(): Promise<void> {
-    console.log(`🔄 CacheManager: Emergency cache invalidation`)
+
     
     await Promise.all([
       mutate((key) => typeof key === 'string' && key.startsWith('items|')),
@@ -1055,11 +1023,7 @@ export const cacheManager = {
 
   // 🚀 팔로우/언팔로우 처리 (SSA 기반)
   follow: async (currentUserId: string, targetUserId: string, isFollow: boolean) => {
-    console.log(`🔄 [CacheManager] ${isFollow ? 'Follow' : 'Unfollow'} operation:`, {
-      currentUserId,
-      targetUserId,
-      isFollow
-    })
+
     
     const manager = getCacheManager()
     const rollback = await manager.smartUpdate({
@@ -1069,7 +1033,7 @@ export const cacheManager = {
       delta: isFollow ? 1 : -1, // 팔로우는 +1, 언팔로우는 -1
     })
     
-    console.log(`✅ [CacheManager] ${isFollow ? 'Follow' : 'Unfollow'} operation completed`)
+
     return rollback
   }
 } 

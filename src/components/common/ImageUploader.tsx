@@ -33,7 +33,7 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 	// 🚀 SSA: thumbnailIndex prop 변경 감지 및 동기화
 	useEffect(() => {
 		if (thumbnailIndex !== currentThumbnailIndex) {
-			console.log(`🎯 ImageUploader: Syncing thumbnail index ${currentThumbnailIndex} → ${thumbnailIndex}`)
+	
 			setCurrentThumbnailIndex(thumbnailIndex)
 		}
 	}, [thumbnailIndex, currentThumbnailIndex])

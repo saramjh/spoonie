@@ -665,13 +665,6 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 					</div>
 
 					<div ref={commentsRef} className="p-4">
-						{/* 🔍 디버깅: SimplifiedCommentsSection 렌더링 확인 */}
-						{console.log('🔍 ItemDetailView: SimplifiedCommentsSection 렌더링 시도', {
-							currentUserId: currentUser?.id,
-							stableItemId,
-							commentsCount,
-							hasValidItemId: !!stableItemId
-						})}
 						<SimplifiedCommentsSection 
 							currentUserId={currentUser?.id} 
 							itemId={stableItemId} 

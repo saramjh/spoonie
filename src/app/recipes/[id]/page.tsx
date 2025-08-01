@@ -10,8 +10,6 @@ export default function RecipeDetailPage() {
 	const params = useParams()
 	const itemId = params.id as string
 
-	console.log(`📍 RecipeDetailPage: Loading recipe with ID: ${itemId}`)
-
 	// 🧭 네비게이션 체인 유지 (중간 경유지 역할)
 	useNavigation({ trackHistory: true })
 
@@ -20,7 +18,6 @@ export default function RecipeDetailPage() {
 
 	// 로딩 상태
 	if (isLoading) {
-		console.log(`⏳ RecipeDetailPage: Loading item ${itemId}`)
 		return (
 			<div className="p-4">
 				<PostCardSkeleton />

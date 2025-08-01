@@ -28,12 +28,7 @@ export default function RecipePageClient({ recipeId }: RecipePageClientProps) {
         // 🔐 현재 사용자 확인
         const { data: { user } } = await supabase.auth.getUser()
         
-        // 🔍 디버깅: 현재 사용자 정보
-        console.log('🔍 RecipePageClient Debug:', {
-          recipeId,
-          currentUserId: user?.id,
-          isAuthenticated: !!user
-        })
+
         
         // 🚀 클라이언트에서 데이터 조회 (브라우저 세션 인증 사용)
         const { data: recipeData, error: recipeError } = await supabase
@@ -64,14 +59,7 @@ export default function RecipePageClient({ recipeId }: RecipePageClientProps) {
           .eq('item_type', 'recipe')
           .single()
         
-        // 🔍 디버깅: 쿼리 결과
-        console.log('🔍 RecipePageClient Query Result:', {
-          hasData: !!recipeData,
-          error: recipeError?.message,
-          recipeUserId: recipeData?.user_id,
-          isPublic: recipeData?.is_public,
-          title: recipeData?.title
-        })
+
 
         if (recipeError) {
           console.error('❌ Recipe query error:', recipeError)
