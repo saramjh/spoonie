@@ -9,7 +9,7 @@ import debounce from 'lodash.debounce'
 interface Recipe {
   id: string;
   title: string;
-  author_name: string; // Changed from profiles.user_name
+  username: string;
 }
 
 interface RecipeCitationModalProps {
@@ -32,17 +32,27 @@ export default function RecipeCitationModal({ isOpen, onClose, onRecipeSelect }:
 
     setIsLoading(true)
     const { data, error } = await supabase
-      .from('recipes_with_author') // Changed to use the view
-      .select('id, title, author_name') // Select author_name directly
-      .ilike('title', `%${query}%`)
+      .from('items')
+      .select(`
+        id, title,
+        author:profiles!items_user_id_fkey(username)
+      `)
+      .eq('item_type', 'recipe')
       .eq('is_public', true)
+      .ilike('title', `%${query}%`)
       .limit(10)
 
     if (error) {
       console.error('Error searching recipes:', error)
       setResults([])
     } else {
-      setResults(data as Recipe[])
+      // 데이터 변환: author.username을 recipe.username으로 매핑
+      const formattedData = data.map(item => ({
+        id: item.id,
+        title: item.title,
+        username: (item.author as any)?.username || '익명'
+      }))
+      setResults(formattedData)
     }
     setIsLoading(false)
   }
@@ -87,7 +97,7 @@ export default function RecipeCitationModal({ isOpen, onClose, onRecipeSelect }:
               className="p-3 border rounded-md hover:bg-gray-100 cursor-pointer"
             >
               <p className="font-semibold">{recipe.title}</p>
-              <p className="text-sm text-gray-500">by {recipe.author_name || '알 수 없는 사용자'}</p>
+              <p className="text-sm text-gray-500">by {recipe.username || '알 수 없는 사용자'}</p>
             </div>
           ))}
         </div>

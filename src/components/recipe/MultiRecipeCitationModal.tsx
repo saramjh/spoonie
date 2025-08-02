@@ -13,7 +13,7 @@ import debounce from "lodash.debounce"
 interface Recipe {
 	id: string
 	title: string
-	author_name: string
+	username: string
 }
 
 interface SelectedRecipe {
@@ -43,13 +43,28 @@ export default function MultiRecipeCitationModal({ isOpen, onClose, onRecipesSel
 		}
 
 		setIsLoading(true)
-		const { data, error } = await supabase.from("recipes_with_author").select("id, title, author_name").ilike("title", `%${query}%`).eq("is_public", true).limit(20)
+		const { data, error } = await supabase
+			.from("items")
+			.select(`
+				id, title,
+				author:profiles!items_user_id_fkey(username)
+			`)
+			.eq("item_type", "recipe")
+			.eq("is_public", true)
+			.ilike("title", `%${query}%`)
+			.limit(20)
 
 		if (error) {
 			console.error("Error searching recipes:", error)
 			setResults([])
 		} else {
-			setResults(data as Recipe[])
+			// 데이터 변환: author.username을 recipe.username으로 매핑
+			const formattedData = data.map(item => ({
+				id: item.id,
+				title: item.title,
+				username: (item.author as any)?.username || '익명'
+			}))
+			setResults(formattedData)
 		}
 		setIsLoading(false)
 	}
@@ -154,7 +169,7 @@ export default function MultiRecipeCitationModal({ isOpen, onClose, onRecipesSel
 												<div className="flex items-center justify-between">
 													<div className="flex-1 min-w-0">
 														<h3 className="font-medium text-sm truncate">{recipe.title}</h3>
-														<p className="text-xs text-gray-500">by {recipe.author_name}</p>
+														<p className="text-xs text-gray-500">by {recipe.username}</p>
 													</div>
 													{isSelected ? (
 														<Badge variant="secondary" className="ml-2 bg-orange-500 text-white">

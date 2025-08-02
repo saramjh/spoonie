@@ -74,7 +74,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
       .select(
         `
         id, title, created_at, item_type, image_urls, user_id, cited_recipe_ids,
-        author:profiles!items_user_id_fkey(display_name, username, public_id, avatar_url)
+        author:profiles!items_user_id_fkey(username, public_id, avatar_url)
         `
       )
       .eq('item_type', 'recipe')
@@ -95,9 +95,9 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
         item_type: item.item_type,
         created_at: item.created_at,
         is_public: true, // 검색 결과에서는 is_public이 항상 true라고 가정
-        username: item.author?.[0]?.username || "익명",
-        avatar_url: item.author?.[0]?.avatar_url || null,
-        user_public_id: item.author?.[0]?.public_id || null,
+        username: (item.author as any)?.username || "익명",
+        avatar_url: (item.author as any)?.avatar_url || null,
+        user_public_id: (item.author as any)?.public_id || null,
         user_email: null, // 이메일은 가져오지 않음
         title: item.title,
         content: null, // 게시물이 아니므로 null
