@@ -178,7 +178,7 @@ export class BatchProcessor<T> {
  * 💰 브라우저 캐시 유틸리티
  */
 export class BrowserCache {
-  private static setWithTTL(key: string, value: any, ttl: number, storage: Storage): void {
+  private static setWithTTL(key: string, value: unknown, ttl: number, storage: Storage): void {
     const item = {
       value,
       expiry: Date.now() + ttl
@@ -186,7 +186,7 @@ export class BrowserCache {
     storage.setItem(key, JSON.stringify(item))
   }
 
-  private static getWithTTL(key: string, storage: Storage): any | null {
+  private static getWithTTL(key: string, storage: Storage): unknown | null {
     const itemStr = storage.getItem(key)
     if (!itemStr) return null
 
@@ -204,20 +204,20 @@ export class BrowserCache {
   }
 
   // 로컬 스토리지 (5분 TTL)
-  static setLocal(key: string, value: any): void {
+  static setLocal(key: string, value: unknown): void {
     this.setWithTTL(key, value, CACHE_CONFIG.LOCAL_STORAGE_TTL, localStorage)
   }
 
-  static getLocal(key: string): any | null {
+  static getLocal(key: string): unknown | null {
     return this.getWithTTL(key, localStorage)
   }
 
   // 세션 스토리지 (30분 TTL)
-  static setSession(key: string, value: any): void {
+  static setSession(key: string, value: unknown): void {
     this.setWithTTL(key, value, CACHE_CONFIG.SESSION_STORAGE_TTL, sessionStorage)
   }
 
-  static getSession(key: string): any | null {
+  static getSession(key: string): unknown | null {
     return this.getWithTTL(key, sessionStorage)
   }
 }
@@ -227,7 +227,7 @@ export class BrowserCache {
  */
 export function useNetworkOptimization() {
   const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true
-  const connection = (navigator as any)?.connection
+  const connection = (navigator as Navigator & { connection?: { effectiveType?: string; saveData?: boolean } })?.connection
 
   return {
     isOnline,

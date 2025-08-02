@@ -26,7 +26,7 @@ export interface AppError extends Error {
   type: ErrorType
   code?: string
   statusCode?: number
-  context?: Record<string, any>
+  context?: Record<string, unknown>
   retryable?: boolean
   userMessage?: string
 }

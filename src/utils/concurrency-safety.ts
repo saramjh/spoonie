@@ -86,7 +86,7 @@ interface QueuedOperation<T> {
   id: string
   operation: () => Promise<T>
   resolve: (value: T) => void
-  reject: (error: any) => void
+  reject: (error: unknown) => void
   priority: number
   timestamp: number
 }
@@ -178,7 +178,7 @@ interface OptimisticUpdate<T> {
   optimisticData: T
   operation: () => Promise<T>
   onSuccess?: (data: T) => void
-  onError?: (error: any, originalData: T) => void
+  onError?: (error: unknown, originalData: T) => void
   rollback: () => void
   timestamp: number
   timeout?: NodeJS.Timeout
@@ -196,7 +196,7 @@ export class OptimisticUpdateManager<T = any> {
     rollback: () => void,
     options: {
       onSuccess?: (data: T) => void
-      onError?: (error: any, originalData: T) => void
+      onError?: (error: unknown, originalData: T) => void
       timeout?: number
     } = {}
   ): Promise<T> {

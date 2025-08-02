@@ -32,12 +32,12 @@ export default function AppWrapper({ children }: { children: React.ReactNode }) 
 	const mainBg = isRecipeBook ? "bg-gray-50" : isSearchPage ? "bg-white" : "bg-gray-50"
 
 	return (
-		<div className={`relative flex flex-col h-screen w-full max-w-md mx-auto ${containerBg} overflow-hidden`}>
+		<div className={`relative flex flex-col min-h-screen w-full max-w-md mx-auto ${containerBg}`}>
 			<PullToRefreshIndicator />
-			<div style={wrapperStyle} className="relative flex flex-col w-full h-full">
+			<div style={wrapperStyle} className="relative flex flex-col w-full">
 				{!noHeader && <Header />}
-				<main className={`flex-1 w-full overflow-y-auto ${mainBg}`}>
-					<div className={`h-full ${!noBottomNav ? "pb-16" : ""}`}>{children}</div>
+				<main className={`flex-1 w-full ${mainBg}`}>
+					<div className={`${!noBottomNav ? "pb-16" : ""}`}>{children}</div>
 				</main>
 			</div>
 			{!noBottomNav && <BottomNavBar />}

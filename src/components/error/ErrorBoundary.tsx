@@ -14,7 +14,7 @@ import { logger, logErrorBoundary, type ErrorBoundaryState } from '@/lib/monitor
 interface ErrorBoundaryProps {
   children: ReactNode
   fallback?: ReactNode
-  onError?: (error: Error, errorInfo: any) => void
+  onError?: (error: Error, errorInfo: React.ErrorInfo) => void
   level?: 'page' | 'component' | 'global'
 }
 
@@ -372,7 +372,7 @@ export function withErrorBoundary<P extends object>(
  * 에러 처리 훅
  */
 export function useErrorHandler() {
-  const handleError = React.useCallback((error: Error, context?: Record<string, any>) => {
+  const handleError = React.useCallback((error: Error, context?: Record<string, unknown>) => {
     logger.error('Hook-based error', error, context)
     
     // Error Boundary로 에러 전파

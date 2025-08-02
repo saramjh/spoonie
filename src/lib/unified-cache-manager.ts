@@ -41,7 +41,7 @@ export class UnifiedCacheManager {
   private pendingOperations = new Map<string, {
     operation: CacheOperation
     resolve: (rollback: (() => void) | null) => void
-    reject: (error: any) => void
+    reject: (error: unknown) => void
     timestamp: number
   }>()
   private processingItems = new Set<string>()
