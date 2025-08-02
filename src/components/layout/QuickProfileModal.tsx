@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+
 import Link from 'next/link'
+import type { User } from "@supabase/supabase-js"
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import {
@@ -15,7 +16,7 @@ import {
 } from "@/components/ui/drawer"
 import { createSupabaseBrowserClient } from '@/lib/supabase'
 import useSWR from 'swr'
-import { Settings, LogOut, PlusCircle, User as UserIcon } from 'lucide-react'
+import { LogOut, PlusCircle, User as UserIcon } from 'lucide-react'
 
 interface UserProfile {
   id: string;
@@ -66,7 +67,7 @@ const fetchRecipeCount = async (userId: string) => {
 interface QuickProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
-  user: any;
+  user: User;
 }
 
 export default function QuickProfileModal({ isOpen, onClose, user }: QuickProfileModalProps) {

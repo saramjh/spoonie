@@ -13,9 +13,9 @@ import { useToast } from "@/hooks/use-toast"
 import { cacheManager } from "@/lib/unified-cache-manager"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import { notificationService } from "@/lib/notification-service"
+import type { Item } from "@/types/item"
 import LikersModal from "./LikersModal"
 import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
-import type { Item } from "@/types/item"
 
 interface SimplifiedLikeButtonProps {
   itemId: string
@@ -25,7 +25,7 @@ interface SimplifiedLikeButtonProps {
   initialLikesCount?: number
   initialHasLiked?: boolean
   isAuthLoading?: boolean
-  cachedItem?: any // SSA 캐시된 완전한 아이템 데이터 (이미지 보존용)
+  	cachedItem?: Item // SSA 캐시된 완전한 아이템 데이터 (이미지 보존용)
   onLikeChange?: (likesCount: number, hasLiked: boolean) => void
 }
 
@@ -37,7 +37,7 @@ export const SimplifiedLikeButton = forwardRef<HTMLButtonElement, SimplifiedLike
   initialHasLiked = false,
   isAuthLoading = false,
   cachedItem: providedCachedItem,
-  onLikeChange
+  onLikeChange: _onLikeChange // Not used in current implementation
 }, ref) => {
   // 🚀 SSA 표준: 완전한 아이템 데이터를 fallback으로 사용 (이미지 보존)
 
@@ -49,8 +49,8 @@ export const SimplifiedLikeButton = forwardRef<HTMLButtonElement, SimplifiedLike
     // 🎯 좋아요/북마크 상태만 보완 (덮어쓰지 않고 보완만)
     likes_count: providedCachedItem.likes_count ?? initialLikesCount,
     is_liked: providedCachedItem.is_liked ?? initialHasLiked,
-    bookmarks_count: (providedCachedItem as any).bookmarks_count ?? 0,
-    is_bookmarked: (providedCachedItem as any).is_bookmarked ?? false
+    bookmarks_count: providedCachedItem.bookmarks_count ?? 0,
+    is_bookmarked: providedCachedItem.is_bookmarked ?? false
   } : {
     // 🛡️ 안전한 기본값 (providedCachedItem이 없을 때만)
     id: itemId,
@@ -135,7 +135,7 @@ export const SimplifiedLikeButton = forwardRef<HTMLButtonElement, SimplifiedLike
       
       // 🚀 SSA 기반: 완전한 Seamless Sync Architecture 패턴 유지
       // 🔑 이미지 정보 보존하면서 Request Deduplication + Batch Processing 유지
-      const rollback = await cacheManager.like(itemId, currentUserId, newHasLiked, cachedItem)
+      await cacheManager.like(itemId, currentUserId, newHasLiked, cachedItem)
       
       // 🔔 알림 발송 (좋아요한 경우에만)
       if (newHasLiked && currentUserId) {
@@ -146,7 +146,7 @@ export const SimplifiedLikeButton = forwardRef<HTMLButtonElement, SimplifiedLike
       // 📞 부모 컴포넌트에게 알림 (캐시 매니저가 업데이트한 후의 정확한 값 전달)
       // onLikeChange는 cacheManager 업데이트 후 useSSAItemCache를 통해 자동으로 반영됨
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`❌ SimplifiedLikeButton: Error for ${itemId}:`, error)
       
       toast({
@@ -159,7 +159,7 @@ export const SimplifiedLikeButton = forwardRef<HTMLButtonElement, SimplifiedLike
       isProcessingRef.current = false
       setIsLoading(false)
     }
-  }, [currentUserId, isAuthLoading, hasLiked, likesCount, itemId, onLikeChange, toast, isLoading])
+  }, [currentUserId, isAuthLoading, hasLiked, itemId, toast, cachedItem])
 
   return (
     <>

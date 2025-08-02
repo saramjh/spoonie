@@ -197,7 +197,7 @@ export default function NotificationsPage() {
     mutate(`unread_notifications_count_${currentUser.id}`, remainingUnreadCount);
 
     try {
-      const { error, count } = await supabase
+      const { error } = await supabase
         .from('notifications')
         .delete({ count: 'exact' })
         .in('id', idsToDelete)

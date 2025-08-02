@@ -77,7 +77,7 @@ export function useRealtimeSync() {
    * ❤️ 좋아요 Optimistic 업데이트
    */
   const handleOptimisticLike = useCallback(async (update: OptimisticUpdate) => {
-    const { id: itemId, action, data } = update
+    const { id: itemId, action } = update
     
     // 홈피드 캐시 업데이트
     await mutate(
@@ -333,7 +333,7 @@ export function useRealtimeSync() {
    * ❤️ 좋아요 변경사항 처리
    */
   const handleLikeChange = useCallback(async (change: RealtimeChange) => {
-    const { eventType, new: newData, old: oldData } = change
+    const { new: newData, old: oldData } = change
     const itemId = newData?.item_id || oldData?.item_id
     
     if (!itemId) return
@@ -371,7 +371,7 @@ export function useRealtimeSync() {
    * 💬 댓글 변경사항 처리
    */
   const handleCommentChange = useCallback(async (change: RealtimeChange) => {
-    const { eventType, new: newData, old: oldData } = change
+    const { new: newData, old: oldData } = change
     const itemId = newData?.item_id || oldData?.item_id
     
     if (!itemId) return
@@ -412,8 +412,7 @@ export function useRealtimeSync() {
   /**
    * 👥 팔로우 변경사항 처리
    */
-  const handleFollowChange = useCallback(async (change: RealtimeChange) => {
-    const { eventType, new: newData, old: oldData } = change
+  const handleFollowChange = useCallback(async (_change: RealtimeChange) => {
     
     // 팔로우 관련 데이터 새로고침
     await mutate(

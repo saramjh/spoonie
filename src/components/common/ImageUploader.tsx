@@ -19,10 +19,10 @@ interface ImageUploaderProps {
 	thumbnailIndex?: number
 	onThumbnailChange?: (index: number) => void
 	showThumbnailSelector?: boolean
-	isEditMode?: boolean // 🚀 수정 모드 여부
+
 }
 
-export default function ImageUploader({ images, onImagesChange, maxImages = 5, label = "이미지 업로드", placeholder = "이미지를 추가해주세요", thumbnailIndex = 0, onThumbnailChange, showThumbnailSelector = true, isEditMode = false }: ImageUploaderProps) {
+export default function ImageUploader({ images, onImagesChange, maxImages = 5, label = "이미지 업로드", placeholder = "이미지를 추가해주세요", thumbnailIndex = 0, onThumbnailChange, showThumbnailSelector = true }: ImageUploaderProps) {
 	const fileInputRef = useRef<HTMLInputElement>(null)
 	const { toast } = useToast()
 	const [isProcessing, setIsProcessing] = useState(false)

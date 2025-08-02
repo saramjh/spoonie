@@ -64,23 +64,8 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	const supabase = createSupabaseBrowserClient()
 	const { mutate } = useSWRConfig()
 
-	// 🛡️ 방어적 프로그래밍: item이 없을 때의 처리
-	if (!item) {
-		return (
-			<div className="flex flex-col h-full items-center justify-center p-8">
-				<div className="text-center space-y-4">
-					<div className="w-16 h-16 bg-gray-200 rounded-full animate-pulse mx-auto"></div>
-					<div className="space-y-2">
-						<div className="h-4 bg-gray-200 rounded animate-pulse w-48"></div>
-						<div className="h-3 bg-gray-200 rounded animate-pulse w-32 mx-auto"></div>
-					</div>
-					<p className="text-gray-500 text-sm">컨텐츠를 불러오는 중...</p>
-				</div>
-			</div>
-		)
-	}
-
-	const isRecipe = item.item_type === "recipe"
+	// 🛡️ early return 제거 - hooks 호출 순서 보장
+	const isRecipe = item?.item_type === "recipe"
 
 	// 🛡️ Hook 안정성을 위한 값 안정화
 	const stableItemId = useMemo(() => {
@@ -93,14 +78,46 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	}, [item?.item_id, item?.id])
 	
 	// 🚀 SSA 표준: items 테이블 데이터에 실시간 상태 기본값 추가
-	const stableFallbackData = useMemo(() => ({
-		...item,
-		likes_count: item?.likes_count || 0,
-		comments_count: item?.comments_count || 0,
-		is_liked: item?.is_liked || false,
-		is_bookmarked: item?.is_bookmarked || false,
-		bookmarks_count: item?.bookmarks_count || 0
-	}), [item])
+	const stableFallbackData = useMemo(() => {
+		if (!item || !stableItemId) {
+			// 🎯 타입 안전성: 완전한 Item 타입 기본 fallback 데이터 제공
+			return {
+				id: stableItemId || 'unknown',
+				item_id: stableItemId || 'unknown',
+				user_id: '',
+				item_type: 'post' as const,
+				created_at: new Date().toISOString(),
+				title: null,
+				content: null,
+				description: null,
+				image_urls: [],
+				thumbnail_index: 0,
+				tags: null,
+				is_public: true,
+				color_label: null,
+				servings: null,
+				cooking_time_minutes: null,
+				recipe_id: null,
+				cited_recipe_ids: null,
+				username: '',
+				likes_count: 0,
+				comments_count: 0,
+				is_liked: false,
+				is_following: false,
+				bookmarks_count: 0,
+				is_bookmarked: false
+			}
+		}
+		return {
+			...item,
+			id: stableItemId, // 🎯 타입 안전성: 명시적 id 설정
+			likes_count: item?.likes_count || 0,
+			comments_count: item?.comments_count || 0,
+			is_liked: item?.is_liked || false,
+			is_bookmarked: item?.is_bookmarked || false,
+			bookmarks_count: item?.bookmarks_count || 0
+		}
+	}, [item, stableItemId])
 
 	// 🚀 SSA 발전: 실시간 캐시 업데이트 구독 (홈화면과 동일) - hooks를 조건부 렌더링 전에 호출
 	const cachedItem = useSSAItemCache(stableItemId || 'null', stableFallbackData)
@@ -113,10 +130,10 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	})
 
 	// SWR 호출 - 조건부 렌더링 전에 호출
-	const { data: citedRecipe } = useSWR(item.item_type === "post" && item.recipe_id ? `recipeTitle:${item.recipe_id}` : null, fetcher)
+	const { data: citedRecipe } = useSWR(item?.item_type === "post" && item?.recipe_id ? `recipeTitle:${item.recipe_id}` : null, fetcher)
 
 	// cited_recipe_ids 처리 - 캐싱된 훅 사용
-	const { citedRecipes, isLoading: citedRecipesLoading } = useCitedRecipes(item.cited_recipe_ids)
+	const { citedRecipes, isLoading: citedRecipesLoading } = useCitedRecipes(item?.cited_recipe_ids)
 
 	// 🚀 SSA 표준: 상태 관리 - 조건부 렌더링 전에 호출
 	const [commentsCount, setCommentsCount] = useState(cachedItem?.comments_count || 0)
@@ -145,10 +162,10 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 
 	// 아이템 상태 동기화 useEffect
 	useEffect(() => {
-		setLocalLikesCount(item.likes_count || 0)
-		setLocalHasLiked(item.is_liked || false)
-		setCommentsCount(item.comments_count || 0)
-	}, [item.likes_count, item.is_liked, item.comments_count])
+		setLocalLikesCount(item?.likes_count || 0)
+		setLocalHasLiked(item?.is_liked || false)
+		setCommentsCount(item?.comments_count || 0)
+	}, [item?.likes_count, item?.is_liked, item?.comments_count])
 
 	// 현재 사용자 조회 useEffect
 	useEffect(() => {
@@ -222,6 +239,22 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 				variant: "destructive",
 			})
 		}
+	}
+	
+	// 🛡️ 방어적 렌더링: item이 없을 때의 처리 (hooks 호출 후)
+	if (!item) {
+		return (
+			<div className="flex flex-col h-full items-center justify-center p-8">
+				<div className="text-center space-y-4">
+					<div className="w-16 h-16 bg-gray-200 rounded-full animate-pulse mx-auto"></div>
+					<div className="space-y-2">
+						<div className="h-4 bg-gray-200 rounded animate-pulse w-48"></div>
+						<div className="h-3 bg-gray-200 rounded animate-pulse w-32 mx-auto"></div>
+					</div>
+					<p className="text-gray-500 text-sm">컨텐츠를 불러오는 중...</p>
+				</div>
+			</div>
+		)
 	}
 	
 	// 🛡️ ID가 없으면 에러 상태 표시 - 모든 hooks 호출 후 조건부 렌더링

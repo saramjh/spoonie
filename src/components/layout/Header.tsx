@@ -7,6 +7,7 @@ import { Bell, Bookmark } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import useSWR from 'swr';
 import { useEffect, useState } from 'react';
+import type { User } from '@supabase/supabase-js';
 import { default as NextImage } from 'next/image';
 import LoginPromptSheet from "@/components/auth/LoginPromptSheet";
 
@@ -29,8 +30,8 @@ const fetchUnreadNotificationsCount = async (userId: string) => {
 export default function Header() {
   const router = useRouter();
   const supabase = createSupabaseBrowserClient();
-  const [user, setUser] = useState<any>(null);
-  const [isShaking, setIsShaking] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const isShaking = false; // No animation state needed currently
   const [showBookmarkPrompt, setShowBookmarkPrompt] = useState(false);
   const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
 

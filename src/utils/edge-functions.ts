@@ -70,7 +70,7 @@ export async function optimizeImagesEdge(
   request: ImageOptimizationRequest
 ): Promise<ImageOptimizationResult> {
   // console.log(`🏃‍♂️ Edge: Optimizing ${request.images.length} images...`)
-  const startTime = Date.now()
+  // const startTime = Date.now() // Performance tracking not used
   
   const supabase = createSupabaseBrowserClient()
   
@@ -84,8 +84,8 @@ export async function optimizeImagesEdge(
       throw new Error(`Image optimization failed: ${error.message}`)
     }
 
-    const endTime = Date.now()
-    const duration = endTime - startTime
+    // const endTime = Date.now() // Performance tracking not used
+    // const duration = endTime - startTime // Performance tracking not used
     
     // Edge: Images optimized
 
@@ -104,7 +104,7 @@ export async function sendNotificationEdge(
   request: NotificationRequest
 ): Promise<NotificationResult> {
   // console.log(`🔔 Edge: Sending ${request.type} notification...`)
-  const startTime = Date.now()
+  // const startTime = Date.now() // Performance tracking not used
   
   const supabase = createSupabaseBrowserClient()
   
@@ -118,8 +118,8 @@ export async function sendNotificationEdge(
       throw new Error(`Notification sending failed: ${error.message}`)
     }
 
-    const endTime = Date.now()
-    const duration = endTime - startTime
+    // const endTime = Date.now() // Performance tracking not used
+    // const duration = endTime - startTime // Performance tracking not used
     
     // console.log(`✅ Edge: Notification sent in ${duration}ms`, {
     //   type: request.type,

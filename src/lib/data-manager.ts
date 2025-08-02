@@ -14,8 +14,7 @@ import { createSupabaseBrowserClient } from './supabase-client'
 import { getCacheManager } from './unified-cache-manager'
 
 // 🚀 임시로 optimistic 함수들을 정의 (기존 코드 호환성을 위해)
-const optimisticCommentUpdate = (...args: any[]) => {} // Handled by unified cache manager
-const updateInfiniteCache = (...args: any[]) => {} // Handled by unified cache manager
+// Handled by unified cache manager
 import { createSWRKey, CacheInvalidators } from './cache-keys'
 import type { Item } from '@/types/item'
 
@@ -176,7 +175,7 @@ export class DataManager {
     try {
       const targetAction = currentlyLiked ? 'remove' : 'add'
       const newLikeState = !currentlyLiked
-      const delta = newLikeState ? 1 : -1
+      // const delta = newLikeState ? 1 : -1 // Handled by unified cache manager
 
       if (!options.skipOptimistic) {
         // 🚀 통합 캐시 매니저가 옵티미스틱 업데이트를 처리
@@ -184,11 +183,11 @@ export class DataManager {
       }
 
       if (targetAction === 'add') {
-        const { error } = await this.supabase
+        await this.supabase
           .from('likes')
           .insert({ item_id: itemId, user_id: this.currentUserId! })
       } else {
-        const { error } = await this.supabase
+        await this.supabase
           .from('likes')
           .delete()
           .eq('item_id', itemId)

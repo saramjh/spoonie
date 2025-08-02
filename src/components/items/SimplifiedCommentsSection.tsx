@@ -18,12 +18,13 @@ import { timeAgo } from "@/lib/utils"
 import { notificationService } from "@/lib/notification-service"
 import Link from "next/link"
 import useSWR from "swr"
+import type { Item } from "@/types/item"
 
 interface SimplifiedCommentsSectionProps {
   currentUserId?: string
   itemId: string
   onCommentsCountChange?: (count: number) => void
-  cachedItem?: any // 🔑 전체 아이템 데이터 추가
+  cachedItem?: Item // 🔑 전체 아이템 데이터 추가
 }
 
 export default function SimplifiedCommentsSection({ 

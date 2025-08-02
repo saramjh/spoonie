@@ -3,7 +3,7 @@
  * 2024-2025 AI 검색 기준에 따른 사이트 진단
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
 interface AISearchCriteria {
   criterion: string
@@ -14,7 +14,7 @@ interface AISearchCriteria {
   priority: 'high' | 'medium' | 'low'
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   const auditResults: AISearchCriteria[] = [
     
     // ✅ 완료된 항목들

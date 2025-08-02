@@ -2,7 +2,6 @@
 
 import { useEffect, useCallback, useRef } from 'react'
 import { mutate } from 'swr'
-import { useRouter } from 'next/navigation'
 
 /**
  * 🚀 업계 표준: History API 기반 히스토리 뒤로가기 동기화
@@ -24,11 +23,11 @@ export function useHistorySync(options: {
     debug = false 
   } = options
   
-  const router = useRouter()
+  // const router = useRouter() // Not used in current implementation
   const lastPathRef = useRef<string>('')
-  const isNavigatingRef = useRef(false)
+  // const isNavigatingRef = useRef(false) // Not used in current implementation
 
-  const handlePopState = useCallback(async (event: PopStateEvent) => {
+  const handlePopState = useCallback(async (_event: PopStateEvent) => {
     if (typeof window === 'undefined') return
 
     const currentPath = window.location.pathname
@@ -95,12 +94,12 @@ export function useHistorySync(options: {
     window.addEventListener('beforeunload', handleBeforeUnload)
 
     // 🎯 추가 보장: Next.js 라우터 이벤트도 처리
-    const handleRouteChange = (url: string) => {
-      if (debug) {
-        // console.log(`🔄 HistorySync: Route change detected - ${url}`)
-      }
-      lastPathRef.current = url
-    }
+    // const handleRouteChange = (url: string) => {
+    //   if (debug) {
+    //     // console.log(`🔄 HistorySync: Route change detected - ${url}`)
+    //   }
+    //   lastPathRef.current = url
+    // } // Not used in current implementation
 
     return () => {
       window.removeEventListener('popstate', handlePopState)

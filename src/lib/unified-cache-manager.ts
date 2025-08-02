@@ -284,7 +284,7 @@ export class UnifiedCacheManager {
    * 📦 모든 관련 캐시 업데이트 (홈피드, 상세페이지, 검색, 프로필)
    */
   private async updateAllCaches(operation: CacheOperation): Promise<void> {
-    const { type, itemId, userId, delta } = operation
+    const { userId } = operation
     
 
     
@@ -293,7 +293,7 @@ export class UnifiedCacheManager {
 
       await this.updateHomeFeedCache(operation)
 
-    } catch (err) {
+    } catch {
 
     }
     
@@ -302,7 +302,7 @@ export class UnifiedCacheManager {
 
       await this.updateItemDetailCache(operation)
 
-    } catch (err) {
+    } catch {
 
     }
     
@@ -311,7 +311,7 @@ export class UnifiedCacheManager {
 
       await this.updateSearchCache(operation)
 
-    } catch (err) {
+    } catch {
 
     }
     
@@ -324,7 +324,7 @@ export class UnifiedCacheManager {
       } else {
 
       }
-    } catch (err) {
+    } catch {
 
     }
     
@@ -333,7 +333,7 @@ export class UnifiedCacheManager {
 
       await this.updateRecipeBookCache(operation)
 
-    } catch (err) {
+    } catch {
 
     }
     
@@ -364,7 +364,7 @@ export class UnifiedCacheManager {
 
           return isMatch
         },
-        async (key) => {
+        async () => {
 
           return undefined // 강제로 캐시 삭제
         },
@@ -400,7 +400,7 @@ export class UnifiedCacheManager {
         
         if (hasCorruptedPages) {
           // Debug: Fixing corrupted cache structure
-          normalizedCacheData = cacheData.map((page, index) => {
+          normalizedCacheData = cacheData.map((page) => {
             if (!Array.isArray(page)) {
               // 페이지가 단일 객체이거나 다른 형태라면 배열로 감싸기
               if (page && typeof page === 'object' && 'id' in page) {
@@ -435,20 +435,18 @@ export class UnifiedCacheManager {
         
                 // 🔧 기존 아이템 업데이트 로직
         let itemFound = false
-        let totalItems = 0
 
         // Debug: Searching for item
 
-        const result = normalizedCacheData.map((page, pageIndex) => {
+        const result = normalizedCacheData.map((page) => {
           if (!Array.isArray(page)) {
             // Debug: Page is not an array
             return page // 🔧 page가 배열인지 안전하게 확인
           }
           
           // Debug: Checking page
-          totalItems += page.length
           
-          return page.map((item, itemIndex) => {
+          return page.map((item) => {
             // 🔍 더 관대한 ID 매칭 (다양한 ID 필드 확인)
             const itemMatches = item.id === itemId || 
                               item.item_id === itemId ||
@@ -505,7 +503,7 @@ export class UnifiedCacheManager {
     // 🔍 CRITICAL DEBUG: ItemDetailCache 시작 상태 확인
     // Debug: ItemDetailCache update started
 
-    const updatedItem = await mutate(
+    await mutate(
       `itemDetail|${itemId}`,
       (currentItem: Item | undefined) => {
         // 🚀 SSA 업계표준: 개별 캐시 없으면 홈피드에서 데이터 가져오기
@@ -524,7 +522,7 @@ export class UnifiedCacheManager {
               
               foundItem = data as Item
             }
-          } catch (error) {
+          } catch {
     
           }
           
@@ -587,7 +585,7 @@ export class UnifiedCacheManager {
   /**
    * 🔍 검색 캐시 업데이트 (모든 검색 뷰와 필터 포함)
    */
-  private async updateSearchCache(operation: CacheOperation): Promise<void> {
+  private async updateSearchCache(_operation: CacheOperation): Promise<void> {
     // 🔧 모든 검색 관련 캐시 무효화 (재검색 시 최신 데이터 반영)
     await mutate(
       (key) => typeof key === 'string' && (
@@ -668,7 +666,7 @@ export class UnifiedCacheManager {
 
           return isMatch
         },
-        async (key) => {
+        async () => {
 
           return undefined // 강제로 캐시 삭제
         },

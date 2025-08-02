@@ -34,8 +34,7 @@ const ACTION_MESSAGES = {
 export default function LoginPromptSheet({ 
 	isOpen, 
 	onClose, 
-	action, 
-	targetName 
+	action 
 }: LoginPromptSheetProps) {
 	const router = useRouter()
 	const actionInfo = ACTION_MESSAGES[action]

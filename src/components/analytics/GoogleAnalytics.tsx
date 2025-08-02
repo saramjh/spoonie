@@ -95,7 +95,7 @@ declare global {
 export default function GoogleAnalytics() {
   useEffect(() => {
     // 🛡️ 개발 환경에서는 애드블로커 충돌 방지를 위해 완전 비활성화
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NEXT_PUBLIC_ENABLE_ANALYTICS_LOGS === 'true') {
       if (!window.__SPOONIE_GA_BLOCKED__) {
         console.log('🛡️ [개발환경] GA 비활성화 - 애드블로커 충돌 방지')
         window.__SPOONIE_GA_BLOCKED__ = true
@@ -108,18 +108,18 @@ export default function GoogleAnalytics() {
       return
     }
 
-    // GA ID 확인 및 로그 (개발 환경에서만)
-    if (process.env.NODE_ENV === 'development') {
+    // GA ID 확인 및 로그 (환경변수로 제어)
+    if (process.env.NEXT_PUBLIC_ENABLE_ANALYTICS_LOGS === 'true') {
       console.log('🎯 Google Analytics ID:', GA_MEASUREMENT_ID)
     }
 
     // 이미 로드되어 있는지 확인
     const existingScript = document.querySelector(`script[src*="gtag/js?id=${GA_MEASUREMENT_ID}"]`)
     if (existingScript) {
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env.NEXT_PUBLIC_ENABLE_ANALYTICS_LOGS === 'true') {
         console.log('🔄 GA script already loaded')
       }
-      isGAInitialized = true // 플래그 설정
+      window.__SPOONIE_GA_INITIALIZED__ = true // 플래그 설정
       return
     }
 
@@ -142,11 +142,11 @@ export default function GoogleAnalytics() {
       gtag('js', new Date());
       gtag('config', GA_MEASUREMENT_ID, {
         page_path: window.location.pathname,
-        debug_mode: process.env.NODE_ENV === 'development',
+        debug_mode: process.env.NEXT_PUBLIC_ENABLE_ANALYTICS_LOGS === 'true',
         send_page_view: true
       });
 
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env.NEXT_PUBLIC_ENABLE_ANALYTICS_LOGS === 'true') {
         console.log('✅ GA 스크립트 로드 성공!')
       }
 
@@ -166,7 +166,7 @@ export default function GoogleAnalytics() {
     }
     
     script.onerror = (e) => {
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env.NEXT_PUBLIC_ENABLE_ANALYTICS_LOGS === 'true') {
         console.warn('⚠️ GA 로드 실패 (네트워크 또는 Ad Blocker):', e)
       }
     }

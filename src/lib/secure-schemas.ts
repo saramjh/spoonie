@@ -4,7 +4,7 @@
  */
 
 import * as z from "zod"
-import { sanitizeHtml, sanitizeUserContent, validateEmail, safeParseInt, safeParseFloat } from './security-utils'
+import { sanitizeHtml, sanitizeUserContent, validateEmail, safeParseFloat } from './security-utils'
 
 // ================================
 // 1. 기본 보안 스키마

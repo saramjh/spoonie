@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { timeAgo, formatCount } from "@/lib/utils"
 import clsx from "clsx"
 import { getColorClass } from "@/lib/color-options"
-import { Heart, MessageCircle, Clock, Users, ChefHat, Bookmark } from "lucide-react"
+import { MessageCircle, Clock, Users, ChefHat } from "lucide-react"
 import { SimplifiedLikeButton } from "@/components/items/SimplifiedLikeButton"
 import { BookmarkButton } from "@/components/items/BookmarkButton"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
@@ -204,8 +204,8 @@ export default function RecipeCard({ item, isSelectable, isSelected, onSelectCha
             itemId={stableItemId}
             itemType={item.item_type}
             currentUserId={session?.id}
-            initialBookmarksCount={(cachedItem as any).bookmarks_count || 0}
-            initialIsBookmarked={(cachedItem as any).is_bookmarked || false}
+            initialBookmarksCount={cachedItem.bookmarks_count || 0}
+            initialIsBookmarked={cachedItem.is_bookmarked || false}
             cachedItem={cachedItem}
             size="icon"
             className="h-5 w-5 sm:h-6 sm:w-6 p-0.5 hover:bg-orange-100 transition-colors"

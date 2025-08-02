@@ -298,7 +298,7 @@ export function useNavigation(options: NavigationOptions = {}) {
   /**
    * 🧭 스마트 리턴 경로 결정 (사용자가 어디서 왔는지 기반)
    */
-  const getSmartReturnPath = useCallback((currentItemId?: string): string => {
+  const getSmartReturnPath = useCallback((_currentItemId?: string): string => {
     // 1. URL origin 파라미터 확인 (최우선)
     const urlOrigin = getOriginFromURL()
     if (urlOrigin) {
@@ -370,17 +370,21 @@ export function useNavigation(options: NavigationOptions = {}) {
       // 일반적인 뒤로가기: 히스토리 유지
       router.push(returnPath)
     }
-  }, [getSmartReturnPath, pathname, navigationHistory, router])
+  }, [getSmartReturnPath, router])
 
   /**
    * 🧹 컴포넌트 언마운트 시 정리
    */
   useEffect(() => {
     return () => {
+      // 🛡️ Ref 안전성: cleanup 시점에 ref 값을 로컬 변수로 저장
+      const hoverTimeouts = hoverTimeoutsRef.current
+      const preloadedRoutes = preloadedRoutesRef.current
+      
       // 모든 타이머 정리
-      hoverTimeoutsRef.current.forEach(timeout => clearTimeout(timeout))
-      hoverTimeoutsRef.current.clear()
-      preloadedRoutesRef.current.clear()
+      hoverTimeouts.forEach(timeout => clearTimeout(timeout))
+      hoverTimeouts.clear()
+      preloadedRoutes.clear()
     }
   }, [])
 

@@ -39,6 +39,8 @@ const logEntrySchema = z.object({
   }).optional()
 })
 
+type LogEntry = z.infer<typeof logEntrySchema>
+
 const logsRequestSchema = z.object({
   logs: z.array(logEntrySchema).max(100) // 최대 100개까지
 })

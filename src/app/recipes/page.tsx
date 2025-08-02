@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Trash2, Search, SlidersHorizontal, List, Grid, BookUser, ChefHat, HelpCircle, X } from "lucide-react"
-import { RecipeBookAuthPrompt } from "@/components/auth/RecipeBookAuthPrompt"
+
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import useSWRInfinite from "swr/infinite"
 import { useSWRConfig } from "swr"
@@ -171,7 +171,7 @@ const PAGE_SIZE = 12
 		})
 
 		// 팔로우 상태 확인 (작성자들에 대한)
-		                                  const authorIds = Array.from(new Set(data.map((item: any) => item.user_id)))
+		const authorIds = Array.from(new Set(data.map((item: Item) => item.user_id)))
 		const { data: userFollows } = await supabase
 			.from("follows")
 			.select("following_id")
@@ -184,7 +184,7 @@ const PAGE_SIZE = 12
 	}
 
 	// ✅ SSA 기반: 홈 피드와 동일한 데이터 변환 로직 적용
-	 return data.map((item: any) => {
+	return data.map((item: Item & { profiles?: any }) => {
 		// 🎯 나의 레시피(RPC)는 이미 평면화된 데이터, 모두의 레시피는 profiles 관계 데이터
 		const profileData = tab === "my_recipes" 
 			? item  // RPC 함수에서 이미 평면화됨

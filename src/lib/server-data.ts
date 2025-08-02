@@ -24,7 +24,7 @@ export interface ServerFeedData {
  */
 export async function getInitialFeedData(): Promise<ServerFeedData> {
 
-  const startTime = Date.now()
+  // const startTime = Date.now() // Performance tracking not used
   
   const supabase = createSupabaseServerClient()
   
@@ -122,7 +122,7 @@ export async function getInitialFeedData(): Promise<ServerFeedData> {
       }
     })
 
-    const endTime = Date.now()
+    // const endTime = Date.now() // Performance tracking not used
     // Server: Initial feed data fetched: { itemsCount, hasNextPage, totalCount, userInteractions }
 
     return {

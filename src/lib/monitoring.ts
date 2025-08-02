@@ -26,7 +26,7 @@ export interface LogEntry {
   sessionId?: string
   userAgent?: string
   url?: string
-  context?: Record<string, any>
+  context?: Record<string, unknown>
   error?: {
     name: string
     message: string
@@ -41,7 +41,7 @@ export interface LogEntry {
   userAction?: {
     type: string
     target: string
-    data?: Record<string, any>
+    data?: Record<string, unknown>
   }
 }
 
@@ -72,7 +72,7 @@ class Logger {
   private createLogEntry(
     level: LogLevel, 
     message: string, 
-    context?: Record<string, any>
+    context?: Record<string, unknown>
   ): LogEntry {
     return {
       level,
@@ -86,7 +86,7 @@ class Logger {
     }
   }
 
-  error(message: string, error?: Error, context?: Record<string, any>): void {
+  error(message: string, error?: Error, context?: Record<string, unknown>): void {
     const logEntry = this.createLogEntry(LogLevel.ERROR, message, context)
     
     if (error) {
@@ -94,7 +94,7 @@ class Logger {
         name: error.name,
         message: error.message,
         stack: error.stack,
-        code: (error as any).code
+        code: (error as Error & { code?: string }).code
       }
     }
 
@@ -104,17 +104,17 @@ class Logger {
     this.sendToServer([logEntry])
   }
 
-  warn(message: string, context?: Record<string, any>): void {
+  warn(message: string, context?: Record<string, unknown>): void {
     const logEntry = this.createLogEntry(LogLevel.WARN, message, context)
     this.addLog(logEntry)
   }
 
-  info(message: string, context?: Record<string, any>): void {
+  info(message: string, context?: Record<string, unknown>): void {
     const logEntry = this.createLogEntry(LogLevel.INFO, message, context)
     this.addLog(logEntry)
   }
 
-  debug(message: string, context?: Record<string, any>): void {
+  debug(message: string, context?: Record<string, unknown>): void {
     const logEntry = this.createLogEntry(LogLevel.DEBUG, message, context)
     this.addLog(logEntry)
   }
@@ -150,12 +150,12 @@ class Logger {
 
   startPerformanceTimer(operation: string): () => void {
     const startTime = performance.now()
-    const startMemory = (performance as any).memory?.usedJSHeapSize
+    const startMemory = (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize
 
     return () => {
       const duration = performance.now() - startTime
-      const endMemory = (performance as any).memory?.usedJSHeapSize
-      const memoryDelta = endMemory ? endMemory - startMemory : undefined
+      const endMemory = (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize
+      const memoryDelta = endMemory && startMemory ? endMemory - startMemory : undefined
 
       const logEntry = this.createLogEntry(LogLevel.INFO, `Performance: ${operation}`)
       logEntry.performance = {
@@ -167,7 +167,7 @@ class Logger {
     }
   }
 
-  trackUserAction(type: string, target: string, data?: Record<string, any>): void {
+  trackUserAction(type: string, target: string, data?: Record<string, unknown>): void {
     const logEntry = this.createLogEntry(LogLevel.INFO, `User Action: ${type}`)
     logEntry.userAction = {
       type,
@@ -203,7 +203,7 @@ class Logger {
 
     // React Error Boundary와 연동 (향후)
     if (typeof window !== 'undefined') {
-      (window as any).__SPOONIE_ERROR_LOGGER__ = this
+      (window as Window & { __SPOONIE_ERROR_LOGGER__?: Logger }).__SPOONIE_ERROR_LOGGER__ = this
     }
   }
 
@@ -226,12 +226,12 @@ class Logger {
     // 큰 레이아웃 시프트 감지
     if ('LayoutShift' in window) {
       let clsValue = 0
-      let clsEntries: any[] = []
+      const clsEntries: PerformanceEntry[] = []
 
       const observer = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
-          if (!(entry as any).hadRecentInput) {
-            clsValue += (entry as any).value
+          if (!(entry as PerformanceEntry & { hadRecentInput?: boolean }).hadRecentInput) {
+            clsValue += (entry as PerformanceEntry & { value?: number }).value || 0
             clsEntries.push(entry)
           }
         }
@@ -406,7 +406,7 @@ export class PerformanceMonitor {
   }
 
   static getStats(): Record<string, { count: number; average: number; min: number; max: number }> {
-    const stats: Record<string, any> = {}
+    const stats: Record<string, { count: number; average: number; min: number; max: number }> = {}
     
     for (const [operation, metrics] of this.metrics) {
       if (metrics.length > 0) {
@@ -432,10 +432,10 @@ export class UserActionTracker {
     type: string
     target: string
     timestamp: string
-    data?: Record<string, any>
+    data?: Record<string, unknown>
   }> = []
 
-  static track(type: string, target: string, data?: Record<string, any>): void {
+  static track(type: string, target: string, data?: Record<string, unknown>): void {
     this.actions.push({
       type,
       target, 
@@ -508,12 +508,12 @@ if (typeof window !== 'undefined') {
 export interface ErrorBoundaryState {
   hasError: boolean
   error?: Error
-  errorInfo?: any
+  errorInfo?: unknown
 }
 
-export function logErrorBoundary(error: Error, errorInfo: any): void {
+export function logErrorBoundary(error: Error, errorInfo: unknown): void {
   logger.error('React Error Boundary triggered', error, {
-    componentStack: errorInfo.componentStack,
+    componentStack: (errorInfo as { componentStack?: string }).componentStack,
     errorBoundary: true
   })
 }

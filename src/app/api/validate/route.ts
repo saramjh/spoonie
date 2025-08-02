@@ -115,7 +115,7 @@ async function validateRecipe(data: any, userId?: string) {
   }
 }
 
-async function validatePost(data: any, userId?: string) {
+async function validatePost(data: any, _userId?: string) {
   const result = securePostSchema.safeParse(data)
   if (!result.success) {
     return {
@@ -273,7 +273,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json()
-    const { type, data, userId } = body
+    const { type, userId } = body
 
     if (!userId) {
       return NextResponse.json(

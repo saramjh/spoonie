@@ -173,8 +173,8 @@ export async function uploadImagesOptimized(
 		})
 	}
 
-	const successCount = results.filter(r => r.success).length
-	const cacheHits = results.filter(r => r.fromCache).length
+	// const successCount = results.filter(r => r.success).length // Statistics not used
+	// const cacheHits = results.filter(r => r.fromCache).length // Statistics not used
 	
 	
 

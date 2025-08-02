@@ -90,7 +90,7 @@ export function recordApiCall(): void {
  */
 function cleanupOldApiRecords(): void {
   const now = Date.now()
-  const currentMinute = Math.floor(now / 60000)
+  // const currentMinute = Math.floor(now / 60000) // Not used in current implementation
   const currentHour = Math.floor(now / 3600000)
   
   // localStorage에서 오래된 기록 삭제

@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
-import { Clock, Heart, MessageCircle, Users, ChefHat, Flame, TrendingUp, Bookmark } from "lucide-react"
+import { Clock, MessageCircle, Users, ChefHat, Flame, TrendingUp } from "lucide-react"
 import { getColorClass } from "@/lib/color-options"
 import { formatCount, formatCompactTime } from "@/lib/utils"
 import { SimplifiedLikeButton } from "@/components/items/SimplifiedLikeButton"
@@ -248,8 +248,8 @@ export default function RecipeListCard({
                     itemId={stableItemId}
                     itemType={item.item_type}
                     currentUserId={session?.id}
-                    initialBookmarksCount={(cachedItem as any).bookmarks_count || 0}
-                    initialIsBookmarked={(cachedItem as any).is_bookmarked || false}
+                    initialBookmarksCount={cachedItem.bookmarks_count || 0}
+                    initialIsBookmarked={cachedItem.is_bookmarked || false}
                     cachedItem={cachedItem}
                     size="icon"
                     className="h-4 w-4 sm:h-5 sm:w-5 p-0.5 hover:bg-orange-100 transition-colors"

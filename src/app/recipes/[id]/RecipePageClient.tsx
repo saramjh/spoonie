@@ -25,10 +25,7 @@ export default function RecipePageClient({ recipeId }: RecipePageClientProps) {
       try {
         const supabase = createSupabaseBrowserClient()
         
-        // 🔐 현재 사용자 확인
-        const { data: { user } } = await supabase.auth.getUser()
-        
-
+        // 🔐 사용자 인증은 Supabase RLS로 처리됨
         
         // 🚀 클라이언트에서 데이터 조회 (브라우저 세션 인증 사용)
         const { data: recipeData, error: recipeError } = await supabase

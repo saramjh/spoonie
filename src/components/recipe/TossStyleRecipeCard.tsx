@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Heart, MessageCircle, Bookmark, Clock, Users, ChefHat } from 'lucide-react'
+import { MessageCircle, Clock, Users, ChefHat } from 'lucide-react'
 import { useSessionStore } from '@/store/sessionStore'
 import { useSSAItemCache } from '@/hooks/useSSAItemCache'
 import { useThumbnail } from '@/hooks/useThumbnail'
@@ -30,8 +30,8 @@ interface TossStyleRecipeCardProps {
  * 5. 접근성 우선 설계
  */
 export default function TossStyleRecipeCard({ 
-  item, 
-  showAuthor = false 
+  item,
+  showAuthor: _showAuthor = false // Not used in current implementation
 }: TossStyleRecipeCardProps) {
   const router = useRouter()
   const { session } = useSessionStore()
@@ -42,7 +42,7 @@ export default function TossStyleRecipeCard({
     likes_count: item.likes_count || 0,
     comments_count: item.comments_count || 0,
     is_liked: item.is_liked || false,
-    is_bookmarked: (item as any).is_bookmarked || false,
+    is_bookmarked: item.is_bookmarked || false,
     image_urls: item.image_urls || null,
     thumbnail_index: item.thumbnail_index || 0
   }
@@ -173,8 +173,8 @@ export default function TossStyleRecipeCard({
             itemId={stableItemId}
             itemType={item.item_type}
             currentUserId={session?.id}
-            initialBookmarksCount={(cachedItem as any).bookmarks_count || 0}
-            initialIsBookmarked={(cachedItem as any).is_bookmarked || false}
+            initialBookmarksCount={cachedItem.bookmarks_count || 0}
+            initialIsBookmarked={cachedItem.is_bookmarked || false}
             cachedItem={cachedItem}
             size="icon"
             className="min-h-[44px] min-w-[44px] rounded-xl hover:bg-orange-50 transition-all duration-200"

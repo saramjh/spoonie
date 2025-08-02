@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -9,6 +9,7 @@ import { Heart, Clock } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { ko } from "date-fns/locale"
 import Link from "next/link"
+import type { Profile } from "@/types/item"
 
 interface LikerProfile {
 	id: string
@@ -33,13 +34,7 @@ export default function LikersModal({ isOpen, onClose, itemId, itemType, current
 	const [error, setError] = useState<string | null>(null)
 	const supabase = createSupabaseBrowserClient()
 
-	useEffect(() => {
-		if (isOpen && itemId) {
-			fetchLikers()
-		}
-	}, [isOpen, itemId])
-
-	const fetchLikers = async () => {
+	const fetchLikers = useCallback(async () => {
 		setLoading(true)
 		setError(null)
 
@@ -69,7 +64,7 @@ export default function LikersModal({ isOpen, onClose, itemId, itemType, current
 				throw error
 			}
 
-			const formattedLikers: LikerProfile[] = (data || []).map((like: { user_id: string; created_at: string; profiles: any }) => {
+			const formattedLikers: LikerProfile[] = (data || []).map((like: { user_id: string; created_at: string; profiles: Profile | Profile[] }) => {
 				const profile = Array.isArray(like.profiles) ? like.profiles[0] : like.profiles
 				return {
 					id: profile?.id || like.user_id,
@@ -89,7 +84,13 @@ export default function LikersModal({ isOpen, onClose, itemId, itemType, current
 		} finally {
 			setLoading(false)
 		}
-	}
+	}, [supabase, itemId])
+
+	useEffect(() => {
+		if (isOpen && itemId) {
+			fetchLikers()
+		}
+	}, [isOpen, itemId, fetchLikers])
 
 	return (
 		<Dialog open={isOpen} onOpenChange={onClose}>

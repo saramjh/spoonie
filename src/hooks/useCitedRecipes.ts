@@ -2,7 +2,7 @@
 
 import useSWR from "swr"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
-import type { Item, ItemType, Profile } from "@/types/item"
+import type { Item, Profile } from "@/types/item"
 
 // 참고 레시피 fetcher - SWR용
 const fetchCitedRecipes = async (citedRecipeIds: string[]): Promise<Item[]> => {

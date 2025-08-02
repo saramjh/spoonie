@@ -5,7 +5,7 @@ import { usePosts } from "@/hooks/usePosts"
 import PostCard from "./PostCard"
 import PostCardSkeleton from "./PostCardSkeleton"
 
-import { usePathname } from "next/navigation"
+
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -38,14 +38,14 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
   const { feedItems, isLoading, isError, size, setSize, isReachingEnd, mutate: swrMutate } = usePosts(initialData)
   const observerElem = useRef<HTMLDivElement>(null)
 
-  const pathname = usePathname()
   const supabase = createSupabaseBrowserClient()
 
   // 🧭 Smart Navigation: 홈피드 navigation history 추적
   useNavigation({ trackHistory: true })
 
   // 실시간 동기화 훅
-  const { applyOptimisticUpdate } = useRealtimeSync()
+  // const { applyOptimisticUpdate } = useRealtimeSync() // Handled by unified cache manager
+  useRealtimeSync()
 
   // 🚀 업계 표준: 히스토리 뒤로가기 완벽 보장
   usePageVisibility({
@@ -82,7 +82,7 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
    * 🎯 스마트 백그라운드 동기화
    * 현재 화면에 보이는 아이템들만 선별적으로 동기화
    */
-  const performSmartSync = useCallback(async (priority: 'low' | 'normal' | 'high' = 'normal') => {
+  const performSmartSync = useCallback(async (_priority: 'low' | 'normal' | 'high' = 'normal') => {
     
     
     try {
@@ -97,7 +97,7 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
     } catch (error) {
       console.error("❌ Smart sync failed:", error)
     }
-  }, [pathname, currentUser])
+  }, [])
 
   /**
    * 👁️ 화면에 보이는 아이템 추적 (Intersection Observer)
@@ -148,72 +148,19 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
     return () => clearTimeout(timeoutId)
   }, [])
 
-  /**
-   * 🎯 지능적 새로고침 함수 (업그레이드)
-   * 사용자가 감지하지 못하도록 조용히 백그라운드에서 동기화
-   */
-  const performSilentSync = useCallback(async () => {
-    // 스마트 동기화를 우선 실행
-    await performSmartSync('normal')
-    
-    // 필요시 전체 새로고침
-    try {
-      
-      const syncStartTime = Date.now()
-      
-      await swrMutate()
-      
-      const syncDuration = Date.now() - syncStartTime
-      
-      
-    } catch (error) {
-      console.error("❌ Silent refresh failed:", error)
-    }
-  }, [performSmartSync, swrMutate])
+
 
   /**
    * 🚀 Optimistic UI 헬퍼 함수들
    * 사용자 액션에 따른 즉시 UI 업데이트
    */
-  const handleOptimisticLike = useCallback(async (itemId: string, isLiked: boolean, userId: string) => {
-    await applyOptimisticUpdate({
-      id: itemId,
-      type: 'like',
-      action: isLiked ? 'remove' : 'add',
-      data: { userId },
-      timestamp: Date.now()
-    })
-  }, [applyOptimisticUpdate])
+  // handleOptimisticLike - Handled by unified cache manager
 
-  const handleOptimisticComment = useCallback(async (itemId: string, comment: any) => {
-    await applyOptimisticUpdate({
-      id: itemId,
-      type: 'comment',
-      action: 'add',
-      data: { comment },
-      timestamp: Date.now()
-    })
-  }, [applyOptimisticUpdate])
+  // handleOptimisticComment - Handled by unified cache manager
 
-  const handleOptimisticFollow = useCallback(async (userId: string, isFollowing: boolean) => {
-    await applyOptimisticUpdate({
-      id: userId,
-      type: 'follow',
-      action: isFollowing ? 'remove' : 'add',
-      data: {},
-      timestamp: Date.now()
-    })
-  }, [applyOptimisticUpdate])
+  // handleOptimisticFollow - Handled by unified cache manager
 
-  const handleOptimisticItemAction = useCallback(async (action: 'add' | 'remove', data: any) => {
-    await applyOptimisticUpdate({
-      id: data.itemId || data.item?.id,
-      type: 'item',
-      action,
-      data,
-      timestamp: Date.now()
-    })
-  }, [applyOptimisticUpdate])
+  // handleOptimisticItemAction - Handled by unified cache manager
 
   // 🚀 Optimistic Updates 시스템에서는 복잡한 등록/구독 로직 불필요
   // 모든 상태는 optimisticLikeUpdate, optimisticCommentUpdate에서 즉시 처리됨

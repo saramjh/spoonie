@@ -124,7 +124,7 @@ export async function toggleLikeACID(
     const result = data as ACIDLikeResult
     
     if (result.success) {
-      const action = result.is_liked ? 'added' : 'removed'
+      // const action = result.is_liked ? 'added' : 'removed' // Handled by unified cache manager
     
       
       // 🔄 효율적 캐시 동기화
@@ -252,11 +252,11 @@ export async function getACIDTransactionStats(): Promise<{
  * 📊 성능 비교: ACID vs 기존 방식
  */
 export function logPerformanceComparison(
-  operation: string,
-  startTime: number,
-  networkCalls: number
+  _operation: string,
+  _startTime: number,
+  _networkCalls: number
 ): void {
-  const duration = Date.now() - startTime
+  // const duration = Date.now() - startTime // Performance tracking completed
   
   // ACID Performance tracking completed
 }
@@ -264,7 +264,7 @@ export function logPerformanceComparison(
 /**
  * 🎯 올-인-원 ACID 체크리스트
  */
-export function validateACIDCompliance(operation: string): {
+export function validateACIDCompliance(_operation: string): {
   atomicity: boolean
   consistency: boolean  
   isolation: boolean

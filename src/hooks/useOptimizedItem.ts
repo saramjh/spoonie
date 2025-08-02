@@ -4,7 +4,7 @@
  */
 
 import { useMemo, useCallback } from 'react'
-import useSWR, { mutate } from 'swr'
+import useSWR from 'swr'
 import { Item } from '@/types/item'
 import { createSWRKey } from '@/lib/cache-keys'
 import { createSupabaseBrowserClient } from '@/lib/supabase-client'
@@ -40,7 +40,7 @@ export function useOptimizedItem(
   options: OptimizedItemOptions = {}
 ): OptimizedItemReturn {
   const {
-    watchFields = ['likes_count', 'comments_count', 'is_liked', 'is_following'],
+    // watchFields = ['likes_count', 'comments_count', 'is_liked', 'is_following'], // Not used
     initialData,
     refreshInterval,
     revalidateOnFocus = false
@@ -141,7 +141,7 @@ export function useOptimizedItem(
  * 🚀 배치 업데이트용 후크 (여러 아이템 동시 업데이트)
  */
 export function useBatchItemUpdates() {
-  const supabase = createSupabaseBrowserClient()
+  // const supabase = createSupabaseBrowserClient() // Not used in current implementation
 
   const batchUpdateLikes = useCallback(async (
     updates: Array<{ itemId: string; count: number; hasLiked: boolean }>

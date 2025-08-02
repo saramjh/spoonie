@@ -2,11 +2,12 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
-import { Badge } from "@/components/ui/badge";
+
 import { X } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase-client';
 import type { Item } from '@/types/item';
 import { format } from 'date-fns'; // 날짜 포맷팅을 위해 date-fns 임포트
+import Image from 'next/image';
 
 interface CitedRecipeSearchProps {
   selectedRecipes: Item[];
@@ -186,7 +187,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
                         {/* 🖼️ 썸네일 추가 */}
                         <div className="w-8 h-8 rounded-lg bg-orange-100 flex-shrink-0 overflow-hidden">
                           {recipe.image_urls && recipe.image_urls.length > 0 ? (
-                            <img src={recipe.image_urls[0]} alt="" className="w-full h-full object-cover" />
+                            <Image src={recipe.image_urls[0]} alt={`${recipe.title} 썸네일`} width={32} height={32} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full bg-orange-100 flex items-center justify-center">
                               <span className="text-xs">🍳</span>
@@ -222,7 +223,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
                 {/* 썸네일 */}
                 <div className="w-10 h-10 rounded-lg bg-white overflow-hidden flex-shrink-0">
                   {recipe.image_urls && recipe.image_urls.length > 0 ? (
-                    <img src={recipe.image_urls[0]} alt="" className="w-full h-full object-cover" />
+                    <Image src={recipe.image_urls[0]} alt={`${recipe.title} 썸네일`} width={40} height={40} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full bg-orange-100 flex items-center justify-center">
                       <span className="text-sm">🍳</span>

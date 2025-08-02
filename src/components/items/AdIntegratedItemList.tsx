@@ -13,6 +13,7 @@
 import { useInView } from 'react-intersection-observer'
 import PostCard from './PostCard'
 import TossStyleAdBanner from '@/components/ads/TossStyleAdBanner'
+import type { User } from "@supabase/supabase-js"
 import { TossAnalyticsEvents } from '@/components/analytics/GoogleAnalytics'
 import type { Item } from '@/types/item'
 
@@ -50,7 +51,7 @@ export default function AdIntegratedItemList({
 
   return (
     <div className="space-y-4 pb-20">
-      {itemsWithAds.map((item, index) => {
+      {itemsWithAds.map((item) => {
         // 🎯 광고 아이템 렌더링
         if ('type' in item && item.type === 'ad') {
           return (
@@ -67,7 +68,7 @@ export default function AdIntegratedItemList({
           <PostCard
             key={(item as Item).item_id || (item as Item).id}
             item={item as Item}
-            currentUser={currentUserId ? { id: currentUserId } as any : null}
+            currentUser={currentUserId ? { id: currentUserId } as User : null}
           />
         )
       })}

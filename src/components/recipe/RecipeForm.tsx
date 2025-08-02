@@ -112,7 +112,7 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 				// 캐시 업데이트 실패해도 UI 상태는 유지
 			}
 		}
-	}, [thumbnailIndex, isEditMode, initialData?.id, supabase.auth])
+	}, [isEditMode, initialData?.id, supabase.auth])
 	const [instructionImages, setInstructionImages] = useState<(OptimizedImage | null)[]>([])
 	const [selectedCitedRecipes, setSelectedCitedRecipes] = useState<Item[]>([])
 
@@ -280,8 +280,8 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 				newImageFiles, 
 				user.id, 
 				bucketId,
-				(progress) => {
-					
+				(_progress) => {
+					// Progress tracking not implemented yet
 				}
 			)
 
@@ -507,7 +507,6 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 								thumbnailIndex={thumbnailIndex} 
 								onThumbnailChange={handleThumbnailChange} 
 								showThumbnailSelector={true} 
-								isEditMode={isEditMode} 
 							/>
 						</CardContent>
 					</Card>

@@ -19,10 +19,8 @@ import { useToast } from "@/hooks/use-toast"
 import type { Item } from "@/types/item"
 import CitedRecipeSearch from "@/components/recipe/CitedRecipeSearch"
 
-import { useSWRConfig } from "swr"
-import { uploadImagesOptimized, processExistingImages, ImageUploadMetrics } from "@/utils/image-optimization"
+import { uploadImagesOptimized, ImageUploadMetrics } from "@/utils/image-optimization"
 import { cacheManager } from "@/lib/unified-cache-manager"
-import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import { notificationService } from "@/lib/notification-service"
 
 interface PostFormProps {
@@ -52,8 +50,6 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 	const router = useRouter()
 	const { toast } = useToast()
 	const supabase = createSupabaseBrowserClient()
-
-	const { mutate } = useSWRConfig()
 
 	const [isSubmitting, setIsSubmitting] = useState(false)
 	const [mainImages, setMainImages] = useState<OptimizedImage[]>([])
@@ -440,7 +436,6 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 								thumbnailIndex={thumbnailIndex}
 								onThumbnailChange={handleThumbnailChange}
 								showThumbnailSelector={true}
-								isEditMode={isEditMode}
 							/>
 						</CardContent>
 					</Card>

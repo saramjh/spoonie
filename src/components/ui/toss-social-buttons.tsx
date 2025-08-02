@@ -10,7 +10,7 @@
 
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Heart, MessageCircle, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -105,7 +105,7 @@ export function TossLikeButton({
       } else {
         setIsAnimating(false)
       }
-    } catch (error) {
+    } catch {
       setIsAnimating(false)
     }
   }
@@ -302,7 +302,7 @@ export function TossFloatingLikeButton({
     try {
       await onToggle()
       setTimeout(() => setIsAnimating(false), 800)
-    } catch (error) {
+    } catch {
       setIsAnimating(false)
     }
   }

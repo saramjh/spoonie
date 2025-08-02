@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -31,23 +31,16 @@ interface LikersModalProps {
 	isOpen: boolean
 	onClose: () => void
 	itemId: string
-	itemType: "recipe" | "post"
 	currentUserId?: string | null
 }
 
-export default function LikersModal({ isOpen, onClose, itemId, itemType, currentUserId }: LikersModalProps) {
+export default function LikersModal({ isOpen, onClose, itemId, currentUserId }: LikersModalProps) {
 	const [likers, setLikers] = useState<LikerProfile[]>([])
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const supabase = createSupabaseBrowserClient()
 
-	useEffect(() => {
-		if (isOpen && itemId) {
-			fetchLikers()
-		}
-	}, [isOpen, itemId])
-
-	const fetchLikers = async () => {
+	const fetchLikers = useCallback(async () => {
 		setLoading(true)
 		setError(null)
 
@@ -97,7 +90,13 @@ export default function LikersModal({ isOpen, onClose, itemId, itemType, current
 		} finally {
 			setLoading(false)
 		}
-	}
+	}, [supabase, itemId])
+
+	useEffect(() => {
+		if (isOpen && itemId) {
+			fetchLikers()
+		}
+	}, [isOpen, itemId, fetchLikers])
 
 	return (
 		<Dialog open={isOpen} onOpenChange={onClose}>

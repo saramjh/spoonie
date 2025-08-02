@@ -26,7 +26,7 @@ interface BookmarkButtonProps {
   className?: string
   size?: "sm" | "icon" | "default"
   variant?: "ghost" | "outline" | "default"
-  cachedItem?: any // SSA 캐시된 완전한 아이템 데이터 (이미지 보존용)
+  cachedItem?: Item // SSA 캐시된 완전한 아이템 데이터 (이미지 보존용)
 }
 
 export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>(({
@@ -49,8 +49,8 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
     // ✅ 기존 데이터 모두 보존 (특히 이미지!)
     ...providedCachedItem,
     // 🎯 북마크/좋아요 상태만 보완 (덮어쓰지 않고 보완만)
-    bookmarks_count: (providedCachedItem as any).bookmarks_count ?? initialBookmarksCount,
-    is_bookmarked: (providedCachedItem as any).is_bookmarked ?? initialIsBookmarked,
+    bookmarks_count: providedCachedItem.bookmarks_count ?? initialBookmarksCount,
+    is_bookmarked: providedCachedItem.is_bookmarked ?? initialIsBookmarked,
     likes_count: providedCachedItem.likes_count ?? 0,
     is_liked: providedCachedItem.is_liked ?? false
   } : {
@@ -85,8 +85,8 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
   // 🔍 CRITICAL DEBUG: BookmarkButton 최종 데이터 확인
 
   
-  const bookmarksCount = (cachedItem as any).bookmarks_count || initialBookmarksCount
-  const isBookmarked = (cachedItem as any).is_bookmarked || initialIsBookmarked
+  const bookmarksCount = cachedItem.bookmarks_count || initialBookmarksCount
+  const isBookmarked = cachedItem.is_bookmarked || initialIsBookmarked
 
   const [isLoading, setIsLoading] = useState(false)
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
@@ -132,7 +132,7 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
       
       // 🚀 SSA 기반: 완전한 Seamless Sync Architecture 패턴 유지
       // 🔑 이미지 정보 보존하면서 Request Deduplication + Batch Processing 유지
-      const rollback = await cacheManager.bookmark(itemId, currentUserId, newIsBookmarked, cachedItem)
+      await cacheManager.bookmark(itemId, currentUserId, newIsBookmarked, cachedItem)
       
       // 🔄 북마크 페이지 실시간 동기화 (Optimistic Update)
       if (currentUserId) {
@@ -142,7 +142,7 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
           // 북마크 해제 시: 즉시 목록에서 제거
           await mutate(
             bookmarksCacheKey,
-            (currentBookmarks: any[] | undefined) => {
+            (currentBookmarks: Item[] | undefined) => {
               if (!currentBookmarks || currentBookmarks.length === 0) return currentBookmarks
               const updatedBookmarks = currentBookmarks.filter(item => (item.id || item.item_id) !== itemId)
 
@@ -160,7 +160,7 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
       // 📞 부모 컴포넌트에게 알림 (필요한 경우)
       onBookmarkChange?.(newIsBookmarked ? bookmarksCount + 1 : bookmarksCount - 1, newIsBookmarked)
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`❌ BookmarkButton: Error for ${itemId}:`, error)
       
       // 🔄 북마크 페이지 캐시도 롤백 (에러 시 정확한 데이터 다시 fetch)
@@ -180,7 +180,7 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
       isProcessingRef.current = false
       setIsLoading(false)
     }
-  }, [currentUserId, isAuthLoading, isBookmarked, bookmarksCount, itemId, onBookmarkChange, toast, isLoading])
+  }, [currentUserId, isAuthLoading, isBookmarked, bookmarksCount, itemId, onBookmarkChange, toast, cachedItem])
 
   return (
     <>

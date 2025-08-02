@@ -208,7 +208,7 @@ class OptimisticUpdateManager<T> {
    * 모든 미확인 업데이트 롤백
    */
   rollbackAll(): void {
-    for (const [id, update] of this.updates) {
+    for (const [, update] of this.updates) {
       if (!update.confirmed) {
         update.rollback()
       }

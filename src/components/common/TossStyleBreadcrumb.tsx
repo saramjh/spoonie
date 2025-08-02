@@ -151,13 +151,13 @@ export default function TossStyleBreadcrumb({
 
 // 🎨 토스 스타일 커스텀 브레드크럼 헬퍼
 export const createCustomBreadcrumb = {
-  recipe: (recipeTitle: string, recipeId: string): BreadcrumbItem[] => [
+  recipe: (recipeTitle: string, _recipeId: string): BreadcrumbItem[] => [
     { label: '홈', href: '/' },
     { label: '레시피', href: '/recipes' },
     { label: recipeTitle, isCurrentPage: true }
   ],
   
-  post: (postTitle: string, postId: string): BreadcrumbItem[] => [
+  post: (postTitle: string, _postId: string): BreadcrumbItem[] => [
     { label: '홈', href: '/' },
     { label: '레시피드', href: '/posts' },
     { label: postTitle, isCurrentPage: true }

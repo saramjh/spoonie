@@ -12,7 +12,6 @@
 "use client"
 
 import { useState, useCallback, useMemo, useEffect } from "react"
-import { mutate } from "swr"
 import { cacheManager } from "@/lib/unified-cache-manager"
 
 interface UseThumbnailOptions {
@@ -129,7 +128,7 @@ export function useThumbnail({
     if (itemId) {
       await cacheManager.updateThumbnail(itemId, newIndex, imageUrls)
     }
-  }, [currentIndex, imageUrls, itemId, isValidIndex, onThumbnailChange])
+  }, [imageUrls, itemId, isValidIndex, onThumbnailChange])
 
   return {
     currentThumbnailIndex: currentIndex,
