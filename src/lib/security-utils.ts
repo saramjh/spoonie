@@ -57,7 +57,7 @@ const ALLOWED_IMAGE_TYPES = [
   'image/webp'
 ]
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const MAX_TOTAL_SIZE = 20 * 1024 * 1024 // 20MB (전체)
 
 /**
@@ -241,7 +241,7 @@ export function validateUUID(uuid: string): boolean {
 /**
  * 안전한 정수 변환
  */
-export function safeParseInt(value: any, defaultValue: number = 0): number {
+export function safeParseInt(value: unknown, defaultValue: number = 0): number {
   if (typeof value === 'number' && !isNaN(value)) {
     return Math.floor(value)
   }
@@ -258,7 +258,7 @@ export function safeParseInt(value: any, defaultValue: number = 0): number {
  * 🔢 안전한 실수 변환 (소숫점 지원)
  * 재료량 등 소숫점 입력을 위한 안전한 parseFloat 대안
  */
-export function safeParseFloat(value: any, defaultValue: number = 0): number {
+export function safeParseFloat(value: unknown, defaultValue: number = 0): number {
   if (typeof value === 'number' && !isNaN(value)) {
     return value
   }

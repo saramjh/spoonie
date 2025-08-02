@@ -2,11 +2,11 @@
 
 import { useState, useRef, useCallback } from "react"
 import Image from "next/image"
-import { Button } from "@/components/ui/button"
+
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
-import { ImagePlus, X, Camera } from "lucide-react"
-import { optimizeImages, formatFileSize, isValidImageType, isValidFileSize, OptimizedImage } from "@/lib/image-utils"
+import { X, Camera } from "lucide-react"
+import { optimizeImages, isValidImageType, isValidFileSize, OptimizedImage } from "@/lib/image-utils"
 import { useToast } from "@/hooks/use-toast"
 
 interface InstructionImageUploaderProps {
@@ -18,7 +18,7 @@ interface InstructionImageUploaderProps {
 export default function InstructionImageUploader({ imageUrl, onImageChange, placeholder = "이미지 추가" }: InstructionImageUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const [isProcessing, setIsProcessing] = useState(false);
+
   const [preview, setPreview] = useState<string | undefined>(imageUrl);
 
   const handleFileSelect = useCallback(
@@ -29,13 +29,13 @@ export default function InstructionImageUploader({ imageUrl, onImageChange, plac
       if (!isValidImageType(file) || !isValidFileSize(file)) {
         toast({
           title: "파일 형식 오류",
-          description: "JPG, PNG, WEBP 형식의 5MB 이하 이미지만 업로드 가능합니다.",
+          description: "JPG, PNG, WEBP 형식의 10MB 이하 이미지만 업로드 가능합니다.",
           variant: "destructive",
         });
         return;
       }
 
-      setIsProcessing(true);
+
       try {
         const [optimizedImage] = await optimizeImages([file]);
         setPreview(optimizedImage.preview);
@@ -48,8 +48,6 @@ export default function InstructionImageUploader({ imageUrl, onImageChange, plac
           description: "이미지 처리 중 오류가 발생했습니다.",
           variant: "destructive",
         });
-      } finally {
-        setIsProcessing(false);
       }
 
       if (fileInputRef.current) {

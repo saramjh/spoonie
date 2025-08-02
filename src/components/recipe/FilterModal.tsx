@@ -35,10 +35,10 @@ export default function FilterModal({ isOpen, onClose }: FilterModalProps) {
 		resetCurrentTabFilters()
 	}
 
-	return (
-		<Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
-			<DrawerContent>
-				<div className="mx-auto w-full max-w-md p-4">
+			return (
+			<Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
+				<DrawerContent className="sm:max-w-md sm:mx-auto">
+					<div className="mx-auto w-full p-4">
 					<DrawerHeader>
 						<DrawerTitle>레시피 필터 및 정렬</DrawerTitle>
 						<DrawerDescription>원하는 레시피를 찾기 위해 조건을 설정하세요.</DrawerDescription>

@@ -10,12 +10,10 @@ export default function AppWrapper({ children }: { children: React.ReactNode }) 
 
 	const { PullToRefreshIndicator, pullDistance } = usePullToRefresh()
 
-	const noHeader = [
-    "/recipes/new",
-    "/posts/new",
-  ].includes(pathname) || pathname.match(/^\/recipes\/.+\/edit$/) || pathname.match(/^\/posts\/.+\/edit$/)
+	// ✅ 헤더는 항상 표시 (뒤로가기 + 브랜딩 + 위치 인식)
+	const noHeader = false
 
-	const noBottomNav = pathname.startsWith("/recipes/") || pathname.startsWith("/posts/")
+	const noBottomNav = (pathname.startsWith("/recipes/") && pathname !== "/recipes") || (pathname.startsWith("/posts/") && pathname !== "/posts")
 
 	const wrapperStyle = {
 		transform: `translateY(${pullDistance}px)`,
@@ -34,12 +32,12 @@ export default function AppWrapper({ children }: { children: React.ReactNode }) 
 	const mainBg = isRecipeBook ? "bg-gray-50" : isSearchPage ? "bg-white" : "bg-gray-50"
 
 	return (
-		<div className={`relative flex flex-col min-h-screen w-full max-w-md mx-auto ${containerBg} overflow-hidden`}>
+		<div className={`relative flex flex-col h-screen w-full max-w-md mx-auto ${containerBg} overflow-hidden`}>
 			<PullToRefreshIndicator />
 			<div style={wrapperStyle} className="relative flex flex-col w-full h-full">
 				{!noHeader && <Header />}
 				<main className={`flex-1 w-full overflow-y-auto ${mainBg}`}>
-					<div className={`flex-1 ${!noBottomNav ? "pb-16" : ""}`}>{children}</div>
+					<div className={`h-full ${!noBottomNav ? "pb-16" : ""}`}>{children}</div>
 				</main>
 			</div>
 			{!noBottomNav && <BottomNavBar />}

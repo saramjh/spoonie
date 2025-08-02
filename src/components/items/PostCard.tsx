@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Share2, MessageCircle, MoreVertical, Trash2, Edit } from "lucide-react"
+import { Share2, MessageCircle, MoreVertical, Trash2, Edit, Heart } from "lucide-react"
 import { timeAgo } from "@/lib/utils"
 import FollowButton from "./FollowButton"
 import { SimplifiedLikeButton } from "@/components/items/SimplifiedLikeButton"
@@ -23,6 +23,8 @@ import { enrichWithCachedAuthor, cacheAuthors } from "@/utils/author-cache"
 import { useThumbnail } from "@/hooks/useThumbnail"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import ExpandableText from "@/components/common/ExpandableText"
+import { cacheManager } from "@/lib/unified-cache-manager"
+import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
 
 /**
  * 🎯 검증된 홈 피드 게시물 카드 컴포넌트
@@ -98,9 +100,13 @@ export default function PostCard({
   // 👤 작성자 정보 캐시 적용
   const enrichedItem = enrichWithCachedAuthor(item)
 
-  // 🗑️ 삭제 관련 상태
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
+  	// 🗑️ 삭제 관련 상태
+	const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+	const [isDeleting, setIsDeleting] = useState(false)
+	
+	// 🎯 더블탭 좋아요 상태 관리
+	const [showHeartAnimation, setShowHeartAnimation] = useState(false)
+	const [showLoginPrompt, setShowLoginPrompt] = useState(false)
 
   // 🚀 SSA: 캐시된 좋아요 데이터 사용
   const likesCount = cachedItem.likes_count
@@ -120,6 +126,33 @@ export default function PostCard({
       }])
     }
   }, [item.user_id, item.username, item.display_name, item.avatar_url, item.user_public_id])
+
+  // 🎯 더블탭 좋아요 핸들러 (프로필 그리드와 동일한 SSA 기반 로직)
+  const handleDoubleTapLike = async () => {
+    // 🔐 비로그인 사용자 회원가입 유도 (토스 UX 스타일 - 바텀시트)
+    if (!currentUser?.id) {
+      setShowLoginPrompt(true)
+      return
+    }
+    
+    try {
+      const newHasLiked = !cachedItem.is_liked
+      await cacheManager.like(stableItemId, currentUser.id, newHasLiked, cachedItem)
+      
+      // 🎉 토스식 마이크로 인터랙션 (React 상태 기반 안전한 애니메이션)
+      if (newHasLiked) {
+        setShowHeartAnimation(true)
+        setTimeout(() => setShowHeartAnimation(false), 600)
+      }
+    } catch (error) {
+      console.error('❌ 더블탭 좋아요 처리 실패:', error)
+      toast({
+        title: "오류가 발생했습니다",
+        description: "잠시 후 다시 시도해주세요.",
+        variant: "destructive",
+      })
+    }
+  }
 
   // 🗑️ SSA 기반 삭제 처리 (즉시 홈화면에서 사라짐)
   const handleDelete = async () => {
@@ -268,26 +301,40 @@ export default function PostCard({
         </div>
       </CardHeader>
 
-      <div onClick={() => router.push(detailUrl)} className="cursor-pointer">
-        {orderedImages.length > 0 && (
-          <div className="relative">
-            <ImageCarousel 
-              images={orderedImages} 
-                              alt={item.title || `Post by ${item.username}`} 
-              priority={priority} 
-            />
-            {/* 비공개 표시 - 업계표준 Privacy UX */}
-            {!item.is_public && (
-              <div className="absolute top-3 right-3 z-20">
-                <div className="bg-black/80 text-white text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm shadow-lg">
-                  비공개
-                </div>
+      {/* 🎯 이미지 영역: 프로필 그리드와 동일한 더블탭 좋아요 */}
+      {orderedImages.length > 0 && (
+        <div className="relative">
+          <ImageCarousel 
+            images={orderedImages} 
+            alt={item.title || `Post by ${item.username}`} 
+            priority={priority}
+            onSingleClick={() => router.push(detailUrl)}  // 단일탭 = 상세페이지
+            onDoubleClick={handleDoubleTapLike}           // 더블탭 = 좋아요
+          />
+          
+          {/* 🎉 토스식 더블탭 좋아요 애니메이션 */}
+          {showHeartAnimation && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
+              <Heart className="w-16 h-16 fill-red-500 text-red-500 animate-ping" />
+            </div>
+          )}
+          
+          {/* 비공개 표시 - 업계표준 Privacy UX */}
+          {!item.is_public && (
+            <div className="absolute top-3 right-3 z-20">
+              <div className="bg-black/80 text-white text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm shadow-lg">
+                비공개
               </div>
-            )}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
+      )}
 
-        <CardContent className={`p-4 ${isRecipe ? 'bg-gradient-to-b from-transparent to-orange-25' : ''}`}>
+        {/* 🎯 텍스트 영역: 기존처럼 클릭으로 상세페이지 이동 */}
+        <CardContent 
+          className={`p-4 ${isRecipe ? 'bg-gradient-to-b from-transparent to-orange-25' : ''} cursor-pointer`}
+          onClick={() => router.push(detailUrl)}
+        >
           {isRecipe ? (
             <>
               <div className="flex items-start gap-2 mb-2">
@@ -392,7 +439,6 @@ export default function PostCard({
             </div>
           )}
         </CardContent>
-      </div>
 
       <CardFooter className={`flex justify-between items-center p-4 pt-2 ${
         isRecipe ? 'bg-gradient-to-r from-orange-50/50 to-yellow-50/50 border-t border-orange-100' : ''
@@ -453,6 +499,13 @@ export default function PostCard({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      
+      {/* 🎨 토스 스타일 로그인 유도 바텀시트 */}
+      <LoginPromptSheet
+        isOpen={showLoginPrompt}
+        onClose={() => setShowLoginPrompt(false)}
+        action="like"
+      />
     </Card>
   )
 }

@@ -50,12 +50,12 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
   // 🚀 업계 표준: 히스토리 뒤로가기 완벽 보장
   usePageVisibility({
     revalidateKeys: ['items|', 'comments_'],
-    debug: false // 프로덕션에서는 false
+    debug: process.env.NODE_ENV === 'development'
   })
 
   useHistorySync({
     homePathPatterns: ['/'],
-    debug: false // 프로덕션에서는 false
+    debug: process.env.NODE_ENV === 'development'
   })
 
   // 사용자 상태 및 가입 유도 모달 관련 상태

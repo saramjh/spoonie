@@ -83,9 +83,31 @@ export function useGoogleAnalytics() {
   }, [pathname, searchParams])
 }
 
+// 🚨 window 객체에 플래그 저장으로 완전 중복 방지
+declare global {
+  interface Window {
+    __SPOONIE_GA_INITIALIZED__: boolean
+    __SPOONIE_GA_BLOCKED__: boolean
+  }
+}
+
 // 🎯 메인 GoogleAnalytics 컴포넌트 (Service Worker 호환)
 export default function GoogleAnalytics() {
   useEffect(() => {
+    // 🛡️ 개발 환경에서는 애드블로커 충돌 방지를 위해 완전 비활성화
+    if (process.env.NODE_ENV === 'development') {
+      if (!window.__SPOONIE_GA_BLOCKED__) {
+        console.log('🛡️ [개발환경] GA 비활성화 - 애드블로커 충돌 방지')
+        window.__SPOONIE_GA_BLOCKED__ = true
+      }
+      return
+    }
+
+    // 🛡️ Window 객체 기반 중복 방지 (더 강력함)
+    if (window.__SPOONIE_GA_INITIALIZED__) {
+      return
+    }
+
     // GA ID 확인 및 로그 (개발 환경에서만)
     if (process.env.NODE_ENV === 'development') {
       console.log('🎯 Google Analytics ID:', GA_MEASUREMENT_ID)
@@ -97,8 +119,12 @@ export default function GoogleAnalytics() {
       if (process.env.NODE_ENV === 'development') {
         console.log('🔄 GA script already loaded')
       }
+      isGAInitialized = true // 플래그 설정
       return
     }
+
+    // 플래그 설정 (로드 시작 시점에 바로 설정)
+    window.__SPOONIE_GA_INITIALIZED__ = true
 
     // 🚀 네이티브 script 태그 생성 (Service Worker 호환)
     const script = document.createElement('script')

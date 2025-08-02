@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, ReactNode } from "react"
+import { useEffect, ReactNode } from "react"
 import { usePathname } from "next/navigation"
 import { useSWRConfig } from "swr"
 import SplashScreen from "./SplashScreen"
@@ -16,7 +16,7 @@ interface ClientLayoutWrapperProps {
 export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperProps) {
   const { isInitialLoad, setSession, setProfile, setInitialLoad: setStoreInitialLoad } = useSessionStore()
   const { initializeFollowState } = useFollowStore() // 🚀 업계 표준: 팔로우 상태 초기화
-  const [initialized, setInitialized] = useState(false)
+
   const { mutate } = useSWRConfig()
   const pathname = usePathname()
 
@@ -68,7 +68,9 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
               
               setProfile(null)
             } else {
-              console.log("✅ Profile loaded successfully:", profile.username)
+              if (process.env.NODE_ENV === 'development') {
+          console.log("✅ Profile loaded successfully:", profile.username)
+        }
               setProfile(profile)
             }
           } else {
@@ -85,14 +87,14 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
         // 초기 로딩 완료
         setTimeout(() => {
           setStoreInitialLoad(false)
-          setInitialized(true)
+
 
         }, 1500) // 1.5초 후 스플래시 화면 숨김
       }
     }
 
     initializeAuth()
-  }, [isInitialLoad, setSession, setProfile, setStoreInitialLoad])
+  }, [isInitialLoad, setSession, setProfile, setStoreInitialLoad, initializeFollowState])
 
   // 🚀 뒤로가기 감지 시 홈화면 피드 새로고침
   useEffect(() => {

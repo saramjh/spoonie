@@ -6,6 +6,7 @@ import { useFollowStore } from "@/store/followStore"
 import { useToast } from "@/hooks/use-toast"
 import { notificationService } from "@/lib/notification-service"
 import { useSessionStore } from "@/store/sessionStore"
+import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
 
 interface FollowButtonProps {
 	userId: string
@@ -13,13 +14,14 @@ interface FollowButtonProps {
 	className?: string
 }
 
-export default function FollowButton({ userId, initialIsFollowing, className }: FollowButtonProps) {
-	const { toast } = useToast()
-	const { session } = useSessionStore()
-	
-	// 🚀 업계 표준: 글로벌 상태에서 팔로우 상태 참조 (Single Source of Truth)
-	const { isFollowing: globalIsFollowing, follow, unfollow } = useFollowStore()
-	const [isProcessing, setIsProcessing] = useState(false)
+	export default function FollowButton({ userId, initialIsFollowing, className }: FollowButtonProps) {
+		const { toast } = useToast()
+		const { session } = useSessionStore()
+		
+		// 🚀 업계 표준: 글로벌 상태에서 팔로우 상태 참조 (Single Source of Truth)
+		const { isFollowing: globalIsFollowing, follow, unfollow } = useFollowStore()
+		const [isProcessing, setIsProcessing] = useState(false)
+		const [showLoginPrompt, setShowLoginPrompt] = useState(false)
 	
 	// 🎯 업계 표준: 글로벌 상태 우선, Store가 로딩중이면 초기값 사용
 	// isFollowing은 항상 boolean을 반환하므로 Store가 초기화되었는지 확인 필요
@@ -31,16 +33,9 @@ export default function FollowButton({ userId, initialIsFollowing, className }: 
 	const handleFollowToggle = async () => {
 		if (isProcessing) return
 		
-		// 🔐 비로그인 사용자 회원가입 유도 (토스 UX 스타일)
+		// 🔐 비로그인 사용자 회원가입 유도 (토스 UX 스타일 - 바텀시트)
 		if (!session?.id) {
-			toast({
-				title: "👋 로그인이 필요해요",
-				description: "팔로우 기능은 회원만 이용할 수 있습니다. 로그인하시겠어요?",
-			})
-			// 3초 후 로그인 페이지로 이동
-			setTimeout(() => {
-				window.location.href = '/login'
-			}, 3000)
+			setShowLoginPrompt(true)
 			return
 		}
 
@@ -97,21 +92,30 @@ export default function FollowButton({ userId, initialIsFollowing, className }: 
 	}
 
 	return (
-		<Button
-			variant={isFollowing ? "outline" : "default"}
-			size="sm"
-			onClick={handleFollowToggle}
-			disabled={isProcessing}
-			className={className}
-		>
-			{isProcessing ? (
-				<div className="flex items-center gap-2">
-					<div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-					<span>{isFollowing ? "언팔로우 중..." : "팔로우 중..."}</span>
-				</div>
-			) : (
-				<span>{isFollowing ? "팔로잉" : "팔로우"}</span>
-			)}
-		</Button>
+		<>
+			<Button
+				variant={isFollowing ? "outline" : "default"}
+				size="sm"
+				onClick={handleFollowToggle}
+				disabled={isProcessing}
+				className={className}
+			>
+				{isProcessing ? (
+					<div className="flex items-center gap-2">
+						<div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+						<span>{isFollowing ? "언팔로우 중..." : "팔로우 중..."}</span>
+					</div>
+				) : (
+					<span>{isFollowing ? "팔로잉" : "팔로우"}</span>
+				)}
+			</Button>
+
+			{/* 🎨 토스 스타일 로그인 유도 바텀시트 */}
+			<LoginPromptSheet
+				isOpen={showLoginPrompt}
+				onClose={() => setShowLoginPrompt(false)}
+				action="follow"
+			/>
+		</>
 	)
 }

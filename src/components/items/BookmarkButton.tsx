@@ -13,6 +13,7 @@ import { cacheManager } from "@/lib/unified-cache-manager"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import { mutate } from "swr"
 import type { Item } from "@/types/item"
+import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
 
 interface BookmarkButtonProps {
   itemId: string
@@ -88,6 +89,7 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
   const isBookmarked = (cachedItem as any).is_bookmarked || initialIsBookmarked
 
   const [isLoading, setIsLoading] = useState(false)
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false)
   const { toast } = useToast()
 
   // 🛡️ Race Condition 방지 (SimplifiedLikeButton과 동일한 패턴)
@@ -102,16 +104,9 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
       e.stopPropagation()
     }
     
-    // 🔐 비로그인 사용자 회원가입 유도 (토스 UX 스타일)
+    // 🔐 비로그인 사용자 회원가입 유도 (토스 UX 스타일 - 바텀시트)
     if (!currentUserId) {
-      toast({
-        title: "👋 로그인이 필요해요",
-        description: "북마크 기능은 회원만 이용할 수 있습니다. 로그인하시겠어요?",
-      })
-      // 3초 후 로그인 페이지로 이동
-      setTimeout(() => {
-        window.location.href = '/login'
-      }, 3000)
+      setShowLoginPrompt(true)
       return
     }
     
@@ -188,26 +183,35 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
   }, [currentUserId, isAuthLoading, isBookmarked, bookmarksCount, itemId, onBookmarkChange, toast, isLoading])
 
   return (
-    <Button
-      ref={ref}
-      variant={variant}
-      size={size}
-      onClick={handleBookmark}
-      disabled={isLoading || isAuthLoading}
-      className={`transition-colors ${className} ${
-        isBookmarked 
-          ? 'text-orange-500 hover:text-orange-600' 
-          : 'text-gray-600 hover:text-orange-500'
-      }`}
-    >
-      <Bookmark 
-        className={`h-5 w-5 transition-all duration-200 ${
+    <>
+      <Button
+        ref={ref}
+        variant={variant}
+        size={size}
+        onClick={handleBookmark}
+        disabled={isLoading || isAuthLoading}
+        className={`transition-colors ${className} ${
           isBookmarked 
-            ? 'fill-orange-500 text-orange-500 scale-110' 
-            : 'hover:scale-105'
-        }`} 
+            ? 'text-orange-500 hover:text-orange-600' 
+            : 'text-gray-600 hover:text-orange-500'
+        }`}
+      >
+        <Bookmark 
+          className={`h-5 w-5 transition-all duration-200 ${
+            isBookmarked 
+              ? 'fill-orange-500 text-orange-500 scale-110' 
+              : 'hover:scale-105'
+          }`} 
+        />
+      </Button>
+
+      {/* 🎨 토스 스타일 로그인 유도 바텀시트 */}
+      <LoginPromptSheet
+        isOpen={showLoginPrompt}
+        onClose={() => setShowLoginPrompt(false)}
+        action="bookmark"
       />
-    </Button>
+    </>
   )
 })
 

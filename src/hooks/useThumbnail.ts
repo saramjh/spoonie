@@ -94,7 +94,7 @@ export function useThumbnail({
     const ordered = reorderImagesForDisplay(imageUrls, currentIndex)
     
     // 🔍 새로운 아이템 디버깅 (이미지 URL이 있지만 orderedImages가 비어있는 경우)
-    if (itemId && imageUrls.length > 0 && ordered.length === 0) {
+    if (process.env.NODE_ENV === 'development' && itemId && imageUrls.length > 0 && ordered.length === 0) {
       console.warn(`⚠️ [THUMBNAIL DEBUG] ${itemId}: Images lost during reorder!`, {
         input_urls: imageUrls,
         current_index: currentIndex,
@@ -111,7 +111,9 @@ export function useThumbnail({
   const setThumbnailIndex = useCallback(async (newIndex: number) => {
     // 유효성 검증
     if (!isValidIndex(newIndex)) {
-      console.warn(`Invalid thumbnail index: ${newIndex} (valid range: 0-${imageUrls.length - 1})`)
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(`Invalid thumbnail index: ${newIndex} (valid range: 0-${imageUrls.length - 1})`)
+      }
       return
     }
 

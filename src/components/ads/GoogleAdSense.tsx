@@ -14,8 +14,19 @@ import { useEffect } from 'react'
 
 const ADSENSE_PUBLISHER_ID = process.env.NEXT_PUBLIC_ADSENSE_ID || 'ca-pub-4410729598083068'
 
+// 🚨 전역 플래그로 중복 로드 완전 방지 (React StrictMode 대응)
+let isAdSenseInitialized = false
+
 export default function GoogleAdSense() {
   useEffect(() => {
+    // 🛡️ 전역 플래그로 1차 체크 (React StrictMode 완전 대응)
+    if (isAdSenseInitialized) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔄 AdSense already initialized, skipping')
+      }
+      return
+    }
+
     // AdSense Publisher ID 확인 및 로그 (개발 환경에서만)
     if (process.env.NODE_ENV === 'development') {
       console.log('💰 Google AdSense Publisher ID:', ADSENSE_PUBLISHER_ID)
@@ -27,8 +38,12 @@ export default function GoogleAdSense() {
       if (process.env.NODE_ENV === 'development') {
         console.log('🔄 AdSense script already loaded')
       }
+      isAdSenseInitialized = true // 플래그 설정
       return
     }
+
+    // 플래그 설정 (로드 시작 시점에 바로 설정)
+    isAdSenseInitialized = true
 
     // 🚀 네이티브 script 태그 생성 (data-nscript 속성 방지)
     const script = document.createElement('script')

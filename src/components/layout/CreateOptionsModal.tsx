@@ -18,10 +18,10 @@ export default function CreateOptionsModal({ isOpen, onClose }: CreateOptionsMod
 		onClose()
 	}
 
-	return (
-		<Drawer open={isOpen} onOpenChange={onClose}>
-			<DrawerContent className="focus:outline-none">
-				<div className="mx-auto w-full max-w-sm">
+			return (
+			<Drawer open={isOpen} onOpenChange={onClose}>
+				<DrawerContent className="focus:outline-none sm:max-w-md sm:mx-auto">
+					<div className="mx-auto w-full">
 					<DrawerHeader>
 						<DrawerTitle>무엇을 만들까요?</DrawerTitle>
 						<DrawerDescription>만들고 싶은 콘텐츠 종류를 선택해주세요.</DrawerDescription>

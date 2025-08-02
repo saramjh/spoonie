@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, MessageCircle, Share2, MoreVertical, Edit, Trash2 } from "lucide-react"
+import { ArrowLeft, MessageCircle, Share2, MoreVertical, Edit, Trash2, Heart } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 
@@ -15,6 +15,7 @@ import { SimplifiedLikeButton } from "@/components/items/SimplifiedLikeButton"
 import { BookmarkButton } from "@/components/items/BookmarkButton"
 import FollowButton from "@/components/items/FollowButton"
 import SimplifiedCommentsSection from "@/components/items/SimplifiedCommentsSection"
+import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
 import ImageCarousel from "@/components/common/ImageCarousel"
 import RecipeContentView from "@/components/recipe/RecipeContentView"
 import { timeAgo } from "@/lib/utils"
@@ -29,6 +30,7 @@ import Link from "next/link"
 import { useCitedRecipes } from "@/hooks/useCitedRecipes"
 import { useThumbnail } from "@/hooks/useThumbnail"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
+import { cacheManager } from "@/lib/unified-cache-manager"
 
 interface ItemDetailViewProps {
 	item: ItemDetail | null | undefined
@@ -124,6 +126,10 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	const [isAuthLoading, setIsAuthLoading] = useState(true)
 	const [showDeleteModal, setShowDeleteModal] = useState(false)
 	const [isDeleting, setIsDeleting] = useState(false)
+	
+	// 🎯 더블탭 좋아요 상태 관리
+	const [showHeartAnimation, setShowHeartAnimation] = useState(false)
+	const [showLoginPrompt, setShowLoginPrompt] = useState(false)
 	const commentsRef = useRef<HTMLDivElement>(null)
 
 	const comments = useMemo(() => item?.comments_data || [], [item?.comments_data])
@@ -188,6 +194,35 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 			)
 		}
 	}, [currentUser?.id, mutate])
+	
+	// 🎯 더블탭 좋아요 핸들러 (프로필 그리드와 동일한 SSA 기반 로직)
+	const handleDoubleTapLike = async () => {
+		// 🔐 비로그인 사용자 회원가입 유도 (토스 UX 스타일 - 바텀시트)
+		if (!currentUser?.id) {
+			setShowLoginPrompt(true)
+			return
+		}
+		
+		try {
+			if (!stableItemId) return // 추가 안전장치
+			
+			const newHasLiked = !cachedItem.is_liked
+			await cacheManager.like(stableItemId, currentUser.id, newHasLiked, cachedItem)
+			
+			// 🎉 토스식 마이크로 인터랙션 (React 상태 기반 안전한 애니메이션)
+			if (newHasLiked) {
+				setShowHeartAnimation(true)
+				setTimeout(() => setShowHeartAnimation(false), 600)
+			}
+		} catch (error) {
+			console.error('❌ 더블탭 좋아요 처리 실패:', error)
+			toast({
+				title: "오류가 발생했습니다",
+				description: "잠시 후 다시 시도해주세요.",
+				variant: "destructive",
+			})
+		}
+	}
 	
 	// 🛡️ ID가 없으면 에러 상태 표시 - 모든 hooks 호출 후 조건부 렌더링
 	if (!stableItemId) {
@@ -363,21 +398,21 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 			
 			{/* 🎨 토스 스타일 브레드크럼 네비게이션 */}
 			<TossStyleBreadcrumb />
-			{/* 비회원 블러 오버레이 */}
+			{/* 비회원 블러 오버레이 - Toss-style 상단 정렬 (약한 블러) */}
 			{isGuest && (
-				<div className="absolute inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-6">
-					<div className="bg-white rounded-2xl p-8 max-w-sm mx-auto text-center shadow-2xl">
+				<div className="absolute inset-0 z-50 bg-black/15 flex items-start justify-center p-6 pt-8 sm:pt-12">
+					<div className="bg-white rounded-3xl p-8 max-w-sm mx-auto text-center shadow-2xl border border-gray-100">
 						<div className="mb-6">
-							<h2 className="text-2xl font-bold text-gray-900 mb-3">회원만 볼 수 있습니다</h2>
-							<p className="text-gray-600 leading-relaxed">
+							<h2 className="text-xl font-bold text-gray-900 mb-2">회원만 볼 수 있습니다</h2>
+							<p className="text-sm text-gray-600 leading-relaxed">
 								{isRecipe ? "레시피의 전체 내용을" : "레시피드의 전체 내용을"} 보시려면 로그인이 필요해요. Spoonie에서 더 많은 {isRecipe ? "레시피" : "레시피드"}를 만나보세요!
 							</p>
 						</div>
 						<div className="space-y-3">
-							<Button asChild className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl font-semibold">
+							<Button asChild className="w-full h-14 text-base font-semibold bg-orange-500 hover:bg-orange-600 rounded-2xl">
 								<Link href="/login">로그인 / 회원가입</Link>
 							</Button>
-							<Button variant="outline" className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 py-3 rounded-xl font-semibold" onClick={() => router.back()}>
+							<Button variant="outline" className="w-full h-14 text-base font-medium border-2 border-gray-200 text-gray-700 hover:bg-gray-50 rounded-2xl" onClick={() => router.back()}>
 								뒤로 가기
 							</Button>
 						</div>
@@ -385,8 +420,8 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 				</div>
 			)}
 
-			{/* 기존 콘텐츠 (비회원일 때 블러 처리) */}
-			<div className={isGuest ? "filter blur-sm pointer-events-none" : ""}>
+			{/* 기존 콘텐츠 (비회원일 때 블러 처리 - 아주 약함) */}
+			<div className={isGuest ? "filter blur-[1px] pointer-events-none" : ""}>
 				{/* 인스타그램 스타일 헤더 */}
 				<header className="sticky top-0 z-10 flex items-center p-4 bg-white border-b">
 					{/* 뒤로가기 버튼 */}
@@ -439,7 +474,23 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 				</header>
 
 				<div className="flex-1 overflow-y-auto">
-					               {orderedImages.length > 0 && <ImageCarousel images={orderedImages} alt={isRecipe ? item.title || "Recipe image" : `Post by ${item.username || "작성자"}`} priority />}
+					{orderedImages.length > 0 && (
+						<div className="relative">
+							<ImageCarousel 
+								images={orderedImages} 
+								alt={isRecipe ? item.title || "Recipe image" : `Post by ${item.username || "작성자"}`} 
+								priority 
+								onDoubleClick={handleDoubleTapLike}
+							/>
+							
+							{/* 🎉 토스식 더블탭 좋아요 애니메이션 */}
+							{showHeartAnimation && (
+								<div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
+									<Heart className="w-16 h-16 fill-red-500 text-red-500 animate-ping" />
+								</div>
+							)}
+						</div>
+					)}
 					<div className="p-4">
 						{isRecipe ? (
 							<>
@@ -693,6 +744,13 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
+			
+			{/* 🎨 토스 스타일 로그인 유도 바텀시트 */}
+			<LoginPromptSheet
+				isOpen={showLoginPrompt}
+				onClose={() => setShowLoginPrompt(false)}
+				action="like"
+			/>
 		</div>
 	)
 }

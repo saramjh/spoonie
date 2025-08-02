@@ -18,7 +18,7 @@ export default function SpoonieLogoAnimation({
 }: SpoonieLogoAnimationProps) {
 	const logoSrc = useFullLogo ? "/logo-full.svg" : "/icon-only.svg"
 	const width = useFullLogo ? 180 : 120
-	const height = useFullLogo ? 180 : 120
+	const height = useFullLogo ? 57 : 120
 
 	const logoContainerClasses = cn("relative", {
 		"animate-splash-logo-bounce": intro,
@@ -42,8 +42,8 @@ export default function SpoonieLogoAnimation({
 					 <Image 
 						src={logoSrc} 
 						alt="Spoonie Logo" 
-						width={useFullLogo ? 180 : 120} 
-						height={useFullLogo ? 57 : 120} 
+						width={width} 
+						height={height} 
 						priority 
 						className="h-auto"
 					/> 

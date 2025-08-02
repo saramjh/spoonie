@@ -20,23 +20,31 @@ export async function GET(request: Request) {
 			} = await supabase.auth.getUser()
 
 			if (user && !userError) {
-				console.log("🔍 OAuth callback - User authenticated:", user.id)
+				if (process.env.NODE_ENV === 'development') {
+					console.log("🔍 OAuth callback - User authenticated:", user.id)
+				}
 				
 				// 프로필 존재 여부 확인
 				const { data: existingProfile, error: profileError } = await supabase.from("profiles").select("id").eq("id", user.id).single()
 				
-				console.log("🔍 Profile check result:", { existingProfile, profileError })
+				if (process.env.NODE_ENV === 'development') {
+					console.log("🔍 Profile check result:", { existingProfile, profileError })
+				}
 
 				// 프로필이 없으면 생성
 				if (!existingProfile && profileError?.code === "PGRST116") {
-					console.log("🆕 Creating new profile for user:", user.id)
+					if (process.env.NODE_ENV === 'development') {
+						console.log("🆕 Creating new profile for user:", user.id)
+					}
 
 					try {
 						// 유니크한 username과 public_id 생성
 						const username = await generateUniqueUsername()
 						const publicId = await generateUniquePublicId()
 						
+						if (process.env.NODE_ENV === 'development') {
 						console.log("🔍 Generated credentials:", { username, publicId })
+					}
 
 						const profileData = {
 							id: user.id,
@@ -50,7 +58,9 @@ export async function GET(request: Request) {
 							username_changed_count: 0,
 						}
 						
+						if (process.env.NODE_ENV === 'development') {
 						console.log("🔍 Inserting profile data:", profileData)
+					}
 
 						const { data: insertedProfile, error: insertError } = await supabase
 							.from("profiles")
@@ -66,13 +76,13 @@ export async function GET(request: Request) {
 								details: insertError.details,
 								hint: insertError.hint
 							})
-						} else {
-							console.log("✅ Profile created successfully:", insertedProfile)
-						}
+											} else if (process.env.NODE_ENV === 'development') {
+						console.log("✅ Profile created successfully:", insertedProfile)
+					}
 					} catch (error) {
 						console.error("❌ Profile creation process failed:", error)
 					}
-				} else if (existingProfile) {
+				} else if (existingProfile && process.env.NODE_ENV === 'development') {
 					console.log("✅ Profile already exists for user:", user.id)
 				} else {
 					console.error("❌ Unexpected profile error:", profileError)
@@ -83,7 +93,9 @@ export async function GET(request: Request) {
 
 			// 🎯 올바른 도메인으로 강제 리디렉션
 			const redirectOrigin = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'
-			console.log('🔍 Callback redirect:', { origin, redirectOrigin, next })
+			if (process.env.NODE_ENV === 'development') {
+				console.log('🔍 Callback redirect:', { origin, redirectOrigin, next })
+			}
 			return NextResponse.redirect(`${redirectOrigin}${next}`)
 		}
 	}

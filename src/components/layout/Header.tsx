@@ -1,12 +1,14 @@
 'use client'
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Bell, Bookmark } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import useSWR from 'swr';
 import { useEffect, useState } from 'react';
 import { default as NextImage } from 'next/image';
+import LoginPromptSheet from "@/components/auth/LoginPromptSheet";
 
 const fetchUnreadNotificationsCount = async (userId: string) => {
   if (!userId) return 0;
@@ -25,9 +27,12 @@ const fetchUnreadNotificationsCount = async (userId: string) => {
 };
 
 export default function Header() {
+  const router = useRouter();
   const supabase = createSupabaseBrowserClient();
   const [user, setUser] = useState<any>(null);
   const [isShaking, setIsShaking] = useState(false);
+  const [showBookmarkPrompt, setShowBookmarkPrompt] = useState(false);
+  const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
 
   useEffect(() => {
     const getUser = async () => {
@@ -62,6 +67,26 @@ export default function Header() {
     };
   }, [user, mutate]);
 
+  // 북마크 클릭 핸들러
+  const handleBookmarkClick = () => {
+    if (!user) {
+      setShowBookmarkPrompt(true);
+      return;
+    }
+    // 회원이면 링크 이동 (Next.js 라우터 사용)
+    router.push('/bookmarks');
+  };
+
+  // 알림 클릭 핸들러
+  const handleNotificationClick = () => {
+    if (!user) {
+      setShowNotificationPrompt(true);
+      return;
+    }
+    // 회원이면 링크 이동 (Next.js 라우터 사용)
+    router.push('/notifications');
+  };
+
   return (
     <header className="flex items-center justify-between p-4 bg-white border-b border-gray-200">
       <Link href="/" className="flex-shrink-0">
@@ -75,22 +100,42 @@ export default function Header() {
       </Link>
 
       <div className="flex items-center gap-2">
-        <Link href="/bookmarks">
-          <Button variant="ghost" size="icon" className="rounded-full relative">
-            <Bookmark className="h-6 w-6 text-gray-600" />
-          </Button>
-        </Link>
-        <Link href="/notifications">
-          <Button variant="ghost" size="icon" className="rounded-full relative">
-            <Bell className={`h-6 w-6 text-gray-600 ${isShaking ? 'animate-bell-shake' : ''}`} />
-            {unreadCount != null && unreadCount > 0 && (
-              <span className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-xs text-white ring-2 ring-white">
-                {unreadCount < 100 ? unreadCount : '99+'}
-              </span>
-            )}
-          </Button>
-        </Link>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="rounded-full relative" 
+          onClick={handleBookmarkClick}
+        >
+          <Bookmark className="h-6 w-6 text-gray-600" />
+        </Button>
+        
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="rounded-full relative" 
+          onClick={handleNotificationClick}
+        >
+          <Bell className={`h-6 w-6 text-gray-600 ${isShaking ? 'animate-bell-shake' : ''}`} />
+          {unreadCount != null && unreadCount > 0 && (
+            <span className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-xs text-white ring-2 ring-white">
+              {unreadCount < 100 ? unreadCount : '99+'}
+            </span>
+          )}
+        </Button>
       </div>
+
+      {/* 🎨 토스 스타일 로그인 유도 바텀시트들 */}
+      <LoginPromptSheet
+        isOpen={showBookmarkPrompt}
+        onClose={() => setShowBookmarkPrompt(false)}
+        action="bookmark"
+      />
+      
+      <LoginPromptSheet
+        isOpen={showNotificationPrompt}
+        onClose={() => setShowNotificationPrompt(false)}
+        action="notification"
+      />
     </header>
   );
 }

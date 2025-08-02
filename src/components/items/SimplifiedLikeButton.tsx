@@ -6,7 +6,7 @@
 
 "use client"
 
-import { useState, forwardRef, useEffect, useRef, useCallback } from "react"
+import { useState, forwardRef, useRef, useCallback } from "react"
 import { Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
@@ -14,6 +14,7 @@ import { cacheManager } from "@/lib/unified-cache-manager"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import { notificationService } from "@/lib/notification-service"
 import LikersModal from "./LikersModal"
+import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
 import type { Item } from "@/types/item"
 
 interface SimplifiedLikeButtonProps {
@@ -94,6 +95,9 @@ export const SimplifiedLikeButton = forwardRef<HTMLButtonElement, SimplifiedLike
 
   // 📱 Instagram 방식: 좋아요한 사람들 모달 상태
   const [showLikersModal, setShowLikersModal] = useState(false)
+  
+  // 🎯 토스 스타일 로그인 유도 바텀시트 상태
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false)
 
   // 🚀 업계 표준: 완전한 Single Source of Truth
   const handleLike = useCallback(async (e?: React.MouseEvent) => {
@@ -103,16 +107,9 @@ export const SimplifiedLikeButton = forwardRef<HTMLButtonElement, SimplifiedLike
       e.stopPropagation()
     }
     
-    // 🔐 비로그인 사용자 회원가입 유도 (토스 UX 스타일)
+    // 🔐 비로그인 사용자 회원가입 유도 (토스 UX 스타일 - 바텀시트)
     if (!currentUserId) {
-      toast({
-        title: "👋 로그인이 필요해요",
-        description: "좋아요 기능은 회원만 이용할 수 있습니다. 로그인하시겠어요?",
-      })
-      // 3초 후 로그인 페이지로 이동
-      setTimeout(() => {
-        window.location.href = '/login'
-      }, 3000)
+      setShowLoginPrompt(true)
       return
     }
     
@@ -209,6 +206,13 @@ export const SimplifiedLikeButton = forwardRef<HTMLButtonElement, SimplifiedLike
         itemId={itemId}
         itemType={itemType}
         currentUserId={currentUserId}
+      />
+      
+      {/* 🎨 토스 스타일 로그인 유도 바텀시트 */}
+      <LoginPromptSheet
+        isOpen={showLoginPrompt}
+        onClose={() => setShowLoginPrompt(false)}
+        action="like"
       />
     </>
   )

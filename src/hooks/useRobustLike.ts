@@ -86,7 +86,6 @@ export function useRobustLike({
     }
 
     const actionId = Date.now().toString()
-    // console.log(`🎯 [${actionId}] Like toggle START for ${itemId}`)
 
     // 현재 상태 백업
     const backupState = { likesCount, hasLiked }
@@ -107,13 +106,11 @@ export function useRobustLike({
       setLikesCount(targetState.likesCount)
       setHasLiked(targetState.hasLiked)
       onStateChange?.(targetState.likesCount, targetState.hasLiked)
-      
-      // console.log(`🎯 [${actionId}] UI updated: ${backupState.hasLiked} → ${targetState.hasLiked}`)
+
 
       // 🚀 STEP 2: 전역 캐시 즉시 업데이트
       await updateAllCaches(itemId, targetState.likesCount, targetState.hasLiked)
-      
-      // console.log(`🎯 [${actionId}] Caches updated`)
+
 
       // 🚀 STEP 3: DB 업데이트 (안전한 upsert 방식)
       if (targetState.hasLiked) {

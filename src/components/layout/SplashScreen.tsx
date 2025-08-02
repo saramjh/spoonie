@@ -80,7 +80,7 @@ export default function SplashScreen() {
 
 			{/* Logo with morphing animation */}
 			<div className="relative z-10">
-				<SpoonieLogoAnimation intro={true} showSlogan={true} />
+				<SpoonieLogoAnimation intro={true} showSlogan={true} useFullLogo={true} />
 			</div>
 
 			{/* Morphing overlay effect for exit */}

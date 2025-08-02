@@ -502,14 +502,44 @@ export default function RecipesPage() {
 		)
 	}
 
-	if (!currentUser) {
-		return <RecipeBookAuthPrompt />
-	}
+	// 비회원 여부 확인
+	const isGuest = !currentUser && !userLoading
 
 	return (
-		<div className="flex flex-col h-full bg-gray-50 text-gray-900">
-			<div className="sticky top-0 bg-white z-[60] border-b border-gray-200">
-				<div className="flex justify-around max-w-md mx-auto relative">
+		<div className="flex flex-col h-full bg-gray-50 text-gray-900 relative">
+			{/* 비회원 블러 오버레이 - ItemDetailView와 동일한 방식 (약한 블러) */}
+			{isGuest && (
+				<div className="absolute inset-0 z-50 bg-black/15 flex items-start justify-center p-6 pt-8 sm:pt-12">
+					<div className="bg-white rounded-3xl p-8 max-w-sm mx-auto text-center shadow-2xl border border-gray-100">
+						<div className="mb-6">
+							<div className="w-16 h-16 mx-auto mb-4 bg-orange-100 rounded-full flex items-center justify-center">
+								<ChefHat className="w-8 h-8 text-orange-500" />
+							</div>
+							<h2 className="text-xl font-bold text-gray-900 mb-2">레시피북은 회원만 이용할 수 있어요</h2>
+							<p className="text-sm text-gray-600 leading-relaxed">
+								Spoonie에 가입하고 나만의 레시피를 기록하고, 관리하고, 다른 사용자들의 레시피를 탐색해보세요!
+							</p>
+						</div>
+						<div className="space-y-3">
+							<Button asChild className="w-full h-14 text-base font-semibold bg-orange-500 hover:bg-orange-600 rounded-2xl">
+								<Link href="/login">로그인 / 회원가입</Link>
+							</Button>
+							<Button 
+								variant="outline" 
+								className="w-full h-14 text-base font-medium border-2 border-gray-200 text-gray-700 hover:bg-gray-50 rounded-2xl" 
+								onClick={() => router.back()}
+							>
+								뒤로 가기
+							</Button>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* 기존 콘텐츠 (비회원일 때 블러 처리 - 아주 약함) */}
+			<div className={`flex flex-col h-full ${isGuest ? "filter blur-[1px] pointer-events-none" : ""}`}>
+				<div className="sticky top-0 bg-white z-[60] border-b border-gray-200">
+					<div className="flex justify-around max-w-md mx-auto relative">
 					<div className="flex-1 flex items-center justify-center relative">
 						<button 
 							onClick={() => handleTabChange("my_recipes")} 
@@ -707,6 +737,7 @@ export default function RecipesPage() {
 			</main>
 
 			<FilterModal isOpen={isFilterModalOpen} onClose={() => setIsFilterModalOpen(false)} />
+			</div>
 		</div>
 	)
 }

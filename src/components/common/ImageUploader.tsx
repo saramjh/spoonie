@@ -56,7 +56,7 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 			if (invalidFiles.length > 0) {
 				toast({
 					title: "파일 형식 오류",
-					description: "JPG, PNG, WEBP 형식의 5MB 이하 이미지만 업로드 가능합니다.",
+					description: "JPG, PNG, WEBP 형식의 10MB 이하 이미지만 업로드 가능합니다.",
 					variant: "destructive",
 				})
 				return
@@ -184,7 +184,7 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 					<div className="h-full flex flex-col items-center justify-center text-gray-400 hover:text-orange-500 space-y-2 transition-colors duration-300">
 						<Camera className="w-12 h-12" />
 						<p className="text-sm font-medium">{placeholder}</p>
-						<p className="text-xs">최대 {maxImages}개, 5MB 이하</p>
+						<p className="text-xs">최대 {maxImages}개, 10MB 이하</p>
 					</div>
 				</Card>
 			)}

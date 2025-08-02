@@ -86,9 +86,9 @@ export default function QuickProfileModal({ isOpen, onClose, user }: QuickProfil
   const isLoading = profileLoading || followLoading || recipeLoading;
 
   return (
-    <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DrawerContent>
-        <div className="mx-auto w-full max-w-sm">
+    		<Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
+			<DrawerContent className="sm:max-w-md sm:mx-auto">
+				<div className="mx-auto w-full">
           <DrawerHeader className="text-left">
             <DrawerTitle className="flex items-center gap-4">
                 {profile?.avatar_url ? (

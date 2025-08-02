@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster"
 import ClientLayoutWrapper from "@/components/layout/ClientLayoutWrapper"
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics"
 import GoogleAdSense from "@/components/ads/GoogleAdSense"
+import ServiceWorkerUpdater from "@/components/layout/ServiceWorkerUpdater"
 
 const fontSans = localFont({
 	src: "./fonts/GeistVF.woff",
@@ -95,6 +96,8 @@ export default function RootLayout({
 				<GoogleAnalytics />
 				{/* 💰 Google AdSense */}
 				<GoogleAdSense />
+				{/* 🔄 Service Worker 업데이터 */}
+				<ServiceWorkerUpdater />
 				
 				<ClientLayoutWrapper>{children}</ClientLayoutWrapper>
 				<Toaster />

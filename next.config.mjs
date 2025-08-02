@@ -1,13 +1,70 @@
 import withPWA from "@ducanh2912/next-pwa";
 
+// 🎯 PWA 재활성화 + SyntaxError 근본 해결 전략
+// Supabase Realtime과 Webpack 모듈 충돌 방지를 위한 정교한 캐싱 전략
 const pwaConfig = withPWA({
-  dest: "public",
-  register: true,
-  skipWaiting: true,
-  disable: process.env.NODE_ENV === "development",
-  fallbacks: {
-    document: "/offline", // 오프라인 시 보여줄 페이지
-  },
+	dest: "public",
+	register: true,      // ✅ PWA 다시 활성화!
+	skipWaiting: true,
+	disable: false,      // ✅ PWA 기능 복원!
+	reloadOnOnline: true,
+	cacheOnFrontEndNav: true,
+	fallbacks: {
+		document: "/offline",
+	},
+	// 🚨 핵심: SyntaxError 방지를 위한 전략적 캐싱
+	runtimeCaching: [
+		{
+			// 🎯 JavaScript 파일: 네트워크 우선으로 최신 코드 보장
+			urlPattern: /\/_next\/static\/chunks\/.*\.js$/,
+			handler: 'NetworkFirst',
+			options: {
+				cacheName: 'spoonie-js-cache-v3',
+				expiration: {
+					maxEntries: 30,        // 최소한의 캐시
+					maxAgeSeconds: 60 * 60 * 24 * 2, // 2일로 단축
+				},
+				networkTimeoutSeconds: 3,  // 빠른 타임아웃
+				// 🔥 캐시 무효화 강화
+				plugins: [{
+					cacheKeyWillBeUsed: async ({ request }) => {
+						const url = new URL(request.url)
+						// 빌드 해시가 변경되면 자동으로 캐시 무효화
+						return `${url.pathname}?v=${url.searchParams.get('v') || 'latest'}`
+					}
+				}]
+			},
+		},
+		{
+			// 🚨 Realtime/WebSocket 관련: 절대 캐시하지 않음
+			urlPattern: /(realtime|websocket|supabase.*realtime)/i,
+			handler: 'NetworkOnly',
+		},
+		{
+			// 🎨 CSS: 안전한 캐싱
+			urlPattern: /\/_next\/static\/css\/.*\.css$/,
+			handler: 'StaleWhileRevalidate',
+			options: {
+				cacheName: 'spoonie-css-cache-v3',
+				expiration: {
+					maxEntries: 20,
+					maxAgeSeconds: 60 * 60 * 24 * 7,
+				},
+			},
+		},
+		{
+			// 🖼️ 이미지: 적극적 캐싱 (변경 빈도 낮음)
+			urlPattern: /\/_next\/static\/media\/.*\.(png|jpg|jpeg|svg|gif|webp)$/,
+			handler: 'CacheFirst',
+			options: {
+				cacheName: 'spoonie-image-cache-v3',
+				expiration: {
+					maxEntries: 100,
+					maxAgeSeconds: 60 * 60 * 24 * 30,
+				},
+			},
+		},
+	],
 });
 
 /** @type {import('next').NextConfig} */

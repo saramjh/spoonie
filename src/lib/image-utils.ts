@@ -111,7 +111,7 @@ export const isValidImageType = (file: File): boolean => {
 /**
  * 최대 파일 크기 확인
  */
-export const isValidFileSize = (file: File, maxSizeMB = 5): boolean => {
+export const isValidFileSize = (file: File, maxSizeMB = 10): boolean => {
 	const maxSizeBytes = maxSizeMB * 1024 * 1024
 	return file.size <= maxSizeBytes
 }

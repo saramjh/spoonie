@@ -63,9 +63,11 @@ export default function LoginPage() {
 			? `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
 			: `${window.location.origin}/auth/callback`
 		
-		// 🔍 디버깅용 로그 (임시)
-		console.log('🔍 OAuth Redirect URL:', redirectUrl)
-		console.log('🔍 Environment NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL)
+		// 🔍 디버깅용 로그 (개발 환경에서만)
+		if (process.env.NODE_ENV === 'development') {
+			console.log('🔍 OAuth Redirect URL:', redirectUrl)
+			console.log('🔍 Environment NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL)
+		}
 		
 		await supabase.auth.signInWithOAuth({
 			provider: "google",
@@ -78,77 +80,104 @@ export default function LoginPage() {
 		})
 	}
 
-	return (
-		<div className="flex flex-col items-center justify-center py-12 bg-white p-4">
-			<main className="w-full max-w-sm mx-auto">
+				return (
+					<div className="min-h-screen flex flex-col items-center justify-start p-4 bg-gradient-to-br from-orange-50 via-white to-orange-50">
+			{/* 🎨 토스 스타일 그라디언트 배경 */}
+			{/* 📱 상단 여백 + 카드 컨테이너 */}
+			<main className="w-full max-w-sm mx-auto pt-16 sm:pt-20">
+				{/* 🏷️ 컴팩트한 브랜드 영역 */}
 				<div className="text-center mb-6">
-					<div className="inline-block bg-white border-2 border-orange-500 p-4 rounded-2xl mb-4 shadow-bauhaus hover:shadow-bauhaus-lg transition-all duration-300 transform hover:scale-105">
-						<Image src="/icon-only.svg" alt="Spoonie Logo" width={40} height={40} />
+					<div className="inline-block bg-white border-2 border-orange-500 p-3 rounded-xl mb-4 shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+						<Image src="/icon-only.svg" alt="Spoonie Logo" width={32} height={32} />
 					</div>
-					<h1 className="text-3xl font-bold text-gray-900">Spoonie</h1>
-					<p className="text-gray-500 mt-2">요리의 즐거움, 한 스푼</p>
+					<h1 className="text-2xl font-bold text-gray-900 mb-1">Spoonie</h1>
+					<p className="text-sm text-gray-600">요리의 즐거움, 한 스푼</p>
 				</div>
 
-				<Form {...form}>
-					<form onSubmit={form.handleSubmit(handleLogin)} className="space-y-4">
-						<FormField
-							control={form.control}
-							name="email"
-							render={({ field }) => (
-								<FormItem>
-									<FormControl>
-										<Input placeholder="이메일" {...field} className="h-12 text-base bg-gray-50 border-gray-200 focus-visible:bg-white rounded-xl" />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-						<FormField
-							control={form.control}
-							name="password"
-							render={({ field }) => (
-								<FormItem>
-									<FormControl>
-										<Input type="password" placeholder="비밀번호" {...field} className="h-12 text-base bg-gray-50 border-gray-200 focus-visible:bg-white rounded-xl" />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-						<Button type="submit" className="w-full h-12 text-base font-bold bg-orange-500 hover:bg-orange-600  rounded-xl">
-							로그인
+				{/* 📋 로그인 카드 */}
+				<div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 backdrop-blur-sm">
+
+					<Form {...form}>
+						<form onSubmit={form.handleSubmit(handleLogin)} className="space-y-5">
+							<FormField
+								control={form.control}
+								name="email"
+								render={({ field }) => (
+									<FormItem>
+										<FormControl>
+											{/* 📝 토스 스타일 입력필드 */}
+											<Input 
+												placeholder="이메일" 
+												{...field} 
+												className="h-14 text-base bg-gray-50 border-2 border-gray-200 focus:border-orange-500 focus:bg-white focus:ring-0 rounded-2xl transition-all duration-200 shadow-sm focus:shadow-md" 
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={form.control}
+								name="password"
+								render={({ field }) => (
+									<FormItem>
+										<FormControl>
+											<Input 
+												type="password" 
+												placeholder="비밀번호" 
+												{...field} 
+												className="h-14 text-base bg-gray-50 border-2 border-gray-200 focus:border-orange-500 focus:bg-white focus:ring-0 rounded-2xl transition-all duration-200 shadow-sm focus:shadow-md" 
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							{/* 🚀 토스 스타일 로그인 버튼 */}
+							<Button 
+								type="submit" 
+								className="w-full h-14 text-base font-bold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]"
+							>
+								로그인
+							</Button>
+						</form>
+					</Form>
+
+						{/* 🔗 비밀번호 찾기 링크 */}
+						<div className="text-center mt-4 mb-6">
+							<Link href="/forgot-password" className="text-sm text-gray-600 hover:text-orange-600 transition-colors duration-200">
+								비밀번호를 잊으셨나요?
+							</Link>
+						</div>
+
+						{/* 📋 구분선 */}
+						<div className="relative my-6">
+							<div className="absolute inset-0 flex items-center">
+								<span className="w-full border-t border-gray-200" />
+							</div>
+							<div className="relative flex justify-center text-xs">
+								<span className="bg-white px-4 text-gray-500 font-medium">또는</span>
+							</div>
+						</div>
+
+						{/* 🚀 소셜 로그인 */}
+						<Button 
+							variant="outline" 
+							className="w-full h-14 text-base border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200" 
+							onClick={handleGoogleLogin}
+						>
+							<GoogleIcon className="mr-3" />
+							Google로 계속하기
 						</Button>
-					</form>
-				</Form>
+				</div>
 
-				<div className="text-center my-4">
-					<Link href="/forgot-password" legacyBehavior>
-						<a className="text-sm text-gray-600 hover:underline">비밀번호를 잊으셨나요?</a>
+				{/* 📋 회원가입 링크 */}
+				<div className="mt-8 text-center">
+					<span className="text-sm text-gray-600">계정이 없으신가요? </span>
+					<Link href="/signup" className="text-sm font-semibold text-orange-500 hover:text-orange-600 transition-colors duration-200">
+						회원가입
 					</Link>
 				</div>
-
-				<div className="relative my-6">
-					<div className="absolute inset-0 flex items-center">
-						<span className="w-full border-t" />
-					</div>
-					<div className="relative flex justify-center text-xs uppercase">
-						<span className="bg-white px-2 text-muted-foreground">또는</span>
-					</div>
-				</div>
-
-				<div className="space-y-3">
-					<Button variant="outline" className="w-full h-12 text-base rounded-xl" onClick={handleGoogleLogin}>
-						<GoogleIcon className="mr-2" />
-						Google로 계속하기
-					</Button>
-				</div>
-
-				<p className="mt-8 text-sm text-center text-gray-600">
-					계정이 없으신가요?{" "}
-					<Link href="/signup" legacyBehavior>
-						<a className="font-semibold text-orange-500 hover:text-orange-600 hover:underline">회원가입</a>
-					</Link>
-				</p>
 			</main>
 		</div>
 	)
