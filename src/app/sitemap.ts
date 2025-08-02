@@ -6,6 +6,9 @@
 import { MetadataRoute } from 'next'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 
+// 🔧 동적 라우팅 강제 (cookies 사용하는 Supabase 때문)
+export const dynamic = 'force-dynamic'
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'
   

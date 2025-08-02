@@ -19,7 +19,7 @@ import { Settings, LogOut, PlusCircle, User as UserIcon } from 'lucide-react'
 
 interface UserProfile {
   id: string;
-  display_name: string | null;
+  username: string | null;
   avatar_url: string | null;
 }
 
@@ -27,7 +27,7 @@ const fetchUserProfile = async (userId: string) => {
   const supabase = createSupabaseBrowserClient()
   const { data, error } = await supabase
     .from("profiles")
-    .select(`id, display_name, avatar_url`)
+    .select(`id, username, avatar_url`)
     .eq("id", userId)
     .single()
   if (error) throw error

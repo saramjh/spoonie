@@ -2,6 +2,9 @@ import { Metadata } from 'next'
 import SeamlessItemList from "@/components/items/SeamlessItemList"
 import { getInitialFeedData } from "@/lib/server-data"
 
+// 🔧 동적 라우팅 강제 (개인화된 피드 때문에)
+export const dynamic = 'force-dynamic'
+
 // 🚀 홈페이지 SEO 최적화 (TBWA 가이드 적용)
 export const metadata: Metadata = {
   title: "스푸니 - 레시피 공유 플랫폼 | 홈쿠킹 커뮤니티",
