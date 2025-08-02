@@ -211,7 +211,7 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 							return {
 								...recipe,
 								item_id: recipe.id, // item_id 필드 추가
-								display_name: authorProfile?.display_name || authorProfile?.username,
+								        display_name: authorProfile?.username,
 								username: authorProfile?.username,
 								avatar_url: authorProfile?.avatar_url,
 								user_public_id: authorProfile?.public_id,
@@ -390,7 +390,7 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 						step_number: index + 1 
 					})),
 					// 🔧 사용자 정보 추가 (optimized_feed_view 호환)
-					display_name: user.user_metadata?.display_name || user.email?.split('@')[0] || 'Anonymous',
+					        display_name: user.email?.split('@')[0] || 'Anonymous',
 					username: user.user_metadata?.username || user.email?.split('@')[0] || 'anonymous',
 					avatar_url: user.user_metadata?.avatar_url || null,
 					user_public_id: user.user_metadata?.public_id || null,
@@ -423,7 +423,7 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 						step_number: index + 1 
 					})),
 					// 🔧 사용자 정보 추가 (optimized_feed_view 호환) - PostForm과 동일
-					display_name: user.user_metadata?.display_name || user.email?.split('@')[0] || 'Anonymous',
+					        display_name: user.email?.split('@')[0] || 'Anonymous',
 					username: user.user_metadata?.username || user.email?.split('@')[0] || 'anonymous',
 					avatar_url: user.user_metadata?.avatar_url || null,
 					user_public_id: user.user_metadata?.public_id || null,

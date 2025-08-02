@@ -49,7 +49,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
 
     const profileData = Array.isArray(recipe.profiles) ? recipe.profiles[0] : recipe.profiles
-    const authorName = profileData?.display_name || profileData?.username || '익명'
+    const authorName = profileData?.username || '익명'
     const imageUrl = recipe.image_urls?.[0] || '/default-recipe.jpg'
     const cleanDescription = recipe.description?.replace(/\n/g, ' ').slice(0, 160) || '맛있는 레시피입니다.'
     

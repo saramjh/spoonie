@@ -273,7 +273,7 @@ export default function PostCard({
           <div className="relative">
             <ImageCarousel 
               images={orderedImages} 
-              alt={item.title || `Post by ${item.display_name}`} 
+                              alt={item.title || `Post by ${item.username}`} 
               priority={priority} 
             />
             {/* 비공개 표시 - 업계표준 Privacy UX */}
@@ -324,7 +324,7 @@ export default function PostCard({
                 {citedRecipes.slice(0, 2).map((recipe) => {
                   // author 정보 안전하게 추출
                   const authorProfile = Array.isArray(recipe.author) ? recipe.author[0] : recipe.author
-                  const authorName = authorProfile?.display_name || authorProfile?.username || "익명"
+                  const authorName = authorProfile?.username || "익명"
                   const recipeDate = recipe.created_at 
                     ? new Date(recipe.created_at).toLocaleDateString('ko-KR', { 
                         year: 'numeric', 

@@ -152,11 +152,11 @@ export default function RecipeListCard({
                 </h3>
                 
                 {/* 작성자 정보 - 모두의 레시피 전용 */}
-                {showAuthor && (item.display_name || item.username) && (
+                {showAuthor && item.username && (
                   <div className="flex items-center gap-1 sm:gap-1.5 mt-0.5 sm:mt-1">
                     <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-gradient-to-r from-orange-400 to-orange-600" />
                     <span className="text-xs sm:text-sm font-medium text-orange-600 truncate">
-                      {item.display_name || item.username}
+                      {item.username}
                     </span>
                   </div>
                 )}

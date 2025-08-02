@@ -156,7 +156,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 				setCurrentUser({
 					id: user.id,
 					avatar_url: profile?.avatar_url || null,
-					display_name: profile?.username || profile?.display_name || user.email?.split("@")[0] || "User",
+					    display_name: profile?.username || user.email?.split("@")[0] || "User",
 				})
 			}
 			setIsAuthLoading(false)
@@ -487,7 +487,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 										<div className="space-y-2">
 											{citedRecipes.map((citedRecipeItem) => {
 												const authorProfile = Array.isArray(citedRecipeItem.author) ? citedRecipeItem.author[0] : citedRecipeItem.author
-												const authorName = authorProfile?.display_name || authorProfile?.username || "익명"
+												    const authorName = authorProfile?.username || "익명"
 												const recipeDate = citedRecipeItem.created_at 
 													? new Date(citedRecipeItem.created_at).toLocaleDateString('ko-KR', { 
 															year: 'numeric', 
@@ -586,7 +586,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 										<div className="space-y-2">
 											{citedRecipes.map((citedRecipeItem) => {
 												const authorProfile = Array.isArray(citedRecipeItem.author) ? citedRecipeItem.author[0] : citedRecipeItem.author
-												const authorName = authorProfile?.display_name || authorProfile?.username || "익명"
+												    const authorName = authorProfile?.username || "익명"
 												const recipeDate = citedRecipeItem.created_at 
 													? new Date(citedRecipeItem.created_at).toLocaleDateString('ko-KR', { 
 															year: 'numeric', 
@@ -623,7 +623,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 												<span className="font-semibold text-gray-600">참고 레시피:</span>
 												<span className="text-gray-800 ml-2">
 													{/* @ts-expect-error - profiles relation can be array or object */}
-													{citedRecipe.profiles?.username || citedRecipe.profiles?.display_name || "익명"}의 {citedRecipe.title}
+													        {citedRecipe.profiles?.username || "익명"}의 {citedRecipe.title}
 												</span>
 											</div>
 										</Link>

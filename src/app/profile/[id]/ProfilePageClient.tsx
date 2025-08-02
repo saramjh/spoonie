@@ -704,7 +704,6 @@ export default function ProfilePageClient({ params }: ProfilePageClientProps) {
 
 							{/* Profile Message and Info */}
 							<div className="space-y-2">
-								{profile?.display_name && <div className="font-semibold">{profile.display_name}</div>}
 								{profile?.profile_message && (
 									<div className="text-sm text-gray-700 leading-relaxed break-words hyphens-auto max-w-full">
 										<p className="whitespace-pre-wrap">{profile.profile_message}</p>

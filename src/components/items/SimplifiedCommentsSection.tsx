@@ -81,7 +81,7 @@ export default function SimplifiedCommentsSection({
             id: comment.user_id,
             public_id: userProfile?.public_id || '',
             username: userProfile?.username || '',
-            display_name: userProfile?.display_name || '',
+            display_name: userProfile?.username || '',
             avatar_url: userProfile?.avatar_url || null,
           },
         }

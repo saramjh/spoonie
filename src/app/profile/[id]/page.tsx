@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       }
     }
 
-    const displayName = profile.display_name || profile.username || '익명'
+    const displayName = profile.username || '익명'
     const profileImageUrl = profile.avatar_url || '/default-avatar.jpg'
     
     // 🎯 프로필 설명 생성 (profile_message 우선, 없으면 통계 기반)

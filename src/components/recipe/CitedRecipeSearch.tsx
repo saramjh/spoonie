@@ -48,7 +48,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
       .select('id')
-      .or(`display_name.ilike.%${cleanQuery}%,username.ilike.%${cleanQuery}%`)
+              .ilike('username', `%${cleanQuery}%`)
       .limit(10);
 
     
@@ -95,7 +95,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
         item_type: item.item_type,
         created_at: item.created_at,
         is_public: true, // 검색 결과에서는 is_public이 항상 true라고 가정
-        display_name: item.author?.[0]?.display_name || item.author?.[0]?.username || "익명",
+        username: item.author?.[0]?.username || "익명",
         avatar_url: item.author?.[0]?.avatar_url || null,
         user_public_id: item.author?.[0]?.public_id || null,
         user_email: null, // 이메일은 가져오지 않음
@@ -196,7 +196,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-medium truncate">{recipe.title}</div>
                           <div className="text-xs text-gray-500 truncate">
-                            {recipe.display_name || "익명"} • {recipe.created_at && format(new Date(recipe.created_at), 'MM.dd')}
+                            {recipe.username || "익명"} • {recipe.created_at && format(new Date(recipe.created_at), 'MM.dd')}
                           </div>
                         </div>
                       </div>
@@ -232,7 +232,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
                 {/* 내용 */}
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-gray-900 truncate">{recipe.title}</div>
-                  <div className="text-sm text-gray-600 truncate">{recipe.display_name || "익명"}의 레시피</div>
+                  <div className="text-sm text-gray-600 truncate">{recipe.username || "익명"}의 레시피</div>
                 </div>
                 {/* 삭제 버튼 */}
                 <button 

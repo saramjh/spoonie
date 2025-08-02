@@ -107,16 +107,16 @@ export default function RecipeCard({ item, isSelectable, isSelected, onSelectCha
         )}
         
         {/* 작성자 정보 - 모두의 레시피 전용 */}
-        {showAuthor && (item.display_name || item.username) && (
+        {showAuthor && item.username && (
           <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 z-20">
             <div className="flex items-center gap-1 sm:gap-1.5 bg-black/70 text-white px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full backdrop-blur-sm">
               <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-gradient-to-r from-orange-400 to-orange-600 flex items-center justify-center">
                 <span className="text-[6px] sm:text-[8px] font-bold text-white">
-                  {(item.display_name || item.username || "?").charAt(0).toUpperCase()}
+                  {(item.username || "?").charAt(0).toUpperCase()}
                 </span>
               </div>
               <span className="text-[8px] sm:text-[10px] font-medium truncate max-w-8 sm:max-w-12">
-                {item.display_name || item.username}
+                {item.username}
               </span>
             </div>
           </div>

@@ -108,7 +108,7 @@ const PAGE_SIZE = 12
 				const { data: userMatches } = await supabase
 					.from("profiles")
 					.select("id")
-					.or(`display_name.ilike.%${searchTerm}%,username.ilike.%${searchTerm}%`)
+					        .ilike('username', `%${searchTerm}%`)
 					.in("id", followingIds)
 				
 				// 2. 재료명으로 검색

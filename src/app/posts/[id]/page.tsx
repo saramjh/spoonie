@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
 
     const profileData = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles
-    const authorName = profileData?.display_name || profileData?.username || '익명'
+    const authorName = profileData?.username || '익명'
     const imageUrl = post.image_urls?.[0] || '/default-post.jpg'
     
     // 🎯 설명 생성 (description 우선, 없으면 content에서 추출)

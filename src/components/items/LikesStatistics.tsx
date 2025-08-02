@@ -82,7 +82,7 @@ export default function LikersModal({ isOpen, onClose, itemId, itemType, current
 				return {
 					id: profile?.id || like.user_id,
 					username: profile?.username || "익명",
-					display_name: profile?.display_name,
+					        display_name: profile?.username,
 					avatar_url: profile?.avatar_url,
 					public_id: profile?.public_id,
 					liked_at: like.created_at,
