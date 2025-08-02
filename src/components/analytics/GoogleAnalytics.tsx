@@ -10,7 +10,6 @@
 
 "use client"
 
-import Script from 'next/script'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useEffect } from 'react'
 
@@ -84,57 +83,78 @@ export function useGoogleAnalytics() {
   }, [pathname, searchParams])
 }
 
-// 🎯 메인 GoogleAnalytics 컴포넌트
+// 🎯 메인 GoogleAnalytics 컴포넌트 (Service Worker 호환)
 export default function GoogleAnalytics() {
-  // GA ID 확인 및 로그 (개발 환경에서만)
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🎯 Google Analytics ID:', GA_MEASUREMENT_ID)
-  }
-  
-  // 🧪 GA 테스트 함수 (글로벌로 노출)
-  if (typeof window !== 'undefined') {
-    (window as any).testGA = () => {
-      if (window.gtag) {
-        window.gtag('event', 'test_event', {
-          event_category: 'Testing',
-          event_label: 'Manual GA Test',
-          value: 1
-        })
-        console.log('✅ GA Test Event Sent!')
-      } else {
-        console.log('❌ GA not loaded')
+  useEffect(() => {
+    // GA ID 확인 및 로그 (개발 환경에서만)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🎯 Google Analytics ID:', GA_MEASUREMENT_ID)
+    }
+
+    // 이미 로드되어 있는지 확인
+    const existingScript = document.querySelector(`script[src*="gtag/js?id=${GA_MEASUREMENT_ID}"]`)
+    if (existingScript) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔄 GA script already loaded')
+      }
+      return
+    }
+
+    // 🚀 네이티브 script 태그 생성 (Service Worker 호환)
+    const script = document.createElement('script')
+    script.async = true
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`
+    
+    script.onload = () => {
+      // dataLayer 및 gtag 함수 초기화
+      window.dataLayer = window.dataLayer || [];
+      function gtag(...args: any[]) { 
+        window.dataLayer.push(args); 
+      }
+      window.gtag = gtag;
+
+      gtag('js', new Date());
+      gtag('config', GA_MEASUREMENT_ID, {
+        page_path: window.location.pathname,
+        debug_mode: process.env.NODE_ENV === 'development',
+        send_page_view: true
+      });
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ GA 스크립트 로드 성공!')
+      }
+
+      // 🧪 GA 테스트 함수 (글로벌로 노출)
+      (window as any).testGA = () => {
+        if (window.gtag) {
+          window.gtag('event', 'test_event', {
+            event_category: 'Testing',
+            event_label: 'Manual GA Test',
+            value: 1
+          })
+          console.log('✅ GA Test Event Sent!')
+        } else {
+          console.log('❌ GA not loaded')
+        }
       }
     }
-  }
-  
-  // 임시로 모든 환경에서 로드 (테스트용)
-  // if (process.env.NODE_ENV !== 'production') {
-  //   console.log('🧪 GA disabled in development mode')
-  //   return null
-  // }
+    
+    script.onerror = (e) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('⚠️ GA 로드 실패 (네트워크 또는 Ad Blocker):', e)
+      }
+    }
 
-  return (
-    <>
-      <Script
-        src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
-        strategy="afterInteractive"
-      />
-      <Script
-        id="google-analytics"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', '${GA_MEASUREMENT_ID}', {
-              page_path: window.location.pathname,
-              debug_mode: true,
-              send_page_view: true
-            });
-          `,
-        }}
-      />
-    </>
-  )
+    // DOM에 추가
+    document.head.appendChild(script)
+
+    // 클린업 함수
+    return () => {
+      if (script.parentNode) {
+        script.parentNode.removeChild(script)
+      }
+    }
+  }, [])
+
+  return null // 컴포넌트 자체는 렌더링하지 않음
 }
