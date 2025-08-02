@@ -1022,19 +1022,19 @@ export const cacheManager = {
     return rollback
   },
 
-  // 🚀 팔로우/언팔로우 처리 (SSA 기반)
+  // 🚀 팔로우/언팔로우 처리 (SSA 기반) - DB 저장 포함
   follow: async (currentUserId: string, targetUserId: string, isFollow: boolean) => {
-
+    console.log(`🚀 [cacheManager.follow] ${isFollow ? 'Following' : 'Unfollowing'} user: ${currentUserId} -> ${targetUserId}`)
     
     const manager = getCacheManager()
-    const rollback = await manager.optimisticUpdate({
+    const rollback = await manager.smartUpdate({
       type: 'follow',
       itemId: targetUserId, // itemId를 targetUserId로 사용
       userId: currentUserId,
       delta: isFollow ? 1 : -1, // 팔로우는 +1, 언팔로우는 -1
     })
     
-
+    console.log(`✅ [cacheManager.follow] Follow operation scheduled for: ${currentUserId} -> ${targetUserId}`)
     return rollback
   }
 } 
