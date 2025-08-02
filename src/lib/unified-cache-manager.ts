@@ -203,22 +203,33 @@ export class UnifiedCacheManager {
 
         
         if (isFollow) {
-
+          console.log(`🔄 [executeDbOperation] Following user: ${userId} -> ${itemId}`)
+          
           const { error, data } = await this.supabase.from('follows').upsert({
             follower_id: userId,
             following_id: itemId // itemId가 targetUserId
-          }, { onConflict: 'follower_id,following_id' })
+          }, { 
+            onConflict: 'follower_id,following_id',
+            ignoreDuplicates: false 
+          })
           
-
-          if (error) throw error
+          console.log(`✅ [executeDbOperation] Follow insert result:`, { data, error })
+          if (error) {
+            console.error(`❌ [executeDbOperation] Follow insert failed:`, error)
+            throw error
+          }
         } else {
-
+          console.log(`🔄 [executeDbOperation] Unfollowing user: ${userId} -> ${itemId}`)
+          
           const { error, count } = await this.supabase.from('follows').delete({ count: 'exact' })
             .eq('follower_id', userId)
             .eq('following_id', itemId)
           
-
-          if (error) throw error
+          console.log(`✅ [executeDbOperation] Unfollow delete result:`, { count, error })
+          if (error) {
+            console.error(`❌ [executeDbOperation] Unfollow delete failed:`, error)
+            throw error
+          }
           
           if (count === 0) {
             console.warn(`⚠️ [executeDbOperation] No follow record found to delete for userId: ${userId}, targetUserId: ${itemId}`)

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Share2, MessageCircle, MoreVertical, Trash2, Edit } from "lucide-react"
+import { Share2, MessageCircle, MoreVertical, Trash2, Edit, Clock, Users } from "lucide-react"
 import { timeAgo } from "@/lib/utils"
 import FollowButton from "./FollowButton"
 import { SimplifiedLikeButton } from "@/components/items/SimplifiedLikeButton"
@@ -296,6 +296,33 @@ export default function PostCard({
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 leading-tight">{item.title}</h3>
               </div>
+
+              {/* 🍳 토스 스타일: 레시피 정보 (조리시간 + 인분수) */}
+              {(item.cooking_time_minutes || item.servings) && (
+                <div className="flex items-center gap-4 mb-3 p-2.5 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg border border-orange-100">
+                  {item.cooking_time_minutes && (
+                    <div className="flex items-center gap-1.5">
+                      <div className="p-1 bg-orange-100 rounded-full">
+                        <Clock className="h-3.5 w-3.5 text-orange-600" />
+                      </div>
+                      <span className="text-sm font-medium text-orange-800">
+                        {item.cooking_time_minutes}분
+                      </span>
+                    </div>
+                  )}
+                  {item.servings && (
+                    <div className="flex items-center gap-1.5">
+                      <div className="p-1 bg-orange-100 rounded-full">
+                        <Users className="h-3.5 w-3.5 text-orange-600" />
+                      </div>
+                      <span className="text-sm font-medium text-orange-800">
+                        {item.servings}인분
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <ExpandableText 
                 text={item.description || ""} 
                 maxLines={2}
