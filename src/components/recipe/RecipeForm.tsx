@@ -611,6 +611,7 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 										<div className="flex gap-2 sm:contents">
 											<Input 
 												type="number" 
+												step="0.1"
 												placeholder="수량" 
 												{...form.register(`ingredients.${index}.amount`)} 
 												className="w-full sm:w-20 bg-white" 

@@ -253,3 +253,20 @@ export function safeParseInt(value: any, defaultValue: number = 0): number {
   
   return defaultValue
 }
+
+/**
+ * 🔢 안전한 실수 변환 (소숫점 지원)
+ * 재료량 등 소숫점 입력을 위한 안전한 parseFloat 대안
+ */
+export function safeParseFloat(value: any, defaultValue: number = 0): number {
+  if (typeof value === 'number' && !isNaN(value)) {
+    return value
+  }
+  
+  if (typeof value === 'string') {
+    const parsed = parseFloat(value)
+    return !isNaN(parsed) ? parsed : defaultValue
+  }
+  
+  return defaultValue
+}

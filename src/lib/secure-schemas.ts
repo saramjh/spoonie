@@ -4,7 +4,7 @@
  */
 
 import * as z from "zod"
-import { sanitizeHtml, sanitizeUserContent, validateEmail, safeParseInt } from './security-utils'
+import { sanitizeHtml, sanitizeUserContent, validateEmail, safeParseInt, safeParseFloat } from './security-utils'
 
 // ================================
 // 1. 기본 보안 스키마
@@ -35,7 +35,7 @@ const secureContent = (minLength: number = 1, maxLength: number = 5000) =>
  */
 const secureNumber = (min: number = 0, max: number = Number.MAX_SAFE_INTEGER) =>
   z.union([z.number(), z.string()])
-    .transform((value) => safeParseInt(value))
+    .transform((value) => safeParseFloat(value))
     .refine(num => num >= min && num <= max, `${min}~${max} 범위의 숫자를 입력해주세요.`)
 
 /**

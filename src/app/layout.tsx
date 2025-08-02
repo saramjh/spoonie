@@ -81,12 +81,12 @@ export default function RootLayout({
 	return (
 		<html lang="ko">
 			<head>
+				{/* 💰 Google AdSense 인증 메타 태그 - 최우선 위치 */}
+				<meta name="google-adsense-account" content="ca-pub-4410729598083068" />
 				{/* 추가 SEO 메타 태그 */}
 				<meta name="author" content="Spoonie Team" />
 				<meta name="format-detection" content="telephone=no" />
 				<link rel="canonical" href={process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'} />
-				{/* 💰 Google AdSense 인증 메타 태그 */}
-				<meta name="google-adsense-account" content="ca-pub-4410729598083068" />
 				{/* 🎯 폰트 최적화 메타 태그 */}
 				<meta name="font-display" content="swap" />
 			</head>
