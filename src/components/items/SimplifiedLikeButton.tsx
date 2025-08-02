@@ -103,8 +103,21 @@ export const SimplifiedLikeButton = forwardRef<HTMLButtonElement, SimplifiedLike
       e.stopPropagation()
     }
     
+    // 🔐 비로그인 사용자 회원가입 유도 (토스 UX 스타일)
+    if (!currentUserId) {
+      toast({
+        title: "👋 로그인이 필요해요",
+        description: "좋아요 기능은 회원만 이용할 수 있습니다. 로그인하시겠어요?",
+      })
+      // 3초 후 로그인 페이지로 이동
+      setTimeout(() => {
+        window.location.href = '/login'
+      }, 3000)
+      return
+    }
+    
     // 🛡️ 기본 검증
-    if (!currentUserId || isAuthLoading || isProcessingRef.current) {
+    if (isAuthLoading || isProcessingRef.current) {
       return
     }
 
@@ -161,7 +174,7 @@ export const SimplifiedLikeButton = forwardRef<HTMLButtonElement, SimplifiedLike
           variant="ghost"
           size="sm"
           onClick={handleLike}
-          disabled={isLoading || isAuthLoading || !currentUserId}
+          disabled={isLoading || isAuthLoading}
           className="p-1 text-gray-600 hover:text-red-500 transition-colors"
         >
           <Heart 

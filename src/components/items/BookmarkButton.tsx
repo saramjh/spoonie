@@ -102,8 +102,21 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
       e.stopPropagation()
     }
     
-    // 🛡️ 기본 검증 (SimplifiedLikeButton과 동일)
-    if (!currentUserId || isAuthLoading || isProcessingRef.current) {
+    // 🔐 비로그인 사용자 회원가입 유도 (토스 UX 스타일)
+    if (!currentUserId) {
+      toast({
+        title: "👋 로그인이 필요해요",
+        description: "북마크 기능은 회원만 이용할 수 있습니다. 로그인하시겠어요?",
+      })
+      // 3초 후 로그인 페이지로 이동
+      setTimeout(() => {
+        window.location.href = '/login'
+      }, 3000)
+      return
+    }
+    
+    // 🛡️ 기본 검증
+    if (isAuthLoading || isProcessingRef.current) {
       return
     }
 
@@ -180,7 +193,7 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
       variant={variant}
       size={size}
       onClick={handleBookmark}
-      disabled={isLoading || isAuthLoading || !currentUserId}
+      disabled={isLoading || isAuthLoading}
       className={`transition-colors ${className} ${
         isBookmarked 
           ? 'text-orange-500 hover:text-orange-600' 

@@ -27,12 +27,23 @@ export default function FollowButton({ userId, initialIsFollowing, className }: 
 	const globalFollowState = globalIsFollowing(userId)
 	const isFollowing = storeLoading ? (initialIsFollowing || false) : globalFollowState
 	
-	// 🚀 SSA 표준: 모든 상태 관리를 cacheManager에 위임
+	// 🚀 SSA 표준: 비로그인 사용자 처리 + 모든 상태 관리를 cacheManager에 위임
 	const handleFollowToggle = async () => {
 		if (isProcessing) return
 		
+		// 🔐 비로그인 사용자 회원가입 유도 (토스 UX 스타일)
+		if (!session?.id) {
+			toast({
+				title: "👋 로그인이 필요해요",
+				description: "팔로우 기능은 회원만 이용할 수 있습니다. 로그인하시겠어요?",
+			})
+			// 3초 후 로그인 페이지로 이동
+			setTimeout(() => {
+				window.location.href = '/login'
+			}, 3000)
+			return
+		}
 
-		
 		setIsProcessing(true)
 		
 		try {
