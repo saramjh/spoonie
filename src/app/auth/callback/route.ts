@@ -40,6 +40,7 @@ export async function GET(request: Request) {
 
 						const profileData = {
 							id: user.id,
+							email: user.email, // 🔧 누락된 email 필드 추가
 							username: username,
 							public_id: publicId,
 							display_name: user.user_metadata?.full_name || username,
