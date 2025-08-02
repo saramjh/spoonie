@@ -50,7 +50,7 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
               console.error("❌ ClientLayoutWrapper: Follow state initialization failed:", error)
             }
             
-            // 2. 프로필 로드
+            // 2. 프로필 로드 (OAuth callback에서 생성되었어야 함)
             const { data: profile, error: profileError } = await supabase
               .from('profiles')
               .select('id, username, display_name, avatar_url, public_id')
@@ -58,9 +58,17 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
               .single()
             
             if (profileError) {
-              console.error("❌ ClientLayoutWrapper: Profile error:", profileError)
+              console.error("❌ ClientLayoutWrapper: Profile loading failed:", profileError)
+              
+              // 프로필이 없는 경우 - OAuth callback 실패 가능성
+              if (profileError.code === 'PGRST116') {
+                console.error("🚨 Profile not found! OAuth callback may have failed.")
+                console.error("🔍 User should try logging out and logging in again.")
+              }
+              
               setProfile(null)
             } else {
+              console.log("✅ Profile loaded successfully:", profile.username)
               setProfile(profile)
             }
           } else {

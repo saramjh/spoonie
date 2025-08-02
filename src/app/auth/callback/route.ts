@@ -20,8 +20,12 @@ export async function GET(request: Request) {
 			} = await supabase.auth.getUser()
 
 			if (user && !userError) {
+				console.log("🔍 OAuth callback - User authenticated:", user.id)
+				
 				// 프로필 존재 여부 확인
 				const { data: existingProfile, error: profileError } = await supabase.from("profiles").select("id").eq("id", user.id).single()
+				
+				console.log("🔍 Profile check result:", { existingProfile, profileError })
 
 				// 프로필이 없으면 생성
 				if (!existingProfile && profileError?.code === "PGRST116") {
@@ -31,8 +35,10 @@ export async function GET(request: Request) {
 						// 유니크한 username과 public_id 생성
 						const username = await generateUniqueUsername()
 						const publicId = await generateUniquePublicId()
+						
+						console.log("🔍 Generated credentials:", { username, publicId })
 
-						const { error: insertError } = await supabase.from("profiles").insert({
+						const profileData = {
 							id: user.id,
 							username: username,
 							public_id: publicId,
@@ -41,17 +47,37 @@ export async function GET(request: Request) {
 							bio: null,
 							profile_message: null,
 							username_changed_count: 0,
-						})
+						}
+						
+						console.log("🔍 Inserting profile data:", profileData)
+
+						const { data: insertedProfile, error: insertError } = await supabase
+							.from("profiles")
+							.insert(profileData)
+							.select()
+							.single()
 
 						if (insertError) {
-							console.error("❌ Error creating profile:", insertError)
+							console.error("❌ Profile creation failed:", insertError)
+							console.error("❌ Error details:", {
+								code: insertError.code,
+								message: insertError.message,
+								details: insertError.details,
+								hint: insertError.hint
+							})
 						} else {
-							console.log("✅ Profile created successfully for user:", user.id)
+							console.log("✅ Profile created successfully:", insertedProfile)
 						}
 					} catch (error) {
-						console.error("❌ Error in profile creation process:", error)
+						console.error("❌ Profile creation process failed:", error)
 					}
+				} else if (existingProfile) {
+					console.log("✅ Profile already exists for user:", user.id)
+				} else {
+					console.error("❌ Unexpected profile error:", profileError)
 				}
+			} else {
+				console.error("❌ OAuth callback - User authentication failed:", userError)
 			}
 
 			// 🎯 올바른 도메인으로 강제 리디렉션
