@@ -271,7 +271,7 @@ export default function SimplifiedCommentsSection({
                   <Avatar className="h-8 w-8 border hover:opacity-80 transition-opacity">
                     <AvatarImage src={comment.user?.avatar_url || undefined} />
                     <AvatarFallback className="text-xs">
-                      {(comment.user?.username || comment.user?.display_name)?.charAt(0) || "U"}
+                      {comment.user?.username?.charAt(0) || "U"}
                     </AvatarFallback>
                   </Avatar>
                 </Link>
@@ -283,7 +283,7 @@ export default function SimplifiedCommentsSection({
                       href={`/profile/${comment.user?.public_id || comment.user?.username || comment.user_id}`}
                       className="font-semibold text-gray-800 text-sm hover:underline transition-colors"
                     >
-                      {comment.user?.display_name || comment.user?.username || '익명'}
+                      {comment.user?.username || '익명'}
                     </Link>
                     <span className="text-xs text-gray-500">
                       {timeAgo(comment.created_at)}
@@ -374,7 +374,7 @@ export default function SimplifiedCommentsSection({
                           <Avatar className="h-6 w-6 border hover:opacity-80 transition-opacity">
                             <AvatarImage src={reply.user?.avatar_url || undefined} />
                             <AvatarFallback className="text-xs">
-                              {(reply.user?.username || reply.user?.display_name)?.charAt(0) || "U"}
+                              {reply.user?.username?.charAt(0) || "U"}
                             </AvatarFallback>
                           </Avatar>
                         </Link>
@@ -385,7 +385,7 @@ export default function SimplifiedCommentsSection({
                               href={`/profile/${reply.user?.public_id || reply.user?.username || reply.user_id}`}
                               className="font-semibold text-gray-800 text-xs hover:underline transition-colors"
                             >
-                              {reply.user?.display_name || reply.user?.username || '익명'}
+                              {reply.user?.username || '익명'}
                             </Link>
                             <span className="text-xs text-gray-500">
                               {timeAgo(reply.created_at)}

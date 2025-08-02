@@ -169,7 +169,7 @@ export default function FollowingModal({ isOpen, onClose, userId, currentUserId 
 										<Avatar className="w-12 h-12 border">
 											<AvatarImage src={followingUser.avatar_url || undefined} />
 											<AvatarFallback className="bg-gradient-to-br from-green-400 to-green-600 text-white">
-												{followingUser.display_name?.charAt(0) || followingUser.username?.charAt(0) || "U"}
+												                {followingUser.username?.charAt(0) || "U"}
 											</AvatarFallback>
 										</Avatar>
 										<div className="flex-1 min-w-0">
@@ -178,9 +178,7 @@ export default function FollowingModal({ isOpen, onClose, userId, currentUserId 
 													{followingUser.username}
 												</p>
 											</div>
-											{followingUser.display_name && (
-												<p className="text-xs text-gray-500 truncate">{followingUser.display_name}</p>
-											)}
+
 											<div className="flex items-center gap-1 text-xs text-gray-400">
 												<Clock className="w-3 h-3" />
 												<span>

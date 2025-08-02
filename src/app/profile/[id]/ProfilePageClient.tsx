@@ -656,7 +656,7 @@ export default function ProfilePageClient({ params }: ProfilePageClientProps) {
 								) : (
 									<div className="w-full h-full flex items-center justify-center">
 										<span className="text-4xl font-bold text-white">
-											{profile?.display_name?.charAt(0) || profile?.username?.charAt(0) || "U"}
+											{profile?.username?.charAt(0) || "U"}
 										</span>
 									</div>
 								)}

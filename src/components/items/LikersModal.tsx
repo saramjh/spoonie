@@ -142,12 +142,12 @@ export default function LikersModal({ isOpen, onClose, itemId, itemType, current
 									<div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
 										<Avatar className="w-10 h-10">
 											<AvatarImage src={liker.avatar_url || undefined} />
-											<AvatarFallback className="bg-orange-100 text-orange-600">{liker.display_name?.[0] || liker.username[0]}</AvatarFallback>
+											                <AvatarFallback className="bg-orange-100 text-orange-600">{liker.username[0]}</AvatarFallback>
 										</Avatar>
 
 										<div className="flex-1 min-w-0">
 											<div className="flex items-center gap-2">
-												<p className="font-medium text-sm truncate">{liker.display_name || liker.username}</p>
+												<p className="font-medium text-sm truncate">{liker.username}</p>
 												{liker.id === currentUserId && <span className="text-xs bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded">나</span>}
 											</div>
 											<div className="flex items-center gap-1 text-xs text-gray-500">

@@ -171,7 +171,7 @@ export default function FollowersModal({ isOpen, onClose, userId, currentUserId 
 										<Avatar className="w-12 h-12 border">
 											<AvatarImage src={follower.avatar_url || undefined} />
 											<AvatarFallback className="bg-gradient-to-br from-blue-400 to-blue-600 text-white">
-												{follower.display_name?.charAt(0) || follower.username?.charAt(0) || "U"}
+												                  {follower.username?.charAt(0) || "U"}
 											</AvatarFallback>
 										</Avatar>
 										<div className="flex-1 min-w-0">
@@ -180,9 +180,7 @@ export default function FollowersModal({ isOpen, onClose, userId, currentUserId 
 													{follower.username}
 												</p>
 											</div>
-											{follower.display_name && (
-												<p className="text-xs text-gray-500 truncate">{follower.display_name}</p>
-											)}
+
 											<div className="flex items-center gap-1 text-xs text-gray-400">
 												<Clock className="w-3 h-3" />
 												<span>

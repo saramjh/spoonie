@@ -52,8 +52,8 @@ export default function BottomNavBar() {
 			return (
 				<Link href={profileHref} className="flex flex-col items-center gap-1">
 					<Avatar className="w-7 h-7 ring-2 ring-transparent hover:ring-orange-200 transition-all">
-						<AvatarImage src={profile.avatar_url || ""} alt={profile.display_name || "User"} />
-						<AvatarFallback className="bg-orange-100 text-orange-600">{profile.display_name?.charAt(0) || "S"}</AvatarFallback>
+						<AvatarImage src={profile.avatar_url || ""} alt={profile.username || "User"} />
+						<AvatarFallback className="bg-orange-100 text-orange-600">{profile.username?.charAt(0) || "S"}</AvatarFallback>
 					</Avatar>
 				</Link>
 			)

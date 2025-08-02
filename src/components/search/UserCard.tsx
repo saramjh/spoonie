@@ -39,7 +39,7 @@ export default function UserCard({ user }: UserCardProps) {
           {/* 👤 유저 정보 */}
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-gray-900 truncate">
-              {user.display_name || user.username}
+              			{user.username}
             </h3>
             <p className="text-sm text-gray-500 truncate">@{user.username}</p>
             <p className="text-xs text-gray-400">

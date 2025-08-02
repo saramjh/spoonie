@@ -320,7 +320,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	const handleShare = () => {
 		const url = window.location.href
 		const shareData = {
-			    title: `Spoonie에서 ${isRecipe ? item.title : (item.display_name || item.username || "사용자") + "님의 레시피드"} 보기`,
+			    title: `Spoonie에서 ${isRecipe ? item.title : (item.username || "사용자") + "님의 레시피드"} 보기`,
 			text: isRecipe ? item.description || "" : item.content || "",
 			url: url,
 		}
@@ -351,7 +351,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 			item.servings ?? undefined, 
 			item.cooking_time_minutes ?? undefined
 		)
-		    : createTossStyleFAQs.post(item.display_name || item.username || '작성자')
+		            : createTossStyleFAQs.post(item.username || '작성자')
 
 	return (
 		<div className="flex flex-col h-full relative">
@@ -398,9 +398,9 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 					     <Link href={`/profile/${item.user_public_id || item.user_id}`} className="flex items-center gap-3 flex-1 ml-3">
 						<Avatar className="h-8 w-8">
 							<AvatarImage src={item.avatar_url || undefined} />
-							<AvatarFallback>{(item.username || item.display_name)?.charAt(0) || "U"}</AvatarFallback>
+							<AvatarFallback>{item.username?.charAt(0) || "U"}</AvatarFallback>
 						</Avatar>
-						<span className="font-semibold">{item.display_name || item.username || "사용자"}</span>
+						<span className="font-semibold">{item.username || "사용자"}</span>
 					</Link>
 					
 					{/* 우측 액션 버튼 */}
@@ -439,7 +439,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 				</header>
 
 				<div className="flex-1 overflow-y-auto">
-					     {orderedImages.length > 0 && <ImageCarousel images={orderedImages} alt={isRecipe ? item.title || "Recipe image" : `Post by ${item.display_name || item.username || "작성자"}`} priority />}
+					               {orderedImages.length > 0 && <ImageCarousel images={orderedImages} alt={isRecipe ? item.title || "Recipe image" : `Post by ${item.username || "작성자"}`} priority />}
 					<div className="p-4">
 						{isRecipe ? (
 							<>

@@ -98,7 +98,7 @@ export default function QuickProfileModal({ isOpen, onClose, user }: QuickProfil
                         <UserIcon className="w-6 h-6 text-gray-500" />
                     </div>
                 )}
-                <span>{profile?.display_name || user.email}</span>
+                <span>{profile?.username || user.email}</span>
             </DrawerTitle>
             <DrawerDescription className="pt-4">
                 <div className="flex justify-around text-center">

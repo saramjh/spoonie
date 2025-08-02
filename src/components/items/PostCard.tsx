@@ -200,10 +200,10 @@ export default function PostCard({
             }`}>
               <AvatarImage 
                 src={enrichedItem.avatar_url || undefined} 
-                alt={enrichedItem.display_name || enrichedItem.username || "사용자"} 
+                alt={enrichedItem.username || "사용자"} 
               />
               <AvatarFallback>
-                {(enrichedItem.display_name || enrichedItem.username || "?").charAt(0).toUpperCase()}
+                {(enrichedItem.username || "?").charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
           </Link>
@@ -214,7 +214,7 @@ export default function PostCard({
                   ? 'hover:text-orange-700 text-gray-800' 
                   : 'hover:text-orange-600'
               }`}>
-                {enrichedItem.display_name || enrichedItem.username || "알 수 없는 사용자"}
+                {enrichedItem.username || "알 수 없는 사용자"}
               </p>
             </Link>
             <div className="flex items-center gap-1">
