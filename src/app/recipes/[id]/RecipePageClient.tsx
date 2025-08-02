@@ -43,7 +43,8 @@ export default function RecipePageClient({ recipeId }: RecipePageClientProps) {
               id,
               name,
               amount,
-              unit
+              unit,
+              order_index
             ),
             instructions (
               id,
@@ -73,8 +74,17 @@ export default function RecipePageClient({ recipeId }: RecipePageClientProps) {
         // 🔄 데이터 변환: DB 스키마를 컴포넌트 인터페이스에 맞게 변환
         const transformedRecipe = {
           ...recipeData,
-          // ingredients는 이미 올바른 형태
-          ingredients: recipeData.ingredients || [],
+          // 🎯 ingredients를 order_index로 정렬 (드래그앤드롭 순서 유지)
+          ingredients: recipeData.ingredients
+            ? recipeData.ingredients
+                .sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0))
+                .map((ingredient: any) => ({
+                  id: ingredient.id,
+                  name: ingredient.name,
+                  amount: ingredient.amount,
+                  unit: ingredient.unit
+                }))
+            : [],
           // instructions를 steps로 변환하고 step_number로 정렬
           steps: recipeData.instructions
             ? recipeData.instructions

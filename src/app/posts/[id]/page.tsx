@@ -218,7 +218,7 @@ export default async function PostDetailPage({ params }: Props) {
     ? createBreadcrumbs.postDetail(postForSchema.title, params.id)
     : createBreadcrumbs.home()
 
-  return (
+		return (
     <>
       {/* 🆕 SEO Schema 최적화 (기존 기능에 영향 없음) */}
       <BreadcrumbSchema items={breadcrumbs} />

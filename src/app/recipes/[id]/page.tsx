@@ -150,7 +150,7 @@ async function getRecipeForSchema(recipeId: string) {
         servings,
         item_type,
         profiles!user_id(username),
-        ingredients(name, amount, unit),
+        ingredients(name, amount, unit, order_index),
         instructions(step_number, description, image_url)
       `)
       .eq('id', recipeId)
@@ -187,7 +187,7 @@ async function getRecipeForSchema(recipeId: string) {
       servings: recipe.servings || 0,
       item_type: recipe.item_type,
       username: profileData?.username || '',
-      ingredients: recipe.ingredients || [],
+      ingredients: recipe.ingredients ? recipe.ingredients.sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0)) : [],
       instructions: recipe.instructions || [],
       likes_count: socialData?.likes_count?.[0]?.count || 0,
       comments_count: socialData?.comments_count?.[0]?.count || 0

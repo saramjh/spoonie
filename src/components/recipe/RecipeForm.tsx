@@ -16,6 +16,7 @@ import { PlusCircle, Trash2, X, Camera, Clock, Book } from "lucide-react"
 import ImageUploader from "@/components/common/ImageUploader"
 import InstructionImageUploader from "@/components/recipe/InstructionImageUploader"
 import CitedRecipeSearch from "@/components/recipe/CitedRecipeSearch"
+import DraggableIngredientList, { DraggableIngredient } from "@/components/recipe/DraggableIngredientList"
 import { OptimizedImage } from "@/lib/image-utils"
 import { useToast } from "@/hooks/use-toast"
 import { RECIPE_COLOR_OPTIONS } from "@/lib/color-options"
@@ -24,6 +25,8 @@ import { RECIPE_COLOR_OPTIONS } from "@/lib/color-options"
 import type { Item } from "@/types/item"
 import { uploadImagesOptimized, ImageUploadMetrics } from "@/utils/image-optimization"
 import { cacheManager } from "@/lib/unified-cache-manager"
+import { mutate } from "swr"
+import { createSWRKey } from "@/lib/cache-keys"
 import { notificationService } from "@/lib/notification-service"
 
 // Zod 스키마 업데이트
@@ -143,7 +146,11 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 				servings: initialData.servings || 1,
 				cooking_time_minutes: initialData.cooking_time_minutes || 1,
 				is_public: initialData.is_public !== undefined ? initialData.is_public : true,
-				ingredients: (initialData.ingredients && initialData.ingredients.length > 0) ? initialData.ingredients.map((i) => ({ name: i.name, amount: i.amount, unit: i.unit || "개" })) : [{ name: "", amount: 1, unit: "개" }],
+				ingredients: (initialData.ingredients && initialData.ingredients.length > 0) 
+					? initialData.ingredients
+						.sort((a, b) => (a.order_index || 0) - (b.order_index || 0)) // 🎯 order_index로 정렬
+						.map((i) => ({ name: i.name, amount: i.amount, unit: i.unit || "개" })) 
+					: [{ name: "", amount: 1, unit: "개" }],
 				instructions: (initialData.instructions && initialData.instructions.length > 0) ? initialData.instructions.map((i) => ({ description: i.description, image_url: i.image_url || "" })) : [{ description: "", image_url: "" }],
 				color_label: initialData.color_label,
 				// @ts-expect-error - tags 타입 변환 처리
@@ -225,8 +232,43 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 		}
 	}, [initialData, isEditMode, form, supabase])
 
-	const { fields: ingredients, append: appendIngredient, remove: removeIngredient } = useFieldArray({ control: form.control, name: "ingredients" })
+	const { fields: ingredients, append: appendIngredient, remove: removeIngredient, move: moveIngredient } = useFieldArray({ control: form.control, name: "ingredients" })
 	const { fields: instructions, append: appendInstruction, remove: removeInstruction } = useFieldArray({ control: form.control, name: "instructions" })
+
+	// 🎯 토스 스타일 드래그앤드롭: 재료 순서 변경 핸들러 (직접 setValue 사용)
+	const handleIngredientsReorder = (newIngredients: DraggableIngredient[]) => {
+	
+		
+		// 현재 form 값들을 가져오기
+		const currentValues = form.getValues("ingredients")
+
+		
+		// newIngredients 순서에 맞게 currentValues 재정렬
+		const reorderedValues = newIngredients.map((item) => {
+			// field.id로 원래 인덱스 찾기
+			const originalIndex = ingredients.findIndex(field => field.id === item.id)
+			if (originalIndex !== -1) {
+				const originalValue = currentValues[originalIndex]
+	
+				return originalValue
+			}
+			
+			// 매핑 실패 시 기본값 반환
+
+			return {
+				name: item.name || "",
+				amount: item.amount || 0,
+				unit: item.unit || ""
+			}
+		})
+		
+
+		
+		// form에 재정렬된 값들 설정
+		form.setValue("ingredients", reorderedValues, { shouldValidate: true })
+		
+
+	}
 
 	const handleInstructionImageChange = (index: number, image: OptimizedImage | null) => {
 		const newInstructionImages = [...instructionImages]
@@ -370,7 +412,13 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 				
 			}
 
-			const ingredientsToInsert = values.ingredients.map((ing) => ({ ...ing, item_id: itemId }))
+			// 🎯 재료 순서 정보 포함하여 저장 (드래그앤드롭 순서 유지)
+			const ingredientsToInsert = values.ingredients.map((ing, index) => ({ 
+				...ing, 
+				item_id: itemId,
+				order_index: index + 1 // 순서 정보 추가 (1부터 시작)
+			}))
+			
 			await supabase.from("ingredients").insert(ingredientsToInsert)
 
 			const instructionsToInsert = instructionsWithImages.map((inst, index) => ({ ...inst, item_id: itemId, step_number: index + 1 }))
@@ -384,16 +432,24 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 					...itemPayload,
 					id: itemId,
 					item_id: itemId,
-					ingredients: values.ingredients,
+					// 🎯 order_index 포함한 완전한 재료 데이터 사용
+					ingredients: ingredientsToInsert.map(({ item_id, ...ing }) => ing),
 					instructions: instructionsWithImages.map((inst, index) => ({ 
 						...inst, 
 						step_number: index + 1 
 					})),
-					// 🔧 사용자 정보 추가 (optimized_feed_view 호환)
-					        display_name: user.email?.split('@')[0] || 'Anonymous',
-					username: user.user_metadata?.username || user.email?.split('@')[0] || 'anonymous',
-					avatar_url: user.user_metadata?.avatar_url || null,
-					user_public_id: user.user_metadata?.public_id || null,
+					// 🔧 작성자 정보 (수정 모드에서는 기존 작성자 정보 유지)
+					display_name: initialData?.display_name || initialData?.username || user.user_metadata?.username || user.email?.split('@')[0] || 'Anonymous',
+					username: initialData?.username || user.user_metadata?.username || user.email?.split('@')[0] || 'anonymous',
+					avatar_url: initialData?.avatar_url || user.user_metadata?.avatar_url || null,
+					user_public_id: initialData?.user_public_id || user.user_metadata?.public_id || null,
+					// 🎯 author 정보도 함께 설정 (ItemDetail 호환성)
+					author: {
+						display_name: initialData?.username || user.user_metadata?.username || user.email?.split('@')[0] || 'Anonymous',
+						username: initialData?.username || user.user_metadata?.username || user.email?.split('@')[0] || 'anonymous',
+						avatar_url: initialData?.avatar_url || user.user_metadata?.avatar_url || null,
+						public_id: initialData?.user_public_id || user.user_metadata?.public_id || null,
+					},
 					// 🔧 초기 통계 값 (기존 값 유지)
 					likes_count: initialData?.likes_count || 0,
 					comments_count: initialData?.comments_count || 0,
@@ -401,32 +457,35 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 					is_following: initialData?.is_following || false,
 					created_at: initialData?.created_at || new Date().toISOString(),
 				}
-				// Debug: { id, item_id, title, thumbnail_index, image_urls }
-				await cacheManager.updateItem(itemId, fullItemPayload)
-				
-				// 🔧 Smart Fallback: 필요시에만 부분 무효화 (성능 개선)
-				setTimeout(async () => {
-					
-					await cacheManager.revalidateHomeFeed()
-				}, 200)
-				
-				
-			} else {
+								// 🚀 핵심: 상세페이지 캐시만 확실하게 업데이트 (가장 중요)
+		await mutate(createSWRKey.itemDetail(itemId), fullItemPayload, { revalidate: false })
+		
+		// 홈피드 등 다른 캐시는 자연스럽게 다음 접근 시 업데이트됨
+			
+		} else {
 				
 				const fullItemPayload = {
 					...itemPayload,
 					id: itemId,
 					item_id: itemId,
-					ingredients: values.ingredients,
+					// 🎯 order_index 포함한 완전한 재료 데이터 사용
+					ingredients: ingredientsToInsert.map(({ item_id, ...ing }) => ing),
 					instructions: instructionsWithImages.map((inst, index) => ({ 
 						...inst, 
 						step_number: index + 1 
 					})),
-					// 🔧 사용자 정보 추가 (optimized_feed_view 호환) - PostForm과 동일
-					        display_name: user.email?.split('@')[0] || 'Anonymous',
+					// 🔧 작성자 정보 (신규 작성, username을 display_name으로 사용)
+					display_name: user.user_metadata?.username || user.email?.split('@')[0] || 'Anonymous',
 					username: user.user_metadata?.username || user.email?.split('@')[0] || 'anonymous',
 					avatar_url: user.user_metadata?.avatar_url || null,
 					user_public_id: user.user_metadata?.public_id || null,
+					// 🎯 author 정보도 함께 설정 (ItemDetail 호환성)
+					author: {
+						display_name: user.user_metadata?.username || user.email?.split('@')[0] || 'Anonymous',
+						username: user.user_metadata?.username || user.email?.split('@')[0] || 'anonymous',
+						avatar_url: user.user_metadata?.avatar_url || null,
+						public_id: user.user_metadata?.public_id || null,
+					},
 					// 🔧 초기 통계 값
 					likes_count: 0,
 					comments_count: 0,
@@ -579,62 +638,51 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 						</div>
 					</div>
 
+					{/* 재료 섹션 - 폼 일관성 유지 */}
 					<Card>
 						<CardHeader>
-							<CardTitle>재료</CardTitle>
+							<CardTitle className="flex items-center justify-between">
+								재료
+								<span className="text-sm font-normal text-gray-500">
+									드래그해서 순서 변경
+								</span>
+							</CardTitle>
 						</CardHeader>
 						<CardContent className="space-y-4">
-							{ingredients.map((field, index) => (
-								<div key={field.id} className="space-y-2">
-									{/* 🎯 모바일 반응형: 390px 이하에서 2행 구성 */}
-									<div className="flex flex-col sm:flex-row gap-2">
-										{/* 첫 번째 행: 재료명 + 삭제버튼 (모바일) */}
-										<div className="flex gap-2 sm:contents">
-											<Input 
-												placeholder="재료명 (예: 돼지고기)" 
-												{...form.register(`ingredients.${index}.name`)} 
-												className="flex-1 bg-white" 
-											/>
-											<Button 
-												type="button" 
-												variant="ghost" 
-												size="icon" 
-												onClick={() => removeIngredient(index)} 
-												disabled={ingredients.length === 1} 
-												className="p-2 shrink-0 sm:order-last"
-											>
-												<Trash2 className="h-4 w-4" />
-											</Button>
-										</div>
-										{/* 두 번째 행: 재료양 + 단위 (모바일) */}
-										<div className="flex gap-2 sm:contents">
-											<Input 
-												type="number" 
-												step="0.1"
-												placeholder="수량" 
-												{...form.register(`ingredients.${index}.amount`)} 
-												className="w-full sm:w-20 bg-white" 
-											/>
-											<Input 
-												placeholder="단위 (예: g)" 
-												{...form.register(`ingredients.${index}.unit`)} 
-												className="w-full sm:w-24 bg-white" 
-											/>
-										</div>
-									</div>
-									{form.formState.errors.ingredients?.[index] && (
-										<div className="text-red-500 text-sm px-1">
-											{form.formState.errors.ingredients[index]?.name?.message && <p>{form.formState.errors.ingredients[index]?.name?.message}</p>}
-											{form.formState.errors.ingredients[index]?.amount?.message && <p>{form.formState.errors.ingredients[index]?.amount?.message}</p>}
-										</div>
-									)}
-								</div>
-							))}
-							<Button type="button" variant="outline" onClick={() => appendIngredient({ name: "", amount: 1, unit: "" })} className="w-full mt-4 bg-white">
+							{/* 드래그앤드롭 재료 리스트 */}
+							<DraggableIngredientList
+								ingredients={ingredients.map((field, index) => {
+									const watchedIngredient = form.watch(`ingredients.${index}`)
+									return {
+										id: field.id,
+										name: watchedIngredient?.name || "",
+										amount: watchedIngredient?.amount || 0,
+										unit: watchedIngredient?.unit || "",
+									}
+								})}
+								onReorder={handleIngredientsReorder}
+								register={form.register}
+								errors={form.formState.errors}
+								onRemove={removeIngredient}
+							/>
+							
+							{/* 재료 추가 버튼 */}
+							<Button 
+								type="button" 
+								variant="outline" 
+								onClick={() => appendIngredient({ name: "", amount: 1, unit: "" })} 
+								className="w-full border-dashed border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+							>
 								<PlusCircle className="mr-2 h-4 w-4" />
 								재료 추가
 							</Button>
-							{form.formState.errors.ingredients?.root && <p className="text-red-500 text-sm mt-1">{form.formState.errors.ingredients.root.message}</p>}
+							
+							{/* 전체 재료 관련 에러 */}
+							{form.formState.errors.ingredients?.root && (
+								<p className="text-red-500 text-sm">
+									{form.formState.errors.ingredients.root.message}
+								</p>
+							)}
 						</CardContent>
 					</Card>
 

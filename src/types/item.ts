@@ -27,6 +27,7 @@ export interface Ingredient {
 	name: string
 	amount: number // Match database numeric type
 	unit: string
+	order_index?: number // 재료 순서 (드래그앤드롭 지원)
 }
 
 export interface Instruction {

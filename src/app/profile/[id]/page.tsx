@@ -151,8 +151,8 @@ async function getProfileForSchema(profileId: string) {
         profile_message
       `)
       .eq('public_id', profileId)
-      .single()
-
+		.single()
+	
     if (error || !profile) {
       return null
     }
@@ -176,8 +176,8 @@ export default async function ProfilePage({ params }: Props) {
   const breadcrumbs = profileForSchema 
     ? createBreadcrumbs.profile(profileForSchema.username, profileForSchema.public_id)
     : createBreadcrumbs.home()
-
-  return (
+									
+									return (
     <>
       {/* 🆕 SEO Schema 최적화 (기존 기능에 영향 없음) */}
       <BreadcrumbSchema items={breadcrumbs} />
@@ -185,5 +185,5 @@ export default async function ProfilePage({ params }: Props) {
       {/* 🛡️ 기존 클라이언트 컴포넌트 완전 보존 */}
       <ProfilePageClient params={params} />
     </>
-  )
+	)
 }

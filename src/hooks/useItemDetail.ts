@@ -78,7 +78,7 @@ const itemDetailFetcher = async (key: string): Promise<ItemDetail> => {
 
 			
 			const [ingredientsResult, instructionsResult] = await Promise.all([
-				supabase.from("ingredients").select("*").eq("item_id", itemId),
+				supabase.from("ingredients").select("*").eq("item_id", itemId).order("order_index"),
 				supabase.from("instructions").select("*").eq("item_id", itemId).order("step_number")
 			])
 

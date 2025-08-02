@@ -90,4 +90,17 @@
 		min-height: 44px;
 		min-width: 44px;
 	}
+
+	/* 🎯 Drag & Drop Overlay 스타일 - dnd-kit 위치 문제 해결 */
+	.dnd-overlay {
+		position: fixed !important;
+		pointer-events: none;
+		z-index: 999;
+		transform-origin: 0 0;
+	}
+
+	/* dnd-kit context 영역 */
+	[data-dnd-context] {
+		position: relative;
+	}
 }
