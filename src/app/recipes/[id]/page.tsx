@@ -12,6 +12,9 @@
 import { Metadata } from 'next'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import RecipeDetailClient from './RecipeDetailClient'
+import RecipeSchema from '@/components/ai-search-optimization/RecipeSchema'
+import BreadcrumbSchema, { createBreadcrumbs } from '@/components/ai-search-optimization/BreadcrumbSchema'
+import ReviewSchema, { prepareReviewData } from '@/components/ai-search-optimization/ReviewSchema'
 
 interface Props {
   params: { id: string }
@@ -129,7 +132,95 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-// 🎯 기존 클라이언트 컴포넌트를 그대로 래핑 (100% 기능 보존)
-export default function RecipeDetailPage({ params }: Props) {
-  return <RecipeDetailClient params={params} />
+// 🍳 레시피 데이터 가져오기 (Schema용)
+async function getRecipeForSchema(recipeId: string) {
+  try {
+    const supabase = createSupabaseServerClient()
+    
+    const { data: recipe, error } = await supabase
+      .from('items')
+      .select(`
+        id,
+        title, 
+        description, 
+        image_urls, 
+        created_at,
+        tags,
+        cooking_time_minutes,
+        servings,
+        item_type,
+        profiles!user_id(username),
+        ingredients(name, amount, unit),
+        instructions(step_number, description, image_url)
+      `)
+      .eq('id', recipeId)
+      .eq('item_type', 'recipe')
+      .eq('is_public', true)
+      .single()
+
+    if (error || !recipe) {
+      return null
+    }
+
+    // 🔄 프로필 데이터 변환
+    const profileData = Array.isArray(recipe.profiles) ? recipe.profiles[0] : recipe.profiles
+
+    // 🔥 좋아요와 댓글 수 조회 (Review Schema용)
+    const { data: socialData } = await supabase
+      .from('items')
+      .select(`
+        id,
+        likes_count:likes(count),
+        comments_count:comments(count)
+      `)
+      .eq('id', recipeId)
+      .single()
+
+    return {
+      id: recipe.id,
+      title: recipe.title || '',
+      description: recipe.description || '',
+      image_urls: recipe.image_urls || [],
+      created_at: recipe.created_at,
+      tags: recipe.tags || [],
+      cooking_time_minutes: recipe.cooking_time_minutes || 0,
+      servings: recipe.servings || 0,
+      item_type: recipe.item_type,
+      username: profileData?.username || '',
+      ingredients: recipe.ingredients || [],
+      instructions: recipe.instructions || [],
+      likes_count: socialData?.likes_count?.[0]?.count || 0,
+      comments_count: socialData?.comments_count?.[0]?.count || 0
+    }
+  } catch (error) {
+    console.error('❌ Recipe schema data loading error:', error)
+    return null
+  }
+}
+
+// 🎯 기존 클라이언트 컴포넌트를 그대로 래핑 + SEO Schema 추가 (100% 기능 보존)
+export default async function RecipeDetailPage({ params }: Props) {
+  // 🔥 SEO를 위한 Recipe Schema 데이터 가져오기
+  const recipeForSchema = await getRecipeForSchema(params.id)
+
+  // 🧭 Breadcrumb 경로 생성
+  const breadcrumbs = recipeForSchema 
+    ? createBreadcrumbs.recipeDetail(recipeForSchema.title, params.id)
+    : createBreadcrumbs.recipes()
+
+  return (
+    <>
+      {/* 🆕 SEO Schema 최적화 (기존 기능에 영향 없음) */}
+      <BreadcrumbSchema items={breadcrumbs} />
+      {recipeForSchema && (
+        <>
+          <RecipeSchema recipe={recipeForSchema} />
+          <ReviewSchema {...prepareReviewData(recipeForSchema)} />
+        </>
+      )}
+      
+      {/* 🛡️ 기존 클라이언트 컴포넌트 완전 보존 */}
+      <RecipeDetailClient params={params} />
+    </>
+  )
 }

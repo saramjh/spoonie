@@ -12,6 +12,8 @@
 import { Metadata } from 'next'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import PostDetailClient from './PostDetailClient'
+import BreadcrumbSchema, { createBreadcrumbs } from '@/components/ai-search-optimization/BreadcrumbSchema'
+import ReviewSchema, { prepareReviewData } from '@/components/ai-search-optimization/ReviewSchema'
 
 interface Props {
   params: { id: string }
@@ -146,7 +148,86 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-// 🎯 기존 클라이언트 컴포넌트를 그대로 래핑 (100% 기능 보존)
-export default function PostDetailPage({ params }: Props) {
-  return <PostDetailClient params={params} />
+// 📝 포스트 데이터 가져오기 (Schema용)
+async function getPostForSchema(postId: string) {
+  try {
+    const supabase = createSupabaseServerClient()
+    
+    const { data: post, error } = await supabase
+      .from('items')
+      .select(`
+        id,
+        title, 
+        description, 
+        content,
+        image_urls, 
+        created_at,
+        tags,
+        item_type,
+        profiles!user_id(username)
+      `)
+      .eq('id', postId)
+      .eq('item_type', 'post')
+      .eq('is_public', true)
+      .single()
+
+    if (error || !post) {
+      return null
+    }
+
+    // 🔄 프로필 데이터 변환
+    const profileData = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles
+
+    // 🔥 좋아요와 댓글 수 조회 (Review Schema용)
+    const { data: socialData } = await supabase
+      .from('items')
+      .select(`
+        id,
+        likes_count:likes(count),
+        comments_count:comments(count)
+      `)
+      .eq('id', postId)
+      .single()
+
+    return {
+      id: post.id,
+      title: post.title || '',
+      description: post.description || '',
+      content: post.content || '',
+      image_urls: post.image_urls || [],
+      created_at: post.created_at,
+      tags: post.tags || [],
+      item_type: post.item_type,
+      username: profileData?.username || '',
+      likes_count: socialData?.likes_count?.[0]?.count || 0,
+      comments_count: socialData?.comments_count?.[0]?.count || 0
+    }
+  } catch (error) {
+    console.error('❌ Post schema data loading error:', error)
+    return null
+  }
+}
+
+// 🎯 기존 클라이언트 컴포넌트를 그대로 래핑 + SEO Schema 추가 (100% 기능 보존)
+export default async function PostDetailPage({ params }: Props) {
+  // 🔥 SEO를 위한 Post Schema 데이터 가져오기
+  const postForSchema = await getPostForSchema(params.id)
+
+  // 🧭 Breadcrumb 경로 생성
+  const breadcrumbs = postForSchema 
+    ? createBreadcrumbs.postDetail(postForSchema.title, params.id)
+    : createBreadcrumbs.home()
+
+  return (
+    <>
+      {/* 🆕 SEO Schema 최적화 (기존 기능에 영향 없음) */}
+      <BreadcrumbSchema items={breadcrumbs} />
+      {postForSchema && (
+        <ReviewSchema {...prepareReviewData(postForSchema)} />
+      )}
+      
+      {/* 🛡️ 기존 클라이언트 컴포넌트 완전 보존 */}
+      <PostDetailClient params={params} />
+    </>
+  )
 }

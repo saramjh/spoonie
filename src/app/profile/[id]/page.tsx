@@ -12,6 +12,7 @@
 import { Metadata } from 'next'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import ProfilePageClient from './ProfilePageClient'
+import BreadcrumbSchema, { createBreadcrumbs } from '@/components/ai-search-optimization/BreadcrumbSchema'
 
 interface Props {
   params: { id: string }
@@ -135,7 +136,54 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-// 🎯 기존 클라이언트 컴포넌트를 그대로 래핑 (100% 기능 보존)
-export default function ProfilePage({ params }: Props) {
-  return <ProfilePageClient params={params} />
+// 👤 프로필 데이터 가져오기 (Schema용)
+async function getProfileForSchema(profileId: string) {
+  try {
+    const supabase = createSupabaseServerClient()
+    
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select(`
+        public_id,
+        username,
+        avatar_url,
+        bio,
+        profile_message
+      `)
+      .eq('public_id', profileId)
+      .single()
+
+    if (error || !profile) {
+      return null
+    }
+
+    return {
+      username: profile.username || '',
+      public_id: profile.public_id
+    }
+  } catch (error) {
+    console.error('❌ Profile schema data loading error:', error)
+    return null
+  }
+}
+
+// 🎯 기존 클라이언트 컴포넌트를 그대로 래핑 + SEO Schema 추가 (100% 기능 보존)
+export default async function ProfilePage({ params }: Props) {
+  // 🔥 SEO를 위한 Profile Schema 데이터 가져오기
+  const profileForSchema = await getProfileForSchema(params.id)
+
+  // 🧭 Breadcrumb 경로 생성
+  const breadcrumbs = profileForSchema 
+    ? createBreadcrumbs.profile(profileForSchema.username, profileForSchema.public_id)
+    : createBreadcrumbs.home()
+
+  return (
+    <>
+      {/* 🆕 SEO Schema 최적화 (기존 기능에 영향 없음) */}
+      <BreadcrumbSchema items={breadcrumbs} />
+      
+      {/* 🛡️ 기존 클라이언트 컴포넌트 완전 보존 */}
+      <ProfilePageClient params={params} />
+    </>
+  )
 }
