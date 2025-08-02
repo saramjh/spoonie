@@ -15,8 +15,10 @@ import Script from 'next/script'
 const ADSENSE_PUBLISHER_ID = process.env.NEXT_PUBLIC_ADSENSE_ID || 'ca-pub-4410729598083068'
 
 export default function GoogleAdSense() {
-  // AdSense Publisher ID 확인 및 로그
-  console.log('💰 Google AdSense Publisher ID:', ADSENSE_PUBLISHER_ID)
+  // AdSense Publisher ID 확인 및 로그 (개발 환경에서만)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('💰 Google AdSense Publisher ID:', ADSENSE_PUBLISHER_ID)
+  }
   
   // 임시로 모든 환경에서 로드 (테스트용)
   // if (process.env.NODE_ENV !== 'production') {
@@ -31,12 +33,16 @@ export default function GoogleAdSense() {
       crossOrigin="anonymous"
       strategy="afterInteractive"
       onLoad={() => {
-        console.log('✅ AdSense 스크립트 로드 성공!')
+        if (process.env.NODE_ENV === 'development') {
+          console.log('✅ AdSense 스크립트 로드 성공!')
+        }
       }}
       onError={(e) => {
-        console.error('❌ AdSense 로드 실패:', e)
-        console.log('🔍 Publisher ID:', ADSENSE_PUBLISHER_ID)
-        console.log('🔍 Script URL:', `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_PUBLISHER_ID}`)
+        if (process.env.NODE_ENV === 'development') {
+          console.error('❌ AdSense 로드 실패:', e)
+          console.log('🔍 Publisher ID:', ADSENSE_PUBLISHER_ID)
+          console.log('🔍 Script URL:', `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_PUBLISHER_ID}`)
+        }
       }}
     />
   )

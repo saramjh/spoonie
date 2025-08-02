@@ -86,8 +86,10 @@ export function useGoogleAnalytics() {
 
 // 🎯 메인 GoogleAnalytics 컴포넌트
 export default function GoogleAnalytics() {
-  // GA ID 확인 및 로그
-  console.log('🎯 Google Analytics ID:', GA_MEASUREMENT_ID)
+  // GA ID 확인 및 로그 (개발 환경에서만)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🎯 Google Analytics ID:', GA_MEASUREMENT_ID)
+  }
   
   // 🧪 GA 테스트 함수 (글로벌로 노출)
   if (typeof window !== 'undefined') {

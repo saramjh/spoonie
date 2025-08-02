@@ -10,11 +10,11 @@ import GoogleAdSense from "@/components/ads/GoogleAdSense"
 const fontSans = localFont({
 	src: "./fonts/GeistVF.woff",
 	variable: "--font-sans",
-	weight: "300 700", // 실제 사용되는 weight 범위로 최적화 (light ~ bold)
+	weight: "300 700",
 	display: "swap",
-	preload: true,
+	preload: false, // 프리로드 경고 방지 - 필요할 때 로드
 	fallback: ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
-	adjustFontFallback: false, // 폰트 fallback 최적화 비활성화로 프리로드 이슈 방지
+	adjustFontFallback: false,
 	style: "normal",
 })
 
