@@ -47,7 +47,7 @@ class Mutex {
 
 class ConcurrencyController {
   private mutexes = new Map<string, Mutex>()
-  private inProgress = new Map<string, Promise<any>>()
+  private inProgress = new Map<string, Promise<unknown>>()
 
   private getMutex(key: string): Mutex {
     if (!this.mutexes.has(key)) {
@@ -70,7 +70,7 @@ class ConcurrencyController {
   async deduplicate<T>(key: string, operation: () => Promise<T>): Promise<T> {
     // 이미 진행 중인 요청이 있으면 그 결과를 반환
     if (this.inProgress.has(key)) {
-      return this.inProgress.get(key)
+      return this.inProgress.get(key) as T
     }
 
     // 새로운 요청 시작
@@ -365,8 +365,8 @@ export async function safeCommentAdd(
   itemId: string,
   userId: string,
   content: string,
-  addFunction: (content: string) => Promise<any>
-): Promise<any> {
+  addFunction: (content: string) => Promise<unknown>
+): Promise<unknown> {
   const key = `comment_${itemId}_${userId}_${content.slice(0, 20)}`
   
   return concurrencyController.deduplicate(key, () => addFunction(content))

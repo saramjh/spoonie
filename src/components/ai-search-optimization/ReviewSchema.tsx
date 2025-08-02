@@ -4,6 +4,20 @@
  * Schema.org Review 표준 준수 (좋아요/댓글 기반)
  */
 
+import type { Item } from '@/types/item'
+
+// 리뷰 데이터 준비에 필요한 최소 속성들
+type ReviewDataInput = {
+  id?: string
+  title?: string
+  item_type?: string
+  likes_count?: number
+  comments_count?: number
+  comments?: any[]
+  username?: string
+  display_name?: string
+}
+
 interface Comment {
   id: string
   content: string
@@ -130,7 +144,7 @@ export const getItemType = (itemType: string): 'Recipe' | 'BlogPosting' => {
 }
 
 // 🎯 유틸리티 함수: 리뷰 데이터 준비
-export const prepareReviewData = (item: any) => {
+export const prepareReviewData = (item: ReviewDataInput) => {
   return {
     itemName: item.title || "스푸니 콘텐츠",
     itemType: getItemType(item.item_type || 'post'),

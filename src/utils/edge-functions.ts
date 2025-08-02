@@ -45,7 +45,7 @@ interface NotificationRequest {
   toUserId: string
   itemId?: string
   message?: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 interface NotificationResult {

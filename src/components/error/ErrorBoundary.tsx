@@ -380,9 +380,9 @@ export function useErrorHandler() {
   }, [])
 
   const safeExecute = React.useCallback(async (
-    operation: () => Promise<any>,
+    operation: () => Promise<unknown>,
     fallback?: any
-  ): Promise<any> => {
+  ): Promise<unknown> => {
     try {
       return await operation()
     } catch (error) {

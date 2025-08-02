@@ -81,7 +81,7 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 				// 캐시 업데이트 실패해도 UI 상태는 유지
 			}
 		}
-	}, [thumbnailIndex, isEditMode, initialData?.id])
+	}, [isEditMode, initialData?.id, supabase.auth])
 	const [selectedCitedRecipes, setSelectedCitedRecipes] = useState<Item[]>([])
 
 	const form = useForm<PostFormValues>({
@@ -124,7 +124,7 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 				)
 				setMainImages(fetchedImages)
 				// 🚀 업계 표준: 저장된 썸네일 인덱스 복원 또는 기본값(0) 사용
-				const savedThumbnailIndex = (initialData as any).thumbnail_index ?? 0
+				const savedThumbnailIndex = (initialData as Item & { thumbnail_index?: number }).thumbnail_index ?? 0
 				setThumbnailIndex(Math.min(savedThumbnailIndex, fetchedImages.length - 1))
 	
 			}

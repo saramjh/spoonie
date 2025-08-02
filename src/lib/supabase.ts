@@ -5,7 +5,8 @@ export function createSupabaseBrowserClient() {
 }
 
 export function createSupabaseServerClient() {
-	// Import cookies only when this function is called (server-side only)
+	// Dynamic import required for server-side only functionality
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
 	const { cookies } = require("next/headers")
 	const cookieStore = cookies()
 

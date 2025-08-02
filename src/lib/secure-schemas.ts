@@ -207,7 +207,7 @@ export const secureSearchSchema = z.object({
 export const fileUploadSchema = z.object({
   // 파일 개수 제한
   files: z
-    .array(z.any())
+    .array(z.unknown())
     .min(1, "최소 1개 파일을 선택해주세요.")
     .max(10, "최대 10개 파일까지 업로드할 수 있습니다."),
   

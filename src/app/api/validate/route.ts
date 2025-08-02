@@ -15,7 +15,7 @@ import { z } from 'zod'
 
 const validationRequestSchema = z.object({
   type: z.enum(['recipe', 'post', 'profile', 'comment']),
-  data: z.record(z.string(), z.any()),
+  data: z.record(z.string(), z.unknown()),
   userId: z.string().uuid().optional()
 })
 

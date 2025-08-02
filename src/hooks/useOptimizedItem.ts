@@ -4,7 +4,7 @@
  */
 
 import { useMemo, useCallback } from 'react'
-import useSWR from 'swr'
+import useSWR, { mutate } from 'swr'
 import { Item } from '@/types/item'
 import { createSWRKey } from '@/lib/cache-keys'
 import { createSupabaseBrowserClient } from '@/lib/supabase-client'

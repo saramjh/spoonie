@@ -38,6 +38,9 @@ export default function FollowingModal({ isOpen, onClose, userId, currentUserId 
 		if (isOpen && userId) {
 			fetchFollowing()
 		}
+		// fetchFollowing은 컴포넌트 생명주기와 무관하게 
+		// userId 변경 시에만 호출되어야 함
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [isOpen, userId])
 
 	const fetchFollowing = async () => {

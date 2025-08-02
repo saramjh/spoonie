@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -38,9 +38,10 @@ export default function FollowersModal({ isOpen, onClose, userId, currentUserId 
 		if (isOpen && userId) {
 			fetchFollowers()
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [isOpen, userId])
 
-	const fetchFollowers = async () => {
+	const fetchFollowers = useCallback(async () => {
 		setLoading(true)
 		setError(null)
 
@@ -111,7 +112,7 @@ export default function FollowersModal({ isOpen, onClose, userId, currentUserId 
 		} finally {
 			setLoading(false)
 		}
-	}
+	}, [supabase, userId, currentUserId])
 
 
 

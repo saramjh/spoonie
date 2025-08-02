@@ -100,6 +100,21 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
   }, [])
 
   /**
+   * 📊 디바운스된 통계 동기화
+   */
+  const debouncedStatsSync = useCallback(() => {
+    const timeoutId = setTimeout(async () => {
+      const visibleIds = Array.from(visibleItemsRef.current)
+      if (visibleIds.length > 0) {
+        // 🚀 통합 캐시 매니저가 자동으로 통계 동기화를 처리
+        
+      }
+    }, 5000)
+
+    return () => clearTimeout(timeoutId)
+  }, [])
+
+  /**
    * 👁️ 화면에 보이는 아이템 추적 (Intersection Observer)
    */
   const trackVisibleItems = useCallback(() => {
@@ -131,24 +146,7 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
     itemElements.forEach(el => observer.observe(el))
 
     return () => observer.disconnect()
-  }, [])
-
-  /**
-   * 📊 디바운스된 통계 동기화
-   */
-  const debouncedStatsSync = useCallback(() => {
-    const timeoutId = setTimeout(async () => {
-      const visibleIds = Array.from(visibleItemsRef.current)
-      if (visibleIds.length > 0) {
-        // 🚀 통합 캐시 매니저가 자동으로 통계 동기화를 처리
-        
-      }
-    }, 5000)
-
-    return () => clearTimeout(timeoutId)
-  }, [])
-
-
+  }, [debouncedStatsSync])
 
   /**
    * 🚀 Optimistic UI 헬퍼 함수들

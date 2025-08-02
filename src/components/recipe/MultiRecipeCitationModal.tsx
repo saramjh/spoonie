@@ -62,13 +62,16 @@ export default function MultiRecipeCitationModal({ isOpen, onClose, onRecipesSel
 			const formattedData = data.map(item => ({
 				id: item.id,
 				title: item.title,
-				username: (item.author as any)?.username || '익명'
+				username: (item.author as { username?: string })?.username || '익명'
 			}))
 			setResults(formattedData)
 		}
 		setIsLoading(false)
 	}
 
+	// debounce 래퍼로 인해 ESLint가 의존성 추적 불가
+	// searchRecipes는 supabase와 안정적인 setState만 사용
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	const debouncedSearch = useCallback(debounce(searchRecipes, 300), [supabase])
 
 	useEffect(() => {

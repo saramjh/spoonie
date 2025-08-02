@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseServerClient } from '@/lib/supabase'
+
 import { rateLimiter } from '@/lib/security-utils'
 import { z } from 'zod'
 
@@ -20,7 +20,7 @@ const logEntrySchema = z.object({
   sessionId: z.string().optional(),
   userAgent: z.string().optional(),
   url: z.string().url().optional(),
-  context: z.record(z.string(), z.any()).optional(),
+  context: z.record(z.string(), z.unknown()).optional(),
   error: z.object({
     name: z.string(),
     message: z.string(),
@@ -35,11 +35,11 @@ const logEntrySchema = z.object({
   userAction: z.object({
     type: z.string(),
     target: z.string(),
-    data: z.record(z.string(), z.any()).optional()
+    data: z.record(z.string(), z.unknown()).optional()
   }).optional()
 })
 
-type LogEntry = z.infer<typeof logEntrySchema>
+
 
 const logsRequestSchema = z.object({
   logs: z.array(logEntrySchema).max(100) // 최대 100개까지
@@ -364,7 +364,7 @@ export async function PUT(request: NextRequest) {
 // 6. 분석 함수들
 // ================================
 
-async function analyzeErrors(storage: LogStorage): Promise<any> {
+async function analyzeErrors(storage: LogStorage): Promise<unknown> {
   const allLogs = await storage.getLogs({ level: 'error', limit: 1000 })
   
   const errorAnalysis = {
@@ -399,7 +399,7 @@ async function analyzeErrors(storage: LogStorage): Promise<any> {
   return errorAnalysis
 }
 
-async function generatePerformanceReport(storage: LogStorage): Promise<any> {
+async function generatePerformanceReport(storage: LogStorage): Promise<unknown> {
   const allLogs = await storage.getLogs({ limit: 1000 })
   const performanceLogs = allLogs.filter(log => log.performance)
 
@@ -457,7 +457,7 @@ async function generatePerformanceReport(storage: LogStorage): Promise<any> {
   return performanceReport
 }
 
-async function analyzeUserBehavior(storage: LogStorage): Promise<any> {
+async function analyzeUserBehavior(storage: LogStorage): Promise<unknown> {
   const allLogs = await storage.getLogs({ limit: 1000 })
   const actionLogs = allLogs.filter(log => log.userAction)
 

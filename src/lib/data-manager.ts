@@ -387,7 +387,7 @@ export class DataManager {
     // Updating item in all caches...
     
     // 1. 홈피드 캐시 업데이트
-    updateInfiniteCache(this.currentUserId, itemId, updatedItem)
+    // updateInfiniteCache(this.currentUserId, itemId, updatedItem) // Handled by unified cache manager
 
     // 2. 상세페이지 캐시 무효화 (새로운 데이터로 교체)
     await mutate(createSWRKey.itemDetail(itemId), updatedItem, { revalidate: false })

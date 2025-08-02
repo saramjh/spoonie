@@ -75,6 +75,8 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 			return null
 		}
 		return id
+		// 의도적 최적화: item 전체가 아닌 ID 속성만 감시
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [item?.item_id, item?.id])
 	
 	// 🚀 SSA 표준: items 테이블 데이터에 실시간 상태 기본값 추가
