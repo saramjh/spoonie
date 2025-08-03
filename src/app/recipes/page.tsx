@@ -506,7 +506,7 @@ export default function RecipesPage() {
 	const isGuest = !currentUser && !userLoading
 
 	return (
-		<div className="flex flex-col h-full bg-gray-50 text-gray-900 relative">
+		<div className="flex flex-col w-full h-screen bg-gray-50 text-gray-900 relative overflow-hidden">
 			{/* 비회원 블러 오버레이 - ItemDetailView와 동일한 방식 (약한 블러) */}
 			{isGuest && (
 				<div className="absolute inset-0 z-50 bg-black/15 flex items-start justify-center p-6 pt-8 sm:pt-12">
