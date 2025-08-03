@@ -203,7 +203,6 @@ export class UnifiedCacheManager {
 
         
         if (isFollow) {
-          console.log(`🔄 [executeDbOperation] Following user: ${userId} -> ${itemId}`)
           
           const { error, data } = await this.supabase.from('follows').upsert({
             follower_id: userId,
@@ -213,19 +212,15 @@ export class UnifiedCacheManager {
             ignoreDuplicates: false 
           })
           
-          console.log(`✅ [executeDbOperation] Follow insert result:`, { data, error })
           if (error) {
             console.error(`❌ [executeDbOperation] Follow insert failed:`, error)
             throw error
           }
         } else {
-          console.log(`🔄 [executeDbOperation] Unfollowing user: ${userId} -> ${itemId}`)
-          
           const { error, count } = await this.supabase.from('follows').delete({ count: 'exact' })
             .eq('follower_id', userId)
             .eq('following_id', itemId)
           
-          console.log(`✅ [executeDbOperation] Unfollow delete result:`, { count, error })
           if (error) {
             console.error(`❌ [executeDbOperation] Unfollow delete failed:`, error)
             throw error
@@ -1022,8 +1017,6 @@ export const cacheManager = {
 
   // 🚀 팔로우/언팔로우 처리 (SSA 기반) - DB 저장 포함
   follow: async (currentUserId: string, targetUserId: string, isFollow: boolean) => {
-    console.log(`🚀 [cacheManager.follow] ${isFollow ? 'Following' : 'Unfollowing'} user: ${currentUserId} -> ${targetUserId}`)
-    
     const manager = getCacheManager()
     const rollback = await manager.smartUpdate({
       type: 'follow',
@@ -1032,7 +1025,6 @@ export const cacheManager = {
       delta: isFollow ? 1 : -1, // 팔로우는 +1, 언팔로우는 -1
     })
     
-    console.log(`✅ [cacheManager.follow] Follow operation scheduled for: ${currentUserId} -> ${targetUserId}`)
     return rollback
   }
 } 

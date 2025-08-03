@@ -41,7 +41,6 @@ export const usePullToRefresh = () => {
             setIsRefreshing(true);
             
             try {
-                console.log('🔄 Pull-to-Refresh: 데이터 갱신 시작');
                 
                 // 1. 🔥 SWR 캐시 완전 무효화 (모든 키 패턴)
                 await Promise.all([
@@ -88,8 +87,6 @@ export const usePullToRefresh = () => {
 
                 // 3. ⏱️ 최소 1초 새로고침 표시 (사용자 피드백)
                 await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                console.log('✅ Pull-to-Refresh: 데이터 갱신 완료');
                 
             } catch (error) {
                 console.error('❌ Pull-to-Refresh: 갱신 실패', error);

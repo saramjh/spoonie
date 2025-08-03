@@ -5,7 +5,6 @@
 
 // 푸시 메시지 수신 처리
 self.addEventListener('push', function(event) {
-  console.log('📨 푸시 메시지 수신:', event);
 
   let notificationData = {
     title: '새 알림',
@@ -50,7 +49,6 @@ self.addEventListener('push', function(event) {
 
 // 알림 클릭 처리
 self.addEventListener('notificationclick', function(event) {
-  console.log('🔔 알림 클릭:', event);
 
   event.notification.close();
 
@@ -78,6 +76,5 @@ self.addEventListener('notificationclick', function(event) {
 
 // 알림 닫기 처리
 self.addEventListener('notificationclose', function(event) {
-  console.log('❌ 알림 닫기:', event);
   // 필요시 분석 데이터 전송
 });

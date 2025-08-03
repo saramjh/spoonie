@@ -121,7 +121,6 @@ export function usePushNotification() {
 
       setSubscription(subscriptionData);
       setIsSubscribed(true);
-      console.log('✅ 푸시 알림 구독 완료!');
       return true;
 
     } catch (error) {
@@ -157,7 +156,6 @@ export function usePushNotification() {
 
       setSubscription(null);
       setIsSubscribed(false);
-      console.log('✅ 푸시 알림 구독 해제 완료!');
 
     } catch (error) {
       console.error('❌ 구독 해제 실패:', error);
