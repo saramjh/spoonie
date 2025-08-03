@@ -83,16 +83,13 @@ export default function PushNotificationSettings() {
           description: "잠시 후 푸시 알림이 표시됩니다.",
         });
       } else {
-        const errorData = await response.text();
-        console.error('❌ 테스트 푸시 실패:', response.status, errorData);
         toast({
           title: "테스트 실패",
-          description: `푸시 알림 발송에 실패했습니다: ${errorData}`,
+          description: "푸시 알림 발송에 실패했습니다.",
           variant: "destructive"
         });
       }
     } catch (error) {
-      console.error('❌ 테스트 푸시 오류:', error);
       toast({
         title: "테스트 오류",
         description: "테스트 중 오류가 발생했습니다.",
