@@ -73,10 +73,55 @@ class NotificationService implements INotificationService {
       if (error) {
         console.error('❌ 댓글 알림 생성 실패:', error)
       } else {
-    
+        // 🔔 하이브리드 전략: 기존 DB 알림 + 선택적 푸시
+        // 사용자가 푸시 알림을 활성화한 경우에만 푸시 발송
+        await this.sendPushIfEnabled(item.user_id, {
+          title: '새 댓글이 달렸습니다',
+          type: 'comment',
+          itemId
+        })
       }
     } catch (error) {
       console.error('❌ 댓글 알림 처리 중 오류:', error)
+    }
+  }
+
+  private async sendPushIfEnabled(userId: string, notification: any): Promise<void> {
+    try {
+      const supabase = createSupabaseBrowserClient()
+      
+      // 🎯 서버 부담 최소화: 사용자 푸시 설정 체크
+      const { data: pushSettings } = await supabase
+        .from('user_push_settings')
+        .select('enabled, subscription_data')
+        .eq('user_id', userId)
+        .eq('enabled', true)
+        .single()
+
+      if (pushSettings?.subscription_data) {
+        // 🆓 무료 푸시 알림 API 호출 (Netlify Functions)
+        fetch('/.netlify/functions/send-push', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subscription: pushSettings.subscription_data,
+            notification: {
+              title: notification.title,
+              body: `새로운 ${notification.type === 'comment' ? '댓글' : 
+                             notification.type === 'like' ? '좋아요' : 
+                             notification.type === 'follow' ? '팔로우' : '활동'}이 있습니다`,
+              type: notification.type,
+              url: `/posts/${notification.itemId}`, // 알림 클릭 시 이동할 URL
+              itemId: notification.itemId
+            }
+          })
+        }).catch(err => {
+          console.warn('푸시 발송 실패 (무시):', err)
+          // 실패해도 인앱 알림은 정상 작동
+        })
+      }
+    } catch (error) {
+      console.warn('푸시 설정 조회 실패 (무시):', error)
     }
   }
 

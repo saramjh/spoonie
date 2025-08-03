@@ -12,6 +12,11 @@ const pwaConfig = withPWA({
 	fallbacks: {
 		document: "/offline",
 	},
+	// 🆓 무료 푸시 알림: 커스텀 Service Worker 추가
+	additionalManifestEntries: [
+		{ url: '/custom-sw.js', revision: Date.now().toString() }
+	],
+	swSrc: 'public/custom-sw.js', // 커스텀 SW 코드 포함
 	// 🚨 핵심: SyntaxError 방지를 위한 전략적 캐싱
 	runtimeCaching: [
 		{

@@ -9,6 +9,7 @@ import { formatDistanceToNowStrict } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { BellOff, UserCircle2, X, Trash2, Heart, MessageCircle, UserPlus, ChefHat, Bell } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import PushNotificationSettings from '@/components/notifications/PushNotificationSettings'
 
 interface Notification {
   id: string;
@@ -423,6 +424,13 @@ export default function NotificationsPage() {
       </div>
 
       <div className="px-4 pb-6">
+        {/* 🔔 푸시 알림 설정 */}
+        {currentUser && (
+          <div className="mt-4 mb-6">
+            <PushNotificationSettings />
+          </div>
+        )}
+
         {/* 🎯 토스 스타일 편집 모드 툴바 */}
         {isSelecting && notifications.length > 0 && (
           <div className="sticky top-[73px] z-10 mb-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
