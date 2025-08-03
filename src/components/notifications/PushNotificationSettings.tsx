@@ -119,11 +119,7 @@ export default function PushNotificationSettings() {
           )}
         </Button>
 
-        <div className="text-xs text-gray-500 space-y-1">
-          <p>💡 <strong>완전 무료:</strong> 외부 서비스 비용 없음</p>
-          <p>🔒 <strong>안전함:</strong> 브라우저 내장 푸시 서비스 사용</p>
-          <p>⚡ <strong>실시간:</strong> 즉시 알림 수신 가능</p>
-        </div>
+
       </CardContent>
     </Card>
   );
