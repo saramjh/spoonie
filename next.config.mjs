@@ -46,12 +46,22 @@ const pwaConfig = withPWA({
 			handler: 'NetworkOnly',
 		},
 		{
-			// 🎯 Google Analytics/Tag Manager: 네트워크 전용 (캐시하지 않음)
-			urlPattern: /^https:\/\/(www\.)?google(tagmanager|analytics)\.com\/.*/i,
+			// 🎯 Google Tag Manager 스크립트: 완전 무시 (Service Worker가 개입하지 않음)
+			urlPattern: /^https:\/\/www\.googletagmanager\.com\/gtag\/js\?.*/,
 			handler: 'NetworkOnly',
 		},
 		{
-			// 🎯 기타 외부 분석/광고 도메인: 네트워크 전용
+			// 🎯 Google Analytics 도메인: 네트워크 전용
+			urlPattern: /^https:\/\/(www\.)?google-analytics\.com\/.*/i,
+			handler: 'NetworkOnly',
+		},
+		{
+			// 🎯 Google Analytics 수집 엔드포인트: 네트워크 전용
+			urlPattern: /^https:\/\/(www\.)?googletagmanager\.com\/.*(?:collect|g\/collect).*/i,
+			handler: 'NetworkOnly',
+		},
+		{
+			// 🎯 기타 Google 분석/광고 도메인: 네트워크 전용
 			urlPattern: /^https:\/\/(www\.)?(googleadservices|googlesyndication|doubleclick)\.net\/.*/i,
 			handler: 'NetworkOnly',
 		},
