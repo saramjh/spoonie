@@ -282,16 +282,39 @@ export class UnifiedCacheManager {
     const { userId } = operation
     
 
-    // 🚀 팔로우/언팔로우 시 팔로우 수 캐시 즉시 무효화
+    // 🚀 팔로우/언팔로우 시 팔로우 수 캐시 즉시 무효화 (비용 최적화)
     if (operation.type === 'follow') {
-      const { itemId: targetUserId, userId: currentUserId } = operation
+      const { itemId: targetUserId, userId: currentUserId, delta } = operation
       
       try {
-        // 팔로우한 사용자의 팔로워 수 캐시 무효화
-        await mutate(`follow_counts_${targetUserId}`, undefined, { revalidate: true })
+        // 💰 비용 최적화: DB 요청 대신 로컬 계산으로 캐시 업데이트
+        const isFollow = delta && delta > 0
         
-        // 팔로우를 실행한 사용자의 팔로잉 수 캐시 무효화
-        await mutate(`follow_counts_${currentUserId}`, undefined, { revalidate: true })
+        // 팔로우한 사용자의 팔로워 수 캐시 업데이트 (DB 요청 없이)
+        await mutate(
+          `follow_counts_${targetUserId}`,
+          (current: { followers: number; following: number } | undefined) => {
+            if (!current) return current
+            return {
+              ...current,
+              followers: Math.max(0, current.followers + (isFollow ? 1 : -1))
+            }
+          },
+          { revalidate: false } // DB 재요청 안함
+        )
+        
+        // 팔로우를 실행한 사용자의 팔로잉 수 캐시 업데이트 (DB 요청 없이)
+        await mutate(
+          `follow_counts_${currentUserId}`,
+          (current: { followers: number; following: number } | undefined) => {
+            if (!current) return current
+            return {
+              ...current,
+              following: Math.max(0, current.following + (isFollow ? 1 : -1))
+            }
+          },
+          { revalidate: false } // DB 재요청 안함
+        )
       } catch (error) {
         console.error('❌ Follow count cache invalidation failed:', error)
       }

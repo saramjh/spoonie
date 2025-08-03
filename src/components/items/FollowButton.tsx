@@ -14,18 +14,16 @@ interface FollowButtonProps {
 	className?: string
 }
 
-	export default function FollowButton({ userId, initialIsFollowing, className }: FollowButtonProps) {
-		const { toast } = useToast()
-		const { session } = useSessionStore()
-		
-		// 🚀 업계 표준: 글로벌 상태에서 팔로우 상태 참조 (Single Source of Truth)
-		const { isFollowing: globalIsFollowing, follow, unfollow } = useFollowStore()
-		const [isProcessing, setIsProcessing] = useState(false)
-		const [showLoginPrompt, setShowLoginPrompt] = useState(false)
+export default function FollowButton({ userId, initialIsFollowing, className }: FollowButtonProps) {
+	const { toast } = useToast()
+	const { session } = useSessionStore()
+	
+	// 🚀 업계 표준: 글로벌 상태에서 팔로우 상태 참조 (Single Source of Truth)
+	const { isFollowing: globalIsFollowing, follow, unfollow, isLoading: storeLoading } = useFollowStore()
+	const [isProcessing, setIsProcessing] = useState(false)
+	const [showLoginPrompt, setShowLoginPrompt] = useState(false)
 	
 	// 🎯 업계 표준: 글로벌 상태 우선, Store가 로딩중이면 초기값 사용
-	// isFollowing은 항상 boolean을 반환하므로 Store가 초기화되었는지 확인 필요
-	const { isLoading: storeLoading } = useFollowStore()
 	const globalFollowState = globalIsFollowing(userId)
 	const isFollowing = storeLoading ? (initialIsFollowing || false) : globalFollowState
 	
