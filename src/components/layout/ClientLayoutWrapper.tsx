@@ -7,7 +7,8 @@ import SplashScreen from "./SplashScreen"
 import AppWrapper from "./AppWrapper"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import { useSessionStore } from "@/store/sessionStore"
-import { useFollowStore } from "@/store/followStore" // �� 업계 표준: 팔로우 상태 관리
+import { useFollowStore } from "@/store/followStore" // 🚀 업계 표준: 팔로우 상태 관리
+import { RefreshProvider } from "@/contexts/RefreshContext"
 
 interface ClientLayoutWrapperProps {
   children: ReactNode
@@ -140,5 +141,9 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
     return <SplashScreen />
   }
 
-  return <AppWrapper>{children}</AppWrapper>
+  return (
+    <RefreshProvider>
+      <AppWrapper>{children}</AppWrapper>
+    </RefreshProvider>
+  )
 }
