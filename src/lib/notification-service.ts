@@ -99,8 +99,10 @@ class NotificationService implements INotificationService {
         .single()
 
       if (pushSettings?.subscription_data) {
+        console.log('📱 푸시 알림 발송 시도:', { userId, notificationType: notification.type });
+        
         // 🆓 무료 푸시 알림 API 호출 (Netlify Functions)
-        fetch('/.netlify/functions/send-push', {
+        const response = await fetch('/.netlify/functions/send-push', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -115,10 +117,16 @@ class NotificationService implements INotificationService {
               itemId: notification.itemId
             }
           })
-        }).catch(err => {
-          console.warn('푸시 발송 실패 (무시):', err)
-          // 실패해도 인앱 알림은 정상 작동
-        })
+        });
+
+        if (response.ok) {
+          console.log('✅ 푸시 알림 발송 성공');
+        } else {
+          const errorData = await response.text();
+          console.error('❌ 푸시 발송 실패:', response.status, errorData);
+        }
+      } else {
+        console.log('ℹ️ 푸시 설정 없음 또는 비활성화:', userId);
       }
     } catch (error) {
       console.warn('푸시 설정 조회 실패 (무시):', error)

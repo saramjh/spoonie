@@ -8,16 +8,18 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bell, BellOff, Smartphone, AlertCircle } from 'lucide-react';
+import { Bell, BellOff, Smartphone, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { usePushNotification } from '@/hooks/usePushNotification';
 import { useToast } from '@/hooks/use-toast';
 
 export default function PushNotificationSettings() {
   const { toast } = useToast();
+  const [isExpanded, setIsExpanded] = useState(false);
   const {
     isSupported,
     isSubscribed,
     isLoading,
+    subscription,
     subscribeToPush,
     unsubscribeFromPush
   } = usePushNotification();
@@ -48,6 +50,58 @@ export default function PushNotificationSettings() {
     }
   };
 
+  const handleTestPush = async () => {
+    if (!subscription) {
+      toast({
+        title: "구독 정보 없음",
+        description: "푸시 알림 구독 정보를 찾을 수 없습니다.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      console.log('🧪 테스트 푸시 발송 시도:', subscription);
+      
+      const response = await fetch('/.netlify/functions/send-push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subscription: subscription,
+          notification: {
+            title: '테스트 알림',
+            body: '푸시 알림이 정상적으로 작동합니다! 🎉',
+            type: 'test',
+            url: '/notifications'
+          }
+        })
+      });
+
+      if (response.ok) {
+        console.log('✅ 테스트 푸시 발송 성공');
+        toast({
+          title: "테스트 알림 발송됨",
+          description: "잠시 후 푸시 알림이 표시됩니다.",
+        });
+      } else {
+        const errorData = await response.text();
+        console.error('❌ 테스트 푸시 실패:', response.status, errorData);
+        toast({
+          title: "테스트 실패",
+          description: `푸시 알림 발송에 실패했습니다: ${errorData}`,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('❌ 테스트 푸시 오류:', error);
+      toast({
+        title: "테스트 오류",
+        description: "테스트 중 오류가 발생했습니다.",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (!isSupported) {
     return (
       <Card className="w-full max-w-md">
@@ -64,13 +118,50 @@ export default function PushNotificationSettings() {
     );
   }
 
+  // 푸시 알림이 켜져 있을 때 축소된 UI
+  if (isSubscribed && !isExpanded) {
+    return (
+      <Card className="w-full max-w-md">
+        <CardHeader 
+          className="cursor-pointer hover:bg-gray-50 transition-colors"
+          onClick={() => setIsExpanded(true)}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Bell className="h-5 w-5 text-green-600" />
+              <div>
+                <CardTitle className="text-sm">푸시 알림 활성화됨</CardTitle>
+                <CardDescription className="text-xs">
+                  실시간 알림을 받고 있습니다
+                </CardDescription>
+              </div>
+            </div>
+            <ChevronDown className="h-4 w-4 text-gray-400" />
+          </div>
+        </CardHeader>
+      </Card>
+    );
+  }
+
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Smartphone className="h-5 w-5" />
-          푸시 알림 설정
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Smartphone className="h-5 w-5" />
+            <CardTitle>푸시 알림 설정</CardTitle>
+          </div>
+          {isSubscribed && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsExpanded(false)}
+              className="h-6 w-6 p-0"
+            >
+              <ChevronUp className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
         <CardDescription>
           브라우저가 닫혀있어도 새로운 댓글, 좋아요, 팔로우 알림을 받을 수 있습니다.
         </CardDescription>
@@ -98,28 +189,39 @@ export default function PushNotificationSettings() {
           </div>
         </div>
 
-        <Button
-          onClick={handleTogglePush}
-          disabled={isLoading}
-          variant={isSubscribed ? "outline" : "default"}
-          className="w-full"
-        >
-          {isLoading ? (
-            "처리 중..."
-          ) : isSubscribed ? (
-            <>
-              <BellOff className="mr-2 h-4 w-4" />
-              푸시 알림 끄기
-            </>
-          ) : (
-            <>
-              <Bell className="mr-2 h-4 w-4" />
-              푸시 알림 켜기
-            </>
+        <div className="space-y-2">
+          <Button
+            onClick={handleTogglePush}
+            disabled={isLoading}
+            variant={isSubscribed ? "outline" : "default"}
+            className="w-full"
+          >
+            {isLoading ? (
+              "처리 중..."
+            ) : isSubscribed ? (
+              <>
+                <BellOff className="mr-2 h-4 w-4" />
+                푸시 알림 끄기
+              </>
+            ) : (
+              <>
+                <Bell className="mr-2 h-4 w-4" />
+                푸시 알림 켜기
+              </>
+            )}
+          </Button>
+
+          {isSubscribed && (
+            <Button
+              onClick={handleTestPush}
+              variant="secondary"
+              className="w-full"
+              size="sm"
+            >
+              🧪 테스트 알림 보내기
+            </Button>
           )}
-        </Button>
-
-
+        </div>
       </CardContent>
     </Card>
   );
