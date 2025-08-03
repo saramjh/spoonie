@@ -24,14 +24,16 @@ self.addEventListener('push', function(event) {
     }
   }
 
-  // 알림 표시
+  // 웨일 브라우저 호환성을 위한 고유 tag 생성
+  const uniqueTag = `spoonie-${notificationData.tag}-${Date.now()}`;
+  
   const showNotification = self.registration.showNotification(
     notificationData.title,
     {
       body: notificationData.body,
       icon: notificationData.icon,
       badge: notificationData.badge,
-      tag: notificationData.tag,
+      tag: uniqueTag, // 매번 고유한 태그로 중복 방지
       data: notificationData.data,
       actions: notificationData.actions || [
         {
@@ -39,36 +41,65 @@ self.addEventListener('push', function(event) {
           title: '확인'
         }
       ],
-      requireInteraction: false,
-      silent: false
+      requireInteraction: true, // 웨일 브라우저에서 더 확실하게 표시
+      silent: false,
+      vibrate: [200, 100, 200], // 진동 추가 (모바일)
+      timestamp: Date.now()
     }
-  );
+  ).then(() => {
+    // 🔄 알림센터 실시간 업데이트: 클라이언트에게 데이터 새로고침 요청
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+      clientList.forEach(client => {
+        try {
+          client.postMessage({
+            type: 'NOTIFICATION_RECEIVED',
+            data: {
+              notificationType: notificationData.type,
+              itemId: notificationData.data?.itemId,
+              timestamp: Date.now()
+            }
+          });
+        } catch (error) {
+          console.warn('클라이언트 메시지 전송 실패:', error);
+        }
+      });
+    });
+  }).catch(error => {
+    console.error('알림 표시 실패:', error);
+  });
 
   event.waitUntil(showNotification);
 });
 
 // 알림 클릭 처리
 self.addEventListener('notificationclick', function(event) {
-
   event.notification.close();
 
   const urlToOpen = event.notification.data?.url || '/';
+  
+  // 절대 URL로 변환 (localhost 대응)
+  const fullUrl = urlToOpen.startsWith('http') ? urlToOpen : 
+                  `${self.location.origin}${urlToOpen.startsWith('/') ? '' : '/'}${urlToOpen}`;
 
   const promiseChain = clients.matchAll({
     type: 'window',
     includeUncontrolled: true
   }).then(function(windowClients) {
-    // 이미 열린 탭이 있으면 해당 탭으로 포커스
+    // 이미 열린 탭이 있으면 해당 탭으로 포커스하고 이동
     for (let i = 0; i < windowClients.length; i++) {
       const client = windowClients[i];
+      
       if (client.url.includes(self.location.origin)) {
-        client.navigate(urlToOpen);
-        return client.focus();
+        return client.navigate(fullUrl).then(() => {
+          return client.focus();
+        });
       }
     }
     
-    // 열린 탭이 없으면 새 탭 열기
-    return clients.openWindow(urlToOpen);
+    // 새 탭으로 열기
+    return clients.openWindow(fullUrl);
+  }).catch(error => {
+    console.error('알림 클릭 처리 실패:', error);
   });
 
   event.waitUntil(promiseChain);

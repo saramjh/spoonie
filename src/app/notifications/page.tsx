@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { createSupabaseBrowserClient } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
 import { mutate } from 'swr'
+import useSWR from 'swr'
 import { formatDistanceToNowStrict } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { BellOff, UserCircle2, X, Trash2, Heart, MessageCircle, UserPlus, ChefHat, Bell } from 'lucide-react'
@@ -35,6 +36,7 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   
   // 복수 선택 관련 상태
   const [isSelecting, setIsSelecting] = useState(false);
@@ -46,68 +48,140 @@ export default function NotificationsPage() {
     setSelectedIds(new Set());
   }, []);
 
+  // 🔄 알림 데이터 가져오기 함수 (독립적으로 분리)
+  const fetchUserAndNotifications = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      toast({ title: '로그인 필요', description: '알림을 보려면 로그인이 필요합니다.', variant: 'destructive' });
+      return;
+    }
+    setCurrentUser(user);
+
+    // 🎯 서버 부담 최소화: 최신 알림 개수만 먼저 확인
+    const { count: newCount } = await supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id);
+
+    // 개수가 같으면 데이터 요청 생략 (서버 자원 절약)
+    if (newCount === notifications.length && notifications.length > 0) {
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('notifications')
+      .select(`
+        id,
+        created_at,
+        type,
+        is_read,
+        item_id,
+        from_profile:profiles!notifications_from_user_id_fkey ( public_id, username, avatar_url ),
+        related_item:items!notifications_item_id_fkey ( item_type )
+      `)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(50); // 🎯 최근 50개만 로드 (대역폭 절약)
+
+    if (error) {
+      toast({ title: '알림 불러오기 실패', description: "알림을 불러오는 중 오류가 발생했습니다. " + error.message, variant: 'destructive' });
+    } else {
+      // 데이터 변환 처리
+      const transformedData: Notification[] = (data || []).map((item: any) => ({
+        id: item.id,
+        created_at: item.created_at,
+        type: item.type,
+        is_read: item.is_read,
+        item_id: item.item_id,
+        from_profile: Array.isArray(item.from_profile) 
+          ? item.from_profile[0] || null 
+          : item.from_profile,
+        related_item: Array.isArray(item.related_item) 
+          ? item.related_item[0] || null 
+          : item.related_item,
+      }));
+      setNotifications(transformedData);
+    }
+  }, [supabase, toast, notifications.length]);
+
+  // 초기 로딩
   useEffect(() => {
-    const fetchUserAndNotifications = async () => {
-      setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+    setLoading(true);
+    fetchUserAndNotifications().finally(() => setLoading(false));
+  }, [fetchUserAndNotifications, refreshTrigger]);
+
+  // 🎯 실시간 업데이트 시스템 (다중 방식)
+  useEffect(() => {
+    if (!currentUser?.id) return;
+
+    // 1️⃣ 적응형 스마트 폴링 (사용자 활동도에 따라 조정)
+    let pollInterval: NodeJS.Timeout;
+    let lastActivity = Date.now();
+    
+    const updatePollingInterval = () => {
+      if (pollInterval) clearInterval(pollInterval);
       
-      if (!user) {
-        toast({ title: '로그인 필요', description: '알림을 보려면 로그인이 필요합니다.', variant: 'destructive' });
-        setLoading(false);
-        return;
+      const timeSinceActivity = Date.now() - lastActivity;
+      let interval;
+      
+      if (timeSinceActivity < 30000) { // 30초 이내 활동
+        interval = 10000; // 10초마다
+      } else if (timeSinceActivity < 120000) { // 2분 이내 활동
+        interval = 20000; // 20초마다  
+      } else { // 비활성 상태
+        interval = 60000; // 60초마다
       }
-      setCurrentUser(user);
-
-      const { data, error } = await supabase
-        .from('notifications')
-        .select(`
-          id,
-          created_at,
-          type,
-          is_read,
-          item_id,
-          from_profile:profiles!notifications_from_user_id_fkey ( public_id, username, avatar_url ),
-          related_item:items!notifications_item_id_fkey ( item_type )
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        toast({ title: '알림 불러오기 실패', description: "알림을 불러오는 중 오류가 발생했습니다. " + error.message, variant: 'destructive' });
-      } else {
-        // 데이터 변환 처리
-        const transformedData: Notification[] = (data || []).map((item: any) => ({
-          id: item.id,
-          created_at: item.created_at,
-          type: item.type,
-          is_read: item.is_read,
-          item_id: item.item_id,
-          from_profile: Array.isArray(item.from_profile) 
-            ? item.from_profile[0] || null 
-            : item.from_profile,
-          related_item: Array.isArray(item.related_item) 
-            ? item.related_item[0] || null 
-            : item.related_item,
-        }));
-        setNotifications(transformedData);
-      }
-      setLoading(false);
+      
+      pollInterval = setInterval(() => {
+        if (!document.hidden) {
+          fetchUserAndNotifications();
+        }
+      }, interval);
     };
+    
+    updatePollingInterval();
+    
+    // 사용자 활동 감지
+    const updateActivity = () => {
+      lastActivity = Date.now();
+      updatePollingInterval();
+    };
+    
+    ['click', 'scroll', 'keydown', 'touchstart'].forEach(event => {
+      document.addEventListener(event, updateActivity, { passive: true });
+    });
 
-    fetchUserAndNotifications();
-
-    // 🎯 폴링 기반 알림 시스템 (비용 효율적)
-    const pollInterval = setInterval(() => {
-      // 페이지가 활성 상태일 때만 폴링
-      if (!document.hidden && currentUser?.id) {
+    // 2️⃣ Page Visibility API (탭 전환 시 즉시 새로고침)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
         fetchUserAndNotifications();
       }
-    }, 30000); // 30초마다 체크
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // 3️⃣ Service Worker 메시지 리스너
+    const handleServiceWorkerMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'NOTIFICATION_RECEIVED') {
+        setRefreshTrigger(prev => prev + 1); // 강제 새로고침 트리거
+      }
+    };
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
+    }
 
     return () => {
       clearInterval(pollInterval);
+      ['click', 'scroll', 'keydown', 'touchstart'].forEach(event => {
+        document.removeEventListener(event, updateActivity);
+      });
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
+      }
     };
-  }, [supabase, toast, currentUser?.id]);
+  }, [currentUser?.id, fetchUserAndNotifications]);
 
   // 🔔 개별 알림 읽음 처리
   const markAsRead = async (id: string) => {

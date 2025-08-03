@@ -61,7 +61,10 @@ export default function PushNotificationSettings() {
     }
 
     try {
-      const endpoint = '/.netlify/functions/send-push';
+      // 개발 환경에서는 테스트 API 사용, 프로덕션에서는 Netlify Functions 사용
+      const endpoint = process.env.NODE_ENV === 'development' 
+        ? '/api/test-push' 
+        : '/.netlify/functions/send-push';
       
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -80,7 +83,7 @@ export default function PushNotificationSettings() {
       if (response.ok) {
         toast({
           title: "테스트 알림 발송됨",
-          description: "잠시 후 푸시 알림이 표시됩니다.",
+          description: "잠시 후 푸시 알림이 표시됩니다!",
         });
       } else {
         toast({

@@ -99,24 +99,29 @@ class NotificationService implements INotificationService {
         .single()
 
       if (pushSettings?.subscription_data) {
-        // 🆓 무료 푸시 알림 API 호출 (Netlify Functions)
-        fetch('/.netlify/functions/send-push', {
+        // 🆓 무료 푸시 알림 API 호출 (개발환경에서는 테스트 API 사용)
+        const endpoint = process.env.NODE_ENV === 'development' 
+          ? '/api/test-push' 
+          : '/.netlify/functions/send-push'
+        
+        fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             subscription: pushSettings.subscription_data,
             notification: {
               title: notification.title,
-              body: `새로운 ${notification.type === 'comment' ? '댓글' : 
-                             notification.type === 'like' ? '좋아요' : 
-                             notification.type === 'follow' ? '팔로우' : '활동'}이 있습니다`,
+              body: `새로운 ${notification.type === 'comment' ? '댓글이' : 
+                             notification.type === 'like' ? '좋아요가' : 
+                             notification.type === 'follow' ? '팔로우가' : '활동이'} 있습니다`,
               type: notification.type,
-              url: `/posts/${notification.itemId}`, // 알림 클릭 시 이동할 URL
+              url: notification.itemId ? `/posts/${notification.itemId}` : '/', // 알림 클릭 시 이동할 URL
               itemId: notification.itemId
             }
           })
-        }).catch(err => {
-          console.warn('푸시 발송 실패 (무시):', err)
+        })
+        .catch(err => {
+          console.warn('푸시 발송 실패:', err)
           // 실패해도 인앱 알림은 정상 작동
         })
       }
@@ -186,7 +191,12 @@ class NotificationService implements INotificationService {
         if (error) {
           console.error(`❌ 대댓글 알림 생성 실패 (${userId}):`, error)
         } else {
-    
+          // 🔔 하이브리드 전략: 기존 DB 알림 + 선택적 푸시
+          await this.sendPushIfEnabled(userId, {
+            title: '새 대댓글이 달렸습니다',
+            type: 'comment',
+            itemId
+          })
         }
       }
       
@@ -234,7 +244,12 @@ class NotificationService implements INotificationService {
       if (error) {
         console.error('❌ 좋아요 알림 생성 실패:', error)
       } else {
-    
+        // 🔔 하이브리드 전략: 기존 DB 알림 + 선택적 푸시
+        await this.sendPushIfEnabled(item.user_id, {
+          title: '새 좋아요가 달렸습니다',
+          type: 'like',
+          itemId
+        })
       }
     } catch (error) {
       console.error('❌ 좋아요 알림 처리 중 오류:', error)
@@ -272,7 +287,12 @@ class NotificationService implements INotificationService {
       if (error) {
         console.error('❌ 팔로우 알림 생성 실패:', error)
       } else {
-    
+        // 🔔 하이브리드 전략: 기존 DB 알림 + 선택적 푸시
+        await this.sendPushIfEnabled(targetUserId, {
+          title: '새 팔로워가 생겼습니다',
+          type: 'follow',
+          itemId: null
+        })
       }
     } catch (error) {
       console.error('❌ 팔로우 알림 처리 중 오류:', error)
@@ -341,7 +361,12 @@ class NotificationService implements INotificationService {
         if (error) {
           console.error(`❌ 참고레시피 알림 생성 실패 (${userId}):`, error)
         } else {
-  
+          // 🔔 하이브리드 전략: 기존 DB 알림 + 선택적 푸시
+          await this.sendPushIfEnabled(userId, {
+            title: '내 레시피가 참고되었습니다',
+            type: 'recipe_cited',
+            itemId: newItemId
+          })
         }
       }
       
