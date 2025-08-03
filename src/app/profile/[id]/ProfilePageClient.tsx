@@ -455,7 +455,15 @@ export default function ProfilePageClient({ params }: ProfilePageClientProps) {
 			dedupingInterval: 30000, // 30초 중복 방지
 		}
 	)
-	const [followCounts, setFollowCounts] = useState<FollowCounts | null>(null)
+	// 🚀 SSA 표준: 팔로우 수도 SWR로 관리하여 실시간 캐시 무효화 지원
+	const { data: followCounts } = useSWR(
+		profile ? `follow_counts_${profile.id}` : null,
+		() => fetchFollowCounts(profile!.id),
+		{
+			revalidateOnFocus: false,
+			dedupingInterval: 10000, // 10초 중복 방지
+		}
+	)
 	const [citationCount, setCitationCount] = useState<number>(0)
 	const [isLoading, setIsLoading] = useState(true)
 	const [profileError, setProfileError] = useState<Error | null>(null)
@@ -482,13 +490,11 @@ export default function ProfilePageClient({ params }: ProfilePageClientProps) {
 				const profileData = await fetchProfile(userId)
 				setProfile(profileData)
 
-				const [followCountsData, citationsData, followStatusData] = await Promise.all([
-					fetchFollowCounts(profileData.id),
+				const [citationsData, followStatusData] = await Promise.all([
 					fetchCitationCount(profileData.id),
 					fetchFollowStatus(user?.id || "", profileData.id) // 🚀 업계 표준: 글로벌 스토어 동기화용
 				])
-				// userItems는 이제 SWR로 자동 관리됨
-				setFollowCounts(followCountsData)
+				// userItems와 followCounts는 이제 SWR로 자동 관리됨
 				setCitationCount(citationsData)
 				
 				// 🚀 업계 표준: 글로벌 팔로우 스토어와 동기화
@@ -498,8 +504,7 @@ export default function ProfilePageClient({ params }: ProfilePageClientProps) {
 			} catch (err) {
 				setProfileError(err instanceof Error ? err : new Error("An error occurred"))
 				setProfile(null)
-				// userItems는 SWR로 관리되므로 직접 설정하지 않음
-				setFollowCounts(null)
+				// userItems와 followCounts는 SWR로 관리되므로 직접 설정하지 않음
 				setCitationCount(0)
 			} finally {
 				setIsLoading(false)

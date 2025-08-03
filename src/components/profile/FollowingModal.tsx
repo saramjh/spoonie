@@ -10,6 +10,7 @@ import { formatDistanceToNow } from "date-fns"
 import { ko } from "date-fns/locale"
 import Link from "next/link"
 import FollowButton from "@/components/items/FollowButton"
+import { useFollowStore } from "@/store/followStore"
 
 interface FollowingProfile {
 	id: string
@@ -33,6 +34,9 @@ export default function FollowingModal({ isOpen, onClose, userId, currentUserId 
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const supabase = createSupabaseBrowserClient()
+	
+	// 🚀 글로벌 팔로우 상태 연동
+	const { isFollowing: getIsFollowing } = useFollowStore()
 
 	useEffect(() => {
 		if (isOpen && userId) {
@@ -199,7 +203,7 @@ export default function FollowingModal({ isOpen, onClose, userId, currentUserId 
 										<div className="ml-3">
 											<FollowButton 
 												userId={followingUser.id} 
-												initialIsFollowing={followingUser.is_still_following}
+												initialIsFollowing={getIsFollowing(followingUser.id)}
 											/>
 										</div>
 									)}

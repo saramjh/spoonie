@@ -282,6 +282,20 @@ export class UnifiedCacheManager {
     const { userId } = operation
     
 
+    // 🚀 팔로우/언팔로우 시 팔로우 수 캐시 즉시 무효화
+    if (operation.type === 'follow') {
+      const { itemId: targetUserId, userId: currentUserId } = operation
+      
+      try {
+        // 팔로우한 사용자의 팔로워 수 캐시 무효화
+        await mutate(`follow_counts_${targetUserId}`, undefined, { revalidate: true })
+        
+        // 팔로우를 실행한 사용자의 팔로잉 수 캐시 무효화
+        await mutate(`follow_counts_${currentUserId}`, undefined, { revalidate: true })
+      } catch (error) {
+        console.error('❌ Follow count cache invalidation failed:', error)
+      }
+    }
     
     try {
       // 1. 홈피드 캐시 업데이트
