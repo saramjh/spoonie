@@ -61,9 +61,9 @@ export default function PushNotificationSettings() {
     }
 
     try {
-      console.log('🧪 테스트 푸시 발송 시도:', subscription);
+      const endpoint = '/.netlify/functions/send-push';
       
-      const response = await fetch('/.netlify/functions/send-push', {
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -78,7 +78,6 @@ export default function PushNotificationSettings() {
       });
 
       if (response.ok) {
-        console.log('✅ 테스트 푸시 발송 성공');
         toast({
           title: "테스트 알림 발송됨",
           description: "잠시 후 푸시 알림이 표시됩니다.",
@@ -211,7 +210,7 @@ export default function PushNotificationSettings() {
             )}
           </Button>
 
-          {isSubscribed && (
+          {isSubscribed && process.env.NODE_ENV === 'development' && (
             <Button
               onClick={handleTestPush}
               variant="secondary"
