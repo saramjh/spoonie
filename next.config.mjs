@@ -41,6 +41,16 @@ const pwaConfig = withPWA({
 			handler: 'NetworkOnly',
 		},
 		{
+			// 🎯 Google Analytics/Tag Manager: 네트워크 전용 (캐시하지 않음)
+			urlPattern: /^https:\/\/(www\.)?google(tagmanager|analytics)\.com\/.*/i,
+			handler: 'NetworkOnly',
+		},
+		{
+			// 🎯 기타 외부 분석/광고 도메인: 네트워크 전용
+			urlPattern: /^https:\/\/(www\.)?(googleadservices|googlesyndication|doubleclick)\.net\/.*/i,
+			handler: 'NetworkOnly',
+		},
+		{
 			// 🎨 CSS: 안전한 캐싱
 			urlPattern: /\/_next\/static\/css\/.*\.css$/,
 			handler: 'StaleWhileRevalidate',
