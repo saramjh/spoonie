@@ -82,14 +82,36 @@ export function usePushNotification() {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
-        const { error } = await supabase
+        // 먼저 기존 레코드 확인
+        const { data: existing } = await supabase
           .from('user_push_settings')
-          .upsert({
-            user_id: user.id,
-            subscription_data: subscriptionData,
-            enabled: true,
-            updated_at: new Date().toISOString()
-          });
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
+        let error;
+        if (existing) {
+          // 기존 레코드 업데이트
+          const result = await supabase
+            .from('user_push_settings')
+            .update({
+              subscription_data: subscriptionData,
+              enabled: true,
+              updated_at: new Date().toISOString()
+            })
+            .eq('user_id', user.id);
+          error = result.error;
+        } else {
+          // 새 레코드 생성
+          const result = await supabase
+            .from('user_push_settings')
+            .insert({
+              user_id: user.id,
+              subscription_data: subscriptionData,
+              enabled: true
+            });
+          error = result.error;
+        }
 
         if (error) {
           console.error('❌ 구독 정보 저장 실패:', error);
