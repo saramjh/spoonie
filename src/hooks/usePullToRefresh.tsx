@@ -1,18 +1,21 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import SpoonieLogoAnimation from "@/components/common/SpoonieLogoAnimation";
+import { mutate } from 'swr';
+import { useRefresh } from "@/contexts/RefreshContext";
 
 const PULL_THRESHOLD = 80; // 당겨야 하는 최소 거리 (px)
 const PULL_TO_REFRESH_TEXT = "당겨서 새로고침";
 
 /**
- * 🚀 Optimistic Updates 시스템용 Pull-to-Refresh
- * 기존처럼 복잡한 refresh 시스템 대신, 간단한 사용자 피드백만 제공
+ * 🚀 완전한 Pull-to-Refresh 시스템
+ * PWA 환경에서 네트워크 오류/캐시 문제 시 실제 데이터 갱신 수행
  */
 export const usePullToRefresh = () => {
     const [pullDistance, setPullDistance] = useState(0);
     const [isPulling, setIsPulling] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const touchStartRef = useRef(0);
+    const { triggerRefresh } = useRefresh();
 
     const handleTouchStart = useCallback((e: TouchEvent) => {
         if (window.scrollY === 0) {
@@ -35,18 +38,70 @@ export const usePullToRefresh = () => {
 
     const handleTouchEnd = useCallback(async () => {
         if (isPulling && pullDistance >= PULL_THRESHOLD) {
-            // 🚀 Optimistic Updates: 실제로는 아무것도 하지 않음 (이미 모든 상태가 최신)
-        
             setIsRefreshing(true);
             
-            // 사용자 피드백용 짧은 애니메이션만 표시
-            setTimeout(() => {
+            try {
+                console.log('🔄 Pull-to-Refresh: 데이터 갱신 시작');
+                
+                // 1. 🔥 SWR 캐시 완전 무효화 (모든 키 패턴)
+                await Promise.all([
+                    // 홈 피드 데이터
+                    mutate(
+                        (key) => typeof key === 'string' && key.startsWith('items|'),
+                        undefined,
+                        { revalidate: true, populateCache: false }
+                    ),
+                    // 아이템 상세 데이터
+                    mutate(
+                        (key) => typeof key === 'string' && key.startsWith('item_details_'),
+                        undefined,
+                        { revalidate: true, populateCache: false }
+                    ),
+                    // 댓글 데이터
+                    mutate(
+                        (key) => typeof key === 'string' && key.startsWith('comments_'),
+                        undefined,
+                        { revalidate: true, populateCache: false }
+                    ),
+                    // 사용자 프로필 데이터
+                    mutate(
+                        (key) => typeof key === 'string' && key.startsWith('user_items_'),
+                        undefined,
+                        { revalidate: true, populateCache: false }
+                    ),
+                    // 레시피 데이터
+                    mutate(
+                        (key) => typeof key === 'string' && key.startsWith('recipes||'),
+                        undefined,
+                        { revalidate: true, populateCache: false }
+                    ),
+                    // 검색 결과
+                    mutate(
+                        (key) => typeof key === 'string' && (key.startsWith('search_') || key.startsWith('popular_')),
+                        undefined,
+                        { revalidate: true, populateCache: false }
+                    )
+                ]);
+
+                // 2. 🔄 RefreshContext 등록된 새로고침 함수들 실행
+                await triggerRefresh();
+
+                // 3. ⏱️ 최소 1초 새로고침 표시 (사용자 피드백)
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                console.log('✅ Pull-to-Refresh: 데이터 갱신 완료');
+                
+            } catch (error) {
+                console.error('❌ Pull-to-Refresh: 갱신 실패', error);
+                // 실패해도 최소 피드백은 제공
+                await new Promise(resolve => setTimeout(resolve, 800));
+            } finally {
                 setIsRefreshing(false);
-            }, 500);
+            }
         }
         setIsPulling(false);
         setPullDistance(0);
-    }, [isPulling, pullDistance]);
+    }, [isPulling, pullDistance, triggerRefresh]);
 
     useEffect(() => {
         const handleTouchStartWrapper = (e: TouchEvent) => handleTouchStart(e);
@@ -80,7 +135,7 @@ export const usePullToRefresh = () => {
 
         if (isRefreshing) {
             return (
-                <div className="fixed inset-0 bg-white bg-opacity-10 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-white bg-opacity-20 flex items-center justify-center z-50">
                     <SpoonieLogoAnimation isLoading={true} useFullLogo={true} />
                 </div>
             );
@@ -89,7 +144,7 @@ export const usePullToRefresh = () => {
         return (
             <div style={indicatorStyle} className="overflow-hidden text-center flex items-center justify-center bg-orange-50">
                 <div style={textStyle} className="text-orange-500 font-bold">
-                    {PULL_TO_REFRESH_TEXT}
+                    {pullDistance >= PULL_THRESHOLD ? "🔄 놓으면 새로고침" : PULL_TO_REFRESH_TEXT}
                 </div>
             </div>
         );
