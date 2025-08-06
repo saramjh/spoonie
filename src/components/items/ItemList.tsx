@@ -109,6 +109,8 @@ export default function ItemList({ initialData }: ItemListProps) {
 			if (element) {
 				observer.unobserve(element)
 			}
+			// 🔧 메모리 안전: IntersectionObserver 완전 정리
+			observer.disconnect()
 		}
 	}, [handleObserver])
 

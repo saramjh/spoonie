@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from "@/lib/supabase-server"
+import { createSupabaseRouteHandlerClient } from "@/lib/supabase-server"
 import { NextResponse } from "next/server"
 import { generateUniqueUsername } from "@/lib/username-generator"
 import { generateUniquePublicId } from "@/lib/public-id-generator"
@@ -9,7 +9,7 @@ export async function GET(request: Request) {
 	const next = searchParams.get("next") ?? "/"
 
 	if (code) {
-		const supabase = createSupabaseServerClient()
+		const supabase = createSupabaseRouteHandlerClient()
 		const { error } = await supabase.auth.exchangeCodeForSession(code)
 
 		if (!error) {

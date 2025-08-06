@@ -99,8 +99,7 @@ export default function SimplifiedCommentsSection({
 
     // 🚀 SSA 표준: 즉시 UI 업데이트 + 모든 캐시 동기화 (0ms)
     const rollback = await cacheManager.comment(itemId, currentUserId, 1, cachedItem)
-    const activeCommentsCount = (comments || []).filter(c => !c.is_deleted).length
-    onCommentsCountChange?.(activeCommentsCount + 1)
+    // ✅ onCommentsCountChange 제거 - 캐시가 UI를 직접 업데이트
 
     try {
       // 🚀 STEP 2: 백그라운드 DB 업데이트
@@ -127,10 +126,7 @@ export default function SimplifiedCommentsSection({
       console.error(`❌ Comment error for ${itemId}:`, error)
       
       setNewComment(commentContent) // 입력 내용 복원
-      const activeCommentsCount = (comments || []).filter(c => !c.is_deleted).length
-      onCommentsCountChange?.(activeCommentsCount)
-      
-      rollback() // 모든 캐시 자동 롤백
+      rollback() // 모든 캐시 자동 롤백 (UI 자동 되돌림)
       
       toast({
         title: "댓글 추가 실패",
@@ -160,8 +156,7 @@ export default function SimplifiedCommentsSection({
 
     // 🚀 STEP 1: 즉시 UI 업데이트 + 모든 캐시 동기화 (0ms)
     const rollback = await cacheManager.comment(itemId, currentUserId, 1, cachedItem)
-    const activeCommentsCount = (comments || []).filter(c => !c.is_deleted).length
-    onCommentsCountChange?.(activeCommentsCount + 1)
+    // ✅ onCommentsCountChange 제거 - 캐시가 UI를 직접 업데이트
 
     try {
       // 🚀 STEP 2: 백그라운드 DB 업데이트
@@ -190,9 +185,7 @@ export default function SimplifiedCommentsSection({
     } catch (error) {
       console.error(`❌ Reply error for ${parentCommentId}:`, error)
       
-      const activeCommentsCount = (comments || []).filter(c => !c.is_deleted).length
-      onCommentsCountChange?.(activeCommentsCount)
-      rollback() // 모든 캐시 자동 롤백
+      rollback() // 모든 캐시 자동 롤백 (UI 자동 되돌림)
       
       toast({
         title: "답글 추가 실패",
@@ -209,8 +202,7 @@ export default function SimplifiedCommentsSection({
 
     // 🚀 STEP 1: 즉시 UI 업데이트 + 모든 캐시 동기화 (0ms)
     const rollback = await cacheManager.comment(itemId, currentUserId, -1, cachedItem)
-    const activeCommentsCount = (comments || []).filter(c => !c.is_deleted).length
-    onCommentsCountChange?.(Math.max(0, activeCommentsCount - 1))
+    // ✅ onCommentsCountChange 제거 - 캐시가 UI를 직접 업데이트
 
     try {
       // 🚀 STEP 2: 백그라운드 DB 업데이트
@@ -232,10 +224,7 @@ export default function SimplifiedCommentsSection({
       // 🚀 STEP 3: 에러 시 자동 롤백
       console.error(`❌ Delete comment error for ${itemId}:`, error)
       
-      const activeCommentsCount = (comments || []).filter(c => !c.is_deleted).length
-      onCommentsCountChange?.(activeCommentsCount)
-      
-      rollback() // 모든 캐시 자동 롤백
+      rollback() // 모든 캐시 자동 롤백 (UI 자동 되돌림)
       
       toast({
         title: "댓글 삭제 실패",

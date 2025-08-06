@@ -9,6 +9,8 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import { useSessionStore } from "@/store/sessionStore"
 import { useFollowStore } from "@/store/followStore" // 🚀 업계 표준: 팔로우 상태 관리
 import { RefreshProvider } from "@/contexts/RefreshContext"
+import { startAuthorCacheCleanup } from "@/utils/author-cache"
+import { startMonitoring } from "@/lib/monitoring"
 
 interface ClientLayoutWrapperProps {
   children: ReactNode
@@ -23,6 +25,17 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
 
 
 
+  // 🔧 메모리 안전: 전역 서비스 관리
+  useEffect(() => {
+    const cleanupAuthorCache = startAuthorCacheCleanup()
+    const cleanupMonitoring = startMonitoring()
+    
+    return () => {
+      cleanupAuthorCache()
+      cleanupMonitoring()
+    }
+  }, [])
+
   // 🚀 세션과 프로필 초기 로드
   useEffect(() => {
     const initializeAuth = async () => {
@@ -36,7 +49,15 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
           const { data: { user }, error: userError } = await supabase.auth.getUser()
           
           if (userError) {
-
+            console.error("❌ ClientLayoutWrapper: Auth error:", userError)
+            // 토큰 관련 에러인 경우 조용히 로그아웃 처리
+            if (userError.message?.includes('Invalid Refresh Token') || 
+                userError.message?.includes('refresh_token_not_found')) {
+              if (process.env.NODE_ENV === 'development') {
+                console.log('🔄 Invalid token detected, signing out silently')
+              }
+              await supabase.auth.signOut()
+            }
             setSession(null)
             setProfile(null)
           } else if (user) {
@@ -85,11 +106,16 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
           setProfile(null)
         }
         
-        // 초기 로딩 완료
+        // 🔧 스플래시 화면 안전장치: 항상 홈으로 전환 보장
         setTimeout(() => {
-          setStoreInitialLoad(false)
-
-
+          try {
+            setStoreInitialLoad(false)
+            console.log("✅ 스플래시 화면 종료 - 홈화면 전환")
+          } catch (error) {
+            console.error("❌ 스플래시 화면 전환 실패:", error)
+            // 강제로라도 스플래시 종료
+            setStoreInitialLoad(false)
+          }
         }, 1500) // 1.5초 후 스플래시 화면 숨김
       }
     }

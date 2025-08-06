@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
-import { createSupabaseServerClient } from "./src/lib/supabase"
+import { createSupabaseServerClient } from "./src/lib/supabase-server"
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl

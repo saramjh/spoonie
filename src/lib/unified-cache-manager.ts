@@ -369,6 +369,13 @@ export class UnifiedCacheManager {
 
     }
     
+    try {
+      // 6. 북마크 캐시 업데이트 (모든 사용자별 북마크 뷰)
+      await this.updateBookmarkCache(operation)
+    } catch {
+
+    }
+    
 
   }
 
@@ -617,19 +624,59 @@ export class UnifiedCacheManager {
   /**
    * 🔍 검색 캐시 업데이트 (모든 검색 뷰와 필터 포함)
    */
-  private async updateSearchCache(_operation: CacheOperation): Promise<void> {
-    // 🔧 모든 검색 관련 캐시 무효화 (재검색 시 최신 데이터 반영)
+  private async updateSearchCache(operation: CacheOperation): Promise<void> {
+    const { type, itemId, delta } = operation
+    
+    // 🚀 SSA 표준: 검색 결과의 개별 아이템 실시간 업데이트
     await mutate(
       (key) => typeof key === 'string' && (
-        key.startsWith('search_') ||                      // 기본 검색
-        key.includes('popular_posts') ||                  // 인기 게시물
-        key.includes('popular_recipes') ||                // 인기 레시피  
+        key.startsWith('search_page|') ||                 // 무한스크롤 검색 결과
+        key.startsWith('popular_posts') ||                // 인기 게시물
+        key.startsWith('popular_recipes') ||              // 인기 레시피
         key.includes('search_grid') ||                    // 검색 그리드 뷰
         key.includes('search_list') ||                    // 검색 목록 뷰
-        key.includes('search_users') ||                   // 사용자 검색
         key.includes('search_results')                    // 일반 검색 결과
       ),
-      undefined,
+      (cacheData: Item[] | Item[][] | undefined) => {
+        if (!cacheData) return cacheData
+        
+        // 🔧 배열 구조 정규화 (무한스크롤 vs 단일 배열)
+        const isInfiniteScroll = Array.isArray(cacheData) && Array.isArray(cacheData[0])
+        
+        if (isInfiniteScroll) {
+          // 무한스크롤 구조: Item[][]
+          const pages = cacheData as Item[][]
+          return pages.map(page => {
+            if (!Array.isArray(page)) return page
+            return page.map(item => {
+              if (item.id === itemId || item.item_id === itemId) {
+                const calculateUpdates = this.calculateUpdates(type, delta)
+                const updates = calculateUpdates(item)
+                return { ...item, ...updates }
+              }
+              return item
+            })
+          })
+        } else {
+          // 단일 배열 구조: Item[]
+          const items = cacheData as Item[]
+          return items.map(item => {
+            if (item.id === itemId || item.item_id === itemId) {
+              const calculateUpdates = this.calculateUpdates(type, delta)
+              const updates = calculateUpdates(item)
+              return { ...item, ...updates }
+            }
+            return item
+          })
+        }
+      },
+      { revalidate: false, populateCache: true }
+    )
+    
+    // 🔧 사용자 검색 결과는 개별 처리 (다른 구조)
+    await mutate(
+      (key) => typeof key === 'string' && key.startsWith('search_users|'),
+      undefined,  // 사용자 검색은 무효화만 (구조가 다름)
       { revalidate: false }
     )
   }
@@ -665,6 +712,37 @@ export class UnifiedCacheManager {
             }
             return item
           })
+        })
+      },
+      { revalidate: false, populateCache: true }
+    )
+  }
+
+  /**
+   * 🔖 북마크 캐시 업데이트 (모든 사용자별 북마크 뷰 포함)
+   */
+  private async updateBookmarkCache(operation: CacheOperation): Promise<void> {
+    const { itemId } = operation
+    
+    // 🔧 모든 북마크 관련 캐시 업데이트
+    await mutate(
+      (key) => typeof key === 'string' && (
+        key.startsWith('bookmarks_') ||              // 사용자별 북마크 목록
+        key.includes('bookmark_list') ||             // 북마크 리스트 뷰
+        key.includes('user_bookmarks')               // 사용자 북마크 컬렉션
+      ),
+      (cacheData: Item[] | undefined) => {
+        if (!cacheData || !Array.isArray(cacheData)) return cacheData
+        
+        // 기존 아이템 업데이트
+        return cacheData.map(item => {
+          if (item.id === itemId || item.item_id === itemId) {
+            const calculateUpdates = this.calculateUpdates(operation.type, operation.delta)
+            const updates = calculateUpdates(item)
+            const updatedItem = { ...item, ...updates }
+            return updatedItem
+          }
+          return item
         })
       },
       { revalidate: false, populateCache: true }

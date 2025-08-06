@@ -138,7 +138,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	const { citedRecipes, isLoading: citedRecipesLoading } = useCitedRecipes(item?.cited_recipe_ids)
 
 	// 🚀 SSA 표준: 상태 관리 - 조건부 렌더링 전에 호출
-	const [commentsCount, setCommentsCount] = useState(cachedItem?.comments_count || 0)
+	// ✅ commentsCount는 캐시에서 직접 사용 (실시간 동기화)
 	const [localLikesCount, setLocalLikesCount] = useState(cachedItem?.likes_count || 0)
 	const [localHasLiked, setLocalHasLiked] = useState(cachedItem?.is_liked || false)
 	const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
@@ -156,7 +156,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	// 🚀 SSA 표준: 캐시 업데이트 시 로컬 상태 동기화
 	useEffect(() => {
 		if (cachedItem) {
-			setCommentsCount(cachedItem.comments_count || 0)
+			// ✅ commentsCount 제거 - 캐시에서 직접 사용
 			setLocalLikesCount(cachedItem.likes_count || 0)
 			setLocalHasLiked(cachedItem.is_liked || false)
 		}
@@ -166,8 +166,8 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	useEffect(() => {
 		setLocalLikesCount(item?.likes_count || 0)
 		setLocalHasLiked(item?.is_liked || false)
-		setCommentsCount(item?.comments_count || 0)
-	}, [item?.likes_count, item?.is_liked, item?.comments_count])
+		// ✅ commentsCount 제거 - 캐시에서 직접 사용
+	}, [item?.likes_count, item?.is_liked])
 
 	// 현재 사용자 조회 useEffect
 	useEffect(() => {
@@ -464,13 +464,26 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 						<ArrowLeft className="h-6 w-6" />
 					</Button>
 					
-					{/* 작성자 정보 (중앙 정렬) */}
+					{/* 작성자 정보 (중앙 정렬) - 토스 디자인 시스템 기반 일관성 */}
 					     <Link href={`/profile/${item.user_public_id || item.user_id}`} className="flex items-center gap-3 flex-1 ml-3">
 						<Avatar className="h-8 w-8">
 							<AvatarImage src={item.avatar_url || undefined} />
 							<AvatarFallback>{item.username?.charAt(0) || "U"}</AvatarFallback>
 						</Avatar>
-						<span className="font-semibold">{item.username || "사용자"}</span>
+						<div className="flex items-center gap-2">
+							<span className="font-semibold text-gray-900">
+								{item.username || "사용자"}
+							</span>
+							{/* 🎨 홈화면과 완전히 동일한 타입 배지 시스템 (토스 일관성 원칙) */}
+							{item.item_type === 'recipe' ? (
+								<div className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white text-xs px-2 py-0.5 rounded-full font-medium flex items-center gap-1 shadow-sm">
+									<span className="text-[10px]">👨‍🍳</span>
+									<span>레시피</span>
+								</div>
+							) : (
+								<span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">레시피드</span>
+							)}
+						</div>
 					</Link>
 					
 					{/* 우측 액션 버튼 */}
@@ -605,7 +618,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 								{item.tags && item.tags.length > 0 && (
 									<div className="flex flex-wrap gap-2 mb-4 mt-3">
 										{item.tags.map((tag, idx) => (
-											<span key={idx} className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
+											<span key={idx} className="bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 px-3 py-1 rounded-full text-sm font-medium border border-orange-300/50 hover:from-orange-200 hover:to-orange-300 hover:border-orange-400 transition-all duration-200">
 												#{tag}
 											</span>
 										))}
@@ -732,7 +745,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 							/>
 							<div className="flex items-center gap-1">
 								<MessageCircle className="h-6 w-6" />
-								<span className="text-base font-medium">{commentsCount}</span>
+								<span className="text-base font-medium">{cachedItem?.comments_count || 0}</span>
 							</div>
 						</div>
 					</div>
@@ -749,7 +762,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 						<SimplifiedCommentsSection 
 							currentUserId={currentUser?.id} 
 							itemId={stableItemId} 
-							onCommentsCountChange={setCommentsCount}
+							onCommentsCountChange={undefined}
 							cachedItem={cachedItem || item}
 						/>
 					</div>

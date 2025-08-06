@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseServerClient } from '@/lib/supabase'
+import { createSupabaseRouteHandlerClient } from '@/lib/supabase-server'
 import { z } from 'zod'
 
 // ================================
@@ -22,7 +22,7 @@ const deleteNotificationSchema = z.object({
 
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = createSupabaseServerClient()
+    const supabase = createSupabaseRouteHandlerClient()
     
     // 인증 확인
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -142,7 +142,7 @@ export async function DELETE(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createSupabaseServerClient()
+    const supabase = createSupabaseRouteHandlerClient()
     
     // 인증 확인
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -217,7 +217,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createSupabaseServerClient()
+    const supabase = createSupabaseRouteHandlerClient()
     
     // 인증 확인
     const { data: { user }, error: authError } = await supabase.auth.getUser()

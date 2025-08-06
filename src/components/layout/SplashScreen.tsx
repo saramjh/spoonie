@@ -23,10 +23,18 @@ export default function SplashScreen() {
 			setIsVisible(false)
 		}, 2800)
 
+		// 🔧 백업 안전장치: 5초 후 강제 종료 (JavaScript 오류 시에도 홈으로 전환)
+		const emergencyExitTimer = setTimeout(() => {
+			console.warn("⚠️ 스플래시 화면 백업 타이머 실행 - 강제 종료")
+			setIsVisible(false)
+			setAnimationPhase(2)
+		}, 5000)
+
 		return () => {
 			clearTimeout(enterTimer)
 			clearTimeout(morphTimer)
 			clearTimeout(exitTimer)
+			clearTimeout(emergencyExitTimer)
 		}
 	}, [])
 

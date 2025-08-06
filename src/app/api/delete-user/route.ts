@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from "@/lib/supabase";
+import { createSupabaseRouteHandlerClient } from "@/lib/supabase-server";
 import { NextResponse } from "next/server";
 
 interface RecipeData {
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
 		return NextResponse.json({ error: "User ID is required" }, { status: 400 });
 	}
 
-	const supabase = createSupabaseServerClient();
+	const supabase = createSupabaseRouteHandlerClient();
 
 	try {
 		// 1. 사용자 프로필 이미지 삭제

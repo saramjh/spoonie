@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseServerClient } from '@/lib/supabase'
+import { createSupabaseRouteHandlerClient } from '@/lib/supabase-server'
 import { secureRecipeSchema, securePostSchema, secureProfileSchema } from '@/lib/secure-schemas'
 import { rateLimiter } from '@/lib/security-utils'
 import { z } from 'zod'
@@ -50,7 +50,7 @@ async function validateRecipe(data: any, userId?: string) {
 
   // 참고 레시피 존재 확인
   if (result.data.cited_recipe_ids && result.data.cited_recipe_ids.length > 0) {
-    const supabase = createSupabaseServerClient()
+    const supabase = createSupabaseRouteHandlerClient()
     const { data: citedRecipes, error } = await supabase
       .from('items')
       .select('id, is_public, user_id')
@@ -160,7 +160,7 @@ async function validateProfile(data: any, userId?: string) {
 
   // 사용자명 중복 확인
   if (result.data.username && userId) {
-    const supabase = createSupabaseServerClient()
+    const supabase = createSupabaseRouteHandlerClient()
     const { data: existing } = await supabase
       .from('profiles')
       .select('id')
@@ -309,7 +309,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // 추가 생성 검증 (예: 일일 생성 한도)
-    const supabase = createSupabaseServerClient()
+    const supabase = createSupabaseRouteHandlerClient()
     const today = new Date().toISOString().split('T')[0]
     
     const { count } = await supabase

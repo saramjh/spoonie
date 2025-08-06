@@ -346,6 +346,8 @@ export default function RecipesPage() {
 		observer.observe(element)
 		return () => {
 			observer.unobserve(element)
+			// 🔧 메모리 안전: IntersectionObserver 완전 정리
+			observer.disconnect()
 		}
 	}, [handleObserver])
 

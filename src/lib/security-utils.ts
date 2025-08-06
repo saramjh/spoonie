@@ -241,18 +241,19 @@ export function validateUUID(uuid: string): boolean {
 /**
  * 안전한 정수 변환
  */
-export function safeParseInt(value: unknown, defaultValue: number = 0): number {
-  if (typeof value === 'number' && !isNaN(value)) {
-    return Math.floor(value)
-  }
-  
-  if (typeof value === 'string') {
-    const parsed = parseInt(value, 10)
-    return !isNaN(parsed) ? parsed : defaultValue
-  }
-  
-  return defaultValue
-}
+// ✅ Removed unused export for better tree shaking
+// export function safeParseInt(value: unknown, defaultValue: number = 0): number {
+//   if (typeof value === 'number' && !isNaN(value)) {
+//     return Math.floor(value)
+//   }
+//   
+//   if (typeof value === 'string') {
+//     const parsed = parseInt(value, 10)
+//     return !isNaN(parsed) ? parsed : defaultValue
+//   }
+//   
+//   return defaultValue
+// }
 
 /**
  * 🔢 안전한 실수 변환 (소숫점 지원)

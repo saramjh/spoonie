@@ -474,10 +474,17 @@ export class UserActionTracker {
 
 export const logger = new Logger()
 
-// 브라우저 환경에서만 자동 추적 설정
-if (typeof window !== 'undefined') {
+// 🔧 메모리 안전: React Hook 기반 모니터링 시스템으로 변경
+// 전역 이벤트 리스너 대신 useEffect에서 관리하도록 수정
+
+let clickListener: ((event: Event) => void) | null = null
+let beforeUnloadListener: (() => void) | null = null
+
+export function startMonitoring(): () => void {
+  if (typeof window === 'undefined' || clickListener) return () => {}
+  
   // 클릭 이벤트 자동 추적
-  document.addEventListener('click', (event) => {
+  clickListener = (event: Event) => {
     const target = event.target as HTMLElement
     const tagName = target.tagName.toLowerCase()
     const className = target.className
@@ -488,17 +495,36 @@ if (typeof window !== 'undefined') {
       id,
       text: target.textContent?.slice(0, 50)
     })
-  })
-
+  }
+  
   // 페이지 이탈 시 남은 로그 전송
-  window.addEventListener('beforeunload', () => {
+  beforeUnloadListener = () => {
     logger.exportLogs().forEach(log => {
       if (log.level === LogLevel.ERROR) {
         // 에러 로그는 즉시 전송 (navigator.sendBeacon 사용)
         navigator.sendBeacon('/api/logs', JSON.stringify({ logs: [log] }))
       }
     })
-  })
+  }
+  
+  document.addEventListener('click', clickListener)
+  window.addEventListener('beforeunload', beforeUnloadListener)
+  
+  return () => {
+    if (clickListener) {
+      document.removeEventListener('click', clickListener)
+      clickListener = null
+    }
+    if (beforeUnloadListener) {
+      window.removeEventListener('beforeunload', beforeUnloadListener)
+      beforeUnloadListener = null
+    }
+  }
+}
+
+// 브라우저 환경에서만 자동 시작 (개발 편의성)
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  startMonitoring()
 }
 
 // ================================

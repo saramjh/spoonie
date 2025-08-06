@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { PlusCircle, Trash2, X, Camera, Clock, Book } from "lucide-react"
+import { PlusCircle, X, Camera, Clock, Book } from "lucide-react"
 import ImageUploader from "@/components/common/ImageUploader"
 import InstructionImageUploader from "@/components/recipe/InstructionImageUploader"
 import CitedRecipeSearch from "@/components/recipe/CitedRecipeSearch"
@@ -25,8 +25,6 @@ import { RECIPE_COLOR_OPTIONS } from "@/lib/color-options"
 import type { Item } from "@/types/item"
 import { uploadImagesOptimized, ImageUploadMetrics } from "@/utils/image-optimization"
 import { cacheManager } from "@/lib/unified-cache-manager"
-import { mutate } from "swr"
-import { createSWRKey } from "@/lib/cache-keys"
 import { notificationService } from "@/lib/notification-service"
 
 // Zod 스키마 업데이트
@@ -232,7 +230,7 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 		}
 	}, [initialData, isEditMode, form, supabase])
 
-	const { fields: ingredients, append: appendIngredient, remove: removeIngredient, move: moveIngredient } = useFieldArray({ control: form.control, name: "ingredients" })
+	const { fields: ingredients, append: appendIngredient, remove: removeIngredient } = useFieldArray({ control: form.control, name: "ingredients" })
 	const { fields: instructions, append: appendInstruction, remove: removeInstruction } = useFieldArray({ control: form.control, name: "instructions" })
 
 	// 🎯 토스 스타일 드래그앤드롭: 재료 순서 변경 핸들러 (직접 setValue 사용)
@@ -322,7 +320,7 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 				newImageFiles, 
 				user.id, 
 				bucketId,
-				(_progress) => {
+				() => {
 					// Progress tracking not implemented yet
 				}
 			)
@@ -433,7 +431,11 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 					id: itemId,
 					item_id: itemId,
 					// 🎯 order_index 포함한 완전한 재료 데이터 사용
-					ingredients: ingredientsToInsert.map(({ item_id, ...ing }) => ing),
+					ingredients: ingredientsToInsert.map((item) => {
+						// eslint-disable-next-line @typescript-eslint/no-unused-vars
+						const { item_id, ...ing } = item
+						return ing
+					}),
 					instructions: instructionsWithImages.map((inst, index) => ({ 
 						...inst, 
 						step_number: index + 1 
@@ -445,6 +447,7 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 					user_public_id: initialData?.user_public_id || user.user_metadata?.public_id || null,
 					// 🎯 author 정보도 함께 설정 (ItemDetail 호환성)
 					author: {
+						id: initialData?.user_id || user.id, // ✅ Profile 타입 호환성: id 필드 추가
 						display_name: initialData?.username || user.user_metadata?.username || user.email?.split('@')[0] || 'Anonymous',
 						username: initialData?.username || user.user_metadata?.username || user.email?.split('@')[0] || 'anonymous',
 						avatar_url: initialData?.avatar_url || user.user_metadata?.avatar_url || null,
@@ -457,19 +460,22 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 					is_following: initialData?.is_following || false,
 					created_at: initialData?.created_at || new Date().toISOString(),
 				}
-								// 🚀 핵심: 상세페이지 캐시만 확실하게 업데이트 (가장 중요)
-		await mutate(createSWRKey.itemDetail(itemId), fullItemPayload, { revalidate: false })
-		
-		// 홈피드 등 다른 캐시는 자연스럽게 다음 접근 시 업데이트됨
+				
+				// 🎯 중요: 모든 캐시 즉시 갱신 (홈피드, 프로필, 레시피북 등)
+				await cacheManager.updateItem(itemId, fullItemPayload)
 			
-		} else {
+					} else {
 				
 				const fullItemPayload = {
 					...itemPayload,
 					id: itemId,
 					item_id: itemId,
 					// 🎯 order_index 포함한 완전한 재료 데이터 사용
-					ingredients: ingredientsToInsert.map(({ item_id, ...ing }) => ing),
+					ingredients: ingredientsToInsert.map((item) => {
+						// eslint-disable-next-line @typescript-eslint/no-unused-vars
+						const { item_id, ...ing } = item
+						return ing
+					}),
 					instructions: instructionsWithImages.map((inst, index) => ({ 
 						...inst, 
 						step_number: index + 1 
@@ -481,6 +487,7 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 					user_public_id: user.user_metadata?.public_id || null,
 					// 🎯 author 정보도 함께 설정 (ItemDetail 호환성)
 					author: {
+						id: user.id, // ✅ Profile 타입 호환성: id 필드 추가
 						display_name: user.user_metadata?.username || user.email?.split('@')[0] || 'Anonymous',
 						username: user.user_metadata?.username || user.email?.split('@')[0] || 'anonymous',
 						avatar_url: user.user_metadata?.avatar_url || null,

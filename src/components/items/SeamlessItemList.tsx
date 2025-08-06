@@ -148,20 +148,7 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
     return () => observer.disconnect()
   }, [debouncedStatsSync])
 
-  /**
-   * 🚀 Optimistic UI 헬퍼 함수들
-   * 사용자 액션에 따른 즉시 UI 업데이트
-   */
-  // handleOptimisticLike - Handled by unified cache manager
-
-  // handleOptimisticComment - Handled by unified cache manager
-
-  // handleOptimisticFollow - Handled by unified cache manager
-
-  // handleOptimisticItemAction - Handled by unified cache manager
-
-  // 🚀 Optimistic Updates 시스템에서는 복잡한 등록/구독 로직 불필요
-  // 모든 상태는 optimisticLikeUpdate, optimisticCommentUpdate에서 즉시 처리됨
+  // 🚀 Optimistic Updates: 통합 캐시 매니저로 완전 자동화 (데드코드 정리 완료)
 
   // 페이지 포커스 및 네비게이션 감지
   useEffect(() => {
