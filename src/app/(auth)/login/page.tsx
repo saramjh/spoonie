@@ -178,6 +178,21 @@ export default function LoginPage() {
 						회원가입
 					</Link>
 				</div>
+
+				{/* ⚖️ 법적 문서 링크 */}
+				<div className="mt-6 text-center space-x-3">
+					<Link href="/legal/privacy" className="text-xs text-gray-500 hover:text-gray-700 transition-colors duration-200">
+						개인정보처리방침
+					</Link>
+					<span className="text-xs text-gray-300">|</span>
+					<Link href="/legal/terms" className="text-xs text-gray-500 hover:text-gray-700 transition-colors duration-200">
+						이용약관
+					</Link>
+					<span className="text-xs text-gray-300">|</span>
+					<Link href="/legal/policy" className="text-xs text-gray-500 hover:text-gray-700 transition-colors duration-200">
+						운영정책
+					</Link>
+				</div>
 			</main>
 		</div>
 	)
