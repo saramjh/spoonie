@@ -57,14 +57,12 @@ export const createBreadcrumbs = {
   // 🍳 레시피 상세
   recipeDetail: (recipeTitle: string, recipeId: string): BreadcrumbItem[] => [
     { name: "홈", url: process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr" },
-    { name: "레시피", url: `${process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"}/recipes` },
     { name: recipeTitle, url: `${process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"}/recipes/${recipeId}` }
   ],
 
   // 📝 포스트 상세  
   postDetail: (postTitle: string, postId: string): BreadcrumbItem[] => [
     { name: "홈", url: process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr" },
-    { name: "포스트", url: `${process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"}/posts` },
     { name: postTitle, url: `${process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"}/posts/${postId}` }
   ],
 

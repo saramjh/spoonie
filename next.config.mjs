@@ -115,6 +115,18 @@ const nextConfig = {
 	experimental: {
 		optimizePackageImports: ['lucide-react'],
 	},
+
+	// 🔄 /posts 목록 경로만 홈으로 리디렉션
+	async redirects() {
+		return [
+			{
+				source: '/posts',
+				destination: '/',
+				permanent: true,
+			},
+		]
+	},
+
 	// 🔧 빌드 안정성 개선: SyntaxError 방지
 	compiler: {
 		removeConsole: process.env.NODE_ENV === 'production' ? {

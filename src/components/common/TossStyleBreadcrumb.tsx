@@ -153,13 +153,11 @@ export default function TossStyleBreadcrumb({
 export const createCustomBreadcrumb = {
   recipe: (recipeTitle: string, _recipeId: string): BreadcrumbItem[] => [
     { label: '홈', href: '/' },
-    { label: '레시피', href: '/recipes' },
     { label: recipeTitle, isCurrentPage: true }
   ],
   
   post: (postTitle: string, _postId: string): BreadcrumbItem[] => [
     { label: '홈', href: '/' },
-    { label: '레시피드', href: '/posts' },
     { label: postTitle, isCurrentPage: true }
   ],
   
