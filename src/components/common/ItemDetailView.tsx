@@ -30,6 +30,7 @@ import Link from "next/link"
 import { useCitedRecipes } from "@/hooks/useCitedRecipes"
 import { useThumbnail } from "@/hooks/useThumbnail"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
+import { useIsCrawler } from "@/hooks/useIsCrawler"
 import { cacheManager } from "@/lib/unified-cache-manager"
 
 interface ItemDetailViewProps {
@@ -276,8 +277,9 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		)
 	}
 
-	// 비회원 여부 확인
-	const isGuest = !currentUser && !isAuthLoading
+	const isCrawler = useIsCrawler()
+	// 비회원 여부 확인 (크롤러는 제외)
+	const isGuest = !currentUser && !isAuthLoading && !isCrawler
 	
 	// 작성자 여부 확인
 	const isOwnItem = currentUser && currentUser.id === item?.user_id
