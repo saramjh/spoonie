@@ -52,6 +52,12 @@ export const metadata: Metadata = {
 		description: "맛있는 레시피를 공유하고 요리 영감을 얻어보세요.",
 		images: [`${process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'}/logo-full.svg`],
 	},
+	// 검색엔진 소유 확인
+	verification: {
+		other: {
+			"naver-site-verification": "0626924727da0c005739ca94edae9591d26a53bc",
+		},
+	},
 	// 검색엔진 최적화
 	robots: {
 		index: true,
