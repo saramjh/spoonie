@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/lib/navigation"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import type { User } from "@supabase/supabase-js"
 import { Button } from "@/components/ui/button"
@@ -22,7 +22,7 @@ import { cacheManager } from "@/lib/unified-cache-manager"
 import { useNavigation } from "@/hooks/useNavigation"
 import useSWR from "swr"
 import type { Item } from "@/types/item"
-import { getCommentCountConcurrencySafe } from "@/utils/concurrency-helpers"
+import { fetchProfile, fetchUserItems, fetchFollowCounts, fetchFollowStatus, fetchCitationCount, type UserProfile } from "@/lib/profile-data"
 
 // 🚀 개선된 프로필 그리드 오버레이 컴포넌트
 interface ProfileGridOverlayProps {
@@ -177,255 +177,15 @@ function ProfileGridOverlay({ item, sessionUser }: ProfileGridOverlayProps) {
 	)
 }
 
-interface UserProfile {
-	id: string
-	username: string
-	display_name: string | null
-	avatar_url: string | null
-	profile_message: string | null // bio → profile_message로 변경
-	created_at?: string
-	public_id?: string | null
-}
-
-// --- 데이터 페칭 함수들 ---
-const fetchProfile = async (identifier: string) => {
-	if (!identifier) {
-		throw new Error("Profile identifier is required.")
-	}
-	const supabase = createSupabaseBrowserClient()
-	// Check if identifier is a UUID
-	const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier)
-
-	const column = isUUID ? "id" : "public_id"
-
-	const { data, error } = await supabase.from("profiles").select("*").eq(column, identifier).single()
-
-	if (error) {
-		// If it was a UUID and it failed, maybe it's a public_id that looks like a UUID? Unlikely.
-		// For now, just throw the error.
-		throw new Error(error.message)
-	}
-	if (!data) {
-		throw new Error("Profile not found")
-	}
-	return data as UserProfile
-}
-
-const fetchUserItems = async (userId: string, currentUserId?: string) => {
-	const supabase = createSupabaseBrowserClient()
-
-	// 🚀 업계표준 Privacy Logic: 본인/타인 구분하여 다른 데이터 소스 사용
-	let query
-	
-	if (currentUserId === userId) {
-		// 🔒 본인 프로필: items 테이블 직접 사용하여 비공개 게시물도 포함
-		// 🚀 홈 피드와 동일한 정확한 댓글 수 계산 방식 사용
-		query = supabase
-			.from("items")
-			.select(`
-				*,
-				profiles!user_id (
-					username,
-					display_name,
-					avatar_url,
-					public_id
-				),
-				likes_count:likes(count)
-			`)
-			.eq("user_id", userId)
-			.in("item_type", ["recipe", "post"])
-			.order("created_at", { ascending: false })
-	} else {
-		// 🌍 타인 프로필: optimized_feed_view 사용 (공개 게시물만)
-		query = supabase
-			.from("optimized_feed_view")
-			.select(`
-				*,
-				profiles!user_id (
-					username,
-					display_name,
-					avatar_url,
-					public_id
-				)
-			`)
-			.eq("user_id", userId)
-			.in("item_type", ["recipe", "post"])
-			.eq("is_public", true) // 타인에게는 공개 게시물만
-			.order("created_at", { ascending: false })
-	}
-
-	const { data: items, error } = await query
-	if (error) throw new Error(error.message)
-	if (!items || items.length === 0) return []
-
-	// 🚀 정확한 댓글 수 계산 (본인 프로필의 경우에만)
-	const itemsWithAccurateComments = currentUserId === userId 
-		? await Promise.all(items.map(async (item) => {
-			const accurateCommentsCount = await getCommentCountConcurrencySafe(item.id)
-			return { ...item, accurate_comments_count: accurateCommentsCount }
-		}))
-		: items
-
-	// 🔄 홈화면과 동일한 좋아요/팔로우 상태 확인
-	const itemIds = itemsWithAccurateComments.map((item) => item.id)
-	const userLikesMap = new Map<string, boolean>()
-	const userFollowsMap = new Map<string, boolean>()
-
-	if (currentUserId && currentUserId !== "guest") {
-		// 좋아요 상태 확인
-		const { data: userLikes } = await supabase
-			.from("likes")
-			.select("item_id")
-			.eq("user_id", currentUserId)
-			.in("item_id", itemIds)
-
-		userLikes?.forEach((like) => {
-			userLikesMap.set(like.item_id, true)
-		})
-
-		// 팔로우 상태 확인 (프로필 주인과 현재 사용자가 다른 경우에만)
-		if (currentUserId !== userId) {
-			const { data: followStatus } = await supabase
-				.from("follows")
-				.select("following_id")
-				.eq("follower_id", currentUserId)
-				.eq("following_id", userId)
-				.single()
-
-			if (followStatus) {
-				userFollowsMap.set(userId, true)
-			}
-		}
-	}
-
-	// 🎯 홈화면과 동일한 Item 형태로 변환
-	return itemsWithAccurateComments.map((item) => {
-		const profileData = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
-		const userLikeStatus = userLikesMap.get(item.id)
-		const isLikedValue = currentUserId && currentUserId !== "guest" 
-			? (userLikeStatus !== undefined ? userLikeStatus : false)
-			: false
-
-		return {
-			id: item.id,
-			item_id: item.id,
-			user_id: item.user_id,
-			item_type: item.item_type as "post" | "recipe",
-			created_at: item.created_at,
-			is_public: item.is_public,
-			display_name: profileData?.display_name || item.display_name || null,
-			username: profileData?.username || item.username || null,
-			avatar_url: profileData?.avatar_url || item.avatar_url || null,
-			user_public_id: profileData?.public_id || item.user_public_id || null,
-			user_email: null,
-			title: item.title,
-			content: item.content,
-			description: item.description,
-			image_urls: item.image_urls,
-			thumbnail_index: item.thumbnail_index ?? 0, // 🖼️ 썸네일 인덱스 추가
-			tags: item.tags,
-			color_label: item.color_label,
-			servings: item.servings,
-			cooking_time_minutes: item.cooking_time_minutes,
-			recipe_id: item.recipe_id,
-			cited_recipe_ids: item.cited_recipe_ids,
-					// 🚀 홈 피드와 동일한 정확한 좋아요/댓글 수 처리
-		likes_count: currentUserId === userId 
-			? (item.likes_count?.[0]?.count ?? 0)   // 본인 프로필: items 테이블 집계 결과
-			: (item.likes_count || 0),              // 타인 프로필: optimized_feed_view 결과
-		comments_count: currentUserId === userId 
-			? ('accurate_comments_count' in item ? (item as { accurate_comments_count: number }).accurate_comments_count : 0)  // 본인 프로필: 정확한 댓글 수 (삭제된 댓글 제외)
-			: (item.comments_count || 0),                   // 타인 프로필: optimized_feed_view 결과 (이미 삭제된 댓글 제외)
-			view_count: 0,
-			is_liked: isLikedValue,
-			is_following: userFollowsMap.get(userId) || false,
-		}
-	})
-}
-
-const fetchFollowCounts = async (userId: string) => {
-	const supabase = createSupabaseBrowserClient()
-	const { count: followersCount } = await supabase.from("follows").select("id", { count: "exact" }).eq("following_id", userId)
-	const { count: followingCount } = await supabase.from("follows").select("id", { count: "exact" }).eq("follower_id", userId)
-	return { followers: followersCount || 0, following: followingCount || 0 }
-}
-
-// 팔로우 상태 확인
-const fetchFollowStatus = async (currentUserId: string, targetUserId: string) => {
-	if (!currentUserId || !targetUserId || currentUserId === targetUserId) {
-		return false
-	}
-	
-	const supabase = createSupabaseBrowserClient()
-	const { data, error } = await supabase
-		.from("follows")
-		.select("id")
-		.eq("follower_id", currentUserId)
-		.eq("following_id", targetUserId)
-		.single()
-	
-	if (error && error.code !== "PGRST116") { // PGRST116 = no rows found
-		console.error("Error checking follow status:", error)
-		return false
-	}
-	
-	return !!data
-}
-
-// 참고레시피로 인용된 횟수 계산
-const fetchCitationCount = async (userId: string) => {
-	const supabase = createSupabaseBrowserClient()
-	
-	// 1. 먼저 이 사용자의 모든 레시피 ID 가져오기
-	const { data: userRecipes, error: recipesError } = await supabase
-		.from("items")
-		.select("id")
-		.eq("user_id", userId)
-		.eq("item_type", "recipe")
-	
-	if (recipesError) {
-		console.error("Error fetching user recipes:", recipesError)
-		return 0
-	}
-	
-	if (!userRecipes || userRecipes.length === 0) {
-		return 0
-	}
-	
-	const userRecipeIds = userRecipes.map(recipe => recipe.id)
-	
-	// 2. cited_recipe_ids에서 이 사용자의 레시피가 포함된 아이템들 찾기
-	const { data: citingItems, error: citingError } = await supabase
-		.from("items")
-		.select("cited_recipe_ids")
-		.not("cited_recipe_ids", "is", null) // cited_recipe_ids가 null이 아닌 것만
-	
-	if (citingError) {
-		console.error("Error fetching citing items:", citingError)
-		return 0
-	}
-	
-	// 3. 클라이언트에서 카운트 계산
-	let totalCitations = 0
-	
-	citingItems?.forEach(item => {
-		if (item.cited_recipe_ids && Array.isArray(item.cited_recipe_ids)) {
-			// 이 아이템의 cited_recipe_ids에 사용자의 레시피 ID가 포함된 개수 계산
-			const matchingCount = item.cited_recipe_ids.filter(citedId => 
-				userRecipeIds.includes(citedId)
-			).length
-			totalCitations += matchingCount
-		}
-	})
-	
-	return totalCitations
-}
-
 interface ProfilePageClientProps {
 	params: { id: string }
+	// 서버에서 미리 조회한 공개 데이터. 초기 HTML에 프로필 내용을 포함시키고, 마운트 후 로그인 사용자 기준으로 갱신한다.
+	initialProfile?: UserProfile | null
+	initialItems?: Awaited<ReturnType<typeof fetchUserItems>> | null
+	initialFollowCounts?: { followers: number; following: number } | null
 }
 
-export default function ProfilePageClient({ params }: ProfilePageClientProps) {
+export default function ProfilePageClient({ params, initialProfile, initialItems, initialFollowCounts }: ProfilePageClientProps) {
 	const router = useRouter()
 	const userId = params.id
 	const supabase = createSupabaseBrowserClient()
@@ -440,7 +200,7 @@ export default function ProfilePageClient({ params }: ProfilePageClientProps) {
 	const { profile: sessionProfile } = useSessionStore()
 	const { setFollowing, isFollowing: getIsFollowing } = useFollowStore() // 🚀 업계 표준: 글로벌 팔로우 상태
 
-	const [profile, setProfile] = useState<UserProfile | null>(null)
+	const [profile, setProfile] = useState<UserProfile | null>(initialProfile ?? null)
 	// 🚀 업계 표준: SWR로 사용자 아이템 관리 (DataManager 연동)
 	const { data: userItems } = useSWR(
 		profile ? `user_items_${profile.id}` : null,
@@ -448,6 +208,8 @@ export default function ProfilePageClient({ params }: ProfilePageClientProps) {
 		{
 			revalidateOnFocus: false,
 			dedupingInterval: 30000, // 30초 중복 방지
+			fallbackData: initialItems ?? undefined,
+			revalidateOnMount: true, // 본인 프로필이면 비공개 글과 좋아요 상태를 다시 채운다
 		}
 	)
 	// 🚀 SSA 표준: 팔로우 수도 SWR로 관리하여 실시간 캐시 무효화 지원
@@ -457,10 +219,12 @@ export default function ProfilePageClient({ params }: ProfilePageClientProps) {
 		{
 			revalidateOnFocus: false,
 			dedupingInterval: 10000, // 10초 중복 방지
+			fallbackData: initialFollowCounts ?? undefined,
+			revalidateOnMount: true,
 		}
 	)
 	const [citationCount, setCitationCount] = useState<number>(0)
-	const [isLoading, setIsLoading] = useState(true)
+	const [isLoading, setIsLoading] = useState(!initialProfile)
 	const [profileError, setProfileError] = useState<Error | null>(null)
 	// 🚀 업계 표준: 지역 상태 제거, 글로벌 상태만 사용
 	
@@ -474,15 +238,17 @@ export default function ProfilePageClient({ params }: ProfilePageClientProps) {
 	useEffect(() => {
 		const loadAllData = async () => {
 			if (!userId) return
-			setIsLoading(true)
+			// 서버가 넘긴 프로필이 있으면 스켈레톤으로 덮지 않고 그대로 보여준 채 갱신한다
+			if (!initialProfile) setIsLoading(true)
 			setProfileError(null)
 			try {
-				// 현재 사용자 정보 가져오기
-				const {
-					data: { user },
-				} = await supabase.auth.getUser()
-
-				const profileData = await fetchProfile(userId)
+				// 현재 사용자 확인과 프로필 조회는 서로 의존하지 않으므로 병렬로 보낸다
+				const [
+					{
+						data: { user },
+					},
+					profileData,
+				] = await Promise.all([supabase.auth.getUser(), initialProfile ?? fetchProfile(userId)])
 				setProfile(profileData)
 
 				const [citationsData, followStatusData] = await Promise.all([

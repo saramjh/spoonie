@@ -147,6 +147,7 @@ async function loadInitialItem(itemId: string) {
 
 export default async function RecipeDetailPage({ params }: Props) {
   const initialItem = await loadInitialItem(params.id)
+  // loading.tsx가 먼저 스트리밍되므로 상태 코드는 200이며, Next가 noindex 메타 태그를 넣어 색인에서 제외한다
   if (initialItem === "not_found") notFound()
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'

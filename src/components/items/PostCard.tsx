@@ -9,7 +9,7 @@ import { timeAgo } from "@/lib/utils"
 import FollowButton from "./FollowButton"
 import { SimplifiedLikeButton } from "@/components/items/SimplifiedLikeButton"
 import { BookmarkButton } from "@/components/items/BookmarkButton"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/lib/navigation"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { useShare } from "@/hooks/useShare"
@@ -336,7 +336,11 @@ export default function PostCard({
         {/* 🎯 텍스트 영역: 기존처럼 클릭으로 상세페이지 이동 */}
         <CardContent 
           className={`p-4 ${isRecipe ? 'bg-gradient-to-b from-transparent to-orange-25' : ''} cursor-pointer`}
-          onClick={() => router.push(detailUrl)}
+          onClick={(e) => {
+            // 제목 링크처럼 카드 안의 링크를 누른 경우는 링크가 이동을 처리한다
+            if ((e.target as Element).closest("a")) return
+            router.push(detailUrl)
+          }}
         >
           {isRecipe ? (
             <>
@@ -345,7 +349,7 @@ export default function PostCard({
                   <span className="text-white text-xs font-bold">R</span>
                 </div>
                 <h2 className="text-lg font-bold text-gray-900 leading-tight">
-                  <Link href={detailUrl} onClick={(e) => e.stopPropagation()}>{item.title}</Link>
+                  <Link href={detailUrl}>{item.title}</Link>
                 </h2>
               </div>
 

@@ -2,7 +2,9 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/lib/navigation"
+import { useState } from "react"
+import { Loader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -31,6 +33,9 @@ export default function LoginPage() {
 	const supabase = createSupabaseBrowserClient()
 	const { toast } = useToast()
 
+	// 로그인 성공 후 화면 이동 중, Google 로그인 페이지로 이동 중에도 버튼을 잠근다
+	const [isRedirecting, setIsRedirecting] = useState(false)
+	const [isGoogleRedirecting, setIsGoogleRedirecting] = useState(false)
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
@@ -52,6 +57,7 @@ export default function LoginPage() {
 				variant: "destructive",
 			})
 		} else {
+			setIsRedirecting(true)
 			router.push("/")
 			router.refresh()
 		}
@@ -69,7 +75,8 @@ export default function LoginPage() {
 			console.log('🔍 Environment NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL)
 		}
 		
-		await supabase.auth.signInWithOAuth({
+		setIsGoogleRedirecting(true)
+		const { error } = await supabase.auth.signInWithOAuth({
 			provider: "google",
 			options: {
 				redirectTo: redirectUrl,
@@ -78,6 +85,14 @@ export default function LoginPage() {
 				},
 			},
 		})
+		if (error) {
+			setIsGoogleRedirecting(false)
+			toast({
+				title: "로그인 실패",
+				description: "Google 로그인을 시작하지 못했습니다. 잠시 후 다시 시도해주세요.",
+				variant: "destructive",
+			})
+		}
 	}
 
 				return (
@@ -136,9 +151,15 @@ export default function LoginPage() {
 							{/* 🚀 토스 스타일 로그인 버튼 */}
 							<Button 
 								type="submit" 
+								disabled={form.formState.isSubmitting || isRedirecting}
 								className="w-full h-14 text-base font-bold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]"
 							>
-								로그인
+								{form.formState.isSubmitting || isRedirecting ? (
+									<>
+										<Loader2 className="mr-2 h-5 w-5 animate-spin" aria-hidden="true" />
+										로그인 중
+									</>
+								) : "로그인"}
 							</Button>
 						</form>
 					</Form>
@@ -165,8 +186,13 @@ export default function LoginPage() {
 							variant="outline" 
 							className="w-full h-14 text-base border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200" 
 							onClick={handleGoogleLogin}
+							disabled={isGoogleRedirecting}
 						>
-							<GoogleIcon className="mr-3" />
+							{isGoogleRedirecting ? (
+								<Loader2 className="mr-3 h-5 w-5 animate-spin" aria-hidden="true" />
+							) : (
+								<GoogleIcon className="mr-3" />
+							)}
 							Google로 계속하기
 						</Button>
 				</div>

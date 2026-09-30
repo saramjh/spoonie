@@ -8,7 +8,7 @@ import { mutate } from 'swr'
 import { formatDistanceToNowStrict } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { BellOff, UserCircle2, X, Trash2, Heart, MessageCircle, UserPlus, ChefHat, Bell } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/lib/navigation'
 import PushNotificationSettings from '@/components/notifications/PushNotificationSettings'
 
 interface Notification {

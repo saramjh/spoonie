@@ -29,25 +29,17 @@ export async function getInitialFeedData(): Promise<ServerFeedData> {
   const supabase = createSupabaseServerClient()
   
   try {
-    // 1. 현재 사용자 확인 (읽기 전용, 토큰 갱신 없음)
-    let user: User | null = null
-    try {
-      const { data: authData, error: userError } = await supabase.auth.getUser()
-      user = authData?.user || null
-      
-      if (userError && !userError.message?.includes('Auth session missing')) {
-        console.warn("⚠️ Server: User auth error:", userError.message)
-      }
-    } catch (authError) {
-      // 인증 에러는 무시하고 게스트로 처리
-      if (process.env.NODE_ENV === 'development') {
-        console.log("🔍 Server: Auth session not available, proceeding as guest")
-      }
-      user = null
-    }
+    // 사용자 확인과 피드 조회는 서로 의존하지 않으므로 병렬로 보낸다.
+    const userPromise: Promise<User | null> = supabase.auth.getUser()
+      .then(({ data: authData, error: userError }) => {
+        if (userError && !userError.message?.includes('Auth session missing')) {
+          console.warn("⚠️ Server: User auth error:", userError.message)
+        }
+        return authData?.user || null
+      })
+      .catch(() => null) // 인증 에러는 무시하고 게스트로 처리
 
-    // 2. 최적화된 뷰에서 피드 아이템 조회 + 작성자 정보 확실히 포함
-    const { data: items, error: itemsError, count } = await supabase
+    const itemsPromise = supabase
       .from("optimized_feed_view")
       .select(`
         *,
@@ -60,6 +52,8 @@ export async function getInitialFeedData(): Promise<ServerFeedData> {
       `, { count: "exact" })
       .range(0, PAGE_SIZE - 1)
       .order("created_at", { ascending: false })
+
+    const [user, { data: items, error: itemsError, count }] = await Promise.all([userPromise, itemsPromise])
 
     if (itemsError) {
       console.error("❌ Server: Error fetching items:", itemsError)

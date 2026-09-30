@@ -2,7 +2,9 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/lib/navigation"
+import { useState } from "react"
+import { Loader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -30,6 +32,8 @@ export default function SignupPage() {
 	const supabase = createSupabaseBrowserClient()
 	const { toast } = useToast()
 
+	// 가입 성공 후 로그인 화면으로 이동하는 동안에도 버튼을 잠근다
+	const [isRedirecting, setIsRedirecting] = useState(false)
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
@@ -67,6 +71,7 @@ export default function SignupPage() {
 				title: "회원가입 성공!",
 				description: "인증 메일을 확인 후 서비스를 이용해주세요.",
 			})
+			setIsRedirecting(true)
 			router.push("/login")
 		}
 	}
@@ -142,9 +147,15 @@ export default function SignupPage() {
 							/>
 							<Button 
 								type="submit" 
+								disabled={form.formState.isSubmitting || isRedirecting}
 								className="w-full h-14 text-base font-bold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]"
 							>
-								회원가입
+								{form.formState.isSubmitting || isRedirecting ? (
+									<>
+										<Loader2 className="mr-2 h-5 w-5 animate-spin" aria-hidden="true" />
+										가입하는 중
+									</>
+								) : "회원가입"}
 							</Button>
 						</form>
 					</Form>

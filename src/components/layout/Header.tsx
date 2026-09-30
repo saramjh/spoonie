@@ -1,7 +1,7 @@
 'use client'
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation"
 import { Button } from "@/components/ui/button";
 import { Bell, Bookmark } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";

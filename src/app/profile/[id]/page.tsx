@@ -11,7 +11,9 @@
 
 import { Metadata } from 'next'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { notFound } from 'next/navigation'
 import ProfilePageClient from './ProfilePageClient'
+import { fetchUserItems, fetchFollowCounts, type UserProfile } from '@/lib/profile-data'
 import BreadcrumbSchema, { createBreadcrumbs } from '@/components/ai-search-optimization/BreadcrumbSchema'
 
 interface Props {
@@ -136,54 +138,51 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-// 👤 프로필 데이터 가져오기 (Schema용)
-async function getProfileForSchema(profileId: string) {
+// 서버에서 공개 프로필 데이터를 미리 조회해 초기 HTML에 프로필 내용을 포함시킨다.
+// 로그인 사용자 기준 데이터(본인의 비공개 글, 좋아요 상태)는 클라이언트가 이어서 채운다.
+// 존재하지 않는 프로필은 "not_found", 그 밖의 오류는 null(클라이언트에서 기존 방식으로 조회).
+async function loadInitialProfileData(identifier: string) {
   try {
     const supabase = createSupabaseServerClient()
-    
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier)
     const { data: profile, error } = await supabase
       .from('profiles')
-      .select(`
-        public_id,
-        username,
-        avatar_url,
-        bio,
-        profile_message
-      `)
-      .eq('public_id', profileId)
-		.single()
-	
-    if (error || !profile) {
-      return null
-    }
+      .select('*')
+      .eq(isUUID ? 'id' : 'public_id', identifier)
+      .maybeSingle()
+    if (error) throw error
+    if (!profile) return 'not_found' as const
 
-    return {
-      username: profile.username || '',
-      public_id: profile.public_id
-    }
+    const [items, followCounts] = await Promise.all([
+      fetchUserItems(profile.id, undefined, supabase),
+      fetchFollowCounts(profile.id, supabase),
+    ])
+    return { profile: profile as UserProfile, items, followCounts }
   } catch (error) {
-    console.error('❌ Profile schema data loading error:', error)
+    console.error('❌ Initial profile load error:', error)
     return null
   }
 }
 
-// 🎯 기존 클라이언트 컴포넌트를 그대로 래핑 + SEO Schema 추가 (100% 기능 보존)
 export default async function ProfilePage({ params }: Props) {
-  // 🔥 SEO를 위한 Profile Schema 데이터 가져오기
-  const profileForSchema = await getProfileForSchema(params.id)
+  const initial = await loadInitialProfileData(params.id)
+  // loading.tsx가 먼저 스트리밍되므로 상태 코드는 200이며, Next가 noindex 메타 태그를 넣어 색인에서 제외한다
+  if (initial === 'not_found') notFound()
 
-  // 🧭 Breadcrumb 경로 생성
-  const breadcrumbs = profileForSchema 
-    ? createBreadcrumbs.profile(profileForSchema.username, profileForSchema.public_id)
+  const breadcrumbs = initial?.profile.public_id
+    ? createBreadcrumbs.profile(initial.profile.username, initial.profile.public_id)
     : createBreadcrumbs.home()
-									
-									return (
+
+  return (
     <>
-      {/* 🆕 SEO Schema 최적화 (기존 기능에 영향 없음) */}
       <BreadcrumbSchema items={breadcrumbs} />
-      
-      {/* 🛡️ 기존 클라이언트 컴포넌트 완전 보존 */}
-      <ProfilePageClient params={params} />
+      <ProfilePageClient
+        key={params.id}
+        params={params}
+        initialProfile={initial?.profile ?? null}
+        initialItems={initial?.items ?? null}
+        initialFollowCounts={initial?.followCounts ?? null}
+      />
     </>
-	)
+  )
 }

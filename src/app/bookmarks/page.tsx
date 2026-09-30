@@ -1,7 +1,7 @@
 "use client"
 
 // React hooks removed - not used in this component
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/lib/navigation"
 import { ArrowLeft, Bookmark } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import PostCard from "@/components/items/PostCard"

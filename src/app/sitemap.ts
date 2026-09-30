@@ -1,126 +1,91 @@
 /**
- * 🚀 동적 사이트맵 생성 (SEO 최적화)
- * TBWA 가이드 기반 구현
+ * 동적 사이트맵. 요청마다 DB를 조회하므로 새 글, 삭제, 비공개 전환이 자동으로 반영된다.
  */
 
 import { MetadataRoute } from 'next'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 
-// 🔧 동적 라우팅 강제 (cookies 사용하는 Supabase 때문)
+// cookies를 쓰는 Supabase 서버 클라이언트 때문에 동적 렌더링
 export const dynamic = 'force-dynamic'
+
+// PostgREST 기본 응답 한도가 1000행이므로 종류별 최대 1000개.
+// 더 많아지면 generateSitemaps로 사이트맵을 나눠야 한다.
+const MAX_PER_TYPE = 1000
+
+type SupabaseServerClient = ReturnType<typeof createSupabaseServerClient>
+type ItemRow = { id: string; created_at: string; updated_at?: string | null }
+
+/**
+ * 공개 항목 조회. items.updated_at 컬럼이 있으면 수정 시각을 쓰고,
+ * 아직 없으면(42703: undefined_column) 작성 시각으로 대체한다.
+ */
+async function getPublicItems(supabase: SupabaseServerClient, itemType: 'recipe' | 'post'): Promise<ItemRow[]> {
+  const query = (columns: string) =>
+    supabase
+      .from('items')
+      .select(columns)
+      .eq('is_public', true)
+      .eq('item_type', itemType)
+      .order('created_at', { ascending: false })
+      .limit(MAX_PER_TYPE)
+
+  const withUpdated = await query('id, created_at, updated_at')
+  if (!withUpdated.error) return (withUpdated.data ?? []) as unknown as ItemRow[]
+  if (withUpdated.error.code !== '42703') throw withUpdated.error
+
+  const createdOnly = await query('id, created_at')
+  if (createdOnly.error) throw createdOnly.error
+  return (createdOnly.data ?? []) as unknown as ItemRow[]
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'
-  
-  // 기본 정적 페이지들
-  const staticPages = [
-    {
-      url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: 'daily' as const,
-      priority: 1.0, // 홈페이지 최고 우선순위
-    },
-    {
-      url: `${baseUrl}/recipes`,
-      lastModified: new Date(),
-      changeFrequency: 'daily' as const,
-      priority: 0.9, // 레시피북 높은 우선순위
-    },
-    {
-      url: `${baseUrl}/search`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/login`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.5,
-    },
-    {
-      url: `${baseUrl}/signup`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.5,
-    }
+
+  // 검색 결과, 로그인, 회원가입 페이지는 색인 대상이 아니므로 넣지 않는다
+  const staticPages: MetadataRoute.Sitemap = [
+    { url: baseUrl, lastModified: new Date(), changeFrequency: 'daily', priority: 1.0 },
+    { url: `${baseUrl}/recipes`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
   ]
 
   try {
     const supabase = createSupabaseServerClient()
-    
-    // 🍳 공개 레시피들 (SEO 핵심 콘텐츠)
-    const { data: publicRecipes } = await supabase
-      .from('items')
-      .select('id, created_at, item_type')
-      .eq('is_public', true)
-      .eq('item_type', 'recipe')
-      .order('created_at', { ascending: false })
-      .limit(1000) // 사이트맵 크기 제한
 
-    // 📝 공개 포스트들
-    const { data: publicPosts } = await supabase
-      .from('items')
-      .select('id, created_at, item_type')
-      .eq('is_public', true)
-      .eq('item_type', 'post')
-      .order('created_at', { ascending: false })
-      .limit(500) // 포스트는 레시피보다 낮은 우선순위
+    const [recipes, posts, profilesResult] = await Promise.all([
+      getPublicItems(supabase, 'recipe'),
+      getPublicItems(supabase, 'post'),
+      supabase
+        .from('profiles')
+        .select('public_id, updated_at')
+        .not('public_id', 'is', null)
+        .order('updated_at', { ascending: false })
+        .limit(MAX_PER_TYPE),
+    ])
 
-    // 👥 활성 사용자 프로필들
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('public_id, updated_at')
-      .not('public_id', 'is', null)
-      .order('updated_at', { ascending: false })
-      .limit(200) // 주요 사용자들만
+    const lastModified = (row: ItemRow) => new Date(row.updated_at || row.created_at)
 
-    // 동적 페이지들 추가
-    const dynamicPages = []
-
-    // 레시피 상세 페이지들
-    if (publicRecipes) {
-      dynamicPages.push(...publicRecipes.map(recipe => ({
+    return [
+      ...staticPages,
+      ...recipes.map((recipe) => ({
         url: `${baseUrl}/recipes/${recipe.id}`,
-        lastModified: new Date(recipe.created_at),
+        lastModified: lastModified(recipe),
         changeFrequency: 'weekly' as const,
-        priority: 0.8, // 레시피는 높은 우선순위
-      })))
-    }
-
-    // 포스트 상세 페이지들  
-    if (publicPosts) {
-      dynamicPages.push(...publicPosts.map(post => ({
+        priority: 0.8,
+      })),
+      ...posts.map((post) => ({
         url: `${baseUrl}/posts/${post.id}`,
-        lastModified: new Date(post.created_at),
+        lastModified: lastModified(post),
         changeFrequency: 'weekly' as const,
-        priority: 0.6, // 포스트는 중간 우선순위
-      })))
-    }
-
-    // 사용자 프로필 페이지들
-    if (profiles) {
-      dynamicPages.push(...profiles.map(profile => ({
+        priority: 0.6,
+      })),
+      ...(profilesResult.data ?? []).map((profile) => ({
         url: `${baseUrl}/profile/${profile.public_id}`,
         lastModified: new Date(profile.updated_at),
         changeFrequency: 'weekly' as const,
-        priority: 0.4, // 프로필은 낮은 우선순위
-      })))
-    }
-
-    return [...staticPages, ...dynamicPages]
-
+        priority: 0.4,
+      })),
+    ]
   } catch (error) {
     console.error('❌ Sitemap generation error:', error)
-    // 에러 시 기본 정적 페이지만 반환
     return staticPages
   }
 }
-
-/**
- * 💡 TBWA 가이드 SEO 원칙 적용:
- * 1. 우선순위 기반 페이지 분류 (홈 > 레시피 > 포스트 > 프로필)
- * 2. 업데이트 빈도 차별화 (콘텐츠 성격에 맞게)
- * 3. 최신 콘텐츠 우선 (updated_at 기준 정렬)
- * 4. 성능 고려 (페이지 수 제한으로 크롤링 효율화)
- */

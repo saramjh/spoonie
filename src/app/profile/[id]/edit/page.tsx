@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { createSupabaseBrowserClient } from "@/lib/supabase"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/lib/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { User } from "@supabase/supabase-js"
 import { Button } from "@/components/ui/button"

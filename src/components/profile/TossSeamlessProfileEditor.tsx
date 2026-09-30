@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { createSupabaseBrowserClient } from "@/lib/supabase"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/lib/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { User } from "@supabase/supabase-js"
 import Image from "next/image"

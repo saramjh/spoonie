@@ -7,6 +7,8 @@ import ClientLayoutWrapper from "@/components/layout/ClientLayoutWrapper"
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics"
 import GoogleAdSense from "@/components/ads/GoogleAdSense"
 import ServiceWorkerUpdater from "@/components/layout/ServiceWorkerUpdater"
+import NavigationProgress from "@/components/layout/NavigationProgress"
+import { Suspense } from "react"
 
 const fontSans = localFont({
 	src: "./fonts/GeistVF.woff",
@@ -100,6 +102,11 @@ export default function RootLayout({
 				{/* 🔄 Service Worker 업데이터 */}
 				<ServiceWorkerUpdater />
 				
+				{/* 화면 전환 진행 막대 */}
+				<Suspense fallback={null}>
+					<NavigationProgress />
+				</Suspense>
+
 				<ClientLayoutWrapper>{children}</ClientLayoutWrapper>
 				<Toaster />
 			</body>

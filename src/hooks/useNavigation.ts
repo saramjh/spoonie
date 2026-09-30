@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useCallback, useRef, useState } from "react"
-import { useRouter, usePathname } from "next/navigation"
+import { usePathname } from "next/navigation"
+import { useRouter } from "@/lib/navigation"
 import { useSWRConfig } from "swr"
 
 /**
