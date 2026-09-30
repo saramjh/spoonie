@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Bell, BellOff, Smartphone, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { usePushNotification } from '@/hooks/usePushNotification';
 import { useToast } from '@/hooks/use-toast';
+import { createSupabaseBrowserClient } from '@/lib/supabase-client';
 
 export default function PushNotificationSettings() {
   const { toast } = useToast();
@@ -66,9 +67,22 @@ export default function PushNotificationSettings() {
         ? '/api/test-push' 
         : '/.netlify/functions/send-push';
       
+      const { data: { session } } = await createSupabaseBrowserClient().auth.getSession();
+      if (!session?.access_token) {
+        toast({
+          title: "로그인 필요",
+          description: "테스트 알림을 보내려면 다시 로그인해주세요.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`
+        },
         body: JSON.stringify({
           subscription: subscription,
           notification: {

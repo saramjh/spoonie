@@ -1,3 +1,4 @@
+import { serializeJsonLd } from "@/lib/json-ld"
 /**
  * 🍳 Recipe Schema 컴포넌트 
  * AI 검색 최적화를 위한 Recipe 구조화 데이터
@@ -108,7 +109,7 @@ export default function RecipeSchema({ recipe }: RecipeSchemaProps) {
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{
-        __html: JSON.stringify(recipeSchema, null, 2)
+        __html: serializeJsonLd(recipeSchema)
       }}
     />
   )

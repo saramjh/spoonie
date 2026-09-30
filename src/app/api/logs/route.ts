@@ -7,6 +7,17 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { rateLimiter } from '@/lib/security-utils'
 import { z } from 'zod'
+import { timingSafeEqual } from 'crypto'
+
+// 관리자 인증: ADMIN_API_KEY가 없거나 짧으면 항상 거부한다 ("Bearer undefined" 우회 방지).
+function isAdminRequest(request: NextRequest): boolean {
+  const adminKey = process.env.ADMIN_API_KEY
+  if (!adminKey || adminKey.length < 32) return false
+  const header = request.headers.get('authorization') ?? ''
+  const expected = Buffer.from(`Bearer ${adminKey}`)
+  const actual = Buffer.from(header)
+  return actual.length === expected.length && timingSafeEqual(actual, expected)
+}
 
 // ================================
 // 1. 로그 스키마 검증
@@ -269,8 +280,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // 간단한 인증 (실제로는 더 강력한 인증 필요)
-    const authHeader = request.headers.get('authorization')
-    if (authHeader !== `Bearer ${process.env.ADMIN_API_KEY}`) {
+    if (!isAdminRequest(request)) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -321,8 +331,7 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     // 관리자 인증
-    const authHeader = request.headers.get('authorization')
-    if (authHeader !== `Bearer ${process.env.ADMIN_API_KEY}`) {
+    if (!isAdminRequest(request)) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }

@@ -1,3 +1,4 @@
+import { serializeJsonLd } from "@/lib/json-ld"
 /**
  * 🤖 E-E-A-T 신호 컴포넌트
  * AI 검색을 위한 전문성, 권위성, 신뢰성 신호
@@ -83,7 +84,7 @@ export default function EEATSignals({ author, content, organization }: EEATSigna
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(personSchema, null, 2)
+          __html: serializeJsonLd(personSchema)
         }}
       />
 
@@ -92,7 +93,7 @@ export default function EEATSignals({ author, content, organization }: EEATSigna
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(organizationSchema, null, 2)
+            __html: serializeJsonLd(organizationSchema)
           }}
         />
       )}
@@ -102,7 +103,7 @@ export default function EEATSignals({ author, content, organization }: EEATSigna
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(reviewSchema, null, 2)
+            __html: serializeJsonLd(reviewSchema)
           }}
         />
       )}

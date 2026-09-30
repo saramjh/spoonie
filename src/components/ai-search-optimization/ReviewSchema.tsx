@@ -5,6 +5,7 @@
  */
 
 import type { Item } from '@/types/item'
+import { serializeJsonLd } from "@/lib/json-ld"
 
 // 리뷰 데이터 준비에 필요한 최소 속성들
 type ReviewDataInput = {
@@ -132,7 +133,7 @@ export default function ReviewSchema({
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{
-        __html: JSON.stringify(itemSchema, null, 2)
+        __html: serializeJsonLd(itemSchema)
       }}
     />
   )

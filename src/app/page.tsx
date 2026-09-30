@@ -72,6 +72,7 @@ const homepageFAQSchema = {
 
 import { Suspense } from "react"
 import PostCardSkeleton from "@/components/items/PostCardSkeleton"
+import { serializeJsonLd } from "@/lib/json-ld"
 
 /**
  * 🚀 홈 페이지 (Server Component + 실시간 동기화)
@@ -91,7 +92,7 @@ export default async function HomePage() {
 				<script
 					type="application/ld+json"
 					dangerouslySetInnerHTML={{
-						__html: JSON.stringify(homepageFAQSchema, null, 2)
+						__html: serializeJsonLd(homepageFAQSchema)
 					}}
 				/>
 				

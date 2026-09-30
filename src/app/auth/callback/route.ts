@@ -3,10 +3,24 @@ import { NextResponse } from "next/server"
 import { generateUniqueUsername } from "@/lib/username-generator"
 import { generateUniquePublicId } from "@/lib/public-id-generator"
 
+// 오픈 리다이렉트 방지: 같은 사이트 내부의 절대 경로만 허용한다.
+// "@evil.com", ".evil.com", "//evil.com", "/\\evil.com" 같은 값은 도메인 뒤에 붙으면 외부로 이동하므로 거부한다.
+function safeNextPath(raw: string | null): string {
+	if (!raw || !raw.startsWith("/") || raw.startsWith("//") || raw.includes("\\")) return "/"
+	try {
+		const base = "https://spoonie.invalid"
+		const url = new URL(raw, base)
+		if (url.origin !== base) return "/"
+		return `${url.pathname}${url.search}${url.hash}`
+	} catch {
+		return "/"
+	}
+}
+
 export async function GET(request: Request) {
 	const { searchParams, origin } = new URL(request.url)
 	const code = searchParams.get("code")
-	const next = searchParams.get("next") ?? "/"
+	const next = safeNextPath(searchParams.get("next"))
 
 	if (code) {
 		const supabase = createSupabaseRouteHandlerClient()

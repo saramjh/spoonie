@@ -13,13 +13,19 @@ interface PostData {
 }
 
 export async function POST(request: Request) {
-	const { userId } = await request.json();
+	const supabase = createSupabaseRouteHandlerClient();
 
-	if (!userId) {
-		return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+	// 로그인한 본인만 자신의 계정을 삭제할 수 있다. 삭제 대상은 세션에서 정하고, 본문 값은 확인용으로만 쓴다.
+	const { data: { user }, error: authError } = await supabase.auth.getUser();
+	if (authError || !user) {
+		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	}
 
-	const supabase = createSupabaseRouteHandlerClient();
+	const body = await request.json().catch(() => ({}));
+	if (body?.userId && body.userId !== user.id) {
+		return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+	}
+	const userId = user.id;
 
 	try {
 		// 1. 사용자 프로필 이미지 삭제
@@ -95,7 +101,7 @@ export async function POST(request: Request) {
 
 		if (deleteDataError) {
 			console.error("Error deleting user data from database:", deleteDataError.message);
-			return NextResponse.json({ error: deleteDataError.message }, { status: 500 });
+			return NextResponse.json({ error: "계정 데이터를 삭제하지 못했습니다." }, { status: 500 });
 		}
 
 		return NextResponse.json({ message: "User and associated data deleted successfully" }, { status: 200 });

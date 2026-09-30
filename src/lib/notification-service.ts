@@ -104,9 +104,15 @@ class NotificationService implements INotificationService {
           ? '/api/test-push' 
           : '/.netlify/functions/send-push'
         
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session?.access_token) return
+
         fetch(endpoint, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`
+          },
           body: JSON.stringify({
             subscription: pushSettings.subscription_data,
             notification: {
@@ -194,7 +200,7 @@ class NotificationService implements INotificationService {
           // 🔔 하이브리드 전략: 기존 DB 알림 + 선택적 푸시
           await this.sendPushIfEnabled(userId, {
             title: '새 대댓글이 달렸습니다',
-            type: 'comment',
+            type: 'reply',
             itemId
           })
         }

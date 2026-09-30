@@ -187,6 +187,12 @@ async function validateProfile(data: any, userId?: string) {
 // 4. API 핸들러
 // ================================
 
+async function getSessionUserId(): Promise<string | undefined> {
+  const supabase = createSupabaseRouteHandlerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  return user?.id
+}
+
 export async function POST(request: NextRequest) {
   try {
     // 요청 파싱
@@ -203,7 +209,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { type, data, userId } = parseResult.data
+    const { type, data } = parseResult.data
+    // 사용자 식별은 본문 값이 아니라 세션에서 한다 (본문 userId 위조로 레이트 리밋/한도 우회 방지)
+    const userId = await getSessionUserId()
 
     // 레이트 리미팅
     const clientIP = request.headers.get('x-forwarded-for') || 
@@ -272,8 +280,9 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { type, userId } = body
+    const body = await request.clone().json()
+    const { type } = body
+    const userId = await getSessionUserId()
 
     if (!userId) {
       return NextResponse.json(

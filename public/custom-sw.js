@@ -77,9 +77,12 @@ self.addEventListener('notificationclick', function(event) {
 
   const urlToOpen = event.notification.data?.url || '/';
   
-  // 절대 URL로 변환 (localhost 대응)
-  const fullUrl = urlToOpen.startsWith('http') ? urlToOpen : 
-                  `${self.location.origin}${urlToOpen.startsWith('/') ? '' : '/'}${urlToOpen}`;
+  // 같은 도메인의 URL만 연다 (알림 데이터로 외부 사이트를 열지 못하게 차단)
+  let fullUrl = self.location.origin + '/';
+  try {
+    const resolved = new URL(urlToOpen, self.location.origin);
+    if (resolved.origin === self.location.origin) fullUrl = resolved.href;
+  } catch (e) {}
 
   const promiseChain = clients.matchAll({
     type: 'window',

@@ -1,3 +1,4 @@
+import { serializeJsonLd } from "@/lib/json-ld"
 /**
  * 🤖 FAQ Schema 컴포넌트 
  * AI 검색 최적화를 위한 FAQ 구조화 데이터
@@ -32,7 +33,7 @@ export default function FAQSchema({ faqs, pageTitle }: FAQSchemaProps) {
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{
-        __html: JSON.stringify(faqSchema, null, 2)
+        __html: serializeJsonLd(faqSchema)
       }}
     />
   )

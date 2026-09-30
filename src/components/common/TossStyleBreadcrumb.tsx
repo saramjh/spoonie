@@ -13,6 +13,7 @@
 import Link from "next/link"
 import { ChevronRight, Home } from "lucide-react"
 import { usePathname } from "next/navigation"
+import { serializeJsonLd } from "@/lib/json-ld"
 
 interface BreadcrumbItem {
   label: string
@@ -100,7 +101,7 @@ export default function TossStyleBreadcrumb({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(structuredData, null, 2)
+          __html: serializeJsonLd(structuredData)
         }}
       />
       

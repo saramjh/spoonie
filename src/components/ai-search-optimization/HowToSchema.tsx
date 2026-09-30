@@ -1,3 +1,4 @@
+import { serializeJsonLd } from "@/lib/json-ld"
 /**
  * 🤖 HowTo Schema 컴포넌트 
  * AI 검색 최적화를 위한 단계별 지침 구조화 데이터
@@ -55,7 +56,7 @@ export default function HowToSchema({
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{
-        __html: JSON.stringify(howToSchema, null, 2)
+        __html: serializeJsonLd(howToSchema)
       }}
     />
   )
