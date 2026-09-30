@@ -182,7 +182,7 @@ export async function getPopularPostsCached(): Promise<PopularPost[]> {
 /**
  * 디바운싱된 검색 (불필요한 요청 방지)
  */
-export class DebouncedSearch {
+class DebouncedSearch {
 	private timeout: NodeJS.Timeout | null = null
 	private searchCache = new Map<string, { results: SearchResult[], timestamp: number }>()
 	private readonly DEBOUNCE_MS = 300

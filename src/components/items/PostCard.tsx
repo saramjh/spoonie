@@ -218,6 +218,7 @@ export default function PostCard({
   }
 
   return (
+    <article>
     <Card className={`w-full max-w-md mx-auto transition-all duration-200 ${
       isRecipe 
         ? 'bg-gradient-to-br from-orange-50 via-white to-yellow-50 shadow-md border-2 border-orange-200 hover:shadow-lg hover:border-orange-300 ring-1 ring-orange-100' 
@@ -252,7 +253,9 @@ export default function PostCard({
             </Link>
             <div className="flex items-center gap-1">
               <p className="text-xs text-gray-500">
-                {timeAgo(item.created_at)} • 
+                <Link href={detailUrl} className="hover:underline">
+                  <time dateTime={item.created_at}>{timeAgo(item.created_at)}</time>
+                </Link> • 
               </p>
               {isRecipe ? (
                 <div className="flex items-center gap-1">
@@ -341,7 +344,9 @@ export default function PostCard({
                 <div className="flex-shrink-0 w-6 h-6 bg-gradient-to-br from-orange-400 to-red-400 rounded-full flex items-center justify-center shadow-sm">
                   <span className="text-white text-xs font-bold">R</span>
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 leading-tight">{item.title}</h3>
+                <h2 className="text-lg font-bold text-gray-900 leading-tight">
+                  <Link href={detailUrl} onClick={(e) => e.stopPropagation()}>{item.title}</Link>
+                </h2>
               </div>
 
               {/* 🍳 토스 스타일: 레시피 정보 칩(Chip) 형태 */}
@@ -507,5 +512,6 @@ export default function PostCard({
         action="like"
       />
     </Card>
+    </article>
   )
 }

@@ -103,7 +103,7 @@ export default function RecipeContentView({ initialServings, ingredients, steps 
 					{/* Servings Slider */}
 					<Card className="bg-white shadow-sm">
 						<CardHeader>
-							<CardTitle className="text-lg">인분 조절</CardTitle>
+							<CardTitle as="p" className="text-lg">인분 조절</CardTitle>
 						</CardHeader>
 						<CardContent className="p-6">
 							<div className="flex flex-col items-center gap-4 mb-4">
@@ -142,7 +142,7 @@ export default function RecipeContentView({ initialServings, ingredients, steps 
 					{/* Reference Ingredient Scaling */}
 					<Card className="bg-white shadow-sm">
 						<CardHeader>
-							<CardTitle className="text-lg">특정 재료 기준 스케일링</CardTitle>
+							<CardTitle as="p" className="text-lg">특정 재료 기준 스케일링</CardTitle>
 						</CardHeader>
 						<CardContent className="p-6 space-y-4">
 							{ingredients.length > 0 ? (
@@ -184,7 +184,7 @@ export default function RecipeContentView({ initialServings, ingredients, steps 
 			{/* Ingredients */}
 			<Card className="bg-white shadow-sm">
 				<CardHeader>
-					<CardTitle className="text-lg">재료</CardTitle>
+					<CardTitle as="h2" className="text-lg">재료</CardTitle>
 				</CardHeader>
 				<CardContent className="p-6">
 					<div className="space-y-3">
@@ -212,7 +212,7 @@ export default function RecipeContentView({ initialServings, ingredients, steps 
 			{/* Steps */}
 			<Card className="bg-white shadow-sm">
 				<CardHeader>
-					<CardTitle className="text-lg">조리법</CardTitle>
+					<CardTitle as="h2" className="text-lg">조리법</CardTitle>
 				</CardHeader>
 				<CardContent className="p-6">
 					<ol className="space-y-6">

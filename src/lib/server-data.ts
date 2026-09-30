@@ -157,30 +157,4 @@ export async function getInitialFeedData(): Promise<ServerFeedData> {
       currentUser: null
     }
   }
-}
-
-/**
- * 서버에서 사용자 프로필 정보 조회
- */
-export async function getServerUserProfile(userId: string) {
-  const supabase = createSupabaseServerClient()
-  
-  try {
-    // 프로필은 공개 데이터이므로 인증 없이 조회 가능
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single()
-
-    if (error) {
-      console.warn("⚠️ Server: Profile fetch error:", error.message)
-      return null
-    }
-
-    return profile
-  } catch (error) {
-    console.error("❌ Server: Failed to fetch user profile:", error)
-    return null
-  }
 } 

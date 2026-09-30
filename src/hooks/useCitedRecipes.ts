@@ -45,9 +45,6 @@ const fetchCitedRecipes = async (citedRecipeIds: string[]): Promise<Item[]> => {
 	const mappedData = (data || []).map((recipe: Record<string, unknown>) => {
 		const authorProfile = Array.isArray(recipe.profiles) ? recipe.profiles[0] : recipe.profiles
 
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const { profiles, ...recipeWithoutAuthor } = recipe
-
 		// 실제 사용되는 필드만 정확하게 매핑 (id, title, created_at, author)
 		const mappedRecipe: Item = {
 			// 🎯 UI에서 실제 사용되는 핵심 필드들

@@ -13,7 +13,6 @@
 import Link from "next/link"
 import { ChevronRight, Home } from "lucide-react"
 import { usePathname } from "next/navigation"
-import { serializeJsonLd } from "@/lib/json-ld"
 
 interface BreadcrumbItem {
   label: string
@@ -83,27 +82,9 @@ export default function TossStyleBreadcrumb({
     return null
   }
 
-  // SEO를 위한 구조화 데이터 생성
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": breadcrumbItems.map((item, index) => ({
-      "@type": "ListItem",
-      "position": index + 1,
-      "name": item.label,
-      ...(item.href && { "item": `${process.env.NEXT_PUBLIC_APP_URL}${item.href}` })
-    }))
-  }
 
   return (
     <>
-      {/* SEO 구조화 데이터 */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: serializeJsonLd(structuredData)
-        }}
-      />
       
       {/* 🎨 토스 스타일 브레드크럼 UI */}
       <nav 
@@ -148,27 +129,4 @@ export default function TossStyleBreadcrumb({
       </nav>
     </>
   )
-}
-
-// 🎨 토스 스타일 커스텀 브레드크럼 헬퍼
-export const createCustomBreadcrumb = {
-  recipe: (recipeTitle: string, _recipeId: string): BreadcrumbItem[] => [
-    { label: '홈', href: '/' },
-    { label: recipeTitle, isCurrentPage: true }
-  ],
-  
-  post: (postTitle: string, _postId: string): BreadcrumbItem[] => [
-    { label: '홈', href: '/' },
-    { label: postTitle, isCurrentPage: true }
-  ],
-  
-  profile: (username: string): BreadcrumbItem[] => [
-    { label: '홈', href: '/' },
-    { label: `${username}님의 프로필`, isCurrentPage: true }
-  ],
-  
-  search: (query?: string): BreadcrumbItem[] => [
-    { label: '홈', href: '/' },
-    { label: query ? `"${query}" 검색 결과` : '검색', isCurrentPage: true }
-  ]
 }

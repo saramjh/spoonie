@@ -1,124 +1,46 @@
 import { serializeJsonLd } from "@/lib/json-ld"
+import type { ItemDetail } from "@/types/item"
+
 /**
- * 🍳 Recipe Schema 컴포넌트 
- * AI 검색 최적화를 위한 Recipe 구조화 데이터
- * Schema.org Recipe 표준 준수
+ * schema.org Recipe 구조화 데이터.
+ * 화면에 보이는 실제 데이터만 사용한다. 평점, 리뷰, 영양 정보처럼 서비스에 없는 값은 넣지 않는다.
  */
-
-interface Ingredient {
-  name: string
-  amount: number
-  unit: string
-}
-
-interface Instruction {
-  step_number: number
-  description: string
-  image_url?: string
-}
-
-interface RecipeSchemaProps {
-  recipe: {
-    title: string
-    description?: string
-    image_urls?: string[]
-    cooking_time_minutes?: number
-    servings?: number
-    ingredients?: Ingredient[]
-    instructions?: Instruction[]
-    username?: string
-    created_at: string
-    tags?: string[]
-  }
-}
-
-export default function RecipeSchema({ recipe }: RecipeSchemaProps) {
-  // 🔄 데이터 변환 및 유효성 검사
-  const recipeName = recipe.title || "맛있는 레시피"
-  const recipeDescription = recipe.description || `${recipeName}를 만드는 법을 알아보세요.`
-  const authorName = recipe.username || "스푸니 셰프"
-  const mainImage = recipe.image_urls?.[0] || null
-  
-  // 🥄 재료 목록 변환
-  const recipeIngredients = recipe.ingredients?.map(ingredient => 
-    `${ingredient.amount} ${ingredient.unit} ${ingredient.name}`
-  ) || []
-  
-  // 📝 조리법 지침 변환
-  const recipeInstructions = recipe.instructions
-    ?.sort((a, b) => a.step_number - b.step_number)
-    ?.map((instruction, index) => ({
+export default function RecipeSchema({ item, baseUrl }: { item: ItemDetail; baseUrl: string }) {
+  const authorName = item.display_name || item.username
+  const ingredients = (item.ingredients ?? [])
+    .map((i) => [i.amount || "", i.unit, i.name].filter(Boolean).join(" ").trim())
+    .filter(Boolean)
+  const steps = [...(item.instructions ?? [])]
+    .sort((a, b) => a.step_number - b.step_number)
+    .filter((s) => s.description)
+    .map((s, index) => ({
       "@type": "HowToStep",
-      "position": index + 1,
-      "name": `단계 ${index + 1}`,
-      "text": instruction.description,
-      ...(instruction.image_url && {
-        "image": instruction.image_url
-      })
-    })) || []
+      position: index + 1,
+      text: s.description,
+      ...(s.image_url && { image: s.image_url }),
+    }))
 
-  // ⏱️ 조리시간 ISO 8601 형식 변환
-  const cookTime = recipe.cooking_time_minutes 
-    ? `PT${recipe.cooking_time_minutes}M` 
-    : undefined
-
-  // 🎯 Recipe Schema 구조화 데이터
-  const recipeSchema = {
+  const schema = {
     "@context": "https://schema.org",
     "@type": "Recipe",
-    "name": recipeName,
-    "description": recipeDescription,
-    "author": {
-      "@type": "Person",
-      "name": authorName
-    },
-    "datePublished": recipe.created_at,
-    ...(mainImage && {
-      "image": [mainImage]
+    name: item.title,
+    url: `${baseUrl}/recipes/${item.id}`,
+    datePublished: item.created_at,
+    ...(item.description && { description: item.description }),
+    ...(item.image_urls?.length && { image: item.image_urls }),
+    ...(authorName && {
+      author: {
+        "@type": "Person",
+        name: authorName,
+        ...(item.user_public_id && { url: `${baseUrl}/profile/${item.user_public_id}` }),
+      },
     }),
-    ...(cookTime && {
-      "cookTime": cookTime
-    }),
-    ...(recipe.servings && {
-      "recipeYield": `${recipe.servings}인분`
-    }),
-    ...(recipeIngredients.length > 0 && {
-      "recipeIngredient": recipeIngredients
-    }),
-    ...(recipeInstructions.length > 0 && {
-      "recipeInstructions": recipeInstructions
-    }),
-    ...(recipe.tags && recipe.tags.length > 0 && {
-      "recipeCategory": recipe.tags.join(", "),
-      "keywords": recipe.tags.join(", ")
-    }),
-    // 🏷️ 추가 메타데이터
-    "nutrition": {
-      "@type": "NutritionInformation",
-      "servingSize": recipe.servings ? `${recipe.servings}인분` : undefined
-    },
-    "recipeInstructionsAdditional": "스푸니에서 더 많은 레시피를 만나보세요!",
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "4.5",
-      "reviewCount": "1"
-    }
+    ...(item.cooking_time_minutes && { totalTime: `PT${item.cooking_time_minutes}M` }),
+    ...(item.servings && { recipeYield: `${item.servings}인분` }),
+    ...(ingredients.length && { recipeIngredient: ingredients }),
+    ...(steps.length && { recipeInstructions: steps }),
+    ...(item.tags?.length && { keywords: item.tags.join(", ") }),
   }
 
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{
-        __html: serializeJsonLd(recipeSchema)
-      }}
-    />
-  )
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(schema) }} />
 }
-
-/**
- * 💡 Schema.org Recipe 최적화 원칙:
- * 1. 필수 필드: name, image, author, datePublished
- * 2. 권장 필드: description, cookTime, recipeYield, recipeIngredient, recipeInstructions
- * 3. SEO 향상: keywords, recipeCategory, nutrition
- * 4. AI 검색 친화: 구조화된 단계별 지침 (HowToStep)
- */

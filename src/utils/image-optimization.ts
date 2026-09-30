@@ -182,31 +182,6 @@ export async function uploadImagesOptimized(
 }
 
 /**
- * 기존 이미지 URL 유지 (수정 시 사용)
- */
-export function processExistingImages(
-	newImages: OptimizedImage[],
-	existingUrls: string[]
-): { imagesToUpload: OptimizedImage[]; finalUrls: string[] } {
-	const imagesToUpload: OptimizedImage[] = []
-	const finalUrls: string[] = []
-
-	newImages.forEach((image, index) => {
-		if (image.file.size > 0) {
-			// 새로운 이미지 - 업로드 필요
-			imagesToUpload.push(image)
-			finalUrls.push('') // 업로드 후 채워질 예정
-		} else {
-			// 기존 이미지 - URL 재사용
-			const existingUrl = existingUrls[index] || image.preview
-			finalUrls.push(existingUrl)
-		}
-	})
-
-	return { imagesToUpload, finalUrls }
-}
-
-/**
  * 이미지 업로드 통계 수집
  */
 export class ImageUploadMetrics {
@@ -267,39 +242,6 @@ export class ImageUploadMetrics {
 			totalSizeMB: 0,
 			averageUploadTime: 0,
 			errors: 0
-		}
-	}
-}
-
-/**
- * 캐시 관리
- */
-export const ImageCacheManager = {
-	// 캐시 크기 확인
-	getCacheSize(): number {
-		return imageCache.size
-	},
-
-	// 캐시 정리 (메모리 관리)
-	clearCache(): void {
-		imageCache.clear()
-		
-	},
-
-	// 특정 해시 캐시 제거
-	removeFromCache(hash: string): void {
-		imageCache.delete(hash)
-	},
-
-	// 캐시 상태 확인
-	getCacheStats() {
-		const activeUploads = uploadQueue.size
-		const cacheEntries = imageCache.size
-		
-		return {
-			cacheEntries,
-			activeUploads,
-			memoryEstimateMB: (cacheEntries * 50) / 1024 // 대략적인 메모리 사용량
 		}
 	}
 } 

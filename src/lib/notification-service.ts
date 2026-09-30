@@ -7,24 +7,10 @@
 
 import { createSupabaseBrowserClient } from '@/lib/supabase-client'
 
-export interface NotificationTarget {
-  userId: string
-  type: 'post_author' | 'comment_author' | 'mentioned_user'
-}
-
-export interface NotificationData {
-  type: 'comment' | 'reply' | 'like' | 'follow'
-  itemId: string
-  actorUserId: string
-  targetUserId: string
-  parentCommentId?: string // 대댓글의 경우
-  message?: string
-}
-
 /**
  * 📢 알림 서비스 인터페이스
  */
-export interface INotificationService {
+interface INotificationService {
   // 댓글 알림 (게시글 작성자에게)
   notifyComment(itemId: string, actorUserId: string, commentId: string): Promise<void>
   

@@ -14,8 +14,8 @@ import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { notFound } from 'next/navigation'
 import { fetchItemDetail, ItemNotFoundError } from '@/lib/item-detail'
 import PostDetailClient from './PostDetailClient'
+import PostSchema from '@/components/ai-search-optimization/PostSchema'
 import BreadcrumbSchema, { createBreadcrumbs } from '@/components/ai-search-optimization/BreadcrumbSchema'
-import ReviewSchema, { prepareReviewData } from '@/components/ai-search-optimization/ReviewSchema'
 
 interface Props {
   params: { id: string }
@@ -150,67 +150,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-// 📝 포스트 데이터 가져오기 (Schema용)
-async function getPostForSchema(postId: string) {
-  try {
-    const supabase = createSupabaseServerClient()
-    
-    const { data: post, error } = await supabase
-      .from('items')
-      .select(`
-        id,
-        title, 
-        description, 
-        content,
-        image_urls, 
-        created_at,
-        tags,
-        item_type,
-        profiles!user_id(username)
-      `)
-      .eq('id', postId)
-      .eq('item_type', 'post')
-      .eq('is_public', true)
-      .single()
-
-    if (error || !post) {
-      return null
-    }
-
-    // 🔄 프로필 데이터 변환
-    const profileData = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles
-
-    // 🔥 좋아요와 댓글 수 조회 (Review Schema용)
-    const { data: socialData } = await supabase
-      .from('items')
-      .select(`
-        id,
-        likes_count:likes(count),
-        comments_count:comments(count)
-      `)
-      .eq('id', postId)
-      .single()
-
-    return {
-      id: post.id,
-      title: post.title || '',
-      description: post.description || '',
-      content: post.content || '',
-      image_urls: post.image_urls || [],
-      created_at: post.created_at,
-      tags: post.tags || [],
-      item_type: post.item_type,
-      username: profileData?.username || '',
-      likes_count: socialData?.likes_count?.[0]?.count || 0,
-      comments_count: socialData?.comments_count?.[0]?.count || 0
-    }
-  } catch (error) {
-    console.error('❌ Post schema data loading error:', error)
-    return null
-  }
-}
-
-// 🎯 기존 클라이언트 컴포넌트를 그대로 래핑 + SEO Schema 추가 (100% 기능 보존)
 // 서버에서 상세 데이터를 미리 조회해 초기 HTML에 본문을 포함시킨다.
 // 존재하지 않거나 접근할 수 없는 항목은 "not_found", 그 밖의 오류는 null(클라이언트에서 재시도).
 async function loadInitialItem(itemId: string) {
@@ -227,23 +166,15 @@ export default async function PostDetailPage({ params }: Props) {
   const initialItem = await loadInitialItem(params.id)
   if (initialItem === "not_found") notFound()
 
-  // 🔥 SEO를 위한 Post Schema 데이터 가져오기
-  const postForSchema = await getPostForSchema(params.id)
-
-  // 🧭 Breadcrumb 경로 생성
-  const breadcrumbs = postForSchema 
-    ? createBreadcrumbs.postDetail(postForSchema.title, params.id)
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'
+  const breadcrumbs = initialItem?.title
+    ? createBreadcrumbs.postDetail(initialItem.title, params.id)
     : createBreadcrumbs.home()
 
-		return (
+  return (
     <>
-      {/* 🆕 SEO Schema 최적화 (기존 기능에 영향 없음) */}
       <BreadcrumbSchema items={breadcrumbs} />
-      {postForSchema && (
-        <ReviewSchema {...prepareReviewData(postForSchema)} />
-      )}
-      
-      {/* 🛡️ 기존 클라이언트 컴포넌트 완전 보존 */}
+      {initialItem && <PostSchema item={initialItem} baseUrl={baseUrl} />}
       <PostDetailClient params={params} initialItem={initialItem} />
     </>
   )

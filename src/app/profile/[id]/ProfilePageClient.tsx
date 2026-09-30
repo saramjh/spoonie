@@ -187,11 +187,6 @@ interface UserProfile {
 	public_id?: string | null
 }
 
-interface FollowCounts {
-	followers: number
-	following: number
-}
-
 // --- 데이터 페칭 함수들 ---
 const fetchProfile = async (identifier: string) => {
 	if (!identifier) {

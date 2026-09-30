@@ -125,7 +125,7 @@ class AuthorCache {
 }
 
 // 싱글톤 인스턴스
-export const authorCache = AuthorCache.getInstance()
+const authorCache = AuthorCache.getInstance()
 
 // 편의 함수들
 export const cacheAuthors = (items: Parameters<typeof authorCache.setAuthors>[0]) => 
@@ -133,9 +133,6 @@ export const cacheAuthors = (items: Parameters<typeof authorCache.setAuthors>[0]
 
 export const enrichWithCachedAuthor = <T extends Parameters<typeof authorCache.enrichItemWithCachedAuthor>[0]>(item: T) => 
   authorCache.enrichItemWithCachedAuthor(item)
-
-export const getAuthorFromCache = (userId: string) => 
-  authorCache.getAuthor(userId)
 
 // 🔧 메모리 안전: React Hook 기반 캐시 정리로 변경
 // 전역 setInterval 대신 useEffect에서 관리하도록 수정

@@ -8,8 +8,6 @@ import { Button } from "@/components/ui/button"
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
-import FAQSchema, { commonRecipeFAQs, commonPostFAQs, platformFAQs } from "@/components/ai-search-optimization/FAQSchema"
-import TossStyleFAQSection, { createTossStyleFAQs } from "@/components/common/TossStyleFAQSection"
 import TossStyleBreadcrumb from "@/components/common/TossStyleBreadcrumb"
 import { SimplifiedLikeButton } from "@/components/items/SimplifiedLikeButton"
 import { BookmarkButton } from "@/components/items/BookmarkButton"
@@ -403,36 +401,8 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 
 
 
-	// AI 검색 최적화: FAQ 데이터 준비
-	const itemSpecificFAQs = isRecipe ? [
-		{
-			question: `${item.title || '이 레시피'}는 몇 인분인가요?`,
-			answer: item.servings ? `${item.servings}인분입니다.` : '레시피 정보를 확인해주세요.'
-		},
-		{
-			question: `${item.title || '이 레시피'} 조리 시간은 얼마나 걸리나요?`,
-			answer: item.cooking_time_minutes ? `약 ${item.cooking_time_minutes}분 소요됩니다.` : '조리 시간은 레시피 정보를 참고해주세요.'
-		},
-		...commonRecipeFAQs
-	] : commonPostFAQs
-
-	// 🎨 토스 스타일 FAQ 데이터 준비
-	const tossStyleFAQs = isRecipe 
-		? createTossStyleFAQs.recipe(
-			item.title || '이 레시피', 
-			item.servings ?? undefined, 
-			item.cooking_time_minutes ?? undefined
-		)
-		            : createTossStyleFAQs.post(item.username || '작성자')
-
 	return (
 		<div className="flex flex-col h-full relative">
-			{/* AI 검색 최적화: FAQ Schema */}
-			<FAQSchema 
-				faqs={[...itemSpecificFAQs, ...platformFAQs]}
-				pageTitle={item.title || (isRecipe ? '레시피' : '레시피드')}
-			/>
-			
 			{/* 🎨 토스 스타일 브레드크럼 네비게이션 */}
 			<TossStyleBreadcrumb />
 			{/* 비회원 블러 오버레이 - Toss-style 상단 정렬 (약한 블러) */}
@@ -458,7 +428,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 			)}
 
 			{/* 기존 콘텐츠 (비회원일 때 블러 처리 - 아주 약함) */}
-			<div className={isGuest ? "filter blur-[1px] pointer-events-none" : ""}>
+			<article className={isGuest ? "filter blur-[1px] pointer-events-none" : ""}>
 				{/* 인스타그램 스타일 헤더 */}
 				<header className="sticky top-0 z-10 flex items-center p-4 bg-white border-b">
 					{/* 뒤로가기 버튼 */}
@@ -626,13 +596,14 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 										))}
 									</div>
 								)}
-								<p className="text-sm text-gray-500 mb-4 text-right">{timeAgo(item.created_at)}</p>
+								<p className="text-sm text-gray-500 mb-4 text-right"><time dateTime={item.created_at}>{timeAgo(item.created_at)}</time></p>
 								<RecipeContentView initialServings={item.servings || 1} ingredients={item.ingredients || []} steps={item.steps || []} />
 							</>
 						) : (
 							<>
 								<div className="flex justify-between items-start mb-2">
 									<div className="flex-1">
+										{item.title && <h1 className="text-xl font-bold text-gray-900 mb-2">{item.title}</h1>}
 										<p className="text-base text-gray-800 whitespace-pre-wrap break-words leading-relaxed">{item.content}</p>
 									</div>
 									<div className="flex items-center gap-1 ml-4">
@@ -752,13 +723,6 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 						</div>
 					</div>
 
-					{/* 🎨 토스 스타일 FAQ 섹션 */}
-					<div className="px-4 py-6 bg-gray-50">
-						<TossStyleFAQSection 
-							faqs={tossStyleFAQs}
-							title="자주 묻는 질문"
-						/>
-					</div>
 
 					<div ref={commentsRef} className="p-4">
 						<SimplifiedCommentsSection 
@@ -771,7 +735,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 				</div>
 
 				{/* 댓글 입력은 SimplifiedCommentsSection 내부에서 처리됨 */}
-			</div>
+			</article>
 			
 			{/* 삭제 확인 다이얼로그 */}
 			<AlertDialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>

@@ -7,7 +7,7 @@
 // 1. 로그 레벨 정의
 // ================================
 
-export enum LogLevel {
+enum LogLevel {
   ERROR = 'error',
   WARN = 'warn', 
   INFO = 'info',
@@ -18,7 +18,7 @@ export enum LogLevel {
 // 2. 로그 인터페이스
 // ================================
 
-export interface LogEntry {
+interface LogEntry {
   level: LogLevel
   message: string
   timestamp: string
@@ -348,86 +348,10 @@ class Logger {
 }
 
 // ================================
-// 8. 특화된 모니터링 함수들
-// ================================
-
-export class PerformanceMonitor {
-  private static metrics = new Map<string, number[]>()
-
-  static measure<T>(operation: string, fn: () => T): T
-  static measure<T>(operation: string, fn: () => Promise<T>): Promise<T>
-  static measure<T>(operation: string, fn: () => T | Promise<T>): T | Promise<T> {
-    const start = performance.now()
-    
-    try {
-      const result = fn()
-      
-      if (result instanceof Promise) {
-        return result.finally(() => {
-          this.recordMetric(operation, performance.now() - start)
-        })
-      } else {
-        this.recordMetric(operation, performance.now() - start)
-        return result
-      }
-    } catch (error) {
-      this.recordMetric(operation, performance.now() - start)
-      throw error
-    }
-  }
-
-  private static recordMetric(operation: string, duration: number): void {
-    if (!this.metrics.has(operation)) {
-      this.metrics.set(operation, [])
-    }
-    
-    const metrics = this.metrics.get(operation)!
-    metrics.push(duration)
-    
-    // 최대 100개까지만 저장
-    if (metrics.length > 100) {
-      metrics.shift()
-    }
-
-    // 성능 임계값 체크
-    if (duration > 1000) { // 1초 이상
-      logger.warn(`Slow operation detected: ${operation}`, {
-        duration,
-        average: this.getAverage(operation)
-      })
-    }
-  }
-
-  static getAverage(operation: string): number {
-    const metrics = this.metrics.get(operation)
-    if (!metrics || metrics.length === 0) return 0
-    
-    return metrics.reduce((sum, value) => sum + value, 0) / metrics.length
-  }
-
-  static getStats(): Record<string, { count: number; average: number; min: number; max: number }> {
-    const stats: Record<string, { count: number; average: number; min: number; max: number }> = {}
-    
-    for (const [operation, metrics] of this.metrics) {
-      if (metrics.length > 0) {
-        stats[operation] = {
-          count: metrics.length,
-          average: this.getAverage(operation),
-          min: Math.min(...metrics),
-          max: Math.max(...metrics)
-        }
-      }
-    }
-    
-    return stats
-  }
-}
-
-// ================================
 // 9. 사용자 행동 추적기
 // ================================
 
-export class UserActionTracker {
+class UserActionTracker {
   private static actions: Array<{
     type: string
     target: string
@@ -472,7 +396,7 @@ export class UserActionTracker {
 // 10. 전역 인스턴스
 // ================================
 
-export const logger = new Logger()
+const logger = new Logger()
 
 // 🔧 메모리 안전: React Hook 기반 모니터링 시스템으로 변경
 // 전역 이벤트 리스너 대신 useEffect에서 관리하도록 수정
@@ -525,60 +449,4 @@ export function startMonitoring(): () => void {
 // 브라우저 환경에서만 자동 시작 (개발 편의성)
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   startMonitoring()
-}
-
-// ================================
-// 11. React Error Boundary 연동
-// ================================
-
-export interface ErrorBoundaryState {
-  hasError: boolean
-  error?: Error
-  errorInfo?: unknown
-}
-
-export function logErrorBoundary(error: Error, errorInfo: unknown): void {
-  logger.error('React Error Boundary triggered', error, {
-    componentStack: (errorInfo as { componentStack?: string }).componentStack,
-    errorBoundary: true
-  })
-}
-
-// ================================
-// 12. 유틸리티 함수들
-// ================================
-
-/**
- * API 호출 모니터링 래퍼
- */
-export function monitoredFetch(url: string, options?: RequestInit): Promise<Response> {
-  return PerformanceMonitor.measure(`fetch_${url}`, async () => {
-    const response = await fetch(url, options)
-    
-    UserActionTracker.track('api_call', url, {
-      method: options?.method || 'GET',
-      status: response.status,
-      ok: response.ok
-    })
-
-    if (!response.ok) {
-      logger.warn(`API call failed: ${url}`, {
-        status: response.status,
-        statusText: response.statusText
-      })
-    }
-
-    return response
-  })
-}
-
-/**
- * 개발 모드에서 성능 통계 표시
- */
-export function showPerformanceStats(): void {
-  if (process.env.NODE_ENV === 'development') {
-    console.table(PerformanceMonitor.getStats())
-    console.table(UserActionTracker.getActionStats())
-    console.log('Logger Stats:', logger.getStats())
-  }
 }

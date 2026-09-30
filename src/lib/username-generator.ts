@@ -82,7 +82,7 @@ const DISHES = [
  * 랜덤한 유저명을 생성합니다 (형용사 + 요리이름 + 숫자)
  * @returns string - 생성된 유저명
  */
-export function generateRandomUsername(): string {
+function generateRandomUsername(): string {
 	const adjective = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)]
 	const dish = DISHES[Math.floor(Math.random() * DISHES.length)]
 	const number = Math.floor(Math.random() * 9999) + 1 // 1-9999

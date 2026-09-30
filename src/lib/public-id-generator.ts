@@ -4,7 +4,7 @@ import { createSupabaseBrowserClient } from "./supabase-client"
  * 안전한 Public ID 생성 (8자리 영문+숫자 조합)
  * 예: sp7k2m9x, uf8n3q5r
  */
-export function generatePublicId(): string {
+function generatePublicId(): string {
 	const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
 	let result = ""
 
@@ -45,19 +45,4 @@ export async function generateUniquePublicId(maxAttempts: number = 20): Promise<
 	// 최대 시도 횟수 초과 시 타임스탬프 추가
 	const fallback = generatePublicId() + Date.now().toString().slice(-2)
 	return fallback
-}
-
-/**
- * Public ID로 사용자 UUID 조회 (서버에서만 사용)
- */
-export async function getUUIDFromPublicId(publicId: string): Promise<string | null> {
-	const supabase = createSupabaseBrowserClient()
-
-	const { data, error } = await supabase.from("profiles").select("id").eq("public_id", publicId).maybeSingle()
-
-	if (error || !data) {
-		return null
-	}
-
-	return data.id
 }

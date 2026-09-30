@@ -58,10 +58,8 @@ export const RECIPE_COLOR_OPTIONS = [
 	},
 ] as const
 
-export type RecipeColorValue = (typeof RECIPE_COLOR_OPTIONS)[number]["value"]
-
 // 색상 값으로 옵션 객체 찾기
-export function getColorOption(value: string | null) {
+function getColorOption(value: string | null) {
 	return RECIPE_COLOR_OPTIONS.find((option) => option.value === value)
 }
 

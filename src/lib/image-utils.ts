@@ -10,7 +10,7 @@ export interface OptimizedImage {
 /**
  * 이미지 파일을 최적화하여 품질과 크기를 조절합니다
  */
-export const optimizeImage = (file: File, maxWidth = 800, quality = 0.8): Promise<OptimizedImage> => {
+const optimizeImage = (file: File, maxWidth = 800, quality = 0.8): Promise<OptimizedImage> => {
 	return new Promise((resolve, reject) => {
 		const canvas = document.createElement("canvas")
 		const ctx = canvas.getContext("2d")

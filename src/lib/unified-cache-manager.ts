@@ -13,7 +13,7 @@ import { mutate } from 'swr'
 import { createSupabaseBrowserClient } from '@/lib/supabase-client'
 import { Item } from '@/types/item'
 
-export interface CacheOperation {
+interface CacheOperation {
   type: 'like' | 'comment' | 'follow' | 'bookmark' | 'create' | 'update' | 'delete' | 'add_new' | 'thumbnail_update'
   itemId: string
   userId?: string | null
@@ -22,7 +22,7 @@ export interface CacheOperation {
   timestamp?: number
 }
 
-export interface RollbackData {
+interface RollbackData {
   operation: CacheOperation
   previousState: unknown
   timestamp: number
@@ -31,10 +31,9 @@ export interface RollbackData {
 /**
  * 🎯 통합 캐시 관리자 - 모든 캐시 연산의 단일 진입점
  */
-export class UnifiedCacheManager {
+class UnifiedCacheManager {
   private supabase = createSupabaseBrowserClient()
   private rollbackStack: Map<string, RollbackData> = new Map()
-  private batchQueue: CacheOperation[] = []
   private batchTimer: NodeJS.Timeout | null = null
   
   // 🚀 SSA 아키텍처에 업계 표준 Request Deduplication 추가
@@ -44,7 +43,6 @@ export class UnifiedCacheManager {
     reject: (error: unknown) => void
     timestamp: number
   }>()
-  private processingItems = new Set<string>()
 
   /**
    * 🚀 즉시 옵티미스틱 업데이트 (0ms 응답)
@@ -204,7 +202,7 @@ export class UnifiedCacheManager {
         
         if (isFollow) {
           
-          const { error, data } = await this.supabase.from('follows').upsert({
+          const { error } = await this.supabase.from('follows').upsert({
             follower_id: userId,
             following_id: itemId // itemId가 targetUserId
           }, { 
@@ -982,7 +980,6 @@ export class UnifiedCacheManager {
       clearTimeout(this.batchTimer)
     }
     this.rollbackStack.clear()
-    this.batchQueue = []
   }
 
   /**
