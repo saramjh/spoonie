@@ -3,6 +3,7 @@
  */
 
 import { Metadata } from 'next'
+import { Suspense } from 'react'
 
 export const metadata: Metadata = {
   title: "나의 레시피북 - 개인 레시피 관리 | 스푸니",
@@ -31,5 +32,6 @@ export default function RecipesLayout({
 }: {
   children: React.ReactNode
 }) {
-  return children
+  // 레시피 목록 페이지가 useSearchParams를 쓰므로 Suspense 경계가 필요하다 (정적 프리렌더 오류 방지)
+  return <Suspense fallback={null}>{children}</Suspense>
 }

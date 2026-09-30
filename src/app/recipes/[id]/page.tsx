@@ -11,6 +11,8 @@
 
 import { Metadata } from 'next'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { notFound } from 'next/navigation'
+import { fetchItemDetail, ItemNotFoundError } from '@/lib/item-detail'
 import RecipeDetailClient from './RecipeDetailClient'
 import RecipeSchema from '@/components/ai-search-optimization/RecipeSchema'
 import BreadcrumbSchema, { createBreadcrumbs } from '@/components/ai-search-optimization/BreadcrumbSchema'
@@ -199,7 +201,22 @@ async function getRecipeForSchema(recipeId: string) {
 }
 
 // 🎯 기존 클라이언트 컴포넌트를 그대로 래핑 + SEO Schema 추가 (100% 기능 보존)
+// 서버에서 상세 데이터를 미리 조회해 초기 HTML에 본문을 포함시킨다.
+// 존재하지 않거나 접근할 수 없는 항목은 "not_found", 그 밖의 오류는 null(클라이언트에서 재시도).
+async function loadInitialItem(itemId: string) {
+  try {
+    return await fetchItemDetail(createSupabaseServerClient(), itemId)
+  } catch (error) {
+    if (error instanceof ItemNotFoundError) return "not_found" as const
+    console.error("❌ Initial item load error:", error)
+    return null
+  }
+}
+
 export default async function RecipeDetailPage({ params }: Props) {
+  const initialItem = await loadInitialItem(params.id)
+  if (initialItem === "not_found") notFound()
+
   // 🔥 SEO를 위한 Recipe Schema 데이터 가져오기
   const recipeForSchema = await getRecipeForSchema(params.id)
 
@@ -220,7 +237,7 @@ export default async function RecipeDetailPage({ params }: Props) {
       )}
       
       {/* 🛡️ 기존 클라이언트 컴포넌트 완전 보존 */}
-      <RecipeDetailClient params={params} />
+      <RecipeDetailClient params={params} initialItem={initialItem} />
     </>
   )
 }

@@ -64,10 +64,6 @@ export const metadata: Metadata = {
 			'max-snippet': -1,
 		},
 	},
-	// 언어 설정
-	alternates: {
-		canonical: process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr',
-	},
 }
 
 export const viewport = {
@@ -87,7 +83,6 @@ export default function RootLayout({
 				{/* 추가 SEO 메타 태그 */}
 				<meta name="author" content="Spoonie Team" />
 				<meta name="format-detection" content="telephone=no" />
-				<link rel="canonical" href={process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'} />
 				{/* 🎯 폰트 최적화 메타 태그 */}
 				<meta name="font-display" content="swap" />
 			</head>

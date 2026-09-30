@@ -39,7 +39,7 @@ export default function SplashScreen() {
 	}, [])
 
 	const getBackgroundClasses = () => {
-		const baseClasses = "fixed inset-0 z-50 flex items-center justify-center transition-all duration-500 ease-in-out"
+		const baseClasses = "fixed inset-0 z-[100] flex items-center justify-center transition-all duration-500 ease-in-out"
 
 		switch (animationPhase) {
 			case 0: // Enter: orange background

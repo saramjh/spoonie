@@ -52,19 +52,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // 🍳 공개 레시피들 (SEO 핵심 콘텐츠)
     const { data: publicRecipes } = await supabase
       .from('items')
-      .select('id, updated_at, item_type')
+      .select('id, created_at, item_type')
       .eq('is_public', true)
       .eq('item_type', 'recipe')
-      .order('updated_at', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(1000) // 사이트맵 크기 제한
 
     // 📝 공개 포스트들
     const { data: publicPosts } = await supabase
       .from('items')
-      .select('id, updated_at, item_type')
+      .select('id, created_at, item_type')
       .eq('is_public', true)
       .eq('item_type', 'post')
-      .order('updated_at', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(500) // 포스트는 레시피보다 낮은 우선순위
 
     // 👥 활성 사용자 프로필들
@@ -82,7 +82,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (publicRecipes) {
       dynamicPages.push(...publicRecipes.map(recipe => ({
         url: `${baseUrl}/recipes/${recipe.id}`,
-        lastModified: new Date(recipe.updated_at),
+        lastModified: new Date(recipe.created_at),
         changeFrequency: 'weekly' as const,
         priority: 0.8, // 레시피는 높은 우선순위
       })))
@@ -92,7 +92,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (publicPosts) {
       dynamicPages.push(...publicPosts.map(post => ({
         url: `${baseUrl}/posts/${post.id}`,
-        lastModified: new Date(post.updated_at),
+        lastModified: new Date(post.created_at),
         changeFrequency: 'weekly' as const,
         priority: 0.6, // 포스트는 중간 우선순위
       })))

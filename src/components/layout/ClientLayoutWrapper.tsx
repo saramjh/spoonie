@@ -163,13 +163,12 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
     return () => window.removeEventListener("popstate", handlePopState)
   }, [pathname, mutate])
 
-  if (isInitialLoad) {
-    return <SplashScreen />
-  }
-
+  // 스플래시는 페이지 위에 겹치는 오버레이로만 그린다.
+  // 페이지를 스플래시로 대체하면 서버 HTML에 본문이 빠져 검색엔진이 빈 페이지를 보게 된다.
   return (
     <RefreshProvider>
       <AppWrapper>{children}</AppWrapper>
+      {isInitialLoad && <SplashScreen />}
     </RefreshProvider>
   )
 }
