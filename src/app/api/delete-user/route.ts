@@ -1,17 +1,6 @@
 import { createSupabaseRouteHandlerClient } from "@/lib/supabase-server";
 import { NextResponse } from "next/server";
 
-interface RecipeData {
-	id: string;
-	image_urls: string[] | null;
-	instructions: { image_url?: string }[] | null;
-}
-
-interface PostData {
-	id: string;
-	image_urls: string[] | null;
-}
-
 export async function POST(request: Request) {
 	const supabase = createSupabaseRouteHandlerClient();
 
@@ -28,75 +17,36 @@ export async function POST(request: Request) {
 	const userId = user.id;
 
 	try {
-		// 1. 사용자 프로필 이미지 삭제
-		const { data: userProfile, error: userProfileError } = await supabase.from("profiles").select("avatar_url").eq("id", userId).single();
-
-		if (userProfileError) {
-			console.error("Error fetching user profile for deletion:", userProfileError.message);
-		}
-
-		if (userProfile?.avatar_url) {
-			const avatarPath = userProfile.avatar_url.split("/avatars/")[1];
-			if (avatarPath) {
-				await supabase.storage.from("avatars").remove([avatarPath]);
-			}
-		}
-
-		// 2. 사용자 레시피 이미지 및 조리법 이미지 삭제
-		const { data: userRecipes, error: userRecipesError } = (await supabase.from("recipes").select("id, image_urls, instructions").eq("user_id", userId)) as { data: RecipeData[] | null; error: any };
-
-		if (userRecipesError) {
-			console.error("Error fetching user recipes for deletion:", userRecipesError.message);
-		}
-
-		if (userRecipes && userRecipes.length > 0) {
-			const filesToDelete: string[] = [];
-			userRecipes.forEach((recipe) => {
-				if (recipe.image_urls && recipe.image_urls.length > 0) {
-					recipe.image_urls.forEach((url: string) => {
-						const path = url.split("/item-images/")[1];
-						if (path) filesToDelete.push(`item-images/${path}`);
-					});
+		// 1. 이미지 삭제. item-images 버킷은 "사용자ID/파일명" 구조라 사용자 폴더 전체를 지우면
+		//    레시피, 게시물, 조리 단계 이미지가 모두 정리된다. 아바타는 "사용자ID.확장자" 이름이다.
+		//    (저장소 정책 supabase/storage_owner_policies.sql이 있어야 조회/삭제가 된다.
+		//     정책이 없으면 목록이 비어 이미지는 남지만 계정 삭제는 계속 진행한다)
+		try {
+			for (;;) {
+				const { data: files, error: listError } = await supabase.storage.from("item-images").list(userId, { limit: 1000 });
+				if (listError) {
+					console.error("Error listing user images for deletion:", listError.message);
+					break;
 				}
-				if (recipe.instructions && Array.isArray(recipe.instructions)) {
-					recipe.instructions.forEach((instruction: Record<string, unknown>) => {
-						if (instruction.image_url) {
-							const path = (instruction.image_url as string).split("/item-images/")[1];
-							if (path) filesToDelete.push(`item-images/${path}`);
-						}
-					});
+				if (!files || files.length === 0) break;
+				const { error: removeError } = await supabase.storage.from("item-images").remove(files.map((file) => `${userId}/${file.name}`));
+				if (removeError) {
+					console.error("Error removing user images:", removeError.message);
+					break;
 				}
-			});
-
-			if (filesToDelete.length > 0) {
-				await supabase.storage.from("item-images").remove(filesToDelete);
+				if (files.length < 1000) break;
 			}
-		}
 
-		// 3. 사용자 게시물 이미지 삭제
-		const { data: userPosts, error: userPostsError } = (await supabase.from("posts").select("id, image_urls").eq("user_id", userId)) as { data: PostData[] | null; error: any };
-
-		if (userPostsError) {
-			console.error("Error fetching user posts for deletion:", userPostsError.message);
-		}
-
-		if (userPosts && userPosts.length > 0) {
-			const postImagePaths: string[] = [];
-			userPosts.forEach((post) => {
-				if (post.image_urls && post.image_urls.length > 0) {
-					post.image_urls.forEach((url: string) => {
-						const path = url.split("/post-images/")[1];
-						if (path) postImagePaths.push(`post-images/${path}`);
-					});
-				}
-			});
-
-			if (postImagePaths.length > 0) {
-				await supabase.storage.from("post-images").remove(postImagePaths);
+			const { data: avatars } = await supabase.storage.from("avatars").list("", { search: userId, limit: 100 });
+			const avatarPaths = (avatars ?? []).map((file) => file.name).filter((name) => name.startsWith(userId));
+			if (avatarPaths.length > 0) {
+				await supabase.storage.from("avatars").remove(avatarPaths);
 			}
+		} catch (storageError) {
+			console.error("Error during image cleanup:", storageError);
 		}
 
-		// 4. 데이터베이스에서 사용자 관련 데이터 및 인증 정보 삭제
+		// 2. 계정 삭제. auth.users 삭제가 프로필과 모든 콘텐츠(게시물, 댓글, 좋아요, 팔로우, 북마크, 알림)로 연쇄된다.
 		const { error: deleteDataError } = await supabase.rpc("delete_user_data", { user_id_to_delete: userId });
 
 		if (deleteDataError) {

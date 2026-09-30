@@ -494,7 +494,7 @@ class UnifiedCacheManager {
               itemFound = true
               // Debug: Found item in cache
               
-              const calculateUpdates = this.calculateUpdates(type, delta)
+              const calculateUpdates = this.calculateUpdates(type, delta, operation.data)
               const updates = calculateUpdates(item)
               
               // 🔍 CRITICAL DEBUG: 업데이트 과정 추적
@@ -648,7 +648,7 @@ class UnifiedCacheManager {
             if (!Array.isArray(page)) return page
             return page.map(item => {
               if (item.id === itemId || item.item_id === itemId) {
-                const calculateUpdates = this.calculateUpdates(type, delta)
+                const calculateUpdates = this.calculateUpdates(type, delta, operation.data)
                 const updates = calculateUpdates(item)
                 return { ...item, ...updates }
               }
@@ -660,7 +660,7 @@ class UnifiedCacheManager {
           const items = cacheData as Item[]
           return items.map(item => {
             if (item.id === itemId || item.item_id === itemId) {
-              const calculateUpdates = this.calculateUpdates(type, delta)
+              const calculateUpdates = this.calculateUpdates(type, delta, operation.data)
               const updates = calculateUpdates(item)
               return { ...item, ...updates }
             }
@@ -702,7 +702,7 @@ class UnifiedCacheManager {
           return page.map(item => {
             if (item.id === itemId || item.item_id === itemId) {
 
-              const calculateUpdates = this.calculateUpdates(operation.type, operation.delta)
+              const calculateUpdates = this.calculateUpdates(operation.type, operation.delta, operation.data)
               const updates = calculateUpdates(item)
               const updatedItem = { ...item, ...updates }
 
@@ -735,7 +735,7 @@ class UnifiedCacheManager {
         // 기존 아이템 업데이트
         return cacheData.map(item => {
           if (item.id === itemId || item.item_id === itemId) {
-            const calculateUpdates = this.calculateUpdates(operation.type, operation.delta)
+            const calculateUpdates = this.calculateUpdates(operation.type, operation.delta, operation.data)
             const updates = calculateUpdates(item)
             const updatedItem = { ...item, ...updates }
             return updatedItem
@@ -835,7 +835,7 @@ class UnifiedCacheManager {
           return page.map(item => {
             if (item.id === itemId || item.item_id === itemId) {
 
-              const calculateUpdates = this.calculateUpdates(type, delta)
+              const calculateUpdates = this.calculateUpdates(type, delta, operation.data)
               const updates = calculateUpdates(item)
               const updatedItem = { ...item, ...updates }
 
