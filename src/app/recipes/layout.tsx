@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   keywords: "레시피북, 개인 레시피, 레시피 관리, 요리법 저장, 나만의 레시피, 레시피 정리",
   
   openGraph: {
+    siteName: '스푸니',
     title: "나의 레시피북 - 스푸니",
     description: "개인 레시피를 체계적으로 관리하고 정리하세요.",
     url: `${process.env.NEXT_PUBLIC_APP_URL}/recipes`,

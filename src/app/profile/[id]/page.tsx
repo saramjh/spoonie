@@ -145,16 +145,18 @@ async function loadInitialProfileData(identifier: string) {
   try {
     const supabase = createSupabaseServerClient()
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier)
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq(isUUID ? 'id' : 'public_id', identifier)
-      .maybeSingle()
+    const [{ data: profile, error }, { data: { user } }] = await Promise.all([
+      supabase.from('profiles').select('*').eq(isUUID ? 'id' : 'public_id', identifier).maybeSingle(),
+      supabase.auth.getUser(),
+    ])
     if (error) throw error
     if (!profile) return 'not_found' as const
 
+    // 다른 사람의 프로필이면 로그인 사용자 기준으로 좋아요 상태를 계산해, 첫 화면부터 좋아요 표시가 정확하게 한다.
+    // 본인 프로필은 비공개 글과 댓글 수 계산에 브라우저 전용 조회가 필요하므로 공개 데이터로 먼저 그리고 클라이언트가 보완한다.
+    const viewerId = user && user.id !== profile.id ? user.id : undefined
     const [items, followCounts] = await Promise.all([
-      fetchUserItems(profile.id, undefined, supabase),
+      fetchUserItems(profile.id, viewerId, supabase),
       fetchFollowCounts(profile.id, supabase),
     ])
     return { profile: profile as UserProfile, items, followCounts }

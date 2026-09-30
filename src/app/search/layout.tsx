@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   keywords: "레시피 검색, 요리법 찾기, 재료별 레시피, 음식 검색, 요리 검색, 인기 레시피, 최신 레시피",
   
   openGraph: {
+    siteName: '스푸니',
     title: "레시피 검색 - 스푸니",
     description: "원하는 레시피를 쉽고 빠르게 검색해보세요.",
     url: `${process.env.NEXT_PUBLIC_APP_URL}/search`,
