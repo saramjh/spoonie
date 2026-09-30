@@ -79,6 +79,9 @@ export default function PostCard({
 
   // 🖼️ 썸네일 관리 - SSA 캐시된 데이터 사용 (캐시 데이터를 먼저 가져옴)
   const cachedItem = useSSAItemCache(stableItemId, stableFallbackData)
+  // 표시용 값: 수정 직후 즉시 갱신되는 개별 항목 캐시를 우선하고, 캐시에 없는 값만 목록 데이터를 쓴다.
+  // (홈 피드 목록 캐시는 새로고침 전까지 갱신되지 않아 수정한 제목, 본문 등이 이전 값으로 남던 문제 방지)
+  const displayItem: Item = { ...item, ...cachedItem }
   
 
   
@@ -213,7 +216,7 @@ export default function PostCard({
   // 🔗 공유하기
   const handleShare = () => {
     const url = `${window.location.origin}${detailUrl}`
-    const text = item.title || item.content?.substring(0, 100) || '맛있는 레시피'
+    const text = displayItem.title || displayItem.content?.substring(0, 100) || '맛있는 레시피'
     share({ title: 'Spoonie에서 보기', text, url })
   }
 
@@ -309,7 +312,7 @@ export default function PostCard({
         <div className="relative">
           <ImageCarousel 
             images={orderedImages} 
-            alt={item.title || `Post by ${item.username}`} 
+            alt={displayItem.title || `Post by ${item.username}`} 
             priority={priority}
             onSingleClick={() => router.push(detailUrl)}  // 단일탭 = 상세페이지
             onDoubleClick={handleDoubleTapLike}           // 더블탭 = 좋아요
@@ -323,7 +326,7 @@ export default function PostCard({
           )}
           
           {/* 비공개 표시 - 업계표준 Privacy UX */}
-          {!item.is_public && (
+          {!displayItem.is_public && (
             <div className="absolute top-3 right-3 z-20">
               <div className="bg-black/80 text-white text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm shadow-lg">
                 비공개
@@ -349,28 +352,28 @@ export default function PostCard({
                   <span className="text-white text-xs font-bold">R</span>
                 </div>
                 <h2 className="text-lg font-bold text-gray-900 leading-tight">
-                  <Link href={detailUrl}>{item.title}</Link>
+                  <Link href={detailUrl}>{displayItem.title}</Link>
                 </h2>
               </div>
 
               {/* 🍳 토스 스타일: 레시피 정보 칩(Chip) 형태 */}
-              {(item.cooking_time_minutes || item.servings) && (
+              {(displayItem.cooking_time_minutes || displayItem.servings) && (
                 <div className="flex items-center gap-2 mb-3">
-                  {item.cooking_time_minutes && (
+                  {displayItem.cooking_time_minutes && (
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                      {item.cooking_time_minutes}분
+                      {displayItem.cooking_time_minutes}분
                     </span>
                   )}
-                  {item.servings && (
+                  {displayItem.servings && (
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                      {item.servings}인분
+                      {displayItem.servings}인분
                     </span>
                   )}
                 </div>
               )}
 
               <ExpandableText 
-                text={item.description || ""} 
+                text={displayItem.description || ""} 
                 maxLines={2}
                 onExpand={() => router.push(detailUrl)}
                 className="text-gray-700"
@@ -378,7 +381,7 @@ export default function PostCard({
             </>
           ) : (
             <ExpandableText 
-              text={item.content || ""} 
+              text={displayItem.content || ""} 
               maxLines={3}
               onExpand={() => router.push(detailUrl)}
             />
@@ -434,9 +437,9 @@ export default function PostCard({
           )}
 
           {/* 태그 표시 */}
-          {item.tags && item.tags.length > 0 && (
+          {displayItem.tags && displayItem.tags.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-3">
-              {item.tags.map((tag, idx) => (
+              {displayItem.tags.map((tag, idx) => (
                 <span key={idx} className={`px-2.5 py-1 rounded-full text-xs font-medium ${
                   isRecipe 
                     ? 'bg-gradient-to-r from-orange-200 to-yellow-200 text-orange-800 shadow-sm' 

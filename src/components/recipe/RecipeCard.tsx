@@ -44,6 +44,9 @@ export default function RecipeCard({ item, isSelectable, isSelected, onSelectCha
   }
   const cachedItem = useSSAItemCache(item.item_id, fallbackItem)
   const stableItemId = item.item_id || item.id
+  // 표시용 값: 수정 직후 즉시 갱신되는 개별 항목 캐시를 우선하고, 캐시에 없는 값만 목록 데이터를 쓴다.
+  // (목록 캐시는 새로고침 전까지 갱신되지 않아 제목, 색상 라벨 등이 이전 값으로 남던 문제 방지)
+  const displayItem: Item = { ...item, ...cachedItem }
   
   const handleSelectChange = (checked: boolean) => {
     if (onSelectChange) {
@@ -81,7 +84,7 @@ export default function RecipeCard({ item, isSelectable, isSelected, onSelectCha
         {cachedItem.image_urls && cachedItem.image_urls.length > 0 ? (
           <Image 
             src={cachedItem.image_urls[cachedItem.thumbnail_index || 0]} 
-            alt={item.title || "Recipe Image"} 
+            alt={displayItem.title || "Recipe Image"} 
             fill 
             className="object-cover group-hover:scale-110 transition-transform duration-700"
             priority={priority}
@@ -97,11 +100,11 @@ export default function RecipeCard({ item, isSelectable, isSelected, onSelectCha
         {/* 🎯 토스 스타일: 선택적 오버레이 요소들 */}
         
         {/* 색상 라벨 - 나의 레시피 전용 */}
-        {!showAuthor && item.color_label && (
+        {!showAuthor && displayItem.color_label && (
           <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-20">
             <div className={clsx(
               "w-4 h-4 sm:w-6 sm:h-6 rounded-full shadow-lg ring-1 sm:ring-2 ring-white/50 backdrop-blur-sm", 
-              getColorClass(item.color_label, "color")
+              getColorClass(displayItem.color_label, "color")
             )} />
           </div>
         )}
@@ -123,7 +126,7 @@ export default function RecipeCard({ item, isSelectable, isSelected, onSelectCha
         )}
         
         {/* 비공개 표시 - 업계표준 Privacy UX (우측 하단, 충돌 방지) */}
-        {!item.is_public && (
+        {!displayItem.is_public && (
           <div className="absolute bottom-1.5 left-1.5 sm:bottom-2 sm:left-2 z-25">
             <div className="bg-black/80 text-white text-[8px] sm:text-[10px] px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full font-medium backdrop-blur-sm shadow-lg">
               비공개
@@ -138,7 +141,7 @@ export default function RecipeCard({ item, isSelectable, isSelected, onSelectCha
         <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2">
           <div className="flex items-center gap-0.5 bg-orange-500 text-white px-1 py-0.5 sm:px-1.5 sm:py-0.5 rounded-full text-[8px] sm:text-[10px] font-bold shadow-lg flex-shrink-0">
             <Clock className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
-            <span>{item.cooking_time_minutes || '?'}분</span>
+            <span>{displayItem.cooking_time_minutes || '?'}분</span>
           </div>
         </div>
       </div>
@@ -147,16 +150,16 @@ export default function RecipeCard({ item, isSelectable, isSelected, onSelectCha
       <CardContent className="pt-0 px-2 pb-2 sm:pt-0 sm:px-3 sm:pb-3 space-y-1.5 sm:space-y-2">
         {/* 제목 - 토스 타이포그래피 */}
         <h3 className="font-bold text-xs sm:text-sm text-gray-900 leading-tight truncate group-hover:text-orange-600 transition-colors mt-1.5 sm:mt-2">
-          {item.title}
+          {displayItem.title}
         </h3>
         
         {/* 서브 정보 - 핵심만 */}
         <div className="flex items-center justify-between mt-1 sm:mt-1.5">
           <div className="flex items-center gap-1 sm:gap-1.5 text-[8px] sm:text-[10px] text-gray-500 min-w-0 flex-1">
-            {item.servings && (
+            {displayItem.servings && (
               <div className="flex items-center gap-0.5 bg-gray-50 px-1 py-0.5 sm:px-1.5 sm:py-0.5 rounded-full">
                 <Users className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
-                <span className="font-medium">{item.servings}인분</span>
+                <span className="font-medium">{displayItem.servings}인분</span>
               </div>
             )}
             <span className="text-gray-400">•</span>

@@ -52,6 +52,9 @@ export default function RecipeListCard({
   }
   const cachedItem = useSSAItemCache(item.item_id, fallbackItem)
   const stableItemId = item.item_id || item.id
+  // 표시용 값: 수정 직후 즉시 갱신되는 개별 항목 캐시를 우선하고, 캐시에 없는 값만 목록 데이터를 쓴다.
+  // (목록 캐시는 새로고침 전까지 갱신되지 않아 제목, 색상 라벨 등이 이전 값으로 남던 문제 방지)
+  const displayItem: Item = { ...item, ...cachedItem }
   
   const handleSelectChange = (checked: boolean) => {
     if (onSelectChange) {
@@ -102,7 +105,7 @@ export default function RecipeListCard({
             {cachedItem.image_urls && cachedItem.image_urls.length > 0 ? (
               <Image 
                 src={cachedItem.image_urls[cachedItem.thumbnail_index || 0]} 
-                alt={item.title || "Recipe Image"} 
+                alt={displayItem.title || "Recipe Image"} 
                 fill
                 className="object-cover group-hover:scale-110 transition-transform duration-500"
                 priority={priority}
@@ -114,7 +117,7 @@ export default function RecipeListCard({
             )}
             
             {/* 비공개 표시 - 업계표준 Privacy UX */}
-            {!item.is_public && (
+            {!displayItem.is_public && (
               <div className="absolute top-1 right-1 sm:top-2 sm:right-2 z-20">
                 <div className="bg-black/80 text-white text-[8px] sm:text-[10px] px-1 py-0.5 sm:px-1.5 sm:py-0.5 rounded-full font-medium backdrop-blur-sm shadow-lg">
                   비공개
@@ -148,7 +151,7 @@ export default function RecipeListCard({
               {/* 제목 + 작성자 그룹 */}
               <div className="flex-1 min-w-0 mr-2">
                 <h3 className="font-bold text-sm sm:text-base text-gray-900 leading-tight truncate group-hover:text-orange-600 transition-colors">
-                  {item.title}
+                  {displayItem.title}
                 </h3>
                 
                 {/* 작성자 정보 - 모두의 레시피 전용 */}
@@ -165,16 +168,16 @@ export default function RecipeListCard({
               {/* 우상단 액션 그룹 - 색상 라벨 배치 */}
               <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                 {/* 색상 라벨 - 나의 레시피 전용 (그리드와 일관성) */}
-                {!showAuthor && item.color_label && (
-                  <div className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full shadow-sm ${getColorClass(item.color_label, "color")}`} />
+                {!showAuthor && displayItem.color_label && (
+                  <div className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full shadow-sm ${getColorClass(displayItem.color_label, "color")}`} />
                 )}
               </div>
             </div>
             
             {/* 설명 - 간결하게 */}
-            {item.description && (
+            {displayItem.description && (
               <p className="text-xs sm:text-sm text-gray-600 truncate mb-2 sm:mb-3">
-                {item.description}
+                {displayItem.description}
               </p>
             )}
 
@@ -183,18 +186,18 @@ export default function RecipeListCard({
               {/* 첫 번째 행: 실용 정보 (조리시간, 인분) - 항상 표시 */}
               <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                 {/* 조리 시간 - 최우선 정보 */}
-                {item.cooking_time_minutes && (
+                {displayItem.cooking_time_minutes && (
                   <div className="flex items-center gap-0.5 sm:gap-1 bg-orange-50 text-orange-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-lg text-[9px] sm:text-xs font-medium flex-shrink-0">
                     <Clock className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
-                    <span>{item.cooking_time_minutes}분</span>
+                    <span>{displayItem.cooking_time_minutes}분</span>
                   </div>
                 )}
                 
                 {/* 인분 - 두 번째 우선순위 */}
-                {item.servings && (
+                {displayItem.servings && (
                   <div className="flex items-center gap-0.5 sm:gap-1 bg-blue-50 text-blue-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-lg text-[9px] sm:text-xs font-medium flex-shrink-0">
                     <Users className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
-                    <span>{item.servings}인분</span>
+                    <span>{displayItem.servings}인분</span>
                   </div>
                 )}
                 
@@ -264,9 +267,9 @@ export default function RecipeListCard({
             </div>
             
             {/* 태그 영역 - 여유 공간 있을 때만 */}
-            {item.tags && item.tags.length > 0 && (
+            {displayItem.tags && displayItem.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2 sm:mt-3">
-                {item.tags.slice(0, 2).map((tag: string) => (
+                {displayItem.tags.slice(0, 2).map((tag: string) => (
                   <Badge 
                     key={tag} 
                     variant="secondary" 
@@ -275,12 +278,12 @@ export default function RecipeListCard({
                     #{tag}
                   </Badge>
                 ))}
-                {item.tags.length > 2 && (
+                {displayItem.tags.length > 2 && (
                   <Badge 
                     variant="outline" 
                     className="text-[8px] sm:text-[9px] px-1 py-0 sm:px-1.5 sm:py-0 text-gray-400 border-gray-200"
                   >
-                    +{item.tags.length - 2}
+                    +{displayItem.tags.length - 2}
                   </Badge>
                 )}
               </div>
