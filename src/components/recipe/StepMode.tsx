@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils"
 import { logEvent } from "@/lib/events"
 import { useRouter } from "@/lib/navigation"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
+import { Sheet } from "@/components/kit"
 
 interface StepModeProps {
 	steps: RecipeStep[]
@@ -142,14 +143,14 @@ export default function StepMode({ steps, ingredients, servingsLabel, startAt, r
 				}}
 			>
 				{finished ? (
-					<div className="rounded-[3px] bg-paper px-5 py-6 shadow-sheet">
+					<Sheet className="px-5 py-6">
 						<h2 className="text-[26px] font-bold leading-tight">다 만들었어요</h2>
 						<p className="mt-3 text-[17px] leading-[1.6] text-ink-soft">
 							사진 한 장과 한 줄이면 이 레시피의 &lsquo;만들어 본 기록&rsquo;으로 남아요. 레시피를 쓴 사람에게도 알려 줘요.
 						</p>
-					</div>
+					</Sheet>
 				) : (
-				<div key={index} className="min-h-[45dvh] rounded-[3px] bg-paper px-5 py-6 shadow-sheet motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-200">
+				<Sheet key={index} className="min-h-[45dvh] px-5 py-6 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-200">
 					{step.image_url && (
 						<div className="relative -mx-5 -mt-6 mb-5 h-[min(40dvh,75vw)] overflow-hidden rounded-t-[3px] bg-muted">
 							{/* 요리 중에는 사진 전체가 정보다: 자르지 않고 프레임 안에 맞춘다 */}
@@ -157,7 +158,7 @@ export default function StepMode({ steps, ingredients, servingsLabel, startAt, r
 						</div>
 					)}
 					<p className="whitespace-pre-wrap break-words text-[26px] font-medium leading-[1.55]">{step.description}</p>
-				</div>
+				</Sheet>
 
 				)}
 
@@ -170,7 +171,7 @@ export default function StepMode({ steps, ingredients, servingsLabel, startAt, r
 				)}
 
 				{showIngredients && (
-					<div className="absolute inset-x-3 top-0 max-h-full overflow-y-auto rounded-[3px] bg-paper px-5 py-4 shadow-sheet">
+					<Sheet className="absolute inset-x-3 top-0 max-h-full overflow-y-auto px-5 py-4">
 						<p className="text-sm font-semibold text-ink-soft">재료 · {servingsLabel}</p>
 						<ul className="mt-2 divide-y divide-border">
 							{ingredients.map((ing, i) => (
@@ -183,7 +184,7 @@ export default function StepMode({ steps, ingredients, servingsLabel, startAt, r
 								</li>
 							))}
 						</ul>
-					</div>
+					</Sheet>
 				)}
 			</div>
 

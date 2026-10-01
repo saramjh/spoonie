@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button"
 import { Trash2 } from "lucide-react"
 import { UseFormRegister, FieldErrors } from "react-hook-form"
 import { Ingredient } from "@/types/item"
+import { Sheet } from "@/components/kit"
 
 // 드래그앤드롭용 확장 타입 (id 필드 추가)
 export interface DraggableIngredient extends Ingredient {
@@ -168,8 +169,7 @@ function SortableIngredientItem({
 // 드래그 오버레이 컴포넌트 - 원본과 일치
 function DragOverlayItem({ ingredient }: { ingredient: DraggableIngredient }) {
   return (
-    <div 
-      className="pointer-events-none rounded-[3px] border border-ink/30 bg-paper p-3 shadow-sheet"
+    <Sheet className="pointer-events-none border border-ink/30 p-3"
       style={{ 
         width: '100%',
         maxWidth: '90vw',
@@ -201,7 +201,7 @@ function DragOverlayItem({ ingredient }: { ingredient: DraggableIngredient }) {
           </div>
         </div>
       </div>
-    </div>
+    </Sheet>
   )
 }
 

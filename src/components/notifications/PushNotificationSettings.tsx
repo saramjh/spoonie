@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { usePushNotification } from '@/hooks/usePushNotification';
 import { useToast } from '@/hooks/use-toast';
 import { createSupabaseBrowserClient } from '@/lib/supabase-client';
+import { Sheet } from "@/components/kit"
 
 export default function PushNotificationSettings() {
   const { toast } = useToast();
@@ -121,7 +122,7 @@ export default function PushNotificationSettings() {
   }
 
   return (
-    <section className="flex items-center gap-3 rounded-[3px] bg-paper px-4 py-3 shadow-sheet">
+    <Sheet as="section" className="flex items-center gap-3 px-4 py-3">
       <div className="min-w-0 flex-1">
         <h2 className="text-[15px] font-semibold text-ink">휴대폰 알림 {isSubscribed ? "켜짐" : "꺼짐"}</h2>
         <p className="mt-0.5 text-[13px] text-ink-soft">
@@ -136,6 +137,6 @@ export default function PushNotificationSettings() {
       <Button onClick={handleTogglePush} disabled={isLoading} variant={isSubscribed ? "outline" : "default"} className="flex-shrink-0">
         {isLoading ? "처리 중" : isSubscribed ? "끄기" : "켜기"}
       </Button>
-    </section>
+    </Sheet>
   )
 }

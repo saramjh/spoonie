@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { createSupabaseBrowserClient } from "@/lib/supabase"
 import { useToast } from "@/hooks/use-toast"
+import { Sheet } from "@/components/kit"
 
 const formSchema = z
 	.object({
@@ -58,7 +59,7 @@ export default function ResetPasswordPage() {
 	}
 
 						return (
-			<div className="min-h-screen flex flex-col items-center justify-start p-4 bg-door">
+			<div className="min-h-screen flex flex-col items-center justify-start p-4">
 				{/* 토스 스타일 그라디언트 배경 */}
 				{/* 상단 여백 + 카드 컨테이너 */}
 				<main className="w-full max-w-sm mx-auto pt-16 sm:pt-20">
@@ -74,7 +75,7 @@ export default function ResetPasswordPage() {
 				</div>
 
 				{/* 비밀번호 재설정 카드 */}
-				<div className="rounded-[3px] bg-paper p-6 shadow-sheet">
+				<Sheet className="p-6">
 
 					<Form {...form}>
 						<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
@@ -129,7 +130,7 @@ export default function ResetPasswordPage() {
 								로그인으로 돌아가기
 							</Link>
 						</div>
-				</div>
+				</Sheet>
 			</main>
 		</div>
 	)

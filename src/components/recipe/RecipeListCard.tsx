@@ -2,8 +2,8 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { Check, ChefHat } from "lucide-react"
-import { getMagnet } from "@/lib/color-options"
+import { ChefHat } from "lucide-react"
+import { CheckBox, Magnet } from "@/components/kit"
 import { formatCompactTime } from "@/lib/utils"
 import { formatCookingTime } from "@/lib/recipe-amount"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
@@ -56,9 +56,8 @@ export default function RecipeListCard({
 
   const baseUrl = `${item.item_type === 'recipe' ? '/recipes' : '/posts'}/${item.item_id}`;
   const detailUrl = createLinkWithOrigin(baseUrl);
-
-  // 색상 라벨은 주인의 정리 도구: "나의 레시피"에서만 보인다 (DESIGN.md Interface Grammar 3)
-  const magnet = showAuthor ? null : getMagnet(displayItem.color_label)
+	// 색상 라벨은 주인의 정리 도구: "나의 레시피"에서만 보인다 (DESIGN.md Interface Grammar 3)
+	const showColor = !showAuthor
   const cookingTime = formatCookingTime(displayItem.cooking_time_minutes)
   const ingredientCount = item.ingredients?.length || 0
   const thumbnail = cachedItem.image_urls?.[cachedItem.thumbnail_index || 0]
@@ -80,24 +79,12 @@ export default function RecipeListCard({
           onClick={() => handleSelectChange(!isSelected)}
           className="absolute left-0 top-0 z-30 flex h-11 w-11 items-center justify-center"
         >
-          <span
-            aria-hidden
-            className={`flex h-5 w-5 items-center justify-center rounded-[4px] border-[1.5px] ${isSelected ? "border-ink bg-ink text-paper" : "border-ink-soft bg-paper"}`}
-          >
-            {isSelected && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
-          </span>
+          <CheckBox checked={!!isSelected} />
         </button>
       )}
 
       <Link href={detailUrl} className="relative flex items-center gap-3 rounded-[3px] bg-paper p-2 pr-4 shadow-sheet">
-        {magnet && (
-          <span
-            role="img"
-            aria-label={`색상 라벨 ${magnet.label}`}
-            className="absolute -left-1.5 top-1/2 z-20 h-5 w-5 -translate-y-1/2 rounded-full shadow-[0_1px_3px_rgba(35,40,43,0.35)]"
-            style={{ backgroundColor: magnet.hex }}
-          />
-        )}
+        {showColor && <Magnet color={displayItem.color_label} size="sm" className="absolute -left-1.5 top-1/2 z-20 -translate-y-1/2" />}
         <div className="relative h-[72px] w-[72px] flex-shrink-0 overflow-hidden rounded-[2px] bg-muted">
           {thumbnail ? (
             <Image src={thumbnail} alt="" fill sizes="72px" className="object-cover" priority={priority} />

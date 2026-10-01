@@ -7,11 +7,12 @@ import { useToast } from '@/hooks/use-toast'
 import { mutate } from 'swr'
 import { formatDistanceToNowStrict } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { Check, Trash2 } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useRouter } from '@/lib/navigation'
 import PushNotificationSettings from '@/components/notifications/PushNotificationSettings'
 import { NOTIFICATION_RECEIVED_EVENT } from '@/lib/realtime-events';
+import { CheckBox, PageHeader, Sheet, StateSheet } from "@/components/kit"
 
 interface Notification {
   id: string;
@@ -411,33 +412,29 @@ export default function NotificationsPage() {
   }
 
   const allSelected = notifications.length > 0 && selectedIds.size === notifications.length
-  const checkbox = (checked: boolean) => (
-    <span
-      aria-hidden
-      className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-[4px] border-[1.5px] ${checked ? "border-ink bg-ink text-paper" : "border-ink-soft bg-paper"}`}
-    >
-      {checked && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
-    </span>
-  )
 
   return (
-    <div className="min-h-screen bg-door">
-      <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-border bg-paper pl-4 pr-1">
-        <h1 className="text-[22px] font-bold text-ink">알림</h1>
-        {notifications.length > 0 && (
-          <Button variant="ghost" onClick={toggleEditMode} className="text-[15px]">
-            {isSelecting ? "완료" : "편집"}
-          </Button>
-        )}
-      </header>
+    <div className="min-h-screen">
+      <PageHeader
+        leading="none"
+        titleAlign="start"
+        title="알림"
+        trailing={
+          notifications.length > 0 ? (
+            <Button variant="ghost" onClick={toggleEditMode} className="text-[15px]">
+              {isSelecting ? "완료" : "편집"}
+            </Button>
+          ) : undefined
+        }
+      />
 
       <div className="space-y-3 px-3 pb-6 pt-3">
         {currentUser && !isSelecting && <PushNotificationSettings />}
 
         {isSelecting && notifications.length > 0 && (
-          <div className="sticky top-14 z-10 flex items-center justify-between rounded-[3px] bg-paper px-2 shadow-sheet">
+          <Sheet className="sticky top-14 z-10 flex items-center justify-between px-2">
             <button type="button" onClick={toggleSelectAll} role="checkbox" aria-checked={allSelected} className="flex h-12 items-center gap-2 px-2 text-[15px] text-ink">
-              {checkbox(allSelected)}
+              <CheckBox checked={allSelected} />
               전체 선택
               {selectedIds.size > 0 && <span className="tabular-nums text-ink-soft">· {selectedIds.size}개</span>}
             </button>
@@ -445,16 +442,13 @@ export default function NotificationsPage() {
               <Trash2 className="h-4 w-4" aria-hidden />
               지우기
             </Button>
-          </div>
+          </Sheet>
         )}
 
         {notifications.length === 0 ? (
-          <section className="rounded-[3px] bg-paper px-5 py-6 shadow-sheet">
-            <p className="text-[17px] font-semibold text-ink">아직 알림이 없어요</p>
-            <p className="mt-1 text-[15px] text-ink-soft">누가 내 레시피로 만들었거나, 좋아요·댓글을 남기면 여기에 쌓여요.</p>
-          </section>
+          <StateSheet title="아직 알림이 없어요" body="누가 내 레시피로 만들었거나, 좋아요·댓글을 남기면 여기에 쌓여요." />
         ) : (
-          <ul className="divide-y divide-border rounded-[3px] bg-paper shadow-sheet">
+          <Sheet as="ul" className="divide-y divide-border">
             {notifications.map((notification) => {
               const selected = selectedIds.has(notification.id)
               const unread = !notification.is_read
@@ -474,7 +468,7 @@ export default function NotificationsPage() {
                     }}
                     className={`flex w-full items-start gap-3 px-4 py-3.5 text-left ${unread && !isSelecting ? "bg-[#f3f7f5]" : ""}`}
                   >
-                    {isSelecting && <span className="pt-2.5">{checkbox(selected)}</span>}
+                    {isSelecting && <span className="pt-2.5"><CheckBox checked={selected} /></span>}
                     <span className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-border">
                       {notification.from_profile?.avatar_url ? (
                         <Image src={notification.from_profile.avatar_url} alt="" width={40} height={40} className="h-full w-full object-cover" />
@@ -499,7 +493,7 @@ export default function NotificationsPage() {
                 </li>
               )
             })}
-          </ul>
+          </Sheet>
         )}
       </div>
     </div>

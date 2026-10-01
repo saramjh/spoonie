@@ -66,7 +66,7 @@ export default async function HomePage() {
 		
 
 		return (
-			<div className="min-h-screen bg-door">
+			<div className="min-h-screen">
 				<h1 className="sr-only">스푸니 - 레시피와 요리 이야기를 나누는 커뮤니티</h1>
 				{/* Google 검색 결과의 사이트 이름 */}
 				<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(websiteSchema) }} />
@@ -80,7 +80,7 @@ export default async function HomePage() {
 		
 		// 서버 에러 시 클라이언트에서 재시도 가능한 폴백
 		return (
-			<div className="min-h-screen bg-door">
+			<div className="min-h-screen">
 				<SeamlessItemList initialData={null} />
 			</div>
 		)

@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast"
 import { safeNextPath } from "@/lib/safe-next-path"
 
 import { generateUniqueUsername } from "@/lib/username-generator"
+import { Sheet } from "@/components/kit"
 
 const formSchema = z
 	.object({
@@ -78,7 +79,7 @@ export default function SignupPage() {
 	}
 
 				return (
-					<div className="min-h-screen flex flex-col items-center justify-start p-4 bg-door">
+					<div className="min-h-screen flex flex-col items-center justify-start p-4">
 			{/* 토스 스타일 그라디언트 배경 */}
 			{/* 상단 여백 + 카드 컨테이너 */}
 			<main className="w-full max-w-sm mx-auto pt-8">
@@ -88,7 +89,7 @@ export default function SignupPage() {
 				</div>
 
 				{/* 회원가입 카드 */}
-				<div className="rounded-[3px] bg-paper p-6 shadow-sheet">
+				<Sheet className="p-6">
 
 					<Form {...form}>
 						<form onSubmit={form.handleSubmit(handleSignUp)} className="space-y-5">
@@ -182,7 +183,7 @@ export default function SignupPage() {
 								운영정책
 							</Link>
 						</div>
-				</div>
+				</Sheet>
 			</main>
 		</div>
 	)

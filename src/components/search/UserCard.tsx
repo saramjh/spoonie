@@ -5,6 +5,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { User } from "lucide-react"
 import { useNavigation } from "@/hooks/useNavigation"
 import type { Item } from "@/types/item"
+import { Sheet } from "@/components/kit"
 
 // 유저 검색 결과 타입 (search/page.tsx와 동일)
 interface UserResult {
@@ -26,7 +27,7 @@ export default function UserCard({ user }: UserCardProps) {
   
   return (
     <Link href={profileUrl} className="block">
-      <div className="rounded-[3px] bg-paper p-4 shadow-sheet">
+      <Sheet className="p-4">
         <div className="flex items-center space-x-3 mb-3">
           {/* 유저 아바타 */}
           <Avatar className="w-12 h-12">
@@ -69,7 +70,7 @@ export default function UserCard({ user }: UserCardProps) {
             ))}
           </div>
         )}
-      </div>
+      </Sheet>
     </Link>
   )
 } 

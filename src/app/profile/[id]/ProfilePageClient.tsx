@@ -22,6 +22,7 @@ import { useFollowStore } from "@/store/followStore" // 업계 표준: 글로벌
 import { useNavigation } from "@/hooks/useNavigation"
 import useSWR from "swr"
 import { fetchProfile, fetchUserItems, fetchFollowCounts, fetchFollowStatus, fetchLineageCounts, type UserProfile } from "@/lib/profile-data"
+import { StateSheet, UnderlineTabs } from "@/components/kit"
 
 interface ProfilePageClientProps {
 	params: { id: string }
@@ -144,7 +145,7 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 
 	if (isLoading) {
 		return (
-			<div className="min-h-screen bg-door" aria-busy="true">
+			<div className="min-h-screen" aria-busy="true">
 				<div className="border-b border-border bg-paper px-4 pb-4 pt-5">
 					<div className="flex items-start gap-4">
 						<Skeleton className="h-[72px] w-[72px] rounded-full" />
@@ -166,7 +167,7 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 	if (profileError) {
 		return (
 			<div className="px-3 pt-3">
-				<p className="rounded-[3px] bg-paper px-5 py-6 text-[17px] font-semibold text-ink shadow-sheet">사용자를 찾을 수 없어요.</p>
+				<StateSheet title="사용자를 찾을 수 없어요" body="주소가 바뀌었거나 탈퇴한 사용자일 수 있어요." />
 			</div>
 		)
 	}
@@ -183,7 +184,7 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 	].filter(Boolean)
 
 	return (
-		<div className="min-h-screen bg-door">
+		<div className="min-h-screen">
 			<header className="border-b border-border bg-paper px-4 pb-4 pt-5">
 				<div className="flex items-start gap-4">
 					<div className="relative h-[72px] w-[72px] flex-shrink-0 overflow-hidden rounded-full bg-border">
@@ -244,23 +245,16 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 				{!isOwner && profile && <FollowButton userId={profile.id} initialIsFollowing={isFollowing} className="mt-4 w-full" />}
 			</header>
 
-			<nav className="sticky top-0 z-10 flex border-b border-border bg-paper" role="tablist" aria-label="작성한 글 종류">
-				{([
-					["recipe", "레시피", recipes.length],
-					["post", "레시피드", posts.length],
-				] as const).map(([key, label, count]) => (
-					<button
-						key={key}
-						type="button"
-						role="tab"
-						aria-selected={activeTab === key}
-						onClick={() => setTab(key)}
-						className={`-mb-px h-12 flex-1 border-b-2 text-[15px] font-semibold ${activeTab === key ? "border-ink text-ink" : "border-transparent text-ink-soft"}`}
-					>
-						{label} <span className="tabular-nums font-medium">{count}</span>
-					</button>
-				))}
-			</nav>
+			<UnderlineTabs
+				label="작성한 글 종류"
+				className="sticky top-0 z-10"
+				value={activeTab}
+				onChange={setTab}
+				items={[
+					{ key: "recipe", label: "레시피", count: recipes.length },
+					{ key: "post", label: "레시피드", count: posts.length },
+				]}
+			/>
 
 			<div className="px-3 py-3">
 				{activeTab === "recipe" ? (
@@ -271,14 +265,7 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 							))}
 						</div>
 					) : (
-						<section className="rounded-[3px] bg-paper px-5 py-6 shadow-sheet">
-							<p className="text-[17px] font-semibold text-ink">{isOwner ? "아직 쓴 레시피가 없어요" : "아직 공개한 레시피가 없어요"}</p>
-							{isOwner && (
-								<Button asChild className="mt-4">
-									<Link href="/recipes/new">레시피 쓰기</Link>
-								</Button>
-							)}
-						</section>
+						<StateSheet title={isOwner ? "아직 쓴 레시피가 없어요" : "아직 공개한 레시피가 없어요"} action={isOwner ? <Button asChild><Link href="/recipes/new">레시피 쓰기</Link></Button> : undefined} />
 					)
 				) : posts.length > 0 ? (
 					<ul className="grid grid-cols-3 gap-1">
@@ -299,10 +286,7 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 						})}
 					</ul>
 				) : (
-					<section className="rounded-[3px] bg-paper px-5 py-6 shadow-sheet">
-						<p className="text-[17px] font-semibold text-ink">{isOwner ? "아직 남긴 레시피드가 없어요" : "아직 공개한 레시피드가 없어요"}</p>
-						{isOwner && <p className="mt-1 text-[15px] text-ink-soft">다른 사람의 레시피로 만들었다면 그 레시피 화면의 &lsquo;이 레시피로 만들었어요&rsquo;로 남겨 보세요.</p>}
-					</section>
+					<StateSheet title={isOwner ? "아직 남긴 레시피드가 없어요" : "아직 공개한 레시피드가 없어요"} body={isOwner ? "다른 사람의 레시피로 만들었다면 그 레시피 화면의 ‘이 레시피로 만들었어요’로 남겨 보세요." : undefined} />
 				)}
 			</div>
 

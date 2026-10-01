@@ -19,7 +19,6 @@ import CitedRecipeSearch from "@/components/recipe/CitedRecipeSearch"
 import DraggableIngredientList, { DraggableIngredient } from "@/components/recipe/DraggableIngredientList"
 import { OptimizedImage } from "@/lib/image-utils"
 import { useToast } from "@/hooks/use-toast"
-import { RECIPE_COLOR_OPTIONS, getMagnet } from "@/lib/color-options"
 
 
 import type { Item, ItemDetail } from "@/types/item"
@@ -29,6 +28,7 @@ import { notificationService } from "@/lib/notification-service"
 import { logEvent } from "@/lib/events"
 import { mutate as globalMutate } from "swr"
 import SourceLine from "@/components/items/SourceLine"
+import { ColorLabelPicker, PageHeader, SectionHeading, Sheet } from "@/components/kit"
 
 // Zod 스키마 업데이트
 const recipeSchema = z.object({
@@ -598,26 +598,20 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 
 	// 쓰는 순서 = 읽는 순서: 사진 → 제목 → 분량·시간 → 설명 → 재료 → 만드는 법 → 참고 → 내 정리 (DESIGN.md Interface Grammar)
 	return (
-		<div className="min-h-screen bg-door pb-28">
-			<header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-paper px-1">
-				<Button type="button" variant="ghost" onClick={() => router.back()}>
-					취소
-				</Button>
-				<h1 className="text-[17px] font-semibold text-ink">{isEditMode ? "레시피 수정" : forkFrom ? "내 버전으로 고쳐 쓰기" : "레시피 쓰기"}</h1>
-				<span className="w-16" aria-hidden />
-			</header>
+		<div className="min-h-screen pb-28">
+			<PageHeader leading="cancel" title={isEditMode ? "레시피 수정" : forkFrom ? "내 버전으로 고쳐 쓰기" : "레시피 쓰기"} />
 
 			{/* @ts-expect-error - form 핸들러 타입 변환 처리 */}
 			<form id="recipe-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 px-3 pt-3">
 				{/* fork: 무엇을 바탕으로 쓰는지 먼저 보여 준다. 저장하면 원본의 "이어진 레시피"에 고친 버전으로 실린다 */}
 				{!isEditMode && forkFrom && (
-					<div className="rounded-[3px] bg-paper px-4 py-3 shadow-sheet">
+					<Sheet className="px-4 py-3">
 						<SourceLine recipes={selectedCitedRecipes.filter((r) => r.id === forkFrom.id)} />
 						<p className="mt-1 text-sm text-ink-soft">분량, 재료, 단계를 가져왔어요. 내 방식대로 고치고 내가 만든 사진을 올려 주세요.</p>
-					</div>
+					</Sheet>
 				)}
 
-				<div className="rounded-[3px] bg-paper shadow-sheet">
+				<Sheet>
 					<section className="space-y-5 px-4 pb-5 pt-5">
 						<ImageUploader
 							images={mainImages}
@@ -709,9 +703,8 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 
 					<section aria-labelledby="form-ingredients" className="border-t border-border px-4 pb-5 pt-5">
 						<div className="flex items-baseline justify-between">
-							<h2 id="form-ingredients" className="text-lg font-bold text-ink">
-								재료 <span className="font-medium tabular-nums text-ink-soft">{ingredients.length}</span>
-							</h2>
+							<SectionHeading id="form-ingredients" count={ingredients.length}>
+								재료</SectionHeading>
 							{ingredients.length > 1 && <span className="text-[13px] text-ink-soft">왼쪽 손잡이로 순서 바꾸기</span>}
 						</div>
 						<div className="mt-2">
@@ -739,9 +732,9 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 					</section>
 
 					<section aria-labelledby="form-steps" className="border-t border-border px-4 pb-5 pt-5">
-						<h2 id="form-steps" className="text-lg font-bold text-ink">
+						<SectionHeading id="form-steps">
 							만드는 법 <span className="font-medium tabular-nums text-ink-soft">{instructions.length}단계</span>
-						</h2>
+						</SectionHeading>
 						<ol className="mt-2">
 							{instructions.map((field, index) => (
 								<li key={field.id} className="flex gap-3 border-b border-border py-4 last:border-b-0">
@@ -780,9 +773,9 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 					</section>
 
 					<section aria-labelledby="form-cited" className="border-t border-border px-4 pb-5 pt-5">
-						<h2 id="form-cited" className="text-lg font-bold text-ink">
+						<SectionHeading id="form-cited">
 							참고한 레시피 <span className="text-sm font-normal text-ink-soft">(선택)</span>
-						</h2>
+						</SectionHeading>
 						<p className="mt-1 text-[13px] text-ink-soft">바탕이 된 레시피를 고르면 그 레시피의 &lsquo;이어진 레시피&rsquo;에 실리고 작성자에게 알려져요.</p>
 						<div className="mt-2">
 							<CitedRecipeSearch selectedRecipes={selectedCitedRecipes} onSelectedRecipesChange={handleSelectedCitedRecipesChange} />
@@ -796,36 +789,20 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 						<Input id="tags" placeholder="예: 김치찌개, 한식, 간단요리" className="mt-1.5" {...form.register("tags")} />
 						{errors.tags && <p className={errorText}>{errors.tags.message}</p>}
 					</section>
-				</div>
+				</Sheet>
 
 				{/* 내 정리: 다른 사람에게는 보이지 않는 주인의 도구 (DESIGN.md Interface Grammar 3) */}
-				<div className="rounded-[3px] bg-paper px-4 pb-5 pt-5 shadow-sheet">
-					<h2 className="text-lg font-bold text-ink">내 정리</h2>
+				<Sheet className="px-4 pb-5 pt-5">
+					<SectionHeading>내 정리</SectionHeading>
 					<fieldset className="mt-3">
 						<legend className={fieldLabel}>
 							색상 라벨 <span className="font-normal text-ink-soft">(나의 레시피북에서 거를 때 써요)</span>
 						</legend>
-						<div className="mt-2 flex flex-wrap gap-1">
-							{RECIPE_COLOR_OPTIONS.map((colorOption) => {
-								const magnet = getMagnet(colorOption.value)
-								const selected = selectedColor === colorOption.value
-								return (
-									<button
-										key={colorOption.value}
-										type="button"
-										aria-pressed={selected}
-										aria-label={`${colorOption.label}${selected ? " (선택됨)" : ""}`}
-										onClick={() => form.setValue("color_label", selected ? null : colorOption.value, { shouldValidate: true })}
-										className="flex h-11 w-11 items-center justify-center"
-									>
-										<span
-											className={`h-7 w-7 rounded-full shadow-[0_1px_3px_rgba(35,40,43,0.35)] ${selected ? "ring-2 ring-ink ring-offset-2 ring-offset-paper" : ""}`}
-											style={{ backgroundColor: magnet?.hex }}
-										/>
-									</button>
-								)
-							})}
-						</div>
+						<ColorLabelPicker
+							className="mt-2"
+							value={selectedColor}
+							onChange={(next) => form.setValue("color_label", next, { shouldValidate: true })}
+						/>
 					</fieldset>
 
 					<Controller
@@ -851,7 +828,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 							</fieldset>
 						)}
 					/>
-				</div>
+				</Sheet>
 			</form>
 
 			<div className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md border-t border-border bg-paper px-3 pb-[max(env(safe-area-inset-bottom),12px)] pt-3">

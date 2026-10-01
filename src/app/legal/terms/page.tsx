@@ -1,8 +1,9 @@
 import Link from "next/link"
+import { Sheet } from "@/components/kit"
 
 export default function TermsOfServicePage() {
   return (
-    <div className="min-h-screen bg-door">
+    <div className="min-h-screen">
       <div className="px-3 py-4">
         {/* 헤더 */}
         <div className="mb-4 px-1">
@@ -14,7 +15,7 @@ export default function TermsOfServicePage() {
         </div>
 
         {/* 내용 */}
-        <div className="rounded-[3px] bg-paper px-5 py-6 shadow-sheet">
+        <Sheet className="px-5 py-6">
           <div className="prose max-w-none">
             
             <section className="mb-8">
@@ -135,7 +136,7 @@ export default function TermsOfServicePage() {
                 <p className="text-ink leading-relaxed">
                   서비스와 관련된 손해배상 책임은 어떠한 경우에도 직접손해 100만원, 간접손해 50만원을 초과하지 않습니다.
                 </p>
-                <div className="bg-door p-4 rounded-[3px]">
+                <div className="bg-muted p-4 rounded-[3px]">
                   <p className="text-sm text-ink">
                     <strong>중요:</strong> 본 서비스는 개인이 비영리 목적으로 운영하는 커뮤니티 서비스로, 상업적 서비스 수준의 가용성이나 성능을 보장하지 않습니다.
                   </p>
@@ -161,7 +162,7 @@ export default function TermsOfServicePage() {
             </section>
 
           </div>
-        </div>
+        </Sheet>
 
         {/* 하단 링크 */}
         <div className="text-center mt-8 space-x-4">

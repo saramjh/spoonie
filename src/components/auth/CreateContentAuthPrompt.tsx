@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { StateSheet } from "@/components/kit"
 
 interface CreateContentAuthPromptProps {
   contentType: "recipe" | "post"
@@ -19,15 +20,7 @@ export default function CreateContentAuthPrompt({ contentType }: CreateContentAu
 
   return (
     <div className="px-3 pt-3">
-      <section className="rounded-[3px] bg-paper px-5 py-6 shadow-sheet">
-        <h1 className="text-xl font-bold text-ink">{isRecipe ? "레시피를 쓰려면 로그인해 주세요" : "레시피드를 쓰려면 로그인해 주세요"}</h1>
-        <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
-          {isRecipe ? "쓴 레시피는 내 레시피북에 모여서 요리할 때 다시 꺼내 볼 수 있어요." : "만든 요리를 남기면 원래 레시피와 이어지고, 작성자에게도 알려져요."}
-        </p>
-        <Button asChild className="mt-5">
-          <Link href={`/login?next=${encodeURIComponent(next)}`}>로그인하고 쓰기</Link>
-        </Button>
-      </section>
+      <StateSheet headingLevel="h1" title={isRecipe ? "레시피를 쓰려면 로그인해 주세요" : "레시피드를 쓰려면 로그인해 주세요"} body={isRecipe ? "쓴 레시피는 내 레시피북에 모여서 요리할 때 다시 꺼내 볼 수 있어요." : "만든 요리를 남기면 원래 레시피와 이어지고, 작성자에게도 알려져요."} action={<Button asChild><Link href={`/login?next=${encodeURIComponent(next)}`}>로그인하고 쓰기</Link></Button>} />
     </div>
   )
 }

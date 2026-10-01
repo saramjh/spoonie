@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { mutate } from 'swr';
 import { useRefresh } from "@/contexts/RefreshContext";
+import SpoonieLogo from "@/components/brand/SpoonieLogo";
 
 const PULL_THRESHOLD = 80; // 당겨야 하는 최소 거리 (px)
 const PULL_TO_REFRESH_TEXT = "당겨서 새로고침";
@@ -132,7 +133,10 @@ export const usePullToRefresh = () => {
         if (isRefreshing) {
             return (
                 <div className="fixed inset-x-0 top-0 z-50 flex justify-center pt-3" role="status" aria-label="새로 불러오는 중">
-                    <span className="rounded-full bg-paper px-4 py-2 text-sm font-medium text-ink shadow-sheet">새로 불러오는 중</span>
+                    <span className="flex items-center gap-2 rounded-full bg-paper py-1.5 pl-2 pr-4 text-sm font-medium text-ink shadow-sheet">
+                        <SpoonieLogo variant="icon" motion="stir" className="h-6 w-6" title="" />
+                        새로 불러오는 중
+                    </span>
                 </div>
             );
         }

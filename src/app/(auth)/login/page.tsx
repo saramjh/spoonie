@@ -13,6 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { createSupabaseBrowserClient } from "@/lib/supabase"
 import { useToast } from "@/hooks/use-toast"
 import { safeNextPath } from "@/lib/safe-next-path"
+import { Sheet } from "@/components/kit"
 
 const formSchema = z.object({
 	email: z.string().email({ message: "올바른 이메일을 입력해주세요." }),
@@ -102,7 +103,7 @@ export default function LoginPage() {
 	}
 
 				return (
-					<div className="min-h-screen flex flex-col items-center justify-start p-4 bg-door">
+					<div className="min-h-screen flex flex-col items-center justify-start p-4">
 			{/* 토스 스타일 그라디언트 배경 */}
 			{/* 상단 여백 + 카드 컨테이너 */}
 			<main className="w-full max-w-sm mx-auto pt-8">
@@ -112,7 +113,7 @@ export default function LoginPage() {
 				</div>
 
 				{/* 로그인 카드 */}
-				<div className="rounded-[3px] bg-paper p-6 shadow-sheet">
+				<Sheet className="p-6">
 
 					<Form {...form}>
 						<form onSubmit={form.handleSubmit(handleLogin)} className="space-y-5">
@@ -199,7 +200,7 @@ export default function LoginPage() {
 							)}
 							Google로 계속하기
 						</Button>
-				</div>
+				</Sheet>
 
 				{/* 회원가입 링크 */}
 				<div className="mt-8 text-center">

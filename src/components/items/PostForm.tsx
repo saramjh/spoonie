@@ -23,6 +23,7 @@ import { notificationService } from "@/lib/notification-service"
 import { logEvent } from "@/lib/events"
 import { mutate as globalMutate } from "swr"
 import SourceLine from "@/components/items/SourceLine"
+import { PageHeader, SectionHeading, Sheet } from "@/components/kit"
 
 interface PostFormProps {
 	isEditMode?: boolean
@@ -442,17 +443,11 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 
 	// 레시피드는 사진이 먼저, 그다음 글. 출처가 있으면 맨 위 첫 줄에 둔다 (DESIGN.md Interface Grammar 1)
 	return (
-		<div className="min-h-screen bg-door pb-28">
-			<header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-paper px-1">
-				<Button type="button" variant="ghost" onClick={() => router.back()}>
-					취소
-				</Button>
-				<h1 className="text-[17px] font-semibold text-ink">{isEditMode ? "레시피드 수정" : sourceRecipeId ? "만들어 본 기록" : "레시피드 쓰기"}</h1>
-				<span className="w-16" aria-hidden />
-			</header>
+		<div className="min-h-screen pb-28">
+			<PageHeader leading="cancel" title={isEditMode ? "레시피드 수정" : sourceRecipeId ? "만들어 본 기록" : "레시피드 쓰기"} />
 
 			<form id="post-form" onSubmit={form.handleSubmit(onSubmit, onError)} className="space-y-3 px-3 pt-3">
-				<div className="rounded-[3px] bg-paper shadow-sheet">
+				<Sheet>
 					{sourceRecipes.length > 0 && (
 						<SourceLine recipes={sourceRecipes} creationOrigin={sourceOrigin} className="border-b border-border px-4 py-3" />
 					)}
@@ -512,9 +507,9 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 					</section>
 
 					<section aria-labelledby="post-cited" className="border-t border-border px-4 pb-5 pt-5">
-						<h2 id="post-cited" className="text-lg font-bold text-ink">
+						<SectionHeading id="post-cited">
 							참고한 레시피 <span className="text-sm font-normal text-ink-soft">(선택)</span>
-						</h2>
+						</SectionHeading>
 						{!sourceRecipeId && (
 							<p className="mt-1 text-[13px] text-ink-soft">
 								다른 사람의 레시피로 만들었다면 그 레시피 화면의 &lsquo;이 레시피로 만들었어요&rsquo;로 쓰면 자동으로 이어져요.
@@ -531,9 +526,9 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 						render={({ field }) => (
 							<fieldset className="border-t border-border px-4 pb-4 pt-5">
 								<legend className="sr-only">공개 범위</legend>
-								<h2 className="text-lg font-bold text-ink" aria-hidden>
+								<SectionHeading aria-hidden>
 									공개 범위
-								</h2>
+								</SectionHeading>
 								<RadioGroup value={field.value.toString()} onValueChange={(value) => field.onChange(value === "true")} className="mt-1">
 									<label htmlFor="post-public" className="flex min-h-12 items-center gap-3">
 										<RadioGroupItem value="true" id="post-public" />
@@ -551,7 +546,7 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 							</fieldset>
 						)}
 					/>
-				</div>
+				</Sheet>
 			</form>
 
 			<div className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md border-t border-border bg-paper px-3 pb-[max(env(safe-area-inset-bottom),12px)] pt-3">

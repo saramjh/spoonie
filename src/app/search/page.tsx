@@ -13,6 +13,7 @@ import type { Item } from '@/types/item';
 import { getPopularKeywordsCached, getPopularPostsCached, optimizedSearch, searchUsers, SearchMetrics, type UserSearchResult } from '@/utils/search-optimization';
 import { useFollowStore } from '@/store/followStore';
 import { useNavigation } from '@/hooks/useNavigation';
+import { SectionHeading, UnderlineTabs } from "@/components/kit"
 // 업계 표준: 사용하지 않는 import 제거 // �� 업계 표준: 글로벌 팔로우 상태
 
 // 서버 부담 최소화를 위한 페이지 크기
@@ -365,7 +366,7 @@ export default function SearchPage() {
 
 
   return (
-    <div className="min-h-screen bg-door">
+    <div className="min-h-screen">
       <div className="px-2 py-4 pb-20">
       {/* Instagram 스타일 검색바 */}
       <div className="relative mb-6">
@@ -393,34 +394,17 @@ export default function SearchPage() {
         /* 검색 결과 - 탭 기반 */
         <div>
           {/* 검색 결과 탭 */}
-          <div className="mb-4 border-b border-border">
-            <div className="flex" role="tablist">
-              <button
-                role="tab"
-                aria-selected={activeTab === 'content'}
-                onClick={() => setActiveTab('content')}
-                className={`-mb-px h-11 border-b-2 px-4 text-[15px] font-semibold ${
-                  activeTab === 'content'
-                    ? 'border-ink text-ink'
-                    : 'border-transparent text-ink-soft'
-                }`}
-              >
-                콘텐츠 ({searchResults.length})
-              </button>
-              <button
-                role="tab"
-                aria-selected={activeTab === 'users'}
-                onClick={() => setActiveTab('users')}
-                className={`-mb-px h-11 border-b-2 px-4 text-[15px] font-semibold ${
-                  activeTab === 'users'
-                    ? 'border-ink text-ink'
-                    : 'border-transparent text-ink-soft'
-                }`}
-              >
-                사용자 ({userResults.length})
-              </button>
-            </div>
-          </div>
+          <UnderlineTabs
+            label="검색 결과 종류"
+            className="mb-4 bg-transparent"
+            stretch={false}
+            value={activeTab}
+            onChange={setActiveTab}
+            items={[
+              { key: 'content', label: '레시피·레시피드', count: searchResults.length },
+              { key: 'users', label: '사람', count: userResults.length },
+            ]}
+          />
 
           {/* 검색 결과 내용 */}
           {activeTab === 'content' ? (
@@ -505,7 +489,7 @@ export default function SearchPage() {
           
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <h2 className="text-lg font-bold text-ink">반응이 많은 레시피와 레시피드</h2>
+              <SectionHeading>반응이 많은 레시피와 레시피드</SectionHeading>
             </div>
             
             <div className="grid grid-cols-3 gap-1 sm:gap-2">

@@ -31,6 +31,7 @@ import SourceLine from "@/components/items/SourceLine"
 import { useThumbnail } from "@/hooks/useThumbnail"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import { cacheManager } from "@/lib/unified-cache-manager"
+import { SectionHeading, Sheet } from "@/components/kit"
 
 interface ItemDetailViewProps {
 	item: ItemDetail | null | undefined
@@ -438,9 +439,9 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		if (!isRecipe) return null
 		return (
 			<section aria-labelledby="made-heading" className="border-t border-border px-4 pb-5 pt-5">
-				<h2 id="made-heading" className="text-lg font-bold text-ink">
+				<SectionHeading id="made-heading">
 					만들어 본 기록 {relations.made.length > 0 && <span className="font-medium tabular-nums text-ink-soft">{relations.made.length}</span>}
-				</h2>
+				</SectionHeading>
 				{relations.made.length > 0 && (
 					<ul className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1">
 						{relations.made.map((made) => (
@@ -534,7 +535,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 				<div className="flex-1 px-3 pb-8 pt-3">
 					{renderCitedPeek()}
 
-					<div className="relative z-10 rounded-[3px] bg-paper shadow-sheet">
+					<Sheet className="relative z-10">
 						{!isRecipe && !citedRecipesLoading && (
 							<SourceLine recipes={citedRecipes} creationOrigin={item.creation_origin} className="border-b border-border px-4 py-3" />
 						)}
@@ -645,7 +646,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 						)}
 
 						{renderRecipeGraph()}
-					</div>
+					</Sheet>
 
 					<div id="comments" ref={commentsRef} className="mt-3 scroll-mt-16 rounded-[3px] bg-paper p-4 shadow-sheet">
 						<h2 className="mb-3 text-lg font-bold text-ink">

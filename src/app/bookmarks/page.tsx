@@ -2,7 +2,7 @@
 
 // React hooks removed - not used in this component
 import { useRouter } from "@/lib/navigation"
-import { ArrowLeft, Bookmark } from "lucide-react"
+import { Bookmark } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import PostCard from "@/components/items/PostCard"
 import PostCardSkeleton from "@/components/items/PostCardSkeleton"
@@ -10,6 +10,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import { useSessionStore } from "@/store/sessionStore"
 import type { Item } from "@/types/item"
 import useSWR from "swr"
+import { PageHeader, Sheet } from "@/components/kit"
 
 // 북마크 데이터 fetcher (SWR용)
 const fetchBookmarks = async (userId: string): Promise<Item[]> => {
@@ -128,7 +129,7 @@ export default function BookmarksPage() {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-door flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Bookmark className="w-16 h-16 text-ink-soft/60 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-ink mb-2">로그인이 필요합니다</h2>
@@ -140,15 +141,9 @@ export default function BookmarksPage() {
   }
 
   return (
-    <div className="min-h-screen bg-door">
+    <div className="min-h-screen">
       {/* 헤더 */}
-      <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-border bg-paper px-1">
-        <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="뒤로 가기">
-          <ArrowLeft className="h-6 w-6" aria-hidden />
-        </Button>
-        <h1 className="text-[17px] font-semibold text-ink">저장한 글</h1>
-        <span className="w-11" aria-hidden />
-      </header>
+      <PageHeader title="저장한 글" />
 
       {/* 콘텐츠 */}
       <div className="px-3 py-3">
@@ -159,17 +154,17 @@ export default function BookmarksPage() {
             ))}
           </div>
         ) : error ? (
-          <div className="rounded-[3px] bg-paper px-5 py-6 shadow-sheet">
+          <Sheet className="px-5 py-6">
             <p className="text-[17px] font-semibold text-ink">저장한 글을 불러오지 못했어요</p>
             <p className="mt-1 text-[15px] text-ink-soft">연결 상태를 확인하고 다시 시도해 주세요.</p>
             <Button className="mt-4" onClick={() => mutate()}>다시 시도</Button>
-          </div>
+          </Sheet>
         ) : !bookmarkedItems || bookmarkedItems.length === 0 ? (
-          <div className="rounded-[3px] bg-paper px-5 py-6 shadow-sheet">
+          <Sheet className="px-5 py-6">
             <p className="text-[17px] font-semibold text-ink">아직 저장한 글이 없어요</p>
             <p className="mt-1 text-[15px] text-ink-soft">레시피나 레시피드의 저장 버튼을 누르면 여기에 모여요.</p>
             <Button className="mt-4" onClick={() => router.push("/")}>홈으로</Button>
-          </div>
+          </Sheet>
         ) : (
           <div className="space-y-4">
             {bookmarkedItems.map((item) => (

@@ -1,8 +1,9 @@
 import Link from "next/link"
+import { Sheet } from "@/components/kit"
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen bg-door">
+    <div className="min-h-screen">
       <div className="px-3 py-4">
         {/* 헤더 */}
         <div className="mb-4 px-1">
@@ -14,7 +15,7 @@ export default function PrivacyPolicyPage() {
         </div>
 
         {/* 내용 */}
-        <div className="rounded-[3px] bg-paper px-5 py-6 shadow-sheet">
+        <Sheet className="px-5 py-6">
           <div className="prose max-w-none">
             
             <section className="mb-8">
@@ -127,7 +128,7 @@ export default function PrivacyPolicyPage() {
 
             <section className="mb-8">
               <h2 className="text-lg font-bold text-ink mb-3">8. 개인정보 보호책임자</h2>
-              <div className="bg-door p-4 rounded-[3px]">
+              <div className="bg-muted p-4 rounded-[3px]">
                 <p className="text-ink">
                   <strong>개인정보 보호책임자:</strong> Spoonie 운영팀<br/>
                   <strong>연락처:</strong> devTestudinidae@gmail.com<br/>
@@ -145,7 +146,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
           </div>
-        </div>
+        </Sheet>
 
         {/* 하단 링크 */}
         <div className="text-center mt-8 space-x-4">

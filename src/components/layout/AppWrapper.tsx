@@ -21,11 +21,11 @@ export default function AppWrapper({ children }: { children: React.ReactNode }) 
 	};
 
 	return (
-		<div className={`relative flex flex-col min-h-screen w-full max-w-md mx-auto bg-door`}>
+		<div className={`relative flex flex-col min-h-screen w-full max-w-md mx-auto door-surface`}>
 			<PullToRefreshIndicator />
 			<div style={wrapperStyle} className="relative flex flex-col w-full">
 				{!noHeader && <Header />}
-				<main className="flex-1 w-full bg-door">
+				<main className="flex-1 w-full">
 					<div className={`${!noBottomNav ? "pb-16" : ""}`}>{children}</div>
 				</main>
 			</div>

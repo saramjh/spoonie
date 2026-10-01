@@ -12,7 +12,7 @@ import { RefreshProvider } from "@/contexts/RefreshContext"
 import { startAuthorCacheCleanup } from "@/utils/author-cache"
 import { startMonitoring } from "@/lib/monitoring"
 
-const SPLASH_MIN_MS = 700
+const SPLASH_MIN_MS = 1000
 const SPLASH_MAX_MS = 3000
 
 interface ClientLayoutWrapperProps {

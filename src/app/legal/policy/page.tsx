@@ -1,8 +1,9 @@
 import Link from "next/link"
+import { Sheet } from "@/components/kit"
 
 export default function OperationPolicyPage() {
   return (
-    <div className="min-h-screen bg-door">
+    <div className="min-h-screen">
       <div className="px-3 py-4">
         {/* 헤더 */}
         <div className="mb-4 px-1">
@@ -14,7 +15,7 @@ export default function OperationPolicyPage() {
         </div>
 
         {/* 내용 */}
-        <div className="rounded-[3px] bg-paper px-5 py-6 shadow-sheet">
+        <Sheet className="px-5 py-6">
           <div className="prose max-w-none">
             
             <section className="mb-8">
@@ -169,7 +170,7 @@ export default function OperationPolicyPage() {
               <p className="text-ink leading-relaxed mb-4">
                 제재 조치에 대해 이의가 있거나 기타 문의사항이 있으신 경우:
               </p>
-              <div className="bg-door p-4 rounded-[3px]">
+              <div className="bg-muted p-4 rounded-[3px]">
                 <p className="text-ink">
                   <strong>연락처:</strong> devTestudinidae@gmail.com<br/>
                   <strong>처리 시간:</strong> 가능한 범위 내에서 신속히 처리 (일반적으로 1주일 이내)<br/>
@@ -181,7 +182,7 @@ export default function OperationPolicyPage() {
 
             <section className="mb-8">
               <h2 className="text-lg font-bold text-ink mb-3">9. 운영 유연성</h2>
-              <div className="bg-door p-4 rounded-[3px] mb-6">
+              <div className="bg-muted p-4 rounded-[3px] mb-6">
                 <p className="text-ink leading-relaxed">
                   <strong>운영 방침:</strong> 본 서비스는 개인이 취미로 운영하는 커뮤니티 서비스입니다.
                 </p>
@@ -203,7 +204,7 @@ export default function OperationPolicyPage() {
             </section>
 
           </div>
-        </div>
+        </Sheet>
 
         {/* 하단 링크 */}
         <div className="text-center mt-8 space-x-4">

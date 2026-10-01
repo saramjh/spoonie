@@ -2,8 +2,8 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { Check, ChefHat } from "lucide-react"
-import { getMagnet } from "@/lib/color-options"
+import { ChefHat } from "lucide-react"
+import { CheckBox, Magnet } from "@/components/kit"
 import { formatCookingTime } from "@/lib/recipe-amount"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import { useNavigation } from "@/hooks/useNavigation"
@@ -44,7 +44,7 @@ export default function RecipeCard({ item, isSelectable, isSelected, onSelectCha
 
 	const detailUrl = createLinkWithOrigin(`${item.item_type === "recipe" ? "/recipes" : "/posts"}/${item.item_id}`)
 	// 색상 라벨은 주인의 정리 도구: "나의 레시피"에서만 보인다 (DESIGN.md Interface Grammar 3)
-	const magnet = showColorLabel ? getMagnet(displayItem.color_label) : null
+	const showColor = showColorLabel
 	const cookingTime = formatCookingTime(displayItem.cooking_time_minutes)
 	const thumbnail = cachedItem.image_urls?.[cachedItem.thumbnail_index || 0]
 	const meta = [displayItem.servings ? `${displayItem.servings}인분` : null, cookingTime].filter(Boolean)
@@ -60,24 +60,12 @@ export default function RecipeCard({ item, isSelectable, isSelected, onSelectCha
 					onClick={() => handleSelectChange(!isSelected)}
 					className="absolute right-0 top-0 z-30 flex h-11 w-11 items-center justify-center"
 				>
-					<span
-						aria-hidden
-						className={`flex h-5 w-5 items-center justify-center rounded-[4px] border-[1.5px] ${isSelected ? "border-ink bg-ink text-paper" : "border-ink-soft bg-paper"}`}
-					>
-						{isSelected && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
-					</span>
+					<CheckBox checked={!!isSelected} />
 				</button>
 			)}
 
 			<Link href={detailUrl} className="relative block rounded-[3px] bg-paper shadow-sheet">
-				{magnet && (
-					<span
-						role="img"
-						aria-label={`색상 라벨 ${magnet.label}`}
-						className="absolute -top-2 left-3 z-20 h-6 w-6 rounded-full shadow-[0_2px_3px_rgba(35,40,43,0.35)]"
-						style={{ backgroundColor: magnet.hex }}
-					/>
-				)}
+				{showColor && <Magnet color={displayItem.color_label} size="md" className="absolute -top-2 left-3 z-20" />}
 				<div className="relative aspect-[4/3] w-full overflow-hidden rounded-t-[3px] bg-muted">
 					{thumbnail ? (
 						<Image src={thumbnail} alt="" fill sizes="(max-width: 448px) 50vw, 220px" className="object-cover" priority={priority} />

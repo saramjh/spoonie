@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation"
 import { useRouter } from "@/lib/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Trash2, Search, SlidersHorizontal, List, Grid, BookUser, ChefHat } from "lucide-react"
+import { Trash2, Search, SlidersHorizontal, List, Grid } from "lucide-react"
 
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import useSWRInfinite from "swr/infinite"
@@ -21,6 +21,7 @@ import type { Item } from "@/types/item"
 import { useToast } from "@/hooks/use-toast"
 import { useNavigation } from "@/hooks/useNavigation"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { Sheet, StateSheet, UnderlineTabs } from "@/components/kit"
 
 type Tab = "my_recipes" | "all_recipes"
 
@@ -491,42 +492,23 @@ export default function RecipesPage() {
 	const isGuest = !currentUser && !userLoading
 
 	return (
-		<div className="flex flex-col w-full h-screen bg-door text-ink relative overflow-hidden">
+		<div className="flex flex-col w-full h-screen text-ink relative overflow-hidden">
 			{isGuest ? (
 				<div className="px-3 pt-3">
-					<section className="rounded-[3px] bg-paper px-5 py-6 shadow-sheet">
-						<h1 className="text-xl font-bold text-ink">레시피북은 회원이 쓰는 공간이에요</h1>
-						<p className="mt-2 text-[15px] leading-relaxed text-ink-soft">내 레시피를 기록하고 색상 라벨로 정리해 두었다가 요리할 때 다시 꺼내 볼 수 있어요.</p>
-						<Button asChild className="mt-5">
-							<Link href="/login?next=/recipes">로그인하고 레시피북 열기</Link>
-						</Button>
-					</section>
+					<StateSheet headingLevel="h1" title="레시피북은 회원이 쓰는 공간이에요" body="내 레시피를 기록하고 색상 라벨로 정리해 두었다가 요리할 때 다시 꺼내 볼 수 있어요." action={<Button asChild><Link href="/login?next=/recipes">로그인하고 레시피북 열기</Link></Button>} />
 				</div>
 			) : (
 			<div className="flex flex-col h-full">
-				<div className="sticky top-0 bg-paper z-[60] border-b border-border">
-					<div className="flex justify-around max-w-md mx-auto relative">
-					<div className="flex-1 flex items-center justify-center relative">
-						<button 
-							onClick={() => handleTabChange("my_recipes")} 
-							className={`flex h-12 items-center justify-center px-2 text-[15px] font-semibold transition-colors ${currentTab === "my_recipes" ? "text-ink border-b-2 border-ink" : "text-ink-soft"}`}
-						>
-							<BookUser className="w-5 h-5 mr-2" />
-							나의 레시피
-						</button>
-					</div>
-					<div className="flex-1 flex items-center justify-center relative">
-						<button 
-							onClick={() => handleTabChange("all_recipes")} 
-							className={`flex h-12 items-center justify-center px-2 text-[15px] font-semibold transition-colors ${currentTab === "all_recipes" ? "text-ink border-b-2 border-ink" : "text-ink-soft"}`}
-						>
-							<ChefHat className="w-5 h-5 mr-2" />
-							모두의 레시피
-						</button>
-					</div>
-					
-				</div>
-			</div>
+				<UnderlineTabs
+					label="레시피 범위"
+					className="sticky top-0 z-[60]"
+					value={currentTab}
+					onChange={handleTabChange}
+					items={[
+						{ key: "my_recipes", label: "나의 레시피" },
+						{ key: "all_recipes", label: "모두의 레시피" },
+					]}
+				/>
 
 			{/* 반응형 최적화: 컨테이너 최대 너비 + 패딩 조정 */}
 			<main className="flex-1 overflow-y-auto px-3 py-3 max-w-7xl mx-auto w-full">
@@ -591,7 +573,7 @@ export default function RecipesPage() {
 						))}
 					</div>
 				) : isEmpty ? (
-					<div className="rounded-[3px] bg-paper px-5 py-6 shadow-sheet">
+					<Sheet className="px-5 py-6">
 						<p className="text-[17px] font-semibold text-ink">{currentTab === "my_recipes" ? "아직 쓴 레시피가 없어요" : "팔로우한 사람의 레시피가 아직 없어요"}</p>
 						<p className="mt-1 text-[15px] text-ink-soft">{currentTab === "my_recipes" ? "레시피를 쓰면 여기에 모여서 요리할 때 다시 꺼내 볼 수 있어요." : "검색에서 마음에 드는 사람을 팔로우하면 그 사람의 레시피가 여기에 모여요."}</p>
 						{currentTab === "my_recipes" && (
@@ -599,7 +581,7 @@ export default function RecipesPage() {
 								<Link href="/recipes/new">레시피 쓰기</Link>
 							</Button>
 						)}
-					</div>
+					</Sheet>
 				) : (
 					<div className={
 						viewMode === "card" 

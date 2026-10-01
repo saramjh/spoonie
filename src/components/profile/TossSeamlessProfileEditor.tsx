@@ -10,11 +10,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Camera, ArrowLeft, Loader2, RefreshCw, CheckCircle } from "lucide-react"
+import { Camera, Loader2, RefreshCw, CheckCircle } from "lucide-react"
 import { validateUsername, checkUsernameAvailability, generateUniqueUsername } from "@/lib/username-generator"
 import { useSessionStore } from "@/store/sessionStore"
 import { getCacheManager } from "@/lib/unified-cache-manager"
 import { optimizeImages } from "@/lib/image-utils"
+import { PageHeader, Sheet } from "@/components/kit"
 
 interface Profile {
   username: string | null
@@ -447,19 +448,13 @@ export default function TossSeamlessProfileEditor({
   const usernameChanged = formData.username !== (initialProfile?.username || "")
   // 프로필 편집: 사진, 이름, 소개 세 가지만. 미리보기·변경 요약 카드는 화면의 값이 곧 결과라 두지 않는다
   return (
-    <div className={mode === "full" ? "min-h-screen bg-door pb-28" : ""}>
+    <div className={mode === "full" ? "min-h-screen pb-28" : ""}>
       {mode === "full" && (
-        <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-paper px-1">
-          <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="뒤로 가기">
-            <ArrowLeft className="h-6 w-6" aria-hidden />
-          </Button>
-          <h1 className="text-[17px] font-semibold text-ink">프로필 수정</h1>
-          <span className="w-11" aria-hidden />
-        </header>
+        <PageHeader title="프로필 수정" />
       )}
 
       <main className={mode === "full" ? "px-3 pt-3" : ""}>
-        <div className="space-y-6 rounded-[3px] bg-paper px-4 pb-6 pt-6 shadow-sheet">
+        <Sheet className="space-y-6 px-4 pb-6 pt-6">
           <div className="flex items-center gap-4">
             <div className="relative h-[88px] w-[88px] flex-shrink-0 overflow-hidden rounded-full bg-border">
               <Image src={currentAvatarUrl} alt="" width={88} height={88} priority className="h-full w-full object-cover" />
@@ -535,7 +530,7 @@ export default function TossSeamlessProfileEditor({
               className="mt-1.5 h-28 resize-none text-[16px] leading-relaxed"
             />
           </div>
-        </div>
+        </Sheet>
       </main>
 
       <div className={mode === "full" ? "fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md border-t border-border bg-paper px-3 pb-[max(env(safe-area-inset-bottom),12px)] pt-3" : "pt-3"}>

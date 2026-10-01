@@ -8,8 +8,9 @@ import { User } from "@supabase/supabase-js"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
-import { LogOut, Trash2, ArrowLeft } from "lucide-react"
+import { LogOut, Trash2 } from "lucide-react"
 import TossSeamlessProfileEditor from "@/components/profile/TossSeamlessProfileEditor"
+import { PageHeader, SectionHeading, Sheet } from "@/components/kit"
 // useSessionStore removed - using local state instead
 
 export default function ProfileEditPage() {
@@ -63,20 +64,14 @@ export default function ProfileEditPage() {
 	}
 
 	return (
-		<div className="min-h-screen bg-door pb-10">
-			<header className="sticky top-0 z-50 flex h-14 items-center justify-between border-b border-border bg-paper px-1">
-				<Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="뒤로 가기">
-					<ArrowLeft className="h-6 w-6" aria-hidden />
-				</Button>
-				<h1 className="text-[17px] font-semibold text-ink">프로필 수정</h1>
-				<span className="w-11" aria-hidden />
-			</header>
+		<div className="min-h-screen pb-10">
+			<PageHeader title="프로필 수정" />
 
 			<main className="space-y-3 px-3 pt-3">
 				<TossSeamlessProfileEditor mode="inline" />
 
-				<section className="rounded-[3px] bg-paper px-4 py-5 shadow-sheet">
-					<h2 className="text-lg font-bold text-ink">계정</h2>
+				<Sheet as="section" className="px-4 py-5">
+					<SectionHeading>계정</SectionHeading>
 					<Button variant="outline" className="mt-3 w-full justify-start" onClick={handleLogout}>
 						<LogOut className="h-4 w-4" aria-hidden />
 						로그아웃
@@ -112,7 +107,7 @@ export default function ProfileEditPage() {
 							</AlertDialogContent>
 						</AlertDialog>
 					</div>
-				</section>
+				</Sheet>
 			</main>
 		</div>
 	)

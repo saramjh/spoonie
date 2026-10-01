@@ -7,6 +7,7 @@ import { Ingredient, RecipeStep } from "@/types/item"
 import { formatAmount } from "@/lib/recipe-amount"
 import { cn } from "@/lib/utils"
 import StepMode from "@/components/recipe/StepMode"
+import { CheckBox, SectionHeading } from "@/components/kit"
 
 interface RecipeContentViewProps {
 	initialServings: number
@@ -90,9 +91,8 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 		<>
 			<section aria-labelledby="ingredients-heading" className="border-t border-border px-4 pb-5 pt-5">
 				<div className="flex items-center justify-between gap-3">
-					<h2 id="ingredients-heading" className="text-lg font-bold text-ink">
-						재료 <span className="font-medium tabular-nums text-ink-soft">{ingredients.length}</span>
-					</h2>
+					<SectionHeading id="ingredients-heading" count={ingredients.length}>
+						재료</SectionHeading>
 					<div className="flex items-center rounded-lg border border-border" role="group" aria-label="인분 조절">
 						<button
 							type="button"
@@ -170,15 +170,7 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 										onClick={() => setChecked((set) => toggle(set, index))}
 										className="flex min-h-12 w-full items-center gap-3 py-2.5 text-left"
 									>
-										<span
-											aria-hidden
-											className={cn(
-												"flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-[4px] border-[1.5px]",
-												isChecked ? "border-ink bg-ink text-paper" : "border-ink-soft"
-											)}
-										>
-											{isChecked && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
-										</span>
+										<CheckBox checked={isChecked} />
 										<span className={cn("flex-1 text-[17px] text-ink", isChecked && "text-ink-soft line-through decoration-ink-soft/70")}>{ing.name}</span>
 										<span className="flex-shrink-0 text-right">
 											<span className={amountClass}>{amountText}</span>
@@ -206,9 +198,9 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 
 			<section aria-labelledby="steps-heading" className="border-t border-border px-4 pb-6 pt-5">
 				<div className="flex items-center justify-between gap-3">
-					<h2 id="steps-heading" className="text-lg font-bold text-ink">
+					<SectionHeading id="steps-heading">
 						만드는 법 {steps.length > 0 && <span className="font-medium tabular-nums text-ink-soft">{steps.length}단계</span>}
-					</h2>
+					</SectionHeading>
 					{steps.length > 0 && (
 						<button
 							type="button"

@@ -26,6 +26,7 @@ import ExpandableText from "@/components/common/ExpandableText"
 import SourceLine from "@/components/items/SourceLine"
 import { cacheManager } from "@/lib/unified-cache-manager"
 import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
+import { Sheet } from "@/components/kit"
 
 /**
  * 검증된 홈 피드 게시물 카드 컴포넌트
@@ -225,7 +226,7 @@ export default function PostCard({
   const profileHref = `/profile/${enrichedItem.user_public_id || enrichedItem.user_id}`
 
   return (
-    <article className="relative rounded-[3px] bg-paper shadow-sheet">
+    <Sheet as="article" className="relative">
 
       <header className="flex items-center justify-between gap-2 py-2 pl-4 pr-1.5">
         <div className="flex min-w-0 items-center gap-2.5">
@@ -384,6 +385,6 @@ export default function PostCard({
       </AlertDialog>
 
       <LoginPromptSheet isOpen={showLoginPrompt} onClose={() => setShowLoginPrompt(false)} action="like" />
-    </article>
+    </Sheet>
   )
 }
