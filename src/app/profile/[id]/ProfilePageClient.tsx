@@ -50,7 +50,8 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 	const [profile, setProfile] = useState<UserProfile | null>(initialProfile ?? null)
 	// 🚀 업계 표준: SWR로 사용자 아이템 관리 (DataManager 연동)
 	const { data: userItems } = useSWR(
-		profile ? `user_items_${profile.id}` : null,
+		// 보는 사람이 바뀌면(로그인 확인 후 본인으로 판명) 비공개 글까지 다시 가져온다
+		profile ? `user_items_${profile.id}_${sessionUser?.id ?? "guest"}` : null,
 		() => fetchUserItems(profile!.id, sessionUser?.id),
 		{
 			revalidateOnFocus: false,
@@ -185,7 +186,7 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 		<div className="min-h-screen bg-door">
 			<header className="border-b border-border bg-paper px-4 pb-4 pt-5">
 				<div className="flex items-start gap-4">
-					<div className="relative h-[72px] w-[72px] flex-shrink-0 overflow-hidden rounded-full bg-muted">
+					<div className="relative h-[72px] w-[72px] flex-shrink-0 overflow-hidden rounded-full bg-border">
 						{currentAvatarUrl && currentAvatarUrl !== "/icon-only.svg" ? (
 							<Image src={currentAvatarUrl} alt="" fill sizes="72px" priority className="object-cover" />
 						) : (

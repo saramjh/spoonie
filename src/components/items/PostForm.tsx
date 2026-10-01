@@ -405,6 +405,12 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 				}
 			}
 			
+			// 레시피에서 나온 기록은 그 레시피로 돌아가 "만들어 본 기록"에 붙은 것을 보여 준다
+			if (!isEditMode && sourceRecipeId && values.cited_recipe_ids?.includes(sourceRecipeId)) {
+				router.replace(`/recipes/${sourceRecipeId}#made-heading`)
+				return
+			}
+
 			// 🧭 스마트 네비게이션: 사용자가 온 곳으로 적절히 돌아가기
 			if (onNavigateBack) {
 				// 🚀 업계 표준: 수정 완료 후 History Replace로 수정폼 제거

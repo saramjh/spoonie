@@ -52,7 +52,7 @@ export default function BottomNavBar() {
 				<Link href={profileHref} aria-label="내 프로필" className="flex min-w-14 flex-col items-center gap-1 py-1">
 					<Avatar className="w-7 h-7 ring-2 ring-transparent">
 						<AvatarImage src={profile.avatar_url || ""} alt={profile.username || "User"} />
-						<AvatarFallback className="bg-muted text-orange-ink">{profile.username?.charAt(0) || "S"}</AvatarFallback>
+						<AvatarFallback className="text-ink">{profile.username?.charAt(0) || "S"}</AvatarFallback>
 					</Avatar>
 				</Link>
 			)

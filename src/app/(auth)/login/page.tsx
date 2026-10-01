@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRouter } from "@/lib/navigation"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Loader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -36,6 +36,12 @@ export default function LoginPage() {
 	// 로그인 성공 후 화면 이동 중, Google 로그인 페이지로 이동 중에도 버튼을 잠근다
 	const [isRedirecting, setIsRedirecting] = useState(false)
 	const [isGoogleRedirecting, setIsGoogleRedirecting] = useState(false)
+	// 가입 화면으로 가도 돌아갈 곳(next)을 잃지 않게 한다
+	const [signupHref, setSignupHref] = useState("/signup")
+	useEffect(() => {
+		const next = new URLSearchParams(window.location.search).get("next")
+		if (next) setSignupHref(`/signup?next=${encodeURIComponent(safeNextPath(next))}`)
+	}, [])
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
@@ -198,7 +204,7 @@ export default function LoginPage() {
 				{/* 📋 회원가입 링크 */}
 				<div className="mt-8 text-center">
 					<span className="text-sm text-ink-soft">계정이 없으신가요? </span>
-					<Link href="/signup" className="text-sm font-semibold text-orange-ink hover:text-orange-ink transition-colors duration-200">
+					<Link href={signupHref} className="text-sm font-semibold text-orange-ink hover:text-orange-ink transition-colors duration-200">
 						회원가입
 					</Link>
 				</div>

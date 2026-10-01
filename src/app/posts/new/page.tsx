@@ -10,7 +10,7 @@ import { useNavigation } from "@/hooks/useNavigation"
 export default function NewPostPage() {
 	const [user, setUser] = useState<User | null>(null)
 	const [isLoading, setIsLoading] = useState(true)
-	// "이 레시피로 만들었어요" / 요리 모드에서 들어온 경우의 출처 (?from=레시피ID&origin=recipe_detail|cook_mode)
+	// "이 레시피로 만들었어요" / 요리 모드에서 들어온 경우의 출처 (?source=레시피ID&origin=recipe_detail|cook_mode, from 은 화면 이동 기록용으로 이미 쓰인다)
 	const [source, setSource] = useState<{ id: string | null; origin: "recipe_detail" | "cook_mode" | null }>({ id: null, origin: null })
 	const supabase = createSupabaseBrowserClient()
 
@@ -19,10 +19,10 @@ export default function NewPostPage() {
 
 	useEffect(() => {
 		const params = new URLSearchParams(window.location.search)
-		const from = params.get("from")
+		const sourceId = params.get("source")
 		const origin = params.get("origin")
 		setSource({
-			id: from && /^[0-9a-f-]{36}$/i.test(from) ? from : null,
+			id: sourceId && /^[0-9a-f-]{36}$/i.test(sourceId) ? sourceId : null,
 			origin: origin === "recipe_detail" || origin === "cook_mode" ? origin : null,
 		})
 		const checkUser = async () => {

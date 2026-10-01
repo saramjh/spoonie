@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import Image from "next/image"
-import Link from "next/link"
 import { Check, Minus, Plus } from "lucide-react"
 import { Ingredient, RecipeStep } from "@/types/item"
 import { formatAmount } from "@/lib/recipe-amount"
@@ -13,10 +12,6 @@ interface RecipeContentViewProps {
 	initialServings: number
 	ingredients: Ingredient[]
 	steps: RecipeStep[]
-	// 비로그인 방문자: 서버가 조리 단계를 보내지 않으므로 로그인 안내를 보여 준다
-	stepsLocked?: boolean
-	// 로그인 후 이 레시피로 돌아오는 링크
-	loginHref?: string
 	recipeId?: string
 }
 
@@ -28,7 +23,7 @@ interface Reference {
 	target: number
 }
 
-export default function RecipeContentView({ initialServings, ingredients, steps, stepsLocked = false, loginHref = "/login", recipeId }: RecipeContentViewProps) {
+export default function RecipeContentView({ initialServings, ingredients, steps, recipeId }: RecipeContentViewProps) {
 	const baseServings = initialServings > 0 ? initialServings : 1
 	const maxServings = Math.max(MIN_MAX_SERVINGS, baseServings * 2)
 	const [servings, setServings] = useState(baseServings)
@@ -212,9 +207,9 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 			<section aria-labelledby="steps-heading" className="border-t border-border px-4 pb-6 pt-5">
 				<div className="flex items-center justify-between gap-3">
 					<h2 id="steps-heading" className="text-lg font-bold text-ink">
-						만드는 법 {!stepsLocked && steps.length > 0 && <span className="font-medium tabular-nums text-ink-soft">{steps.length}단계</span>}
+						만드는 법 {steps.length > 0 && <span className="font-medium tabular-nums text-ink-soft">{steps.length}단계</span>}
 					</h2>
-					{!stepsLocked && steps.length > 0 && (
+					{steps.length > 0 && (
 						<button
 							type="button"
 							onClick={() => setStepModeAt(firstUndone(steps.length, doneSteps))}
@@ -225,18 +220,7 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 					)}
 				</div>
 
-				{stepsLocked ? (
-					<div className="mt-2">
-						<p className="text-[17px] font-semibold text-ink">로그인하면 단계별로 볼 수 있어요</p>
-						<p className="mt-1 text-[15px] text-ink-soft">재료는 위에서 모두 볼 수 있어요. 단계별 설명과 사진, 요리 모드는 회원에게 보여요.</p>
-						<Link
-							href={loginHref}
-							className="mt-4 inline-flex h-11 items-center rounded-lg bg-primary px-4 text-[15px] font-semibold text-primary-foreground"
-						>
-							로그인하고 만드는 법 보기
-						</Link>
-					</div>
-				) : steps.length > 0 ? (
+				{steps.length > 0 ? (
 					<ol className="mt-2">
 						{steps.map((step, index) => {
 							const isDone = doneSteps.has(index)

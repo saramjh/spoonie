@@ -9,6 +9,7 @@ import { formatAmount } from "@/lib/recipe-amount"
 import { cn } from "@/lib/utils"
 import { logEvent } from "@/lib/events"
 import { useRouter } from "@/lib/navigation"
+import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 
 interface StepModeProps {
 	steps: RecipeStep[]
@@ -50,7 +51,11 @@ export default function StepMode({ steps, ingredients, servingsLabel, startAt, r
 		logEvent("cook_complete", recipeId, "cook_mode")
 	}, [index, onStepDone, recipeId])
 
+	// 요리 모드를 연 횟수 기록 (개발 모드의 effect 이중 실행에도 한 번만)
+	const startLogged = useRef(false)
 	useEffect(() => {
+		if (startLogged.current) return
+		startLogged.current = true
 		logEvent("cook_start", recipeId, "cook_mode")
 	}, [recipeId])
 
@@ -189,7 +194,12 @@ export default function StepMode({ steps, ingredients, servingsLabel, startAt, r
 				</button>
 				<button
 					type="button"
-					onClick={() => router.push(`/posts/new?from=${recipeId}&origin=cook_mode`)}
+					onClick={async () => {
+						// 요리한 경험을 나누려 할 때 가입을 권한다: 비로그인이면 로그인 후 바로 작성 화면으로 이어진다
+						const target = `/posts/new?source=${recipeId}&origin=cook_mode`
+						const { data } = await createSupabaseBrowserClient().auth.getSession()
+						router.push(data.session ? target : `/login?next=${encodeURIComponent(target)}`)
+					}}
 					disabled={!recipeId}
 					className="h-14 rounded-lg bg-primary text-[17px] font-bold text-primary-foreground active:brightness-95"
 				>

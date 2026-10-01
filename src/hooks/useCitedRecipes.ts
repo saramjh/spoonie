@@ -145,7 +145,7 @@ const fetchRecipeRelations = async (recipeId: string): Promise<RelatedItem[]> =>
 	const { data, error } = await supabase
 		.from("content_relations")
 		.select(
-			"relation_type, item:items!content_relations_from_item_id_fkey(id, title, item_type, image_urls, thumbnail_index, is_public, author:profiles!user_id(username))"
+			"relation_type, item:items!content_relations_from_item_id_fkey(id, title, item_type, image_urls, thumbnail_index, author:profiles!user_id(username))"
 		)
 		.eq("to_recipe_id", recipeId)
 		.order("created_at", { ascending: false })
@@ -153,7 +153,8 @@ const fetchRecipeRelations = async (recipeId: string): Promise<RelatedItem[]> =>
 	if (error) throw error
 	return (data || []).flatMap((row) => {
 		const item = (Array.isArray(row.item) ? row.item[0] : row.item) as Record<string, unknown> | null
-		if (!item || item.is_public === false) return []
+		// 공개 여부는 RLS가 판단한다 (작성자는 자기 비공개 글도 본다)
+		if (!item) return []
 		const author = Array.isArray(item.author) ? item.author[0] : item.author
 		const images = (item.image_urls as string[] | null) || []
 		return [

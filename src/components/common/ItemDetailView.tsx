@@ -400,9 +400,6 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	const authorName = item.username || "사용자"
 	const cookingTime = formatCookingTime(item.cooking_time_minutes)
 	const ingredientCount = item.ingredients?.length || 0
-	// 비로그인 방문자에게는 서버가 조리 단계를 보내지 않는다 (instructions RLS).
-	// 로그인 확인 전(서버 렌더링 포함)에도 단계가 비어 있으면 로그인 안내를 보여 준다.
-	const stepsLocked = !currentUser && (item.steps?.length || 0) === 0
 
 	// 이 글이 참고한 레시피: 종이 뒤로 겹쳐 붙은 다른 종이의 가장자리로 보여 준다
 	const renderCitedPeek = () => {
@@ -433,8 +430,8 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		)
 	}
 
-	// 로그인하지 않았으면 로그인 후 이 화면으로 돌아오게 한다
-	const requireLogin = (href: string) => (currentUser ? href : `/login?next=${encodeURIComponent(`/recipes/${stableItemId}`)}`)
+	// 요리한 경험을 나누려 할 때 가입을 권한다: 비로그인이면 로그인 후 바로 그 작성 화면으로 이어진다
+	const requireLogin = (href: string) => (currentUser ? href : `/login?next=${encodeURIComponent(href)}`)
 
 	// 이 레시피에서 나온 것들: 만들어 본 기록(레시피드)과 이어진 레시피(레시피). 행동은 그 머리에 둔다.
 	const renderRecipeGraph = () => {
@@ -459,7 +456,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 					</ul>
 				)}
 				<Button asChild variant="outline" className="mt-3 w-full">
-					<Link href={requireLogin(`/posts/new?from=${stableItemId}&origin=recipe_detail`)}>이 레시피로 만들었어요</Link>
+					<Link href={requireLogin(`/posts/new?source=${stableItemId}&origin=recipe_detail`)}>이 레시피로 만들었어요</Link>
 				</Button>
 
 				{relations.continued.length > 0 && (
@@ -643,8 +640,6 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 								initialServings={item.servings || 1}
 								ingredients={item.ingredients || []}
 								steps={item.steps || []}
-								stepsLocked={stepsLocked}
-								loginHref={`/login?next=${encodeURIComponent(`/recipes/${stableItemId}`)}`}
 								recipeId={stableItemId}
 							/>
 						)}

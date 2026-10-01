@@ -569,6 +569,12 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 			}
 		}
 		
+		// 내 버전은 저장한 새 레시피로 바로 간다 (위쪽에 원본이 "참고한 레시피"로 겹쳐 보인다)
+		if (!isEditMode && forkFrom) {
+			router.replace(`/recipes/${itemId}`)
+			return
+		}
+
 		// 🧭 스마트 네비게이션: 사용자가 온 곳으로 적절히 돌아가기
 		if (onNavigateBack) {
 			// 🚀 업계 표준: 수정 완료 후 History Replace로 수정폼 제거

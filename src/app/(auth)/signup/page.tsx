@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { createSupabaseBrowserClient } from "@/lib/supabase"
 import { useToast } from "@/hooks/use-toast"
+import { safeNextPath } from "@/lib/safe-next-path"
 
 import { generateUniqueUsername } from "@/lib/username-generator"
 
@@ -44,9 +45,10 @@ export default function SignupPage() {
 
 	const handleSignUp = async (values: z.infer<typeof formSchema>) => {
 		const username = await generateUniqueUsername()
-		const redirectUrl = process.env.NEXT_PUBLIC_APP_URL 
-			? `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
-			: `${window.location.origin}/auth/callback`
+		// 가입 전 보던 곳(예: 만들었어요 작성 화면)으로 인증 메일 링크와 로그인 화면이 이어지게 한다
+		const next = safeNextPath(new URLSearchParams(window.location.search).get("next"))
+		const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth/callback`
+		const redirectUrl = next === "/" ? callbackUrl : `${callbackUrl}?next=${encodeURIComponent(next)}`
 		
 		const { error } = await supabase.auth.signUp({
 			email: values.email,
@@ -71,7 +73,7 @@ export default function SignupPage() {
 				description: "인증 메일을 확인 후 서비스를 이용해주세요.",
 			})
 			setIsRedirecting(true)
-			router.push("/login")
+			router.push(next === "/" ? "/login" : `/login?next=${encodeURIComponent(next)}`)
 		}
 	}
 
