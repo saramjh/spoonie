@@ -15,6 +15,7 @@ import SimplifiedCommentsSection from "@/components/items/SimplifiedCommentsSect
 import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
 import ImageCarousel from "@/components/common/ImageCarousel"
 import RecipeContentView from "@/components/recipe/RecipeContentView"
+import { RecipeActivity } from "@/components/recipe/RecipeActivity"
 import RecipeCard from "@/components/recipe/RecipeCard"
 import { cn } from "@/lib/utils"
 import { formatCookingTime } from "@/lib/recipe-amount"
@@ -623,6 +624,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 											<MadeProof madeCount={madeByOthers.count} continuedCount={continuedByOthers} thumbs={madeByOthers.thumbs} />
 										</a>
 									)}
+									<RecipeActivity recipeId={stableItemId} userId={currentUser?.id} />
 									{item.description && <p className="mt-4 whitespace-pre-wrap break-words text-[16px] leading-[1.65] text-ink">{item.description}</p>}
 								</>
 							) : (
