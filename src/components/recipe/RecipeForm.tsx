@@ -11,15 +11,15 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { PlusCircle, X, Camera, Clock, Book } from "lucide-react"
+
+import { Minus, Plus } from "lucide-react"
 import ImageUploader from "@/components/common/ImageUploader"
 import InstructionImageUploader from "@/components/recipe/InstructionImageUploader"
 import CitedRecipeSearch from "@/components/recipe/CitedRecipeSearch"
 import DraggableIngredientList, { DraggableIngredient } from "@/components/recipe/DraggableIngredientList"
 import { OptimizedImage } from "@/lib/image-utils"
 import { useToast } from "@/hooks/use-toast"
-import { RECIPE_COLOR_OPTIONS } from "@/lib/color-options"
+import { RECIPE_COLOR_OPTIONS, getMagnet } from "@/lib/color-options"
 
 
 import type { Item, ItemDetail } from "@/types/item"
@@ -591,128 +591,130 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 		}
 	}
 
+	const errors = form.formState.errors
+	const selectedColor = form.watch("color_label")
+	const fieldLabel = "text-sm font-medium text-ink"
+	const errorText = "mt-1 text-sm text-destructive"
+
+	// 쓰는 순서 = 읽는 순서: 사진 → 제목 → 분량·시간 → 설명 → 재료 → 만드는 법 → 참고 → 내 정리 (DESIGN.md Interface Grammar)
 	return (
-		<div className="min-h-screen bg-door">
-			<div className="bg-paper border-b sticky top-0 z-40">
-				<div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
-					<Button type="button" variant="ghost" onClick={() => router.back()}>
-						취소
-					</Button>
-					<h1 className="text-lg font-semibold">{isEditMode ? "레시피 수정" : forkFrom ? "내 버전으로 고쳐 쓰기" : "새 레시피"}</h1>
-					<div className="w-12" />
-				</div>
-			</div>
+		<div className="min-h-screen bg-door pb-28">
+			<header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-paper px-1">
+				<Button type="button" variant="ghost" onClick={() => router.back()}>
+					취소
+				</Button>
+				<h1 className="text-[17px] font-semibold text-ink">{isEditMode ? "레시피 수정" : forkFrom ? "내 버전으로 고쳐 쓰기" : "레시피 쓰기"}</h1>
+				<span className="w-16" aria-hidden />
+			</header>
 
-			<div className="max-w-md mx-auto p-4 space-y-6">
-				{/* @ts-expect-error - form 핸들러 타입 변환 처리 */}
-				      <form id="recipe-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-					{/* fork: 무엇을 바탕으로 쓰는지 먼저 보여 준다. 저장하면 원본의 "이어진 레시피"에 고친 버전으로 실린다 */}
-					{!isEditMode && forkFrom && (
-						<div className="rounded-[3px] bg-paper px-4 py-3 shadow-sheet">
-							<SourceLine recipes={selectedCitedRecipes.filter((r) => r.id === forkFrom.id)} />
-							<p className="mt-1 text-sm text-ink-soft">분량, 재료, 단계를 가져왔어요. 내 방식대로 고치고 내가 만든 사진을 올려 주세요.</p>
-						</div>
-					)}
-					<Card>
-						<CardHeader>
-							<CardTitle className="flex items-center gap-2">
-								<Camera className="w-5 h-5 text-orange-ink" />
-								레시피 이미지
-							</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<ImageUploader 
-								images={mainImages} 
-								onImagesChange={setMainImages} 
-								maxImages={5} 
-								placeholder="레시피 사진을 추가해주세요" 
-								thumbnailIndex={thumbnailIndex} 
-								onThumbnailChange={handleThumbnailChange} 
-								showThumbnailSelector={true} 
-							/>
-						</CardContent>
-					</Card>
-
-					<div>
-						<Label htmlFor="title" className="text-base font-medium">
-							레시피 제목
-						</Label>
-						<Input id="title" placeholder="예: 맛있는 김치찌개" className="mt-2 bg-paper" {...form.register("title")} />
-						{form.formState.errors.title && <p className="text-red-500 text-sm mt-1">{form.formState.errors.title.message}</p>}
+			{/* @ts-expect-error - form 핸들러 타입 변환 처리 */}
+			<form id="recipe-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 px-3 pt-3">
+				{/* fork: 무엇을 바탕으로 쓰는지 먼저 보여 준다. 저장하면 원본의 "이어진 레시피"에 고친 버전으로 실린다 */}
+				{!isEditMode && forkFrom && (
+					<div className="rounded-[3px] bg-paper px-4 py-3 shadow-sheet">
+						<SourceLine recipes={selectedCitedRecipes.filter((r) => r.id === forkFrom.id)} />
+						<p className="mt-1 text-sm text-ink-soft">분량, 재료, 단계를 가져왔어요. 내 방식대로 고치고 내가 만든 사진을 올려 주세요.</p>
 					</div>
+				)}
 
-					<div>
-						<Label htmlFor="description" className="text-base font-medium">
-							레시피 설명
-						</Label>
-						<Textarea id="description" placeholder="레시피에 대한 간단한 설명을 입력하세요" className="mt-2 bg-paper" {...form.register("description")} />
-					</div>
-
-					<div className="grid grid-cols-2 gap-4">
-						<div>
-							<Label htmlFor="servings" className="text-base font-medium">
-								인분
-							</Label>
-							<div className="flex items-center mt-2">
-								<Button
-									type="button"
-									variant="outline"
-									size="sm"
-									onClick={() => {
-										const current = form.getValues("servings")
-										if (current > 1) form.setValue("servings", current - 1, { shouldValidate: true })
-									}}
-									className="rounded-r-none">
-									-
-								</Button>
-								<Input id="servings" type="number" min="1" className="rounded-none text-center bg-paper" {...form.register("servings")} />
-								<Button
-									type="button"
-									variant="outline"
-									size="sm"
-									onClick={() => {
-										const current = form.getValues("servings")
-										form.setValue("servings", current + 1, { shouldValidate: true })
-									}}
-									className="rounded-l-none">
-									+
-								</Button>
-							</div>
-							<span className="text-xs text-ink-soft mt-1 block">인분</span>
-						</div>
+				<div className="rounded-[3px] bg-paper shadow-sheet">
+					<section className="space-y-5 px-4 pb-5 pt-5">
+						<ImageUploader
+							images={mainImages}
+							onImagesChange={setMainImages}
+							maxImages={5}
+							label="완성 사진"
+							placeholder="완성한 요리 사진을 올려 주세요"
+							frame="recipe"
+							thumbnailIndex={thumbnailIndex}
+							onThumbnailChange={handleThumbnailChange}
+							showThumbnailSelector={true}
+						/>
 
 						<div>
-							<Label htmlFor="cooking_time_minutes" className="text-base font-medium flex items-center gap-1">
-								<Clock className="w-4 h-4" />
-								조리시간
+							<Label htmlFor="title" className={fieldLabel}>
+								제목
 							</Label>
-							<div className="flex items-center gap-2 mt-2">
-								<Input 
-									id="cooking_time_minutes" 
-									type="number" 
-									min="1" 
-									placeholder="30" 
-									className="bg-paper flex-1" 
-									{...form.register("cooking_time_minutes")} 
-								/>
-								<span className="text-sm text-ink-soft font-medium">분</span>
-							</div>
-							{form.formState.errors.cooking_time_minutes && <p className="text-red-500 text-sm mt-1">{form.formState.errors.cooking_time_minutes.message}</p>}
+							<Input id="title" placeholder="예: 대파 듬뿍 김치찌개" className="mt-1.5 h-12 text-[17px] font-semibold" {...form.register("title")} />
+							{errors.title && <p className={errorText}>{errors.title.message}</p>}
 						</div>
-					</div>
 
-					{/* 재료 섹션 - 폼 일관성 유지 */}
-					<Card>
-						<CardHeader>
-							<CardTitle className="flex items-center justify-between">
-								재료
-								<span className="text-sm font-normal text-ink-soft">
-									드래그해서 순서 변경
-								</span>
-							</CardTitle>
-						</CardHeader>
-						<CardContent className="space-y-4">
-							{/* 드래그앤드롭 재료 리스트 */}
+						<div className="grid grid-cols-2 gap-3">
+							<div>
+								<Label htmlFor="servings" className={fieldLabel}>
+									분량
+								</Label>
+								<div className="mt-1.5 flex h-11 items-center rounded-md border border-ink/40">
+									<button
+										type="button"
+										aria-label="1인분 줄이기"
+										onClick={() => {
+											const current = Number(form.getValues("servings")) || 1
+											if (current > 1) form.setValue("servings", current - 1, { shouldValidate: true })
+										}}
+										className="flex h-full w-11 items-center justify-center text-ink"
+									>
+										<Minus className="h-4 w-4" aria-hidden />
+									</button>
+									<Input
+										id="servings"
+										type="number"
+										min="1"
+										inputMode="numeric"
+										className="h-full min-w-0 flex-1 rounded-none border-0 px-0 text-center tabular-nums focus-visible:ring-0"
+										{...form.register("servings")}
+									/>
+									<span className="pr-1 text-sm text-ink-soft">인분</span>
+									<button
+										type="button"
+										aria-label="1인분 늘리기"
+										onClick={() => {
+											const current = Number(form.getValues("servings")) || 0
+											form.setValue("servings", current + 1, { shouldValidate: true })
+										}}
+										className="flex h-full w-11 items-center justify-center text-ink"
+									>
+										<Plus className="h-4 w-4" aria-hidden />
+									</button>
+								</div>
+								{errors.servings && <p className={errorText}>{errors.servings.message}</p>}
+							</div>
+							<div>
+								<Label htmlFor="cooking_time_minutes" className={fieldLabel}>
+									조리 시간
+								</Label>
+								<div className="mt-1.5 flex h-11 items-center rounded-md border border-ink/40 pr-3">
+									<Input
+										id="cooking_time_minutes"
+										type="number"
+										min="1"
+										inputMode="numeric"
+										placeholder="30"
+										className="h-full min-w-0 flex-1 border-0 text-right tabular-nums focus-visible:ring-0"
+										{...form.register("cooking_time_minutes")}
+									/>
+									<span className="pl-1 text-sm text-ink-soft">분</span>
+								</div>
+								{errors.cooking_time_minutes && <p className={errorText}>{errors.cooking_time_minutes.message}</p>}
+							</div>
+						</div>
+
+						<div>
+							<Label htmlFor="description" className={fieldLabel}>
+								한 줄 소개 <span className="font-normal text-ink-soft">(선택)</span>
+							</Label>
+							<Textarea id="description" placeholder="어떤 맛인지, 언제 만들면 좋은지" className="mt-1.5 min-h-[72px]" {...form.register("description")} />
+						</div>
+					</section>
+
+					<section aria-labelledby="form-ingredients" className="border-t border-border px-4 pb-5 pt-5">
+						<div className="flex items-baseline justify-between">
+							<h2 id="form-ingredients" className="text-lg font-bold text-ink">
+								재료 <span className="font-medium tabular-nums text-ink-soft">{ingredients.length}</span>
+							</h2>
+							{ingredients.length > 1 && <span className="text-[13px] text-ink-soft">왼쪽 손잡이로 순서 바꾸기</span>}
+						</div>
+						<div className="mt-2">
 							<DraggableIngredientList
 								ingredients={ingredients.map((field, index) => {
 									const watchedIngredient = form.watch(`ingredients.${index}`)
@@ -725,142 +727,137 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 								})}
 								onReorder={handleIngredientsReorder}
 								register={form.register}
-								errors={form.formState.errors}
+								errors={errors}
 								onRemove={removeIngredient}
 							/>
-							
-							{/* 재료 추가 버튼 */}
-							<Button 
-								type="button" 
-								variant="outline" 
-								onClick={() => appendIngredient({ name: "", amount: 1, unit: "" })} 
-								className="w-full border-dashed border-2 border-border hover:border-border hover:bg-door"
-							>
-								<PlusCircle className="mr-2 h-4 w-4" />
-								재료 추가
-							</Button>
-							
-							{/* 전체 재료 관련 에러 */}
-							{form.formState.errors.ingredients?.root && (
-								<p className="text-red-500 text-sm">
-									{form.formState.errors.ingredients.root.message}
-								</p>
-							)}
-						</CardContent>
-					</Card>
-
-					<Card>
-						<CardHeader>
-							<CardTitle>조리법</CardTitle>
-						</CardHeader>
-						<CardContent className="space-y-4">
-							{instructions.map((field, index) => (
-								<div key={field.id} className="flex items-start gap-3">
-									<div className="relative pt-1">
-										<div className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium flex-shrink-0 z-10">{index + 1}</div>
-										{instructions.length > 1 && (
-											<Button type="button" variant="destructive" size="icon" onClick={() => removeInstruction(index)} className="absolute -top-1 -right-3 w-5 h-5 rounded-full z-20">
-												<X className="h-3 w-3" />
-											</Button>
-										)}
-									</div>
-									<div className="flex-1 space-y-2">
-										<InstructionImageUploader imageUrl={field.image_url} onImageChange={(image) => handleInstructionImageChange(index, image)} />
-										<Textarea placeholder="조리 과정을 순서대로 설명해주세요" className="min-h-[80px] bg-paper" {...form.register(`instructions.${index}.description`)} />
-										{form.formState.errors.instructions?.[index]?.description && <p className="text-red-500 text-sm mt-1">{form.formState.errors.instructions[index].description.message}</p>}
-									</div>
-								</div>
-							))}
-							<Button type="button" variant="outline" onClick={() => appendInstruction({ description: "", image_url: "" })} className="w-full mt-4">
-								<PlusCircle className="mr-2 h-4 w-4" />
-								단계 추가
-							</Button>
-							{form.formState.errors.instructions?.root && <p className="text-red-500 text-sm mt-1">{form.formState.errors.instructions.root.message}</p>}
-						</CardContent>
-					</Card>
-
-					{/* 🚀 토스 스타일: 더 자연스러운 참고레시피 섹션 */}
-					<div className="space-y-2">
-						<Label className="text-base font-medium flex items-center gap-2">
-							<Book className="w-4 h-4 text-orange-ink" />
-							참고 레시피
-							<span className="text-sm font-normal text-ink-soft">(선택사항)</span>
-						</Label>
-						<CitedRecipeSearch selectedRecipes={selectedCitedRecipes} onSelectedRecipesChange={handleSelectedCitedRecipesChange} />
-					</div>
-
-					<div>
-						<Label htmlFor="tags" className="text-base font-medium">
-							태그 (쉼표로 구분)
-						</Label>
-						<Input id="tags" placeholder="예: #김치찌개, #한식" className="mt-2 bg-paper" {...form.register("tags")} />
-						{form.formState.errors.tags && <p className="text-red-500 text-sm mt-1">{form.formState.errors.tags.message}</p>}
-					</div>
-
-					<div>
-						<Label className="text-base font-medium">색상 라벨</Label>
-						<div className="grid grid-cols-7 gap-2 mt-2">
-							{RECIPE_COLOR_OPTIONS.map((colorOption) => (
-								<Button
-									key={colorOption.value}
-									type="button"
-									variant="outline"
-									className={`
-										w-10 h-10 p-0 rounded-xl border-2 transition-all duration-200
-										${colorOption.color}
-										${form.watch("color_label") === colorOption.value ? "ring-2 ring-ring ring-offset-2 scale-110" : "hover:scale-105"}
-                    focus-visible:ring-ring focus-visible:ring-offset-2
-									`}
-									onClick={() => {
-										const currentColor = form.getValues("color_label")
-										form.setValue("color_label", currentColor === colorOption.value ? null : colorOption.value, { shouldValidate: true })
-									}}>
-									{form.watch("color_label") === colorOption.value}
-								</Button>
-							))}
 						</div>
-					</div>
+						<Button type="button" variant="outline" onClick={() => appendIngredient({ name: "", amount: 1, unit: "" })} className="mt-3 w-full">
+							<Plus className="h-4 w-4" aria-hidden />
+							재료 추가
+						</Button>
+						{errors.ingredients?.root && <p className={errorText}>{errors.ingredients.root.message}</p>}
+					</section>
 
-					<Card>
-						<CardHeader>
-							<CardTitle>공개 설정</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<Controller
-								control={form.control}
-								name="is_public"
-								render={({ field }) => (
-									<RadioGroup value={field.value.toString()} onValueChange={(value) => field.onChange(value === "true")} className="space-y-3">
-										<div className="flex items-center space-x-3">
-											<RadioGroupItem value="true" id="public" />
-											<Label htmlFor="public" className="flex-1">
-												<div className="font-medium">공개</div>
-												<div className="text-sm text-ink-soft">모든 사용자가 볼 수 있습니다</div>
-											</Label>
+					<section aria-labelledby="form-steps" className="border-t border-border px-4 pb-5 pt-5">
+						<h2 id="form-steps" className="text-lg font-bold text-ink">
+							만드는 법 <span className="font-medium tabular-nums text-ink-soft">{instructions.length}단계</span>
+						</h2>
+						<ol className="mt-2">
+							{instructions.map((field, index) => (
+								<li key={field.id} className="flex gap-3 border-b border-border py-4 last:border-b-0">
+									<span className="w-6 flex-shrink-0 pt-2.5 text-lg font-bold tabular-nums text-ink">{index + 1}</span>
+									<div className="min-w-0 flex-1 space-y-2">
+										<Textarea
+											placeholder="이 단계에서 할 일을 적어 주세요"
+											aria-label={`${index + 1}단계 설명`}
+											className="min-h-[88px] text-[16px] leading-relaxed"
+											{...form.register(`instructions.${index}.description`)}
+										/>
+										{errors.instructions?.[index]?.description && <p className={errorText}>{errors.instructions[index].description.message}</p>}
+										<div className="flex items-start justify-between gap-2">
+											<div className="min-w-0 flex-1">
+												<InstructionImageUploader imageUrl={field.image_url} onImageChange={(image) => handleInstructionImageChange(index, image)} />
+											</div>
+											{instructions.length > 1 && (
+												<button
+													type="button"
+													onClick={() => removeInstruction(index)}
+													className="h-11 flex-shrink-0 px-1 text-sm text-ink-soft underline underline-offset-4 hover:text-destructive"
+												>
+													단계 지우기
+												</button>
+											)}
 										</div>
-										<div className="flex items-center space-x-3">
-											<RadioGroupItem value="false" id="private" />
-											<Label htmlFor="private" className="flex-1">
-												<div className="font-medium">비공개</div>
-												<div className="text-sm text-ink-soft">나만 볼 수 있습니다</div>
-											</Label>
-										</div>
-									</RadioGroup>
-								)}
-							/>
-						</CardContent>
-					</Card>
+									</div>
+								</li>
+							))}
+						</ol>
+						<Button type="button" variant="outline" onClick={() => appendInstruction({ description: "", image_url: "" })} className="mt-3 w-full">
+							<Plus className="h-4 w-4" aria-hidden />
+							단계 추가
+						</Button>
+						{errors.instructions?.root && <p className={errorText}>{errors.instructions.root.message}</p>}
+					</section>
 
-					<div className="h-20" />
-				</form>
-			</div>
+					<section aria-labelledby="form-cited" className="border-t border-border px-4 pb-5 pt-5">
+						<h2 id="form-cited" className="text-lg font-bold text-ink">
+							참고한 레시피 <span className="text-sm font-normal text-ink-soft">(선택)</span>
+						</h2>
+						<p className="mt-1 text-[13px] text-ink-soft">바탕이 된 레시피를 고르면 그 레시피의 &lsquo;이어진 레시피&rsquo;에 실리고 작성자에게 알려져요.</p>
+						<div className="mt-2">
+							<CitedRecipeSearch selectedRecipes={selectedCitedRecipes} onSelectedRecipesChange={handleSelectedCitedRecipesChange} />
+						</div>
+					</section>
 
-			<div className="fixed bottom-0 left-0 right-0 bg-paper border-t shadow-lg z-50">
-				<div className="max-w-md mx-auto p-4">
-					<Button type="submit" form="recipe-form" disabled={isSubmitting} className="w-full bg-primary hover:brightness-95 h-12 text-base font-medium rounded-md">
-						{isSubmitting ? `레시피 ${isEditMode ? "수정" : "작성"} 중...` : `레시피 ${isEditMode ? "수정" : "작성"}하기`}
-					</Button>
+					<section className="border-t border-border px-4 pb-5 pt-5">
+						<Label htmlFor="tags" className={fieldLabel}>
+							태그 <span className="font-normal text-ink-soft">(쉼표로 구분)</span>
+						</Label>
+						<Input id="tags" placeholder="예: 김치찌개, 한식, 간단요리" className="mt-1.5" {...form.register("tags")} />
+						{errors.tags && <p className={errorText}>{errors.tags.message}</p>}
+					</section>
 				</div>
+
+				{/* 내 정리: 다른 사람에게는 보이지 않는 주인의 도구 (DESIGN.md Interface Grammar 3) */}
+				<div className="rounded-[3px] bg-paper px-4 pb-5 pt-5 shadow-sheet">
+					<h2 className="text-lg font-bold text-ink">내 정리</h2>
+					<fieldset className="mt-3">
+						<legend className={fieldLabel}>
+							색상 라벨 <span className="font-normal text-ink-soft">(나의 레시피북에서 거를 때 써요)</span>
+						</legend>
+						<div className="mt-2 flex flex-wrap gap-1">
+							{RECIPE_COLOR_OPTIONS.map((colorOption) => {
+								const magnet = getMagnet(colorOption.value)
+								const selected = selectedColor === colorOption.value
+								return (
+									<button
+										key={colorOption.value}
+										type="button"
+										aria-pressed={selected}
+										aria-label={`${colorOption.label}${selected ? " (선택됨)" : ""}`}
+										onClick={() => form.setValue("color_label", selected ? null : colorOption.value, { shouldValidate: true })}
+										className="flex h-11 w-11 items-center justify-center"
+									>
+										<span
+											className={`h-7 w-7 rounded-full shadow-[0_1px_3px_rgba(35,40,43,0.35)] ${selected ? "ring-2 ring-ink ring-offset-2 ring-offset-paper" : ""}`}
+											style={{ backgroundColor: magnet?.hex }}
+										/>
+									</button>
+								)
+							})}
+						</div>
+					</fieldset>
+
+					<Controller
+						control={form.control}
+						name="is_public"
+						render={({ field }) => (
+							<fieldset className="mt-4">
+								<legend className={fieldLabel}>공개 범위</legend>
+								<RadioGroup value={field.value.toString()} onValueChange={(value) => field.onChange(value === "true")} className="mt-1">
+									<label htmlFor="public" className="flex min-h-12 items-center gap-3">
+										<RadioGroupItem value="true" id="public" />
+										<span className="text-[15px] text-ink">
+											공개 <span className="text-ink-soft">· 누구나 보고 만들어 볼 수 있어요</span>
+										</span>
+									</label>
+									<label htmlFor="private" className="flex min-h-12 items-center gap-3">
+										<RadioGroupItem value="false" id="private" />
+										<span className="text-[15px] text-ink">
+											비공개 <span className="text-ink-soft">· 나만 봐요</span>
+										</span>
+									</label>
+								</RadioGroup>
+							</fieldset>
+						)}
+					/>
+				</div>
+			</form>
+
+			<div className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md border-t border-border bg-paper px-3 pb-[max(env(safe-area-inset-bottom),12px)] pt-3">
+				<Button type="submit" form="recipe-form" disabled={isSubmitting} className="h-12 w-full text-base">
+					{isSubmitting ? (isEditMode ? "고치는 중..." : "저장하는 중...") : isEditMode ? "고친 내용 저장" : "레시피 저장"}
+				</Button>
 			</div>
 		</div>
 	)

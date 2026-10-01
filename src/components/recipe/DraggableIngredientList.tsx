@@ -57,11 +57,8 @@ function DragHandle() {
   return (
     <div 
       data-drag-handle
-      className="w-6 h-6 flex items-center justify-center cursor-grab active:cursor-grabbing text-ink-soft hover:text-ink-soft touch-manipulation"
-      style={{ 
-        minHeight: '24px',
-        minWidth: '24px'
-      }}
+      aria-label="끌어서 순서 바꾸기"
+      className="-ml-2 flex h-11 w-9 cursor-grab touch-manipulation items-center justify-center text-ink-soft active:cursor-grabbing"
     >
       <div className="flex flex-col gap-0.5">
         {[...Array(3)].map((_, i) => (
@@ -99,11 +96,11 @@ function SortableIngredientItem({
       ref={setNodeRef}
       style={style}
       className={`
-        bg-paper border border-border rounded-xl p-3 transition-all duration-200
-        ${isDragging ? 'opacity-50' : 'hover:shadow-sm hover:border-border'}
+        border-b border-border bg-paper py-3 last:border-b-0
+        ${isDragging ? 'relative z-10 shadow-sheet' : ''}
       `}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-start gap-1">
         {/* 드래그 핸들 */}
         <div {...attributes} {...listeners}>
           <DragHandle />
@@ -113,39 +110,44 @@ function SortableIngredientItem({
         <div className="flex-1 space-y-2">
           {/* 1행: 재료명 (전체 너비) */}
           <Input 
-            placeholder="재료명 (예: 돼지고기)" 
+            placeholder="재료 이름 (예: 대파)" 
+            aria-label={`${index + 1}번째 재료 이름`}
             {...register(`ingredients.${index}.name`)} 
-            className="w-full bg-paper" 
+            className="h-11 w-full" 
           />
           
           {/* 2행: 수량 + 단위 + 삭제버튼 */}
           <div className="flex gap-2">
             <Input 
               type="number" 
-              step="0.1"
-              placeholder="수량" 
+              step="any"
+              inputMode="decimal"
+              placeholder="양" 
+              aria-label={`${index + 1}번째 재료 양`}
               {...register(`ingredients.${index}.amount`)} 
-              className="flex-1 bg-paper text-center" 
+              className="h-11 flex-1 text-right tabular-nums" 
             />
             <Input 
-              placeholder="단위" 
+              placeholder="단위 (g, 큰술)" 
+              aria-label={`${index + 1}번째 재료 단위`}
               {...register(`ingredients.${index}.unit`)} 
-              className="flex-1 bg-paper text-center" 
+              className="h-11 flex-1" 
             />
             <Button 
               type="button" 
               variant="ghost" 
               size="icon" 
               onClick={() => onRemove(index)} 
-              className="w-9 h-9 shrink-0 text-ink-soft hover:text-red-500"
+              aria-label={`${index + 1}번째 재료 지우기`}
+              className="h-11 w-11 shrink-0 text-ink-soft hover:text-destructive"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-4 w-4" aria-hidden />
             </Button>
           </div>
           
           {/* 에러 메시지 */}
           {errors.ingredients && Array.isArray(errors.ingredients) && errors.ingredients[index] && (
-            <div className="text-red-500 text-sm space-y-1">
+            <div className="space-y-1 text-sm text-destructive">
               {(errors.ingredients[index] as any)?.name?.message && (
                 <p>{(errors.ingredients[index] as any)?.name?.message}</p>
               )}
@@ -167,7 +169,7 @@ function SortableIngredientItem({
 function DragOverlayItem({ ingredient }: { ingredient: DraggableIngredient }) {
   return (
     <div 
-      className="bg-paper border-2 border-blue-400 rounded-xl p-3 shadow-xl opacity-90 pointer-events-none"
+      className="pointer-events-none rounded-[3px] border border-ink/30 bg-paper p-3 shadow-sheet"
       style={{ 
         width: '100%',
         maxWidth: '90vw',

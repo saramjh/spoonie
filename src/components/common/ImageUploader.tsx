@@ -2,12 +2,10 @@
 
 import { useState, useRef, useCallback, useEffect } from "react"
 import Image from "next/image"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card } from "@/components/ui/card"
-import { ImagePlus, X, Star, Camera } from "lucide-react"
-import { optimizeImages, formatFileSize, isValidImageType, isValidFileSize, OptimizedImage } from "@/lib/image-utils"
+import { ImagePlus, X, Camera } from "lucide-react"
+import { optimizeImages, isValidImageType, isValidFileSize, OptimizedImage } from "@/lib/image-utils"
 import { useToast } from "@/hooks/use-toast"
 
 interface ImageUploaderProps {
@@ -15,6 +13,8 @@ interface ImageUploaderProps {
 	onImagesChange: (images: OptimizedImage[]) => void
 	maxImages?: number
 	label?: string
+	// 빈 상태 프레임 비율: 레시피 4:3, 레시피드 1:1 (DESIGN.md Interface Grammar 4)
+	frame?: "recipe" | "recipeed"
 	placeholder?: string
 	thumbnailIndex?: number
 	onThumbnailChange?: (index: number) => void
@@ -22,7 +22,7 @@ interface ImageUploaderProps {
 
 }
 
-export default function ImageUploader({ images, onImagesChange, maxImages = 5, label = "이미지 업로드", placeholder = "이미지를 추가해주세요", thumbnailIndex = 0, onThumbnailChange, showThumbnailSelector = true }: ImageUploaderProps) {
+export default function ImageUploader({ images, onImagesChange, maxImages = 5, label = "이미지 업로드", placeholder = "이미지를 추가해주세요", thumbnailIndex = 0, onThumbnailChange, showThumbnailSelector = true, frame = "recipeed" }: ImageUploaderProps) {
 	const fileInputRef = useRef<HTMLInputElement>(null)
 	const { toast } = useToast()
 	const [isProcessing, setIsProcessing] = useState(false)
@@ -65,12 +65,8 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 			setIsProcessing(true)
 			try {
 				const optimizedImages = await optimizeImages(files)
+				// 사진은 저장할 때 올라간다. 여기서는 줄여서 미리 보여 주기만 하므로 알림을 띄우지 않는다 (나타난 사진이 피드백)
 				onImagesChange([...images, ...optimizedImages])
-
-				toast({
-					title: "이미지 업로드 완료",
-					description: `${files.length}개의 이미지가 업로드되었습니다.`,
-				})
 			} catch (error) {
 				console.error("Image optimization failed:", error)
 				toast({
@@ -119,93 +115,74 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 	}, [images])
 
 	return (
-		<div className="space-y-4">
-			<div className="flex items-center justify-between">
-				<Label className="text-base font-medium">{label}</Label>
-				<span className="text-sm text-ink-soft">
+		<div>
+			<div className="flex items-baseline justify-between">
+				<Label className="text-sm font-medium text-ink">{label}</Label>
+				<span className="text-sm tabular-nums text-ink-soft">
 					{images.length}/{maxImages}
 				</span>
 			</div>
 
 			{images.length > 0 ? (
-				<div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-					{images.map((image, index) => (
-						<Card key={`${image.file.name}-${index}`} className={`relative group overflow-hidden aspect-square transition-all duration-200 ${
-							showThumbnailSelector && index === currentThumbnailIndex 
-								? 'ring-4 ring-blue-500 ring-offset-2 shadow-lg scale-105' 
-								: 'hover:shadow-md'
-						}`}>
-							{showThumbnailSelector && index === currentThumbnailIndex && (
-								<div className="absolute top-2 left-2 z-20 bg-blue-500 text-white rounded-full p-1.5 flex items-center justify-center shadow-lg">
-									<Star className="w-4 h-4 fill-current" />
-								</div>
-							)}
-							{showThumbnailSelector && index === currentThumbnailIndex && (
-								<div className="absolute inset-0 bg-blue-500 bg-opacity-20 z-10 flex items-center justify-center">
-									<div className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-										현재 썸네일
-									</div>
-								</div>
-							)}
-
-							<button type="button" onClick={() => removeImage(index)} className="absolute top-2 right-2 z-10 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-								<X className="w-3 h-3" />
-							</button>
-
-							{showThumbnailSelector && index !== currentThumbnailIndex && (
-								<button type="button" onClick={() => setThumbnail(index)} className="absolute top-2 left-2 z-10 bg-black bg-opacity-50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity" title="썸네일로 설정">
-									<Star className="w-3 h-3" />
+				<>
+					<ul className="-mx-1 mt-2 flex gap-2 overflow-x-auto px-1 pb-1">
+						{images.map((image, index) => {
+							const isCover = showThumbnailSelector && index === currentThumbnailIndex
+							return (
+								<li key={`${image.file.name}-${index}`} className="relative h-24 w-24 flex-shrink-0">
+									<button
+										type="button"
+										onClick={() => showThumbnailSelector && setThumbnail(index)}
+										aria-pressed={isCover}
+										aria-label={isCover ? `${index + 1}번째 사진 (대표 사진)` : `${index + 1}번째 사진을 대표 사진으로`}
+										className={`relative block h-full w-full overflow-hidden rounded-[3px] bg-muted ${isCover ? "ring-2 ring-ink ring-offset-2 ring-offset-paper" : ""}`}
+									>
+										<Image src={image.preview} alt="" fill sizes="96px" className="object-cover" priority={index === 0} />
+										{isCover && <span className="absolute bottom-1 left-1 rounded-[2px] bg-ink/85 px-1.5 py-0.5 text-[11px] font-bold text-paper">대표</span>}
+									</button>
+									<button
+										type="button"
+										onClick={() => removeImage(index)}
+										aria-label={`${index + 1}번째 사진 지우기`}
+										className="absolute -right-2 -top-2 flex h-11 w-11 items-center justify-center"
+									>
+										<span className="flex h-6 w-6 items-center justify-center rounded-full bg-ink/85 text-paper">
+											<X className="h-3.5 w-3.5" aria-hidden />
+										</span>
+									</button>
+								</li>
+							)
+						})}
+						{images.length < maxImages && (
+							<li className="h-24 w-24 flex-shrink-0">
+								<button
+									type="button"
+									onClick={() => fileInputRef.current?.click()}
+									disabled={isProcessing}
+									className="flex h-full w-full flex-col items-center justify-center gap-1 rounded-[3px] border border-dashed border-ink/30 text-sm text-ink-soft"
+								>
+									<ImagePlus className="h-5 w-5" aria-hidden />
+									{isProcessing ? "줄이는 중" : "추가"}
 								</button>
-							)}
-
-							<Image 
-							src={image.preview} 
-							alt={`Preview ${index + 1}`} 
-							fill 
-							className="object-cover cursor-pointer" 
-							onClick={() => showThumbnailSelector && setThumbnail(index)}
-							priority={index === 0}
-						/>
-
-							<div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-								<div>{image.width} × {image.height}</div>
-								<div>
-									{image.file.size > 0 
-										? formatFileSize(image.file.size) 
-										: "기존 이미지"
-									}
-								</div>
-							</div>
-						</Card>
-					))}
-				</div>
+							</li>
+						)}
+					</ul>
+					{showThumbnailSelector && images.length > 1 && <p className="mt-1 text-[13px] text-ink-soft">사진을 누르면 대표 사진이 돼요.</p>}
+				</>
 			) : (
-				<Card className="aspect-video border-2 border-dashed border-border cursor-pointer hover:border-orange-ink hover:bg-muted transition-all duration-300" onClick={() => fileInputRef.current?.click()}>
-					<div className="h-full flex flex-col items-center justify-center text-ink-soft hover:text-orange-ink space-y-2 transition-colors duration-300">
-						<Camera className="w-12 h-12" />
-						<p className="text-sm font-medium">{placeholder}</p>
-						<p className="text-xs">최대 {maxImages}개, 10MB 이하</p>
-					</div>
-				</Card>
+				<button
+					type="button"
+					onClick={() => fileInputRef.current?.click()}
+					disabled={isProcessing}
+					className={`mt-2 flex w-full flex-col items-center justify-center gap-2 rounded-[3px] border border-dashed border-ink/30 bg-muted text-ink-soft ${frame === "recipe" ? "aspect-[4/3]" : "aspect-square"}`}
+				>
+					<Camera className="h-8 w-8" aria-hidden />
+					<span className="text-[15px] font-medium text-ink">{isProcessing ? "사진을 줄이는 중" : placeholder}</span>
+					<span className="text-[13px]">최대 {maxImages}장, 올릴 때 자동으로 줄여요</span>
+				</button>
 			)}
-
-			<div className="flex gap-2 mt-4">
-				{images.length > 0 && images.length < maxImages && (
-					<Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isProcessing} className="flex-1">
-						<ImagePlus className="w-4 h-4 mr-2" />
-						{isProcessing ? "처리 중..." : "이미지 추가"}
-					</Button>
-				)}
-			</div>
 
 			<Input ref={fileInputRef} type="file" accept="image/jpeg,image/jpg,image/png,image/webp" multiple onChange={handleFileSelect} className="hidden" />
-
-			{images.length === 0 && (
-				<div className="mt-2">
-					<p className="text-xs text-ink-soft">JPG, PNG, WEBP 형식의 이미지를 업로드하세요. 자동으로 최적화됩니다.</p>
-				</div>
-			)}
-
 		</div>
 	)
 }

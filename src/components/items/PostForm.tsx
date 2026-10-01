@@ -11,8 +11,6 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Camera } from "lucide-react"
 import ImageUploader from "@/components/common/ImageUploader"
 import { OptimizedImage } from "@/lib/image-utils"
 import { useToast } from "@/hooks/use-toast"
@@ -36,7 +34,8 @@ interface PostFormProps {
 }
 
 const postSchema = z.object({
-	title: z.string().min(1, "제목을 입력해주세요"),
+	// 레시피드는 사진과 글이 주인공이라 제목은 선택이다 (DESIGN.md Interface Grammar 1)
+	title: z.string().optional(),
 	content: z.string().min(1, "내용을 입력해주세요"),
 	is_public: z.boolean(),
 	tags: z.array(z.string()).optional(),
@@ -294,7 +293,7 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 			const itemPayload = {
 				user_id: user.id,
 				item_type: "post" as const,
-				title: values.title,
+				title: values.title?.trim() || null,
 				content: values.content,
 				image_urls: uploadedImageUrls,
 				tags: values.tags,
@@ -431,62 +430,75 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 		}
 	}
 
+	const errors = form.formState.errors
+	const sourceRecipes = !isEditMode && sourceRecipeId ? selectedCitedRecipes.filter((r) => r.id === sourceRecipeId) : []
+	const fieldLabel = "text-sm font-medium text-ink"
+	const errorText = "mt-1 text-sm text-destructive"
+	const handleCitedChange = (recipes: Item[]) => {
+		setSelectedCitedRecipes(recipes)
+		const recipeIds = recipes.map((r: Item) => String(r.id || r.item_id || "")).filter((id) => id !== "")
+		form.setValue("cited_recipe_ids", recipeIds)
+	}
+
+	// 레시피드는 사진이 먼저, 그다음 글. 출처가 있으면 맨 위 첫 줄에 둔다 (DESIGN.md Interface Grammar 1)
 	return (
-		<div className="min-h-screen bg-door pb-20">
-			<div className="bg-paper border-b sticky top-0 z-40">
-				<div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
-					<Button type="button" variant="ghost" onClick={() => router.back()}>
-						취소
-					</Button>
-					<h1 className="text-lg font-semibold">{isEditMode ? "레시피드 수정" : sourceRecipeId ? "만들어 본 기록" : "새 레시피드"}</h1>
-					<div className="w-12" />
-				</div>
-			</div>
+		<div className="min-h-screen bg-door pb-28">
+			<header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-paper px-1">
+				<Button type="button" variant="ghost" onClick={() => router.back()}>
+					취소
+				</Button>
+				<h1 className="text-[17px] font-semibold text-ink">{isEditMode ? "레시피드 수정" : sourceRecipeId ? "만들어 본 기록" : "레시피드 쓰기"}</h1>
+				<span className="w-16" aria-hidden />
+			</header>
 
-			<div className="max-w-md mx-auto p-4 space-y-6">
-				<form onSubmit={form.handleSubmit(onSubmit, onError)} className="space-y-6">
-					{/* 출처가 정해진 기록: 이 글이 어떤 레시피에서 나왔는지 먼저 보여 준다 */}
-					{!isEditMode && sourceRecipeId && selectedCitedRecipes.some((r) => r.id === sourceRecipeId) && (
-						<SourceLine
-							recipes={selectedCitedRecipes.filter((r) => r.id === sourceRecipeId)}
-							creationOrigin={sourceOrigin}
-							className="rounded-[3px] bg-paper px-4 py-3 shadow-sheet"
-						/>
+			<form id="post-form" onSubmit={form.handleSubmit(onSubmit, onError)} className="space-y-3 px-3 pt-3">
+				<div className="rounded-[3px] bg-paper shadow-sheet">
+					{sourceRecipes.length > 0 && (
+						<SourceLine recipes={sourceRecipes} creationOrigin={sourceOrigin} className="border-b border-border px-4 py-3" />
 					)}
-					<Card>
-						<CardHeader>
-							<CardTitle className="flex items-center gap-2">
-								<Camera className="w-5 h-5 text-orange-ink" />
-								레시피드 이미지
-							</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<ImageUploader 
-								images={mainImages} 
-								onImagesChange={setMainImages} 
-								maxImages={5} 
-								placeholder="사진을 추가해주세요"
-								thumbnailIndex={thumbnailIndex}
-								onThumbnailChange={handleThumbnailChange}
-								showThumbnailSelector={true}
+
+					<section className="space-y-5 px-4 pb-5 pt-5">
+						<ImageUploader
+							images={mainImages}
+							onImagesChange={setMainImages}
+							maxImages={5}
+							label="사진"
+							placeholder={sourceRecipeId ? "만든 요리 사진을 올려 주세요" : "사진을 올려 주세요"}
+							frame="recipeed"
+							thumbnailIndex={thumbnailIndex}
+							onThumbnailChange={handleThumbnailChange}
+							showThumbnailSelector={true}
+						/>
+
+						<div>
+							<Label htmlFor="post-content" className={fieldLabel}>
+								글
+							</Label>
+							<Textarea
+								id="post-content"
+								{...form.register("content")}
+								placeholder={sourceRecipeId ? "어떻게 만들었는지, 바꾼 점이나 맛은 어땠는지" : "요리 이야기를 들려 주세요"}
+								rows={6}
+								className="mt-1.5 resize-none text-[16px] leading-relaxed"
 							/>
-						</CardContent>
-					</Card>
+							{errors.content && <p className={errorText}>{errors.content.message}</p>}
+						</div>
 
-					<div className="space-y-4">
-					<div>
-							<Input {...form.register("title")} placeholder="제목을 입력하세요" className="text-lg font-semibold bg-paper" />
-						{form.formState.errors.title && <p className="text-red-500 text-sm mt-1">{form.formState.errors.title.message}</p>}
-					</div>
+						<div>
+							<Label htmlFor="post-title" className={fieldLabel}>
+								제목 <span className="font-normal text-ink-soft">(선택)</span>
+							</Label>
+							<Input id="post-title" {...form.register("title")} placeholder="한 줄로 붙일 이름" className="mt-1.5" />
+						</div>
 
-					<div>
-							<Textarea {...form.register("content")} placeholder="내용을 입력하세요" rows={8} className="resize-none bg-paper" />
-						{form.formState.errors.content && <p className="text-red-500 text-sm mt-1">{form.formState.errors.content.message}</p>}
-					</div>
-
-					<div>
+						<div>
+							<Label htmlFor="post-tags" className={fieldLabel}>
+								태그 <span className="font-normal text-ink-soft">(쉼표로 구분)</span>
+							</Label>
 							<Input
-								placeholder="태그를 입력하세요 (쉼표로 구분)"
+								id="post-tags"
+								placeholder="예: 집밥, 주말요리"
+								className="mt-1.5"
 								onChange={(e) => {
 									const tags = e.target.value
 										.split(",")
@@ -497,69 +509,55 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 								defaultValue={form.getValues("tags")?.join(", ") || ""}
 							/>
 						</div>
+					</section>
 
-						<div>
-							<CitedRecipeSearch
-								selectedRecipes={selectedCitedRecipes}
-								onSelectedRecipesChange={(recipes: Item[]) => {
-
-									setSelectedCitedRecipes(recipes)
-									
-									// 안전한 string 변환
-									const recipeIds = recipes.map((r: Item) => {
-										const id = String(r.id || r.item_id || "")
-
-										return id
-									}).filter(id => id !== "")
-									
-
-									
-									// 타입 검증
-									if (Array.isArray(recipeIds) && recipeIds.every(id => typeof id === 'string')) {
-										form.setValue("cited_recipe_ids", recipeIds)
-									} else {
-										console.error("❌ PostForm: Invalid recipeIds type:", recipeIds)
-										form.setValue("cited_recipe_ids", [])
-									}
-								}}
-							/>
+					<section aria-labelledby="post-cited" className="border-t border-border px-4 pb-5 pt-5">
+						<h2 id="post-cited" className="text-lg font-bold text-ink">
+							참고한 레시피 <span className="text-sm font-normal text-ink-soft">(선택)</span>
+						</h2>
+						{!sourceRecipeId && (
+							<p className="mt-1 text-[13px] text-ink-soft">
+								다른 사람의 레시피로 만들었다면 그 레시피 화면의 &lsquo;이 레시피로 만들었어요&rsquo;로 쓰면 자동으로 이어져요.
+							</p>
+						)}
+						<div className="mt-2">
+							<CitedRecipeSearch selectedRecipes={selectedCitedRecipes} onSelectedRecipesChange={handleCitedChange} />
 						</div>
+					</section>
 
-						<Card>
-							<CardHeader>
-								<CardTitle>공개 설정</CardTitle>
-							</CardHeader>
-							<CardContent>
-								<Controller
-									control={form.control}
-									name="is_public"
-									render={({ field }) => (
-										<RadioGroup value={field.value.toString()} onValueChange={(value) => field.onChange(value === "true")} className="space-y-3">
-											<div className="flex items-center space-x-3">
-												<RadioGroupItem value="true" id="post-public" />
-												<Label htmlFor="post-public" className="flex-1">
-													<div className="font-medium">공개</div>
-													<div className="text-sm text-ink-soft">모든 사용자가 볼 수 있습니다</div>
-												</Label>
-											</div>
-											<div className="flex items-center space-x-3">
-												<RadioGroupItem value="false" id="post-private" />
-												<Label htmlFor="post-private" className="flex-1">
-													<div className="font-medium">비공개</div>
-													<div className="text-sm text-ink-soft">나만 볼 수 있습니다</div>
-												</Label>
-											</div>
-										</RadioGroup>
-									)}
-								/>
-							</CardContent>
-						</Card>
-					</div>
+					<Controller
+						control={form.control}
+						name="is_public"
+						render={({ field }) => (
+							<fieldset className="border-t border-border px-4 pb-4 pt-5">
+								<legend className="sr-only">공개 범위</legend>
+								<h2 className="text-lg font-bold text-ink" aria-hidden>
+									공개 범위
+								</h2>
+								<RadioGroup value={field.value.toString()} onValueChange={(value) => field.onChange(value === "true")} className="mt-1">
+									<label htmlFor="post-public" className="flex min-h-12 items-center gap-3">
+										<RadioGroupItem value="true" id="post-public" />
+										<span className="text-[15px] text-ink">
+											공개 <span className="text-ink-soft">· 누구나 볼 수 있어요</span>
+										</span>
+									</label>
+									<label htmlFor="post-private" className="flex min-h-12 items-center gap-3">
+										<RadioGroupItem value="false" id="post-private" />
+										<span className="text-[15px] text-ink">
+											비공개 <span className="text-ink-soft">· 나만 봐요</span>
+										</span>
+									</label>
+								</RadioGroup>
+							</fieldset>
+						)}
+					/>
+				</div>
+			</form>
 
-					<Button type="submit" disabled={isSubmitting} className="w-full">
-						{isSubmitting ? "저장 중..." : isEditMode ? "수정하기" : "게시하기"}
-					</Button>
-				</form>
+			<div className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md border-t border-border bg-paper px-3 pb-[max(env(safe-area-inset-bottom),12px)] pt-3">
+				<Button type="submit" form="post-form" disabled={isSubmitting} className="h-12 w-full text-base">
+					{isSubmitting ? "저장하는 중..." : isEditMode ? "고친 내용 저장" : sourceRecipeId ? "기록 남기기" : "레시피드 올리기"}
+				</Button>
 			</div>
 		</div>
 	)

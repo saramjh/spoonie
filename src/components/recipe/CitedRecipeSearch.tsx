@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
 
-import { X, ChefHat } from "lucide-react";
+import { X, ChefHat, Search } from "lucide-react";
 import { createSupabaseBrowserClient } from '@/lib/supabase-client';
 import type { Item } from '@/types/item';
 import { format } from 'date-fns'; // 날짜 포맷팅을 위해 date-fns 임포트
@@ -144,27 +144,23 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
   }, [showSearch]);
 
   return (
-    <div className="space-y-4">
-      {/* 🚀 토스 스타일: 미니멀한 시작 상태 */}
+    <div className="space-y-3">
+      {/* 시작 상태: 작은 찾기 버튼 하나 */}
       {selectedRecipes.length === 0 && !searchTerm && !showSearch && (
-        <div className="border-2 border-dashed border-border rounded-xl p-6 text-center hover:border-border hover:bg-muted/30 transition-all duration-200 cursor-pointer group"
-             onClick={() => setShowSearch(true)}>
-          <div className="flex flex-col items-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center group-hover:bg-primary/40 transition-colors">
-              <ChefHat className="w-5 h-5 text-orange-ink" aria-hidden="true" />
-            </div>
-            <p className="text-sm text-ink-soft group-hover:text-orange-ink transition-colors">
-              참고한 레시피가 있다면 추가해보세요
-            </p>
-            <p className="text-xs text-ink-soft">레시피를 검색하고 선택할 수 있어요</p>
-          </div>
-        </div>
+        <button
+          type="button"
+          onClick={() => setShowSearch(true)}
+          className="flex h-11 w-full items-center gap-2 rounded-md border border-dashed border-ink/30 px-3 text-left text-[15px] text-ink-soft"
+        >
+          <Search className="h-4 w-4" aria-hidden />
+          레시피 찾아서 고르기
+        </button>
       )}
 
       {/* 🎯 검색 영역 - 필요할 때만 표시 */}
       {(searchTerm || selectedRecipes.length > 0 || showSearch) && (
         <div className="relative">
-          <Command shouldFilter={false} className="border border-border rounded-xl shadow-sm">
+          <Command shouldFilter={false} className="rounded-md border border-ink/40">
             <CommandInput 
               ref={inputRef}
               id="recipe-search-input"
@@ -174,7 +170,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
                 setSearchTerm(search);
                 handleSearch(search);
               }}
-              className="border-none bg-door/50"
+              className="border-none"
             />
             <CommandList className="max-h-48">
               {isLoading && <CommandEmpty>검색 중...</CommandEmpty>}
@@ -185,12 +181,12 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
                     <CommandItem key={recipe.item_id} onSelect={() => handleSelectRecipe(recipe)} className="cursor-pointer hover:bg-muted">
                       <div className="flex items-center gap-3 w-full">
                         {/* 🖼️ 썸네일 추가 */}
-                        <div className="w-8 h-8 rounded-lg bg-muted flex-shrink-0 overflow-hidden">
+                        <div className="h-9 w-9 flex-shrink-0 overflow-hidden rounded-[2px] bg-muted">
                           {recipe.image_urls && recipe.image_urls.length > 0 ? (
-                            <Image src={recipe.image_urls[0]} alt={`${recipe.title} 썸네일`} width={32} height={32} className="w-full h-full object-cover" />
+                            <Image src={recipe.image_urls[0]} alt="" width={36} height={36} className="h-full w-full object-cover" />
                           ) : (
                             <div className="w-full h-full bg-muted flex items-center justify-center">
-                              <ChefHat className="w-3.5 h-3.5 text-orange-ink" aria-hidden="true" />
+                              <ChefHat className="h-4 w-4 text-ink-soft" aria-hidden="true" />
                             </div>
                           )}
                         </div>
@@ -213,17 +209,16 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
       {/* 🏷️ 선택된 레시피들 - 토스 스타일 카드 */}
       {selectedRecipes.length > 0 && (
         <div className="space-y-2">
-          <p className="text-sm text-ink-soft">참고 레시피 {selectedRecipes.length}개</p>
-          <div className="grid gap-2">
+          <ul className="divide-y divide-border">
             {selectedRecipes.map(recipe => (
-              <div key={recipe.item_id} className="bg-muted border border-border rounded-xl p-3 flex items-center gap-3 group hover:bg-muted transition-colors">
+              <li key={recipe.item_id} className="flex items-center gap-3 py-2">
                 {/* 썸네일 */}
-                <div className="w-10 h-10 rounded-lg bg-paper overflow-hidden flex-shrink-0">
+                <div className="h-11 w-11 flex-shrink-0 overflow-hidden rounded-[2px] bg-muted">
                   {recipe.image_urls && recipe.image_urls.length > 0 ? (
-                    <Image src={recipe.image_urls[0]} alt={`${recipe.title} 썸네일`} width={40} height={40} className="w-full h-full object-cover" />
+                    <Image src={recipe.image_urls[0]} alt="" width={44} height={44} className="h-full w-full object-cover" />
                   ) : (
                     <div className="w-full h-full bg-muted flex items-center justify-center">
-                      <ChefHat className="w-4 h-4 text-orange-ink" aria-hidden="true" />
+                      <ChefHat className="h-4 w-4 text-ink-soft" aria-hidden="true" />
                     </div>
                   )}
                 </div>
@@ -234,14 +229,16 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
                 </div>
                 {/* 삭제 버튼 */}
                 <button 
+                  type="button"
                   onClick={() => handleRemoveRecipe(recipe.item_id)} 
-                  className="w-6 h-6 rounded-full bg-paper hover:bg-muted flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-sm"
+                  aria-label={`${recipe.title} 참고에서 빼기`}
+                  className="flex h-11 w-11 flex-shrink-0 items-center justify-center text-ink-soft"
                 >
-                  <X className="h-3 w-3 text-ink-soft" />
+                  <X className="h-4 w-4" aria-hidden />
                 </button>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       )}
     </div>

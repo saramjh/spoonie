@@ -4,7 +4,6 @@ import { useState, useRef, useCallback } from "react"
 import Image from "next/image"
 
 import { Input } from "@/components/ui/input"
-import { Card } from "@/components/ui/card"
 import { X, Camera } from "lucide-react"
 import { optimizeImages, isValidImageType, isValidFileSize, OptimizedImage } from "@/lib/image-utils"
 import { useToast } from "@/hooks/use-toast"
@@ -15,7 +14,7 @@ interface InstructionImageUploaderProps {
   placeholder?: string;
 }
 
-export default function InstructionImageUploader({ imageUrl, onImageChange, placeholder = "이미지 추가" }: InstructionImageUploaderProps) {
+export default function InstructionImageUploader({ imageUrl, onImageChange, placeholder = "단계 사진 추가 (선택)" }: InstructionImageUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -62,25 +61,32 @@ export default function InstructionImageUploader({ imageUrl, onImageChange, plac
     onImageChange(null);
   }, [onImageChange]);
 
+  // 단계 사진은 선택이다: 비어 있으면 작은 추가 버튼만, 있으면 4:3 프레임 (DESIGN.md Interface Grammar 4)
   return (
     <div className="w-full">
       {preview ? (
-        <Card className="relative group overflow-hidden aspect-video">
-          <button onClick={removeImage} className="absolute top-2 right-2 z-10 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <X className="w-3 h-3" />
+        <div className="relative aspect-[4/3] overflow-hidden rounded-[3px] bg-muted">
+          <Image src={preview} alt="단계 사진 미리보기" fill sizes="(max-width: 448px) 80vw, 360px" className="object-contain" />
+          <button
+            type="button"
+            onClick={removeImage}
+            aria-label="단계 사진 지우기"
+            className="absolute right-1 top-1 flex h-11 w-11 items-center justify-center"
+          >
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink/80 text-paper">
+              <X className="h-4 w-4" aria-hidden />
+            </span>
           </button>
-                      <Image src={preview} alt="Instruction preview" fill className="object-cover" priority />
-        </Card>
+        </div>
       ) : (
-        <Card 
-          className="aspect-video border-2 border-dashed border-border cursor-pointer hover:border-orange-ink hover:bg-muted transition-all duration-300"
+        <button
+          type="button"
           onClick={() => fileInputRef.current?.click()}
+          className="inline-flex h-11 items-center gap-2 rounded-lg border border-dashed border-ink/30 px-3 text-sm text-ink-soft"
         >
-          <div className="h-full flex flex-col items-center justify-center text-ink-soft hover:text-orange-ink space-y-2 transition-colors duration-300">
-            <Camera className="w-8 h-8" />
-            <p className="text-sm font-medium">{placeholder}</p>
-          </div>
-        </Card>
+          <Camera className="h-4 w-4" aria-hidden />
+          {placeholder}
+        </button>
       )}
       <Input ref={fileInputRef} type="file" accept="image/jpeg,image/jpg,image/png,image/webp" onChange={handleFileSelect} className="hidden" />
     </div>
