@@ -4,6 +4,7 @@ import { useRef, useCallback, useEffect, useState } from "react"
 import { usePosts } from "@/hooks/usePosts"
 import PostCard from "./PostCard"
 import { feedPeriod } from "@/lib/feed-period"
+import { useHydrated } from "@/hooks/useHydrated"
 import PostCardSkeleton from "./PostCardSkeleton"
 
 
@@ -35,6 +36,8 @@ interface SeamlessItemListProps {
  * @returns 실시간 동기화가 적용된 무한 스크롤 아이템 리스트
  */
 export default function SeamlessItemList({ initialData }: SeamlessItemListProps) {
+  // 시간 덩어리 이름의 "오늘"은 화면이 뜬 뒤 기준으로 (미리 만든 홈과의 불일치 방지)
+  const now = useHydrated() ? new Date() : null
   const { feedItems, isLoading, isError, size, setSize, isReachingEnd, mutate: swrMutate } = usePosts(initialData)
   const observerElem = useRef<HTMLDivElement>(null)
 
@@ -258,8 +261,8 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
           // LCP 최적화: 첫 번째 3개 포스트에만 priority 적용
           const isPriorityPost = index < 3
           // 시간 덩어리가 바뀌는 곳에 이름을 달아 피드에 리듬을 준다 (오늘 / 어제 / 이번 주 / 이번 달 / 년월)
-          const period = feedPeriod(item.created_at)
-          const showPeriod = index === 0 || feedPeriod(feedItems[index - 1].created_at) !== period
+          const period = feedPeriod(item.created_at, now)
+          const showPeriod = index === 0 || feedPeriod(feedItems[index - 1].created_at, now) !== period
           
           return (
             <div key={item.id || item.item_id} data-item-id={item.id || item.item_id}>

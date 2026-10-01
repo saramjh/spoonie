@@ -2,8 +2,7 @@
 
 import Image from "next/image"
 import { ChefHat } from "lucide-react"
-import { CheckBox, IntentLink, Magnet } from "@/components/kit"
-import { formatCompactTime } from "@/lib/utils"
+import { CheckBox, IntentLink, Magnet, RelativeTime } from "@/components/kit"
 import { formatCookingTime } from "@/lib/recipe-amount"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import { useNavigation } from "@/hooks/useNavigation"
@@ -98,7 +97,7 @@ export default function RecipeListCard({
           {meta.length > 0 && <p className="mt-0.5 truncate text-sm text-ink-soft">{meta.join(" · ")}</p>}
           <p className="mt-0.5 truncate text-[13px] text-ink-soft">
             {showAuthor && item.username ? `${item.username} · ` : ""}
-            {formatCompactTime(item.created_at)}
+            <RelativeTime iso={item.created_at} compact />
             {!displayItem.is_public && " · 비공개"}
           </p>
         </div>

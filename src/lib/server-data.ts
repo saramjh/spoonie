@@ -1,4 +1,5 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js"
+import type { SupabaseClient } from "@supabase/supabase-js"
+import { createSupabasePublicClient } from "@/lib/supabase-public"
 import type { Item } from "@/types/item"
 import type { User } from "@supabase/supabase-js"
 
@@ -24,10 +25,7 @@ export interface ServerFeedData {
  * 로그인 사용자의 좋아요/팔로우 상태는 클라이언트가 이어서 채운다.
  */
 export async function getPublicFeedData(): Promise<ServerFeedData> {
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-  })
-  return loadFeed(supabase)
+  return loadFeed(createSupabasePublicClient())
 }
 
 async function loadFeed(supabase: SupabaseClient): Promise<ServerFeedData> {

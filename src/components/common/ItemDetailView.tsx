@@ -15,7 +15,7 @@ import SimplifiedCommentsSection from "@/components/items/SimplifiedCommentsSect
 import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
 import ImageCarousel from "@/components/common/ImageCarousel"
 import RecipeContentView from "@/components/recipe/RecipeContentView"
-import { cn, timeAgo } from "@/lib/utils"
+import { cn } from "@/lib/utils"
 import { formatCookingTime } from "@/lib/recipe-amount"
 import { useShare } from "@/hooks/useShare"
 import { useNavigation } from "@/hooks/useNavigation"
@@ -31,7 +31,8 @@ import SourceLine from "@/components/items/SourceLine"
 import { useThumbnail } from "@/hooks/useThumbnail"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import { cacheManager } from "@/lib/unified-cache-manager"
-import { IntentLink, SectionHeading, Sheet } from "@/components/kit"
+import { IntentLink, RelativeTime, SectionHeading, Sheet } from "@/components/kit"
+import { revalidateItemPage } from "@/lib/revalidate-item"
 
 interface ItemDetailViewProps {
 	item: ItemDetail | null | undefined
@@ -170,6 +171,28 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		setLocalHasLiked(item?.is_liked || false)
 		// commentsCount 제거 - 캐시에서 직접 사용
 	}, [item?.likes_count, item?.is_liked])
+
+	// 로그인 사용자 기준으로 다시 받은 값(내 좋아요·저장, 최신 수)을 화면 캐시에 반영한다.
+	// 미리 만든 공개 페이지의 값으로 처음 채워진 캐시는 그대로 두면 바뀌지 않는다.
+	useEffect(() => {
+		if (!stableItemId || !item) return
+		mutate(
+			`itemDetail|${stableItemId}`,
+			(prev: Item | undefined) =>
+				prev
+					? {
+							...prev,
+							likes_count: item.likes_count ?? prev.likes_count,
+							is_liked: item.is_liked ?? prev.is_liked,
+							comments_count: item.comments_count ?? prev.comments_count,
+							is_bookmarked: (item as Item & { is_bookmarked?: boolean }).is_bookmarked ?? (prev as Item & { is_bookmarked?: boolean }).is_bookmarked,
+						}
+					: prev,
+			{ revalidate: false }
+		)
+		// item의 사용자 기준 값이 바뀔 때만 (다시 받기 완료 시점)
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [stableItemId, item?.likes_count, item?.is_liked, item?.comments_count, (item as Item & { is_bookmarked?: boolean })?.is_bookmarked])
 
 	// 현재 사용자 조회 useEffect
 	useEffect(() => {
@@ -351,6 +374,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 				.eq("user_id", currentUser.id) // 보안 검증
 			
 			if (error) throw error
+			revalidateItemPage(item.item_id) // 지운 글의 미리 만든 페이지를 바로 내린다
 			
 
 			
@@ -566,7 +590,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 											.filter(Boolean)
 											.join(" · ")}
 										{" · "}
-										<time dateTime={item.created_at}>{timeAgo(item.created_at)}</time>
+										<RelativeTime iso={item.created_at} />
 									</p>
 									{item.description && <p className="mt-4 whitespace-pre-wrap break-words text-[16px] leading-[1.65] text-ink">{item.description}</p>}
 								</>
@@ -598,7 +622,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 
 							{!isRecipe && (
 								<p className="mt-3 text-sm text-ink-soft">
-									<time dateTime={item.created_at}>{timeAgo(item.created_at)}</time>
+									<RelativeTime iso={item.created_at} />
 								</p>
 							)}
 						</div>

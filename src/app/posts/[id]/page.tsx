@@ -10,7 +10,7 @@
  */
 
 import { Metadata } from 'next'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { createSupabasePublicClient } from '@/lib/supabase-public'
 import { notFound } from 'next/navigation'
 import { fetchItemDetail, ItemNotFoundError } from '@/lib/item-detail'
 import PostDetailClient from './PostDetailClient'
@@ -25,7 +25,7 @@ interface Props {
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
   try {
-    const supabase = await createSupabaseServerClient()
+    const supabase = createSupabasePublicClient()
     
     // 최소한의 데이터만 가져와서 메타데이터 생성 (성능 최적화)
     const { data: post, error } = await supabase
@@ -49,6 +49,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       return { 
         title: '레시피드 - 스푸니',
         description: '요리와 관련된 이야기를 공유하는 스푸니입니다.',
+        robots: { index: false, follow: true }, // 공개 글이 아니거나 없는 주소
       }
     }
 
@@ -151,23 +152,30 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   }
 }
 
-// 서버에서 상세 데이터를 미리 조회해 초기 HTML에 본문을 포함시킨다.
-// 존재하지 않거나 접근할 수 없는 항목은 "not_found", 그 밖의 오류는 null(클라이언트에서 재시도).
+// 공개 글은 첫 방문 때 한 번 만들어 CDN에 두고 10분마다 갱신한다 (작성자가 고치면 /api/revalidate로 즉시 갱신).
+// 로그인 정보를 읽지 않으므로 서버 함수가 방문마다 실행되지 않는다. 내 좋아요·저장 상태는 브라우저가 채운다.
+export const revalidate = 600
+
+export async function generateStaticParams() {
+  return []
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+// 공개 데이터만 조회한다. 비공개 글이나 없는 글이면 null → 브라우저가 로그인 세션으로 다시 조회한다 (작성자는 자기 비공개 글을 본다)
 async function loadInitialItem(itemId: string) {
   try {
-    return await fetchItemDetail(await createSupabaseServerClient(), itemId)
+    return await fetchItemDetail(createSupabasePublicClient(), itemId, { withViewer: false })
   } catch (error) {
-    if (error instanceof ItemNotFoundError) return "not_found" as const
-    console.error("❌ Initial item load error:", error)
+    if (!(error instanceof ItemNotFoundError)) console.error("Initial item load error:", error)
     return null
   }
 }
 
 export default async function PostDetailPage(props: Props) {
   const params = await props.params;
+  if (!UUID.test(params.id)) notFound()
   const initialItem = await loadInitialItem(params.id)
-  // loading.tsx가 먼저 스트리밍되므로 상태 코드는 200이며, Next가 noindex 메타 태그를 넣어 색인에서 제외한다
-  if (initialItem === "not_found") notFound()
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'
   const breadcrumbs = initialItem?.title

@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useNavigation } from "@/hooks/useNavigation"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Sheet, StateSheet, UnderlineTabs } from "@/components/kit"
+import { revalidateItemPage } from "@/lib/revalidate-item"
 
 type Tab = "my_recipes" | "all_recipes"
 
@@ -442,6 +443,7 @@ export default function RecipesPage() {
 			const { error } = await supabase.from("items").delete().in("id", selectedRecipes)
 
 			if (error) throw error
+			selectedRecipes.forEach(revalidateItemPage) // 지운 레시피의 미리 만든 페이지를 바로 내린다
 			
 			
 

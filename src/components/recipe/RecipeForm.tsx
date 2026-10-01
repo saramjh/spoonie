@@ -29,6 +29,7 @@ import { logEvent } from "@/lib/events"
 import { mutate as globalMutate } from "swr"
 import SourceLine from "@/components/items/SourceLine"
 import { ColorLabelPicker, PageHeader, SectionHeading, Sheet } from "@/components/kit"
+import { revalidateItemPage } from "@/lib/revalidate-item"
 
 // Zod 스키마 업데이트
 const recipeSchema = z.object({
@@ -548,6 +549,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 
 		toast({ title: `레시피 ${isEditMode ? "수정" : "작성"} 완료`, description: `성공적으로 ${isEditMode ? "수정" : "등록"}되었습니다.` })
 		if (!isEditMode && forkFrom) logEvent("derived_create", itemId, "fork")
+		revalidateItemPage(itemId) // 미리 만든 상세 페이지를 고친 내용으로 바로 갱신
 		// 원본 레시피 상세의 "이어진 레시피"가 바로 보이도록 관계 캐시를 비운다
 		values.cited_recipe_ids?.forEach((id) => globalMutate(`recipe-relations:${id}`))
 		

@@ -14,7 +14,8 @@ export class ItemNotFoundError extends Error {
 	}
 }
 
-export async function fetchItemDetail(supabase: SupabaseClient, itemId: string): Promise<ItemDetail> {
+// withViewer=false: 로그인 사용자 기준 값(내 좋아요)을 계산하지 않는다. 미리 만드는 공개 페이지용.
+export async function fetchItemDetail(supabase: SupabaseClient, itemId: string, { withViewer = true }: { withViewer?: boolean } = {}): Promise<ItemDetail> {
 
 
 	if (!itemId) {
@@ -33,7 +34,7 @@ export async function fetchItemDetail(supabase: SupabaseClient, itemId: string):
 			instructionsResult,
 			{ data: commentsData, error: commentsError },
 		] = await Promise.all([
-			supabase.auth.getUser(),
+			withViewer ? supabase.auth.getUser() : Promise.resolve({ data: { user: null } }),
 			supabase
 				.from("items")
 				.select(`
@@ -86,6 +87,18 @@ export async function fetchItemDetail(supabase: SupabaseClient, itemId: string):
 			isLiked = !!myLike
 		}
 
+		// 내가 저장한 글인지 (로그인 사용자만, 저장 목록은 본인만 읽을 수 있다)
+		let isBookmarked = false
+		if (currentUserId) {
+			const { data: myBookmark } = await supabase
+				.from("bookmarks")
+				.select("item_id")
+				.eq("item_id", itemId)
+				.eq("user_id", currentUserId)
+				.maybeSingle()
+			isBookmarked = !!myBookmark
+		}
+
 		const isRecipeItem = itemData.item_type === "recipe"
 		const ingredients: Ingredient[] = isRecipeItem ? ingredientsResult.data || [] : []
 		const instructions: Instruction[] = isRecipeItem ? instructionsResult.data || [] : []
@@ -135,6 +148,7 @@ export async function fetchItemDetail(supabase: SupabaseClient, itemId: string):
 			likes_count: likesCount, // 실제 DB에서 가져온 좋아요 개수
 			comments_count: transformedComments.filter(c => !c.is_deleted).length,
 			is_liked: isLiked, // 실제 DB에서 가져온 좋아요 상태
+			is_bookmarked: isBookmarked,
 			// 기타 호환성 필드들
 			author: Array.isArray(itemData.author) ? itemData.author[0] : itemData.author,
 			display_name: itemData.author?.display_name || itemData.author?.username,

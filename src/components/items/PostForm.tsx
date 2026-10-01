@@ -24,6 +24,7 @@ import { logEvent } from "@/lib/events"
 import { mutate as globalMutate } from "swr"
 import SourceLine from "@/components/items/SourceLine"
 import { PageHeader, SectionHeading, Sheet } from "@/components/kit"
+import { revalidateItemPage } from "@/lib/revalidate-item"
 
 interface PostFormProps {
 	isEditMode?: boolean
@@ -385,6 +386,7 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 		})
 			
 			if (!isEditMode) logEvent("recipeed_create", itemId, sourceOrigin ?? undefined)
+			revalidateItemPage(itemId) // 미리 만든 상세 페이지를 고친 내용으로 바로 갱신
 			// 레시피 상세의 "만들어 본 기록"이 바로 보이도록 관계 캐시를 비운다
 			values.cited_recipe_ids?.forEach((id) => globalMutate(`recipe-relations:${id}`))
 

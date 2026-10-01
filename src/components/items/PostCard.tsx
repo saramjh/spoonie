@@ -3,7 +3,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Share2, MessageCircle, MoreVertical, Trash2, Edit, Heart } from "lucide-react"
-import { timeAgo } from "@/lib/utils"
 import { formatCookingTime } from "@/lib/recipe-amount"
 import FollowButton from "./FollowButton"
 import { SimplifiedLikeButton } from "@/components/items/SimplifiedLikeButton"
@@ -25,7 +24,8 @@ import ExpandableText from "@/components/common/ExpandableText"
 import SourceLine from "@/components/items/SourceLine"
 import { cacheManager } from "@/lib/unified-cache-manager"
 import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
-import { IntentLink, Sheet } from "@/components/kit"
+import { IntentLink, RelativeTime, Sheet } from "@/components/kit"
+import { revalidateItemPage } from "@/lib/revalidate-item"
 
 /**
  * 검증된 홈 피드 게시물 카드 컴포넌트
@@ -179,6 +179,7 @@ export default function PostCard({
           .eq('user_id', currentUser?.id) // 보안: 자신의 아이템만 삭제
 
         if (error) throw error
+        revalidateItemPage(item.item_id || item.id) // 지운 글의 미리 만든 페이지를 바로 내린다
 
 
         
@@ -243,7 +244,7 @@ export default function PostCard({
               <span>{isRecipe ? "레시피" : "레시피드"}</span>
               {" · "}
               <IntentLink href={detailUrl}>
-                <time dateTime={item.created_at}>{timeAgo(item.created_at)}</time>
+                <RelativeTime iso={item.created_at} />
               </IntentLink>
               {!displayItem.is_public && <span> · 비공개</span>}
             </p>
