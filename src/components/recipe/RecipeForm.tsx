@@ -30,6 +30,7 @@ import { mutate as globalMutate } from "swr"
 import SourceLine from "@/components/items/SourceLine"
 import { ColorLabelPicker, PageHeader, SectionHeading, Sheet } from "@/components/kit"
 import { revalidateItemPage } from "@/lib/revalidate-item"
+import { removeDroppedImages } from "@/lib/item-images"
 
 // Zod 스키마 업데이트
 const recipeSchema = z.object({
@@ -551,6 +552,13 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 		toast({ title: `레시피 ${isEditMode ? "수정" : "작성"} 완료`, description: `성공적으로 ${isEditMode ? "수정" : "등록"}되었습니다.` })
 		if (!isEditMode && forkFrom) logEvent("derived_create", itemId, "fork")
 		revalidateItemPage(itemId) // 미리 만든 상세 페이지를 고친 내용으로 바로 갱신
+		// 고치면서 빠진 사진(대표·단계) 파일을 저장소에서 지운다
+		if (isEditMode && initialData) {
+			removeDroppedImages(
+				[...(initialData.image_urls || []), ...(initialData.instructions || []).map((inst) => inst.image_url)],
+				[...finalImageUrls, ...instructionsWithImages.map((inst) => inst.image_url)]
+			)
+		}
 		// 원본 레시피 상세의 "이어진 레시피"가 바로 보이도록 관계 캐시를 비운다
 		values.cited_recipe_ids?.forEach((id) => globalMutate(`recipe-relations:${id}`))
 		

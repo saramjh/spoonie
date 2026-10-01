@@ -32,6 +32,7 @@ import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import { cacheManager } from "@/lib/unified-cache-manager"
 import { IntentLink, Photo, RelativeTime, SectionHeading, Sheet } from "@/components/kit"
 import { revalidateItemPage } from "@/lib/revalidate-item"
+import { collectItemImageUrls, removeItemImages } from "@/lib/item-images"
 
 interface ItemDetailViewProps {
 	item: ItemDetail | null | undefined
@@ -366,6 +367,8 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	
 			
 			// 2. 실제 데이터베이스에서 삭제
+			// 글이 지워지면 사진 목록도 사라지므로 먼저 모아 둔다
+			const imageUrls = await collectItemImageUrls(supabase, [item.item_id])
 			const { error } = await supabase
 				.from("items")
 				.delete()
@@ -374,6 +377,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 			
 			if (error) throw error
 			revalidateItemPage(item.item_id) // 지운 글의 미리 만든 페이지를 바로 내린다
+			removeItemImages(imageUrls) // 지운 글의 사진 파일도 지운다
 			
 
 			

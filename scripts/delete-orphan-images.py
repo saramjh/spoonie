@@ -27,6 +27,8 @@ for folder in req('POST', '/storage/v1/object/list/item-images', {'prefix': '', 
 cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=24)
 orphans = [o for o in objects if o['name'] not in keep and datetime.datetime.fromisoformat(o['created_at'].replace('Z', '+00:00')) < cutoff]
 size = sum((o.get('metadata') or {}).get('size', 0) for o in orphans)
+if not keep or len(orphans) > len(objects) / 2:
+    sys.exit(f'중단: 쓰는 사진 {len(keep)}개, 지울 파일 {len(orphans)}/{len(objects)} (안전장치)')
 print(f'files {len(objects)}, keep {len([o for o in objects if o["name"] in keep])}, orphans {len(orphans)} ({size/1024/1024:.1f}MB)')
 if '--apply' in sys.argv and orphans:
     names = [o['name'] for o in orphans]

@@ -26,6 +26,7 @@ import { cacheManager } from "@/lib/unified-cache-manager"
 import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
 import { IntentLink, RelativeTime, Sheet } from "@/components/kit"
 import { revalidateItemPage } from "@/lib/revalidate-item"
+import { collectItemImageUrls, removeItemImages } from "@/lib/item-images"
 
 /**
  * 검증된 홈 피드 게시물 카드 컴포넌트
@@ -172,6 +173,8 @@ export default function PostCard({
       
       // SSA STEP 2: 백그라운드 DB 삭제
       try {
+        // 글이 지워지면 사진 목록도 사라지므로 먼저 모아 둔다
+        const imageUrls = await collectItemImageUrls(supabase, [item.item_id || item.id])
         const { error } = await supabase
           .from('items')
           .delete()
@@ -180,6 +183,7 @@ export default function PostCard({
 
         if (error) throw error
         revalidateItemPage(item.item_id || item.id) // 지운 글의 미리 만든 페이지를 바로 내린다
+        removeItemImages(imageUrls) // 지운 글의 사진 파일도 지운다
 
 
         

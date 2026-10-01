@@ -69,3 +69,6 @@
   NEXT_PUBLIC_GA_ID = "G-16DKDXVQ9T" 
   NEXT_PUBLIC_ADSENSE_ID = "ca-pub-4410729598083068"
   NEXT_PUBLIC_APP_URL = "https://spoonie.kr"
+# 쓰지 않는 사진 파일 정리 (매주 일요일 새벽, 안전망)
+[functions."sweep-orphan-images"]
+  schedule = "@weekly"
