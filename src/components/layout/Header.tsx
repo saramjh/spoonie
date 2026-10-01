@@ -101,36 +101,38 @@ export default function Header() {
   };
 
   return (
-    <header className="flex items-center justify-between p-4 bg-white border-b border-gray-200">
-      <Link href="/" className="flex-shrink-0">
+    <header className="flex h-14 items-center justify-between border-b border-border bg-paper pl-4 pr-1.5">
+      <Link href="/" className="flex-shrink-0" aria-label="스푸니 홈">
         <NextImage 
           src="/logo-full.svg" 
-          alt="Spoonie Logo" 
+          alt="스푸니" 
           width={100} 
           height={32} 
           priority 
         />
       </Link>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center">
         <Button 
           variant="ghost" 
           size="icon" 
-          className="rounded-full relative" 
+          className="relative h-11 w-11" 
           onClick={handleBookmarkClick}
+          aria-label="저장한 글"
         >
-          <Bookmark className="h-6 w-6 text-gray-600" />
+          <Bookmark className="h-6 w-6 text-ink-soft" aria-hidden />
         </Button>
         
         <Button 
           variant="ghost" 
           size="icon" 
-          className="rounded-full relative" 
+          className="relative h-11 w-11" 
           onClick={handleNotificationClick}
+          aria-label={unreadCount ? `알림, 읽지 않은 알림 ${unreadCount}개` : "알림"}
         >
-          <Bell className={`h-6 w-6 text-gray-600 ${isShaking ? 'animate-bell-shake' : ''}`} />
+          <Bell aria-hidden className={`h-6 w-6 text-ink-soft ${isShaking ? 'animate-bell-shake' : ''}`} />
           {unreadCount != null && unreadCount > 0 && (
-            <span className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-orange-500 text-xs text-white ring-2 ring-white">
+            <span className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] font-bold tabular-nums text-primary-foreground ring-2 ring-paper">
               {unreadCount < 100 ? unreadCount : '99+'}
             </span>
           )}

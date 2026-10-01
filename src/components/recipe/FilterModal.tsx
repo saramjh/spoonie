@@ -46,7 +46,7 @@ export default function FilterModal({ isOpen, onClose }: FilterModalProps) {
 					<div className="space-y-6 p-4">
 						{/* 태그 필터 */}
 						<div>
-							<label htmlFor="filter-category" className="block text-sm font-medium text-gray-700 mb-2">
+							<label htmlFor="filter-category" className="block text-sm font-medium text-ink mb-2">
 								태그 필터
 							</label>
 							<Input 
@@ -61,7 +61,7 @@ export default function FilterModal({ isOpen, onClose }: FilterModalProps) {
 
 						{/* 색상 라벨 필터 */}
 						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-2">색상 라벨 필터</label>
+							<label className="block text-sm font-medium text-ink mb-2">색상 라벨 필터</label>
 							<div className="flex flex-wrap gap-3">
 								{RECIPE_COLOR_OPTIONS.map((colorOption) => (
 									<button
@@ -72,7 +72,7 @@ export default function FilterModal({ isOpen, onClose }: FilterModalProps) {
 											w-10 h-10 rounded-xl ${colorOption.color} 
 											flex items-center justify-center ring-2 ring-offset-2 
 											transition-all duration-200 shadow-bauhaus hover:shadow-bauhaus-lg
-											${filterColorLabel === colorOption.value ? "ring-orange-500 scale-110" : "ring-transparent hover:scale-105"}
+											${filterColorLabel === colorOption.value ? "ring-ring scale-110" : "ring-transparent hover:scale-105"}
 										`}>
 										{filterColorLabel === colorOption.value && <Check className="h-5 w-5 text-white drop-shadow-lg" />}
 									</button>
@@ -83,7 +83,7 @@ export default function FilterModal({ isOpen, onClose }: FilterModalProps) {
 						{/* 정렬 기준 */}
 						<div className="grid grid-cols-2 gap-4">
 							<div>
-								<label htmlFor="sort-by" className="block text-sm font-medium text-gray-700 mb-2">
+								<label htmlFor="sort-by" className="block text-sm font-medium text-ink mb-2">
 									정렬 기준
 								</label>
 								<Select onValueChange={(value: string) => setSortBy(value)} defaultValue={sortBy}>
@@ -100,7 +100,7 @@ export default function FilterModal({ isOpen, onClose }: FilterModalProps) {
 
 							{/* 정렬 순서 */}
 							<div>
-								<label htmlFor="sort-order" className="block text-sm font-medium text-gray-700 mb-2">
+								<label htmlFor="sort-order" className="block text-sm font-medium text-ink mb-2">
 									정렬 순서
 								</label>
 								<Select onValueChange={(value: "asc" | "desc") => setSortOrder(value)} defaultValue={sortOrder}>

@@ -288,23 +288,23 @@ export default function SimplifiedCommentsSection({
                     {/* 🎯 유저네임 + 프로필 링크 */}
                     <Link
                       href={`/profile/${comment.user?.public_id || comment.user?.username || comment.user_id}`}
-                      className="font-semibold text-gray-800 text-sm hover:underline transition-colors"
+                      className="font-semibold text-ink text-sm hover:underline transition-colors"
                     >
                       {comment.user?.username || '익명'}
                     </Link>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-ink-soft">
                       {timeAgo(comment.created_at)}
                     </span>
                   </div>
                   
                   {/* 댓글 내용 */}
                   {comment.is_deleted ? (
-                    <p className="text-gray-500 text-sm italic whitespace-pre-wrap mt-1">
+                    <p className="text-ink-soft text-sm italic whitespace-pre-wrap mt-1">
                       삭제된 댓글입니다.
                     </p>
                   ) : (
                     <>
-                      <p className="text-gray-700 text-sm whitespace-pre-wrap mt-1 break-words">
+                      <p className="text-ink text-sm whitespace-pre-wrap mt-1 break-words">
                         {comment.content}
                       </p>
 
@@ -314,7 +314,7 @@ export default function SimplifiedCommentsSection({
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-xs text-gray-500 hover:text-gray-700 p-1 h-auto"
+                            className="text-xs text-ink-soft hover:text-ink p-1 h-auto"
                             onClick={() => handleReply(comment.id)}
                           >
                             <CornerUpLeft className="w-3 h-3 mr-1" />
@@ -362,7 +362,7 @@ export default function SimplifiedCommentsSection({
                     variant="ghost"
                     size="sm"
                     onClick={() => handleDeleteComment(comment.id)}
-                    className="text-gray-400 hover:text-red-500 w-6 h-6 p-0"
+                    className="text-ink-soft hover:text-red-500 w-6 h-6 p-0"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -371,7 +371,7 @@ export default function SimplifiedCommentsSection({
 
               {/* 🚀 대댓글들 렌더링 */}
               {replyMap[comment.id] && replyMap[comment.id].length > 0 && (
-                <div className="ml-11 space-y-3 border-l-2 border-gray-100 pl-4">
+                <div className="ml-11 space-y-3 border-l-2 border-border pl-4">
                   {replyMap[comment.id]
                     .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
                     .map((reply) => (
@@ -390,22 +390,22 @@ export default function SimplifiedCommentsSection({
                           <div className="flex items-baseline gap-2 flex-wrap">
                             <Link
                               href={`/profile/${reply.user?.public_id || reply.user?.username || reply.user_id}`}
-                              className="font-semibold text-gray-800 text-xs hover:underline transition-colors"
+                              className="font-semibold text-ink text-xs hover:underline transition-colors"
                             >
                               {reply.user?.username || '익명'}
                             </Link>
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-ink-soft">
                               {timeAgo(reply.created_at)}
                             </span>
                           </div>
                           
                           {/* 대댓글 내용 */}
                           {reply.is_deleted ? (
-                            <p className="text-gray-500 text-xs italic whitespace-pre-wrap mt-1">
+                            <p className="text-ink-soft text-xs italic whitespace-pre-wrap mt-1">
                               삭제된 댓글입니다.
                             </p>
                           ) : (
-                            <p className="text-gray-700 text-xs whitespace-pre-wrap mt-1 break-words">
+                            <p className="text-ink text-xs whitespace-pre-wrap mt-1 break-words">
                               {reply.content}
                             </p>
                           )}
@@ -417,7 +417,7 @@ export default function SimplifiedCommentsSection({
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDeleteComment(reply.id)}
-                            className="text-gray-400 hover:text-red-500 w-5 h-5 p-0"
+                            className="text-ink-soft hover:text-red-500 w-5 h-5 p-0"
                           >
                             <Trash2 className="w-3 h-3" />
                           </Button>

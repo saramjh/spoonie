@@ -122,7 +122,7 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 		<div className="space-y-4">
 			<div className="flex items-center justify-between">
 				<Label className="text-base font-medium">{label}</Label>
-				<span className="text-sm text-gray-500">
+				<span className="text-sm text-ink-soft">
 					{images.length}/{maxImages}
 				</span>
 			</div>
@@ -180,8 +180,8 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 					))}
 				</div>
 			) : (
-				<Card className="aspect-video border-2 border-dashed border-gray-300 cursor-pointer hover:border-orange-400 hover:bg-orange-50 transition-all duration-300" onClick={() => fileInputRef.current?.click()}>
-					<div className="h-full flex flex-col items-center justify-center text-gray-400 hover:text-orange-500 space-y-2 transition-colors duration-300">
+				<Card className="aspect-video border-2 border-dashed border-border cursor-pointer hover:border-orange-ink hover:bg-muted transition-all duration-300" onClick={() => fileInputRef.current?.click()}>
+					<div className="h-full flex flex-col items-center justify-center text-ink-soft hover:text-orange-ink space-y-2 transition-colors duration-300">
 						<Camera className="w-12 h-12" />
 						<p className="text-sm font-medium">{placeholder}</p>
 						<p className="text-xs">최대 {maxImages}개, 10MB 이하</p>
@@ -202,7 +202,7 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 
 			{images.length === 0 && (
 				<div className="mt-2">
-					<p className="text-xs text-gray-500">JPG, PNG, WEBP 형식의 이미지를 업로드하세요. 자동으로 최적화됩니다.</p>
+					<p className="text-xs text-ink-soft">JPG, PNG, WEBP 형식의 이미지를 업로드하세요. 자동으로 최적화됩니다.</p>
 				</div>
 			)}
 

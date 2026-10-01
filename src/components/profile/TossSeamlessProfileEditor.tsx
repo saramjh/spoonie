@@ -18,6 +18,7 @@ import {
 import { validateUsername, checkUsernameAvailability, generateUniqueUsername } from "@/lib/username-generator"
 import { useSessionStore } from "@/store/sessionStore"
 import { getCacheManager } from "@/lib/unified-cache-manager"
+import { optimizeImages } from "@/lib/image-utils"
 
 interface Profile {
   username: string | null
@@ -323,12 +324,13 @@ export default function TossSeamlessProfileEditor({
 
     // 아바타 파일 업로드
     if (formData.avatarFile) {
-      const fileExtension = formData.avatarFile.name.split(".").pop()
-      const filePath = `${user.id}.${fileExtension}`
+      // 프로필 사진은 36~80px로 보이므로 320px JPEG로 줄여 올린다
+      const [resized] = await optimizeImages([formData.avatarFile], 320, 0.85)
+      const filePath = `${user.id}.jpg`
       
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(filePath, formData.avatarFile, { upsert: true })
+        .upload(filePath, resized.file, { upsert: true, contentType: "image/jpeg" })
       
       if (uploadError) throw uploadError
 
@@ -476,7 +478,7 @@ export default function TossSeamlessProfileEditor({
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-orange-ink" />
       </div>
     )
   }
@@ -533,12 +535,12 @@ export default function TossSeamlessProfileEditor({
           </div>
 
           {/* 드래그 앤 드롭 영역 */}
-          <div className="w-full p-4 border-2 border-dashed border-gray-200 rounded-lg hover:border-orange-300 transition-colors">
+          <div className="w-full p-4 border-2 border-dashed border-border rounded-lg hover:border-border transition-colors">
             <label htmlFor="avatar-upload-drag" className="block cursor-pointer">
               <div className="text-center">
-                <Upload className="w-6 h-6 mx-auto text-gray-400 mb-2" />
-                <p className="text-sm text-gray-600">
-                  사진을 드래그하거나 <span className="text-orange-500 font-medium">파일 선택</span>
+                <Upload className="w-6 h-6 mx-auto text-ink-soft mb-2" />
+                <p className="text-sm text-ink-soft">
+                  사진을 드래그하거나 <span className="text-orange-ink font-medium">파일 선택</span>
                 </p>
               </div>
               <input 
@@ -572,7 +574,7 @@ export default function TossSeamlessProfileEditor({
             {/* 실시간 검증 상태 표시 */}
             <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center space-x-2">
               {validation.username.isChecking && (
-                <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                <Loader2 className="w-4 h-4 animate-spin text-ink-soft" />
               )}
               {!validation.username.isChecking && validation.username.isValid && formData.username && (
                 <CheckCircle className="w-4 h-4 text-green-500" />
@@ -590,7 +592,7 @@ export default function TossSeamlessProfileEditor({
                 size="sm" 
                 onClick={generateSmartUsername} 
                 disabled={validation.isGenerating} 
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 px-3 text-xs hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 px-3 text-xs hover:bg-muted hover:text-orange-ink transition-colors"
               >
                 <RefreshCw className={`w-3 h-3 mr-1 ${validation.isGenerating ? "animate-spin" : ""}`} />
                 생성
@@ -629,7 +631,7 @@ export default function TossSeamlessProfileEditor({
               </div>
             </div>
           ) : (
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-ink-soft">
               사용자 이름은 1회만 변경할 수 있어요. 생성 버튼을 활용해보세요.
             </p>
           )}
@@ -641,8 +643,8 @@ export default function TossSeamlessProfileEditor({
             <Label htmlFor="profileMessage">프로필 메시지</Label>
             <span className={`text-xs transition-colors ${
               formData.profileMessage.length > 130 
-                ? 'text-orange-600 font-medium' 
-                : 'text-gray-400'
+                ? 'text-orange-ink font-medium' 
+                : 'text-ink-soft'
             }`}>
               {formData.profileMessage.length} / 150
             </span>
@@ -656,7 +658,7 @@ export default function TossSeamlessProfileEditor({
             className="h-24 resize-none leading-relaxed" 
           />
           <div className="flex items-start justify-between gap-2">
-            <p className="text-xs text-gray-500 leading-relaxed">
+            <p className="text-xs text-ink-soft leading-relaxed">
               긴 단어나 링크는 자동으로 줄바꿈됩니다. 
               {formData.profileMessage.length === 0 && "문단을 나누면 더 읽기 쉬워요!"}
               {formData.profileMessage.length > 0 && formData.profileMessage.length <= 50 && "조금 더 자세히 소개해보세요."}
@@ -668,16 +670,16 @@ export default function TossSeamlessProfileEditor({
 
         {/* 🎨 실시간 미리보기 */}
         {preview.visible && hasChanges && (
-          <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+          <div className="bg-door rounded-xl p-4 border border-border">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-gray-800 flex items-center">
-                <Sparkles className="w-4 h-4 mr-1 text-orange-500" />
+              <h3 className="text-sm font-semibold text-ink flex items-center">
+                <Sparkles className="w-4 h-4 mr-1 text-orange-ink" />
                 미리보기
               </h3>
               <Badge variant="secondary" className="text-xs">실시간 업데이트</Badge>
             </div>
             
-            <div className="bg-white rounded-lg p-3 shadow-sm">
+            <div className="bg-paper rounded-lg p-3 shadow-sm">
               <div className="flex items-center space-x-3">
                 <Image 
                   src={preview.data?.avatar_url || "/icon-only.svg"} 
@@ -687,11 +689,11 @@ export default function TossSeamlessProfileEditor({
                   className="w-10 h-10 rounded-full object-cover"
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 truncate">
+                  <p className="font-medium text-ink truncate">
                     {preview.data?.username}
                   </p>
                   {preview.data?.profile_message && (
-                    <div className="text-sm text-gray-500 leading-relaxed break-words hyphens-auto max-w-full mt-1">
+                    <div className="text-sm text-ink-soft leading-relaxed break-words hyphens-auto max-w-full mt-1">
                       <p className="whitespace-pre-wrap line-clamp-2">
                         {preview.data.profile_message}
                       </p>
@@ -708,7 +710,7 @@ export default function TossSeamlessProfileEditor({
           <Button 
             onClick={handleOptimisticSave}
             disabled={!canSave || optimisticUpdates.size > 0}
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+            className="w-full bg-primary hover:brightness-95 text-primary-foreground font-medium py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
           >
             {optimisticUpdates.size > 0 ? (
               <>

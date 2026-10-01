@@ -132,15 +132,15 @@ export const usePullToRefresh = () => {
 
         if (isRefreshing) {
             return (
-                <div className="fixed inset-0 bg-white bg-opacity-20 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-paper bg-opacity-20 flex items-center justify-center z-50">
                     <SpoonieLogoAnimation isLoading={true} useFullLogo={true} />
                 </div>
             );
         }
 
         return (
-            <div style={indicatorStyle} className="overflow-hidden text-center flex items-center justify-center bg-orange-50">
-                <div style={textStyle} className="text-orange-500 font-bold">
+            <div style={indicatorStyle} className="overflow-hidden text-center flex items-center justify-center bg-muted">
+                <div style={textStyle} className="text-orange-ink font-bold">
                     {pullDistance >= PULL_THRESHOLD ? "놓으면 새로고침" : PULL_TO_REFRESH_TEXT}
                 </div>
             </div>

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useFollowStore } from "@/store/followStore"
 import { useToast } from "@/hooks/use-toast"
@@ -87,11 +88,12 @@ export default function FollowButton({ userId, initialIsFollowing, className }: 
 	return (
 		<>
 			<Button
-				variant={isFollowing ? "outline" : "default"}
+				variant={isFollowing ? "ghost" : "outline"}
 				size="sm"
 				onClick={handleFollowToggle}
 				disabled={isProcessing}
-				className={className}
+				className={cn(isFollowing && "text-ink-soft", className)}
+				aria-pressed={isFollowing}
 			>
 				{isProcessing ? (
 					<div className="flex items-center gap-2">

@@ -60,20 +60,18 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
   const [currentUser, setCurrentUser] = useState<User | null>(initialData?.currentUser || null)
   const scrollCountRef = useRef(0)
   const [showSignupModal, setShowSignupModal] = useState(false)
-  const [isAuthLoading, setIsAuthLoading] = useState(!initialData)
+  const [isAuthLoading, setIsAuthLoading] = useState(!initialData?.currentUser)
   const visibleItemsRef = useRef<Set<string>>(new Set())
 
-  // 사용자 상태 확인 (초기 데이터가 없는 경우에만)
+  // 사용자 상태 확인: 홈 HTML은 공개 피드로 정적 생성되므로 로그인 여부는 항상 브라우저에서 확인한다
   useEffect(() => {
-    if (!initialData) {
-      const checkUser = async () => {
-        setIsAuthLoading(true)
-        const { data: { user } } = await supabase.auth.getUser()
-        setCurrentUser(user)
-        setIsAuthLoading(false)
-      }
-      checkUser()
+    if (initialData?.currentUser) return
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setCurrentUser(user)
+      setIsAuthLoading(false)
     }
+    checkUser()
   }, [supabase, initialData])
 
   /**
@@ -226,7 +224,7 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-        <p className="text-gray-500">데이터를 불러오는 중 오류가 발생했습니다.</p>
+        <p className="text-ink-soft">데이터를 불러오는 중 오류가 발생했습니다.</p>
         <Button 
           variant="outline" 
           onClick={() => swrMutate()}
@@ -254,7 +252,7 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
 
 
       {/* 아이템 목록 */}
-      <div className="space-y-5 px-2 py-2">
+      <div className="space-y-3 px-3 py-3">
         {feedItems.map((item, index) => {
           // 🚀 LCP 최적화: 첫 번째 3개 포스트에만 priority 적용
           const isPriorityPost = index < 3
@@ -282,7 +280,7 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
               ))}
             </div>
           ) : (
-            <div className="text-center text-gray-500">
+            <div className="text-center text-ink-soft">
               스크롤해서 더 보기
             </div>
           )}
@@ -291,7 +289,7 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
 
       {/* 끝 표시 */}
       {isReachingEnd && feedItems.length > 0 && (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-ink-soft">
           모든 게시물을 확인했습니다
         </div>
       )}
@@ -299,8 +297,8 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
       {/* 빈 상태 */}
       {feedItems.length === 0 && !isLoading && (
         <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-          <h3 className="text-xl font-semibold text-gray-700">아직 게시물이 없어요</h3>
-          <p className="text-gray-500 text-center">
+          <h3 className="text-xl font-semibold text-ink">아직 게시물이 없어요</h3>
+          <p className="text-ink-soft text-center">
             첫 번째 레시피나 레시피드를 작성해보세요!
           </p>
           <div className="flex gap-2">

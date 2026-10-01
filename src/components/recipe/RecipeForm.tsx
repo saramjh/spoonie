@@ -22,10 +22,13 @@ import { useToast } from "@/hooks/use-toast"
 import { RECIPE_COLOR_OPTIONS } from "@/lib/color-options"
 
 
-import type { Item } from "@/types/item"
+import type { Item, ItemDetail } from "@/types/item"
 import { uploadImagesOptimized, ImageUploadMetrics } from "@/utils/image-optimization"
 import { cacheManager } from "@/lib/unified-cache-manager"
 import { notificationService } from "@/lib/notification-service"
+import { logEvent } from "@/lib/events"
+import { mutate as globalMutate } from "swr"
+import SourceLine from "@/components/items/SourceLine"
 
 // Zod 스키마 업데이트
 const recipeSchema = z.object({
@@ -71,10 +74,12 @@ type RecipeFormValues = z.infer<typeof recipeSchema>
 
 interface RecipeFormProps {
 	initialData?: Item | null
+	// "참고해서 내 레시피 만들기": 원본의 분량·재료·단계를 미리 채우고 출처를 자동으로 남긴다
+	forkFrom?: ItemDetail | null
 	onNavigateBack?: (itemId?: string, options?: { replace?: boolean }) => void // 🧭 스마트 네비게이션 콜백
 }
 
-export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormProps) {
+export default function RecipeForm({ initialData, onNavigateBack, forkFrom = null }: RecipeFormProps) {
 	const router = useRouter()
 	const supabase = createSupabaseBrowserClient()
 	const { toast } = useToast()
@@ -229,6 +234,30 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 			}
 		}
 	}, [initialData, isEditMode, form, supabase])
+
+	// fork: 사진과 색상 라벨은 가져오지 않는다 (내가 만든 요리의 사진, 내 정리 기준을 쓴다)
+	useEffect(() => {
+		if (isEditMode || !forkFrom) return
+		form.reset({
+			title: "",
+			description: "",
+			servings: forkFrom.servings || 1,
+			cooking_time_minutes: forkFrom.cooking_time_minutes || 1,
+			is_public: true,
+			ingredients:
+				forkFrom.ingredients && forkFrom.ingredients.length > 0
+					? forkFrom.ingredients.map((ing) => ({ name: ing.name, amount: ing.amount, unit: ing.unit }))
+					: [{ name: "", amount: 1, unit: "" }],
+			instructions:
+				forkFrom.instructions && forkFrom.instructions.length > 0
+					? forkFrom.instructions.map((inst) => ({ description: inst.description, image_url: "" }))
+					: [{ description: "", image_url: "" }],
+			color_label: null,
+			tags: forkFrom.tags?.join(", ") || "",
+			cited_recipe_ids: [forkFrom.id],
+		} as unknown as RecipeFormValues)
+		setSelectedCitedRecipes([{ ...forkFrom, item_id: forkFrom.id } as Item])
+	}, [isEditMode, forkFrom, form])
 
 	const { fields: ingredients, append: appendIngredient, remove: removeIngredient } = useFieldArray({ control: form.control, name: "ingredients" })
 	const { fields: instructions, append: appendInstruction, remove: removeInstruction } = useFieldArray({ control: form.control, name: "instructions" })
@@ -389,6 +418,17 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 				tags: values.tags,
 				cited_recipe_ids: values.cited_recipe_ids,
 				thumbnail_index: thumbnailIndex, // 🚀 썸네일 인덱스 저장
+				// 작성 경로: fork로 시작해 원본을 그대로 인용하면 fork(이어진 레시피 - 고친 버전), 직접 고른 인용은 manual
+				...(isEditMode
+					? {}
+					: {
+							creation_origin:
+								forkFrom && values.cited_recipe_ids?.includes(forkFrom.id)
+									? ("fork" as const)
+									: values.cited_recipe_ids && values.cited_recipe_ids.length > 0
+										? ("manual" as const)
+										: null,
+						}),
 			}
 
 			let itemId: string
@@ -507,6 +547,9 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 		
 
 		toast({ title: `레시피 ${isEditMode ? "수정" : "작성"} 완료`, description: `성공적으로 ${isEditMode ? "수정" : "등록"}되었습니다.` })
+		if (!isEditMode && forkFrom) logEvent("derived_create", itemId, "fork")
+		// 원본 레시피 상세의 "이어진 레시피"가 바로 보이도록 관계 캐시를 비운다
+		values.cited_recipe_ids?.forEach((id) => globalMutate(`recipe-relations:${id}`))
 		
 		// 🔔 참고레시피 알림 발송 
 		if (values.cited_recipe_ids && values.cited_recipe_ids.length > 0) {
@@ -543,13 +586,13 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 	}
 
 	return (
-		<div className="min-h-screen bg-gray-50">
-			<div className="bg-white border-b sticky top-0 z-40">
+		<div className="min-h-screen bg-door">
+			<div className="bg-paper border-b sticky top-0 z-40">
 				<div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
 					<Button type="button" variant="ghost" onClick={() => router.back()}>
 						취소
 					</Button>
-					<h1 className="text-lg font-semibold">{isEditMode ? "레시피 수정" : "새 레시피"}</h1>
+					<h1 className="text-lg font-semibold">{isEditMode ? "레시피 수정" : forkFrom ? "내 버전으로 고쳐 쓰기" : "새 레시피"}</h1>
 					<div className="w-12" />
 				</div>
 			</div>
@@ -557,10 +600,17 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 			<div className="max-w-md mx-auto p-4 space-y-6">
 				{/* @ts-expect-error - form 핸들러 타입 변환 처리 */}
 				      <form id="recipe-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+					{/* fork: 무엇을 바탕으로 쓰는지 먼저 보여 준다. 저장하면 원본의 "이어진 레시피"에 고친 버전으로 실린다 */}
+					{!isEditMode && forkFrom && (
+						<div className="rounded-[3px] bg-paper px-4 py-3 shadow-sheet">
+							<SourceLine recipes={selectedCitedRecipes.filter((r) => r.id === forkFrom.id)} />
+							<p className="mt-1 text-sm text-ink-soft">분량, 재료, 단계를 가져왔어요. 내 방식대로 고치고 내가 만든 사진을 올려 주세요.</p>
+						</div>
+					)}
 					<Card>
 						<CardHeader>
 							<CardTitle className="flex items-center gap-2">
-								<Camera className="w-5 h-5 text-orange-500" />
+								<Camera className="w-5 h-5 text-orange-ink" />
 								레시피 이미지
 							</CardTitle>
 						</CardHeader>
@@ -581,7 +631,7 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 						<Label htmlFor="title" className="text-base font-medium">
 							레시피 제목
 						</Label>
-						<Input id="title" placeholder="예: 맛있는 김치찌개" className="mt-2 bg-white" {...form.register("title")} />
+						<Input id="title" placeholder="예: 맛있는 김치찌개" className="mt-2 bg-paper" {...form.register("title")} />
 						{form.formState.errors.title && <p className="text-red-500 text-sm mt-1">{form.formState.errors.title.message}</p>}
 					</div>
 
@@ -589,7 +639,7 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 						<Label htmlFor="description" className="text-base font-medium">
 							레시피 설명
 						</Label>
-						<Textarea id="description" placeholder="레시피에 대한 간단한 설명을 입력하세요" className="mt-2 bg-white" {...form.register("description")} />
+						<Textarea id="description" placeholder="레시피에 대한 간단한 설명을 입력하세요" className="mt-2 bg-paper" {...form.register("description")} />
 					</div>
 
 					<div className="grid grid-cols-2 gap-4">
@@ -609,7 +659,7 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 									className="rounded-r-none">
 									-
 								</Button>
-								<Input id="servings" type="number" min="1" className="rounded-none text-center bg-white" {...form.register("servings")} />
+								<Input id="servings" type="number" min="1" className="rounded-none text-center bg-paper" {...form.register("servings")} />
 								<Button
 									type="button"
 									variant="outline"
@@ -622,7 +672,7 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 									+
 								</Button>
 							</div>
-							<span className="text-xs text-gray-500 mt-1 block">인분</span>
+							<span className="text-xs text-ink-soft mt-1 block">인분</span>
 						</div>
 
 						<div>
@@ -636,10 +686,10 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 									type="number" 
 									min="1" 
 									placeholder="30" 
-									className="bg-white flex-1" 
+									className="bg-paper flex-1" 
 									{...form.register("cooking_time_minutes")} 
 								/>
-								<span className="text-sm text-gray-600 font-medium">분</span>
+								<span className="text-sm text-ink-soft font-medium">분</span>
 							</div>
 							{form.formState.errors.cooking_time_minutes && <p className="text-red-500 text-sm mt-1">{form.formState.errors.cooking_time_minutes.message}</p>}
 						</div>
@@ -650,7 +700,7 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 						<CardHeader>
 							<CardTitle className="flex items-center justify-between">
 								재료
-								<span className="text-sm font-normal text-gray-500">
+								<span className="text-sm font-normal text-ink-soft">
 									드래그해서 순서 변경
 								</span>
 							</CardTitle>
@@ -678,7 +728,7 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 								type="button" 
 								variant="outline" 
 								onClick={() => appendIngredient({ name: "", amount: 1, unit: "" })} 
-								className="w-full border-dashed border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+								className="w-full border-dashed border-2 border-border hover:border-border hover:bg-door"
 							>
 								<PlusCircle className="mr-2 h-4 w-4" />
 								재료 추가
@@ -701,7 +751,7 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 							{instructions.map((field, index) => (
 								<div key={field.id} className="flex items-start gap-3">
 									<div className="relative pt-1">
-										<div className="bg-orange-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium flex-shrink-0 z-10">{index + 1}</div>
+										<div className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium flex-shrink-0 z-10">{index + 1}</div>
 										{instructions.length > 1 && (
 											<Button type="button" variant="destructive" size="icon" onClick={() => removeInstruction(index)} className="absolute -top-1 -right-3 w-5 h-5 rounded-full z-20">
 												<X className="h-3 w-3" />
@@ -710,7 +760,7 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 									</div>
 									<div className="flex-1 space-y-2">
 										<InstructionImageUploader imageUrl={field.image_url} onImageChange={(image) => handleInstructionImageChange(index, image)} />
-										<Textarea placeholder="조리 과정을 순서대로 설명해주세요" className="min-h-[80px] bg-white" {...form.register(`instructions.${index}.description`)} />
+										<Textarea placeholder="조리 과정을 순서대로 설명해주세요" className="min-h-[80px] bg-paper" {...form.register(`instructions.${index}.description`)} />
 										{form.formState.errors.instructions?.[index]?.description && <p className="text-red-500 text-sm mt-1">{form.formState.errors.instructions[index].description.message}</p>}
 									</div>
 								</div>
@@ -726,9 +776,9 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 					{/* 🚀 토스 스타일: 더 자연스러운 참고레시피 섹션 */}
 					<div className="space-y-2">
 						<Label className="text-base font-medium flex items-center gap-2">
-							<Book className="w-4 h-4 text-orange-500" />
+							<Book className="w-4 h-4 text-orange-ink" />
 							참고 레시피
-							<span className="text-sm font-normal text-gray-500">(선택사항)</span>
+							<span className="text-sm font-normal text-ink-soft">(선택사항)</span>
 						</Label>
 						<CitedRecipeSearch selectedRecipes={selectedCitedRecipes} onSelectedRecipesChange={handleSelectedCitedRecipesChange} />
 					</div>
@@ -737,7 +787,7 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 						<Label htmlFor="tags" className="text-base font-medium">
 							태그 (쉼표로 구분)
 						</Label>
-						<Input id="tags" placeholder="예: #김치찌개, #한식" className="mt-2 bg-white" {...form.register("tags")} />
+						<Input id="tags" placeholder="예: #김치찌개, #한식" className="mt-2 bg-paper" {...form.register("tags")} />
 						{form.formState.errors.tags && <p className="text-red-500 text-sm mt-1">{form.formState.errors.tags.message}</p>}
 					</div>
 
@@ -752,8 +802,8 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 									className={`
 										w-10 h-10 p-0 rounded-xl border-2 transition-all duration-200
 										${colorOption.color}
-										${form.watch("color_label") === colorOption.value ? "ring-2 ring-orange-500 ring-offset-2 scale-110" : "hover:scale-105"}
-                    focus-visible:ring-orange-500 focus-visible:ring-offset-2
+										${form.watch("color_label") === colorOption.value ? "ring-2 ring-ring ring-offset-2 scale-110" : "hover:scale-105"}
+                    focus-visible:ring-ring focus-visible:ring-offset-2
 									`}
 									onClick={() => {
 										const currentColor = form.getValues("color_label")
@@ -779,14 +829,14 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 											<RadioGroupItem value="true" id="public" />
 											<Label htmlFor="public" className="flex-1">
 												<div className="font-medium">공개</div>
-												<div className="text-sm text-gray-500">모든 사용자가 볼 수 있습니다</div>
+												<div className="text-sm text-ink-soft">모든 사용자가 볼 수 있습니다</div>
 											</Label>
 										</div>
 										<div className="flex items-center space-x-3">
 											<RadioGroupItem value="false" id="private" />
 											<Label htmlFor="private" className="flex-1">
 												<div className="font-medium">비공개</div>
-												<div className="text-sm text-gray-500">나만 볼 수 있습니다</div>
+												<div className="text-sm text-ink-soft">나만 볼 수 있습니다</div>
 											</Label>
 										</div>
 									</RadioGroup>
@@ -799,9 +849,9 @@ export default function RecipeForm({ initialData, onNavigateBack }: RecipeFormPr
 				</form>
 			</div>
 
-			<div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-50">
+			<div className="fixed bottom-0 left-0 right-0 bg-paper border-t shadow-lg z-50">
 				<div className="max-w-md mx-auto p-4">
-					<Button type="submit" form="recipe-form" disabled={isSubmitting} className="w-full bg-orange-500 hover:bg-orange-600 h-12 text-base font-medium rounded-md">
+					<Button type="submit" form="recipe-form" disabled={isSubmitting} className="w-full bg-primary hover:brightness-95 h-12 text-base font-medium rounded-md">
 						{isSubmitting ? `레시피 ${isEditMode ? "수정" : "작성"} 중...` : `레시피 ${isEditMode ? "수정" : "작성"}하기`}
 					</Button>
 				</div>

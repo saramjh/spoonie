@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, ReactNode } from "react"
+import { useEffect, useState, ReactNode } from "react"
 import { usePathname } from "next/navigation"
 import { useSWRConfig } from "swr"
 import SplashScreen from "./SplashScreen"
@@ -12,6 +12,9 @@ import { RefreshProvider } from "@/contexts/RefreshContext"
 import { startAuthorCacheCleanup } from "@/utils/author-cache"
 import { startMonitoring } from "@/lib/monitoring"
 
+const SPLASH_MIN_MS = 700
+const SPLASH_MAX_MS = 3000
+
 interface ClientLayoutWrapperProps {
   children: ReactNode
 }
@@ -22,6 +25,8 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
 
   const { mutate } = useSWRConfig()
   const pathname = usePathname()
+  // 스플래시는 홈으로 들어올 때만 보여 준다. 공유 링크로 상세에 들어오면 이미 그려진 본문을 가리지 않는다.
+  const [splashRoute] = useState(() => pathname === "/")
 
 
 
@@ -40,6 +45,13 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
   useEffect(() => {
     const initializeAuth = async () => {
       if (isInitialLoad) {
+        // 스플래시 최소 표시 시간. 로그인 확인이 끝나면 그 뒤의 팔로우·프로필 조회를 기다리지 않고 닫는다.
+        const startedAt = performance.now()
+        const closeSplash = () => {
+          const wait = Math.max(0, SPLASH_MIN_MS - (performance.now() - startedAt))
+          setTimeout(() => setStoreInitialLoad(false), wait)
+        }
+        const fallbackTimer = setTimeout(() => setStoreInitialLoad(false), SPLASH_MAX_MS)
 
         
         try {
@@ -47,6 +59,8 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
           
           // 1. 세션 확인
           const { data: { user }, error: userError } = await supabase.auth.getUser()
+          clearTimeout(fallbackTimer)
+          closeSplash()
           
           if (userError) {
             console.error("❌ ClientLayoutWrapper: Auth error:", userError)
@@ -106,17 +120,8 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
           setProfile(null)
         }
         
-        // 🔧 스플래시 화면 안전장치: 항상 홈으로 전환 보장
-        setTimeout(() => {
-          try {
-            setStoreInitialLoad(false)
-            console.log("✅ 스플래시 화면 종료 - 홈화면 전환")
-          } catch (error) {
-            console.error("❌ 스플래시 화면 전환 실패:", error)
-            // 강제로라도 스플래시 종료
-            setStoreInitialLoad(false)
-          }
-        }, 1500) // 1.5초 후 스플래시 화면 숨김
+        clearTimeout(fallbackTimer)
+        closeSplash()
       }
     }
 
@@ -168,7 +173,7 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
   return (
     <RefreshProvider>
       <AppWrapper>{children}</AppWrapper>
-      {isInitialLoad && <SplashScreen />}
+      {isInitialLoad && splashRoute && <SplashScreen />}
     </RefreshProvider>
   )
 }

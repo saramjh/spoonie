@@ -22,11 +22,17 @@ import CitedRecipeSearch from "@/components/recipe/CitedRecipeSearch"
 import { uploadImagesOptimized, ImageUploadMetrics } from "@/utils/image-optimization"
 import { cacheManager } from "@/lib/unified-cache-manager"
 import { notificationService } from "@/lib/notification-service"
+import { logEvent } from "@/lib/events"
+import { mutate as globalMutate } from "swr"
+import SourceLine from "@/components/items/SourceLine"
 
 interface PostFormProps {
 	isEditMode?: boolean
 	initialData?: Item
 	onNavigateBack?: (itemId?: string, options?: { replace?: boolean }) => void // 🧭 스마트 네비게이션 콜백
+	// 레시피 화면이나 요리 모드에서 "만들었어요"로 들어온 경우: 출처 레시피와 작성 경로
+	sourceRecipeId?: string | null
+	sourceOrigin?: "recipe_detail" | "cook_mode" | null
 }
 
 const postSchema = z.object({
@@ -46,7 +52,7 @@ type PostFormValues = z.infer<typeof postSchema>
  * @param isEditMode - 수정 모드 여부 (true: 수정, false: 생성)
  * @param initialData - 수정 시 초기 데이터 (FeedItem 타입)
  */
-export default function PostForm({ isEditMode = false, initialData, onNavigateBack }: PostFormProps) {
+export default function PostForm({ isEditMode = false, initialData, onNavigateBack, sourceRecipeId = null, sourceOrigin = null }: PostFormProps) {
 	const router = useRouter()
 	const { toast } = useToast()
 	const supabase = createSupabaseBrowserClient()
@@ -96,6 +102,43 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 		},
 	})
 
+	// 참고 레시피의 표시 정보(제목, 작성자) 조회
+	const loadCitedRecipes = useCallback(
+		async (ids: string[]): Promise<Item[]> => {
+			const { data, error } = await supabase
+				.from("items")
+				.select("id, title, item_type, image_urls, user_id, created_at, author:profiles!items_user_id_fkey(display_name, username, public_id, avatar_url)")
+				.in("id", ids)
+				.eq("item_type", "recipe")
+			if (error) {
+				console.error("Error fetching cited recipes", error)
+				return []
+			}
+			return data.map((recipe) => {
+				const authorProfile = Array.isArray(recipe.author) ? recipe.author[0] : recipe.author
+				return {
+					...recipe,
+					item_id: recipe.id,
+					display_name: authorProfile?.username,
+					username: authorProfile?.username,
+					avatar_url: authorProfile?.avatar_url,
+					user_public_id: authorProfile?.public_id,
+				}
+			}) as unknown as Item[]
+		},
+		[supabase]
+	)
+
+	// "이 레시피로 만들었어요"로 들어오면 출처 레시피를 미리 연결한다 (다시 검색할 필요 없음)
+	useEffect(() => {
+		if (isEditMode || !sourceRecipeId) return
+		loadCitedRecipes([sourceRecipeId]).then((recipes) => {
+			if (recipes.length === 0) return
+			setSelectedCitedRecipes(recipes)
+			form.setValue("cited_recipe_ids", [sourceRecipeId])
+		})
+	}, [isEditMode, sourceRecipeId, loadCitedRecipes, form])
+
 	useEffect(() => {
 		if (isEditMode && initialData) {
 			// 안전한 cited_recipe_ids 처리
@@ -131,49 +174,10 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 
 			// 참고 레시피 초기화
 			if (initialData.cited_recipe_ids && initialData.cited_recipe_ids.length > 0) {
-				const fetchCitedRecipes = async () => {
-					const { data, error } = await supabase
-						.from("items")
-						.select(
-							`
-							id,
-							title,
-							item_type,
-							image_urls,
-							user_id,
-							created_at,
-							author:profiles!items_user_id_fkey(
-								display_name,
-								username,
-								public_id,
-								avatar_url
-							)
-						`
-						)
-						.in("id", initialData.cited_recipe_ids!)
-						.eq("item_type", "recipe")
-
-					if (error) {
-						console.error("Error fetching cited recipes", error)
-					} else {
-						const formattedRecipes = data.map((recipe) => {
-							const authorProfile = Array.isArray(recipe.author) ? recipe.author[0] : recipe.author
-							return {
-								...recipe,
-								item_id: recipe.id,
-								        display_name: authorProfile?.username,
-								username: authorProfile?.username,
-								avatar_url: authorProfile?.avatar_url,
-								user_public_id: authorProfile?.public_id,
-							}
-						})
-						setSelectedCitedRecipes(formattedRecipes as unknown as Item[])
-					}
-				}
-				fetchCitedRecipes()
+				loadCitedRecipes(initialData.cited_recipe_ids).then(setSelectedCitedRecipes)
 			}
 		}
-	}, [isEditMode, initialData, form, supabase])
+	}, [isEditMode, initialData, form, supabase, loadCitedRecipes])
 
 	// 폼 에러 핸들러 추가
 	const onError = () => {
@@ -297,6 +301,17 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 				cited_recipe_ids: values.cited_recipe_ids,
 				is_public: values.is_public, // 사용자가 설정한 공개/비공개 값
 				thumbnail_index: thumbnailIndex, // 🚀 썸네일 인덱스 저장
+				// 작성 경로: 출처 레시피가 그대로 연결돼 있으면 그 경로, 직접 고른 인용이면 manual (관계 종류를 정한다)
+				...(isEditMode
+					? {}
+					: {
+							creation_origin:
+								sourceRecipeId && sourceOrigin && values.cited_recipe_ids?.includes(sourceRecipeId)
+									? sourceOrigin
+									: values.cited_recipe_ids && values.cited_recipe_ids.length > 0
+										? ("manual" as const)
+										: null,
+						}),
 			}
 			
 			// 🚀 SSA 기반: 간단하고 안정적인 제출 프로세스
@@ -369,6 +384,10 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 			description: "레시피드가 성공적으로 처리되었습니다.",
 		})
 			
+			if (!isEditMode) logEvent("recipeed_create", itemId, sourceOrigin ?? undefined)
+			// 레시피 상세의 "만들어 본 기록"이 바로 보이도록 관계 캐시를 비운다
+			values.cited_recipe_ids?.forEach((id) => globalMutate(`recipe-relations:${id}`))
+
 			// 🔔 참고레시피 알림 발송
 			if (values.cited_recipe_ids && values.cited_recipe_ids.length > 0) {
 				if (!isEditMode) {
@@ -407,23 +426,31 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 	}
 
 	return (
-		<div className="min-h-screen bg-gray-50 pb-20">
-			<div className="bg-white border-b sticky top-0 z-40">
+		<div className="min-h-screen bg-door pb-20">
+			<div className="bg-paper border-b sticky top-0 z-40">
 				<div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
 					<Button type="button" variant="ghost" onClick={() => router.back()}>
 						취소
 					</Button>
-					<h1 className="text-lg font-semibold">{isEditMode ? "레시피드 수정" : "새 레시피드"}</h1>
+					<h1 className="text-lg font-semibold">{isEditMode ? "레시피드 수정" : sourceRecipeId ? "만들어 본 기록" : "새 레시피드"}</h1>
 					<div className="w-12" />
 				</div>
 			</div>
 
 			<div className="max-w-md mx-auto p-4 space-y-6">
 				<form onSubmit={form.handleSubmit(onSubmit, onError)} className="space-y-6">
+					{/* 출처가 정해진 기록: 이 글이 어떤 레시피에서 나왔는지 먼저 보여 준다 */}
+					{!isEditMode && sourceRecipeId && selectedCitedRecipes.some((r) => r.id === sourceRecipeId) && (
+						<SourceLine
+							recipes={selectedCitedRecipes.filter((r) => r.id === sourceRecipeId)}
+							creationOrigin={sourceOrigin}
+							className="rounded-[3px] bg-paper px-4 py-3 shadow-sheet"
+						/>
+					)}
 					<Card>
 						<CardHeader>
 							<CardTitle className="flex items-center gap-2">
-								<Camera className="w-5 h-5 text-orange-500" />
+								<Camera className="w-5 h-5 text-orange-ink" />
 								레시피드 이미지
 							</CardTitle>
 						</CardHeader>
@@ -442,12 +469,12 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 
 					<div className="space-y-4">
 					<div>
-							<Input {...form.register("title")} placeholder="제목을 입력하세요" className="text-lg font-semibold bg-white" />
+							<Input {...form.register("title")} placeholder="제목을 입력하세요" className="text-lg font-semibold bg-paper" />
 						{form.formState.errors.title && <p className="text-red-500 text-sm mt-1">{form.formState.errors.title.message}</p>}
 					</div>
 
 					<div>
-							<Textarea {...form.register("content")} placeholder="내용을 입력하세요" rows={8} className="resize-none bg-white" />
+							<Textarea {...form.register("content")} placeholder="내용을 입력하세요" rows={8} className="resize-none bg-paper" />
 						{form.formState.errors.content && <p className="text-red-500 text-sm mt-1">{form.formState.errors.content.message}</p>}
 					</div>
 
@@ -506,14 +533,14 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 												<RadioGroupItem value="true" id="post-public" />
 												<Label htmlFor="post-public" className="flex-1">
 													<div className="font-medium">공개</div>
-													<div className="text-sm text-gray-500">모든 사용자가 볼 수 있습니다</div>
+													<div className="text-sm text-ink-soft">모든 사용자가 볼 수 있습니다</div>
 												</Label>
 											</div>
 											<div className="flex items-center space-x-3">
 												<RadioGroupItem value="false" id="post-private" />
 												<Label htmlFor="post-private" className="flex-1">
 													<div className="font-medium">비공개</div>
-													<div className="text-sm text-gray-500">나만 볼 수 있습니다</div>
+													<div className="text-sm text-ink-soft">나만 볼 수 있습니다</div>
 												</Label>
 											</div>
 										</RadioGroup>

@@ -10,12 +10,21 @@ import { useNavigation } from "@/hooks/useNavigation"
 export default function NewPostPage() {
 	const [user, setUser] = useState<User | null>(null)
 	const [isLoading, setIsLoading] = useState(true)
+	// "이 레시피로 만들었어요" / 요리 모드에서 들어온 경우의 출처 (?from=레시피ID&origin=recipe_detail|cook_mode)
+	const [source, setSource] = useState<{ id: string | null; origin: "recipe_detail" | "cook_mode" | null }>({ id: null, origin: null })
 	const supabase = createSupabaseBrowserClient()
 
 	// 🧭 스마트 네비게이션 (이전 경로 추적)
 	const { navigateBack } = useNavigation({ trackHistory: true })
 
 	useEffect(() => {
+		const params = new URLSearchParams(window.location.search)
+		const from = params.get("from")
+		const origin = params.get("origin")
+		setSource({
+			id: from && /^[0-9a-f-]{36}$/i.test(from) ? from : null,
+			origin: origin === "recipe_detail" || origin === "cook_mode" ? origin : null,
+		})
 		const checkUser = async () => {
 			const { data: { user } } = await supabase.auth.getUser()
 			setUser(user)
@@ -27,7 +36,7 @@ export default function NewPostPage() {
 	if (isLoading) {
 		return (
 			<div className="flex items-center justify-center min-h-screen">
-				<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+				<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-ink"></div>
 			</div>
 		)
 	}
@@ -35,10 +44,10 @@ export default function NewPostPage() {
 	if (!user) {
 		return (
 			<CreateContentAuthPrompt contentType="post">
-				<PostForm onNavigateBack={navigateBack} />
+				<PostForm onNavigateBack={navigateBack} sourceRecipeId={source.id} sourceOrigin={source.origin} />
 			</CreateContentAuthPrompt>
 		)
 	}
 
-	return <PostForm onNavigateBack={navigateBack} />
+	return <PostForm onNavigateBack={navigateBack} sourceRecipeId={source.id} sourceOrigin={source.origin} />
 }

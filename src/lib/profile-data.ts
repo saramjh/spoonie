@@ -19,6 +19,8 @@ export interface UserProfile {
 	profile_message: string | null // bio → profile_message로 변경
 	created_at?: string
 	public_id?: string | null
+	show_follower_count?: boolean | null
+	show_join_date?: boolean | null
 }
 
 export const fetchProfile = async (identifier: string, supabase: SupabaseClient = createSupabaseBrowserClient()) => {
@@ -207,43 +209,26 @@ export const fetchFollowStatus = async (currentUserId: string, targetUserId: str
 }
 
 // 참고레시피로 인용된 횟수 계산
-export const fetchCitationCount = async (userId: string) => {
+export interface LineageCounts {
+	recipes: number
+	cooked: number
+	adapted: number
+	referenced: number
+}
+
+// 프로필 지표: 공개 레시피 수와, 다른 사람이 그 레시피로 만든·이어 쓴·참고한 공개 글 수 (DB 함수 한 번)
+export const fetchLineageCounts = async (userId: string): Promise<LineageCounts> => {
 	const supabase = createSupabaseBrowserClient()
-	
-	// 사용자의 레시피 ID와 인용 목록은 서로 의존하지 않으므로 병렬로 조회
-	const [{ data: userRecipes, error: recipesError }, { data: citingItems, error: citingError }] = await Promise.all([
-		supabase.from("items").select("id").eq("user_id", userId).eq("item_type", "recipe"),
-		supabase.from("items").select("cited_recipe_ids").not("cited_recipe_ids", "is", null),
-	])
-	
-	if (recipesError) {
-		console.error("Error fetching user recipes:", recipesError)
-		return 0
+	const { data, error } = await supabase.rpc("get_profile_lineage_counts", { profile_user_id: userId })
+	const row = Array.isArray(data) ? data[0] : data
+	if (error || !row) {
+		if (error) console.error("Error fetching lineage counts:", error)
+		return { recipes: 0, cooked: 0, adapted: 0, referenced: 0 }
 	}
-	
-	if (!userRecipes || userRecipes.length === 0) {
-		return 0
+	return {
+		recipes: Number(row.recipes_count) || 0,
+		cooked: Number(row.cooked_count) || 0,
+		adapted: Number(row.adapted_count) || 0,
+		referenced: Number(row.referenced_count) || 0,
 	}
-	
-	const userRecipeIds = userRecipes.map(recipe => recipe.id)
-	
-	if (citingError) {
-		console.error("Error fetching citing items:", citingError)
-		return 0
-	}
-	
-	// 3. 클라이언트에서 카운트 계산
-	let totalCitations = 0
-	
-	citingItems?.forEach(item => {
-		if (item.cited_recipe_ids && Array.isArray(item.cited_recipe_ids)) {
-			// 이 아이템의 cited_recipe_ids에 사용자의 레시피 ID가 포함된 개수 계산
-			const matchingCount = item.cited_recipe_ids.filter(citedId => 
-				userRecipeIds.includes(citedId)
-			).length
-			totalCitations += matchingCount
-		}
-	})
-	
-	return totalCitations
 }

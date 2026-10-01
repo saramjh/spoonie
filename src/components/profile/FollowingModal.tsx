@@ -138,18 +138,18 @@ export default function FollowingModal({ isOpen, onClose, userId, currentUserId 
 						<div className="space-y-4">
 							{[...Array(3)].map((_, i) => (
 								<div key={i} className="flex items-center space-x-3 animate-pulse">
-									<div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+									<div className="w-12 h-12 bg-border rounded-full"></div>
 									<div className="flex-1 space-y-2">
-										<div className="h-4 bg-gray-200 rounded w-24"></div>
-										<div className="h-3 bg-gray-200 rounded w-16"></div>
+										<div className="h-4 bg-border rounded w-24"></div>
+										<div className="h-3 bg-border rounded w-16"></div>
 									</div>
-									<div className="w-20 h-8 bg-gray-200 rounded"></div>
+									<div className="w-20 h-8 bg-border rounded"></div>
 								</div>
 							))}
 						</div>
 					) : error ? (
 						<div className="text-center py-8">
-							<UserPlus className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+							<UserPlus className="w-12 h-12 text-ink-soft/60 mx-auto mb-4" />
 							<p className="text-red-500 text-sm">{error}</p>
 							<Button
 								variant="outline"
@@ -162,8 +162,8 @@ export default function FollowingModal({ isOpen, onClose, userId, currentUserId 
 						</div>
 					) : following.length === 0 ? (
 						<div className="text-center py-8">
-							<UserPlus className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-							<p className="text-gray-500 text-sm">아직 팔로잉하는 사용자가 없습니다.</p>
+							<UserPlus className="w-12 h-12 text-ink-soft/60 mx-auto mb-4" />
+							<p className="text-ink-soft text-sm">아직 팔로잉하는 사용자가 없습니다.</p>
 						</div>
 					) : (
 						<div className="space-y-3">
@@ -171,22 +171,22 @@ export default function FollowingModal({ isOpen, onClose, userId, currentUserId 
 								<div key={followingUser.id} className="flex items-center justify-between py-2">
 									<Link 
 										href={`/profile/${followingUser.public_id || followingUser.id}`}
-										className="flex items-center space-x-3 flex-1 hover:bg-gray-50 rounded-lg p-2 transition-colors"
+										className="flex items-center space-x-3 flex-1 hover:bg-door rounded-lg p-2 transition-colors"
 									>
 										<Avatar className="w-12 h-12 border">
 											<AvatarImage src={followingUser.avatar_url || undefined} />
-											<AvatarFallback className="bg-gray-200 text-gray-600">
+											<AvatarFallback className="bg-border text-ink-soft">
 												                {followingUser.username?.charAt(0) || "U"}
 											</AvatarFallback>
 										</Avatar>
 										<div className="flex-1 min-w-0">
 											<div className="flex items-center gap-2">
-												<p className="font-semibold text-sm text-gray-900 truncate">
+												<p className="font-semibold text-sm text-ink truncate">
 													{followingUser.username}
 												</p>
 											</div>
 
-											<div className="flex items-center gap-1 text-xs text-gray-400">
+											<div className="flex items-center gap-1 text-xs text-ink-soft">
 												<Clock className="w-3 h-3" />
 												<span>
 													{formatDistanceToNow(new Date(followingUser.followed_at), {

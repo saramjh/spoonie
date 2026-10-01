@@ -13,6 +13,8 @@ interface ImageCarouselProps {
   // 🎯 더블탭 좋아요 지원
   onDoubleClick?: () => void
   onSingleClick?: () => void
+  // 프레임 비율: 레시피 4:3, 레시피드 1:1 (DESIGN.md Interface Grammar)
+  frame?: "recipe" | "recipeed"
 }
 
 export default function ImageCarousel({ 
@@ -20,7 +22,8 @@ export default function ImageCarousel({
   alt, 
   priority = false, 
   onDoubleClick, 
-  onSingleClick
+  onSingleClick,
+  frame = "recipeed",
 }: ImageCarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel()
   const [selectedIndex, setSelectedIndex] = React.useState(0)
@@ -93,7 +96,7 @@ export default function ImageCarousel({
     <div className="relative w-full overflow-hidden" ref={emblaRef}>
       <div className="flex">
         {images.map((src, index) => (
-          <div className="relative flex-none w-full aspect-square" key={index}>
+          <div className={cn("relative w-full flex-none bg-muted", frame === "recipe" ? "aspect-[4/3]" : "aspect-square")} key={index}>
             <Image
               src={src}
               alt={`${alt} ${index + 1}`}
@@ -136,19 +139,19 @@ export default function ImageCarousel({
           </div>
         ))}
       </div>
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
+      {images.length > 1 && <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
         {images.map((_, index) => (
           <button
             key={index}
             onClick={() => emblaApi?.scrollTo(index)}
             className={cn(
               'w-2 h-2 rounded-full transition-all duration-300',
-              selectedIndex === index ? 'bg-white scale-125' : 'bg-white/50'
+              selectedIndex === index ? 'bg-paper scale-125' : 'bg-paper/50'
             )}
-            aria-label={`Go to image ${index + 1}`}
+            aria-label={`${index + 1}번째 사진 보기`}
           />
         ))}
-      </div>
+      </div>}
     </div>
   )
 }

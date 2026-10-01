@@ -88,7 +88,7 @@ export default function TossStyleBreadcrumb({
       
       {/* 🎨 토스 스타일 브레드크럼 UI */}
       <nav 
-        className={`bg-white border-b border-gray-100 ${className}`}
+        className={`bg-paper border-b border-border ${className}`}
         aria-label="브레드크럼 네비게이션"
       >
         <div className="max-w-md mx-auto px-4 py-3">
@@ -97,14 +97,14 @@ export default function TossStyleBreadcrumb({
               <li key={index} className="flex items-center gap-2">
                 {/* 구분자 (첫 번째 제외) */}
                 {index > 0 && (
-                  <ChevronRight className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                  <ChevronRight className="w-3 h-3 text-ink-soft flex-shrink-0" />
                 )}
                 
                 {/* 브레드크럼 아이템 */}
                 {item.href ? (
                   <Link
                     href={item.href}
-                    className="flex items-center gap-1 text-gray-600 hover:text-orange-500 transition-colors py-1 px-2 rounded-lg hover:bg-orange-50"
+                    className="flex items-center gap-1 text-ink-soft hover:text-orange-ink transition-colors py-1 px-2 rounded-lg hover:bg-muted"
                   >
                     {index === 0 && showHome && (
                       <Home className="w-3 h-3" />
@@ -113,7 +113,7 @@ export default function TossStyleBreadcrumb({
                   </Link>
                 ) : (
                   <span 
-                    className="flex items-center gap-1 text-gray-900 font-semibold py-1 px-2"
+                    className="flex items-center gap-1 text-ink font-semibold py-1 px-2"
                     aria-current="page"
                   >
                     {index === 0 && showHome && (

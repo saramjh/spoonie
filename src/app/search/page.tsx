@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
-import { Search as SearchIcon, TrendingUp, User, Grid3X3, X } from 'lucide-react';
+import { Search as SearchIcon, User, Grid3X3, X } from 'lucide-react';
 import useSWR from 'swr';
 import useSWRInfinite from 'swr/infinite';
 
@@ -365,15 +365,15 @@ export default function SearchPage() {
 
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-door">
       <div className="px-2 py-4 pb-20">
       {/* 🔍 Instagram 스타일 검색바 */}
       <div className="relative mb-6">
-        <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+        <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-ink-soft" />
         <Input
           type="text"
           placeholder="레시피, 피드, 사용자 검색..."
-          className={`pl-12 ${searchTerm ? 'pr-12' : 'pr-4'} py-3 rounded-xl bg-white border-gray-200 shadow-sm focus:border-orange-500 focus:ring-orange-500 focus:shadow-md h-14 text-base placeholder:text-gray-500 transition-all duration-200`}
+          className={`pl-12 ${searchTerm ? 'pr-12' : 'pr-4'} h-12 text-base`}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -381,10 +381,10 @@ export default function SearchPage() {
         {searchTerm && (
           <button
             onClick={() => setSearchTerm('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-full transition-colors duration-200"
+            className="absolute right-1 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center"
             aria-label="검색어 지우기"
           >
-            <X className="h-3.5 w-3.5 text-gray-500" />
+            <X className="h-5 w-5 text-ink-soft" aria-hidden />
           </button>
         )}
       </div>
@@ -393,28 +393,30 @@ export default function SearchPage() {
         /* 🔍 검색 결과 - 탭 기반 */
         <div>
           {/* 📱 검색 결과 탭 */}
-          <div className="flex items-center mb-4">
-            <div className="flex bg-gray-100 rounded-lg p-1">
+          <div className="mb-4 border-b border-border">
+            <div className="flex" role="tablist">
               <button
+                role="tab"
+                aria-selected={activeTab === 'content'}
                 onClick={() => setActiveTab('content')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`-mb-px h-11 border-b-2 px-4 text-[15px] font-semibold ${
                   activeTab === 'content'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'border-ink text-ink'
+                    : 'border-transparent text-ink-soft'
                 }`}
               >
-                <Grid3X3 className="w-4 h-4" />
                 콘텐츠 ({searchResults.length})
               </button>
               <button
+                role="tab"
+                aria-selected={activeTab === 'users'}
                 onClick={() => setActiveTab('users')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`-mb-px h-11 border-b-2 px-4 text-[15px] font-semibold ${
                   activeTab === 'users'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'border-ink text-ink'
+                    : 'border-transparent text-ink-soft'
                 }`}
               >
-                <User className="w-4 h-4" />
                 사용자 ({userResults.length})
               </button>
             </div>
@@ -425,14 +427,14 @@ export default function SearchPage() {
             /* 📱 콘텐츠 탭 - Instagram 그리드 */
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <Grid3X3 className="w-5 h-5 text-gray-600" />
-                <h2 className="text-lg font-semibold text-gray-900">레시피 & 레시피드</h2>
+                <Grid3X3 className="w-5 h-5 text-ink-soft" />
+                <h2 className="text-lg font-semibold text-ink">레시피 & 레시피드</h2>
               </div>
               
               {searchResults.length === 0 && !searchLoading ? (
                 <div className="text-center py-12">
-                  <div className="text-gray-500 text-lg mb-2">콘텐츠 검색 결과가 없습니다</div>
-                  <div className="text-gray-400 text-sm">다른 키워드로 검색해 보세요</div>
+                  <div className="text-ink-soft text-lg mb-2">콘텐츠 검색 결과가 없습니다</div>
+                  <div className="text-ink-soft text-sm">다른 키워드로 검색해 보세요</div>
                 </div>
               ) : (
                 <>
@@ -452,14 +454,14 @@ export default function SearchPage() {
                     
                     {/* 로딩 스켈레톤 */}
                     {isLoadingMore && Array.from({ length: 6 }).map((_, index) => (
-                      <div key={`skeleton-${index}`} className="aspect-square bg-gray-200 rounded-sm animate-pulse" />
+                      <div key={`skeleton-${index}`} className="aspect-square bg-border rounded-sm animate-pulse" />
                     ))}
                   </div>
                     
                   {/* 무한스크롤 트리거 */}
                   {!isReachingEnd && (
                     <div ref={observerRef} className="h-10 flex items-center justify-center mt-4">
-                      {isLoadingMore && <div className="text-sm text-gray-500">로딩 중...</div>}
+                      {isLoadingMore && <div className="text-sm text-ink-soft">로딩 중...</div>}
                     </div>
                   )}
                 </>
@@ -469,18 +471,18 @@ export default function SearchPage() {
             /* 👤 사용자 탭 - 유저 카드 */
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <User className="w-5 h-5 text-gray-600" />
-                <h2 className="text-lg font-semibold text-gray-900">사용자</h2>
+                <User className="w-5 h-5 text-ink-soft" />
+                <h2 className="text-lg font-semibold text-ink">사용자</h2>
               </div>
               
               {userSearchLoading ? (
                 <div className="text-center py-12">
-                  <div className="text-gray-500 text-lg mb-2">사용자 검색 중...</div>
+                  <div className="text-ink-soft text-lg mb-2">사용자 검색 중...</div>
                 </div>
               ) : userResults.length === 0 ? (
                 <div className="text-center py-12">
-                  <div className="text-gray-500 text-lg mb-2">사용자 검색 결과가 없습니다</div>
-                  <div className="text-gray-400 text-sm">다른 키워드로 검색해 보세요</div>
+                  <div className="text-ink-soft text-lg mb-2">사용자 검색 결과가 없습니다</div>
+                  <div className="text-ink-soft text-sm">다른 키워드로 검색해 보세요</div>
                 </div>
               ) : (
                 <div className="space-y-5">
@@ -503,8 +505,7 @@ export default function SearchPage() {
           
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <TrendingUp className="w-5 h-5 text-gray-600" />
-              <h2 className="text-lg font-semibold text-gray-900">인기 레시피 & 레시피드</h2>
+              <h2 className="text-lg font-bold text-ink">반응이 많은 레시피와 레시피드</h2>
             </div>
             
             <div className="grid grid-cols-3 gap-1 sm:gap-2">
@@ -528,7 +529,7 @@ export default function SearchPage() {
                 // 2. 처음 로딩 중인 경우 (안정화된 데이터가 없는 경우)
                 if (postsLoading && (!stablePopularPosts || stablePopularPosts.length === 0)) {
                   return Array.from({ length: 12 }).map((_, index) => (
-                    <div key={`skeleton-${index}`} className="aspect-square bg-gray-200 rounded-sm animate-pulse" />
+                    <div key={`skeleton-${index}`} className="aspect-square bg-border rounded-sm animate-pulse" />
                   ));
                 }
 
@@ -536,7 +537,7 @@ export default function SearchPage() {
                 if (!postsLoading && hasInitialized) {
 
                   return (
-                    <div className="col-span-3 text-center py-8 text-gray-500">
+                    <div className="col-span-3 text-center py-8 text-ink-soft">
                       인기 게시물을 불러올 수 없습니다.
                     </div>
                   );
@@ -545,7 +546,7 @@ export default function SearchPage() {
                 // 4. 그 외의 모든 경우 - 빈 상태로 대기 (데이터 로딩 중이거나 초기화 중)
 
                 return Array.from({ length: 6 }).map((_, index) => (
-                  <div key={`waiting-${index}`} className="aspect-square bg-gray-100 rounded-sm animate-pulse" />
+                  <div key={`waiting-${index}`} className="aspect-square bg-muted rounded-sm animate-pulse" />
                 ));
               })()}
             </div>

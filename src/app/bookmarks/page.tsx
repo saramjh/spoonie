@@ -128,11 +128,11 @@ export default function BookmarksPage() {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-door flex items-center justify-center">
         <div className="text-center">
-          <Bookmark className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">로그인이 필요합니다</h2>
-          <p className="text-gray-600 mb-4">북마크 기능을 사용하려면 로그인해주세요.</p>
+          <Bookmark className="w-16 h-16 text-ink-soft/60 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-ink mb-2">로그인이 필요합니다</h2>
+          <p className="text-ink-soft mb-4">북마크 기능을 사용하려면 로그인해주세요.</p>
           <Button onClick={() => router.push("/login")}>로그인하기</Button>
         </div>
       </div>
@@ -140,9 +140,9 @@ export default function BookmarksPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-door">
       {/* 헤더 */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <div className="bg-paper border-b border-border sticky top-0 z-10">
         <div className="max-w-md mx-auto flex items-center justify-between p-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()}>
             <ArrowLeft className="h-6 w-6" />
@@ -162,16 +162,16 @@ export default function BookmarksPage() {
           </div>
         ) : error ? (
           <div className="text-center py-16">
-            <Bookmark className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">오류가 발생했습니다</h3>
-            <p className="text-gray-500 mb-4">{error instanceof Error ? error.message : '북마크를 불러오는 중 오류가 발생했습니다.'}</p>
+            <Bookmark className="w-16 h-16 text-ink-soft/60 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-ink mb-2">오류가 발생했습니다</h3>
+            <p className="text-ink-soft mb-4">{error instanceof Error ? error.message : '북마크를 불러오는 중 오류가 발생했습니다.'}</p>
             <Button onClick={() => mutate()}>다시 시도</Button>
           </div>
         ) : !bookmarkedItems || bookmarkedItems.length === 0 ? (
           <div className="text-center py-16">
-            <Bookmark className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">북마크한 게시물이 없습니다</h3>
-            <p className="text-gray-500 mb-4">마음에 드는 레시피나 레시피드를 북마크해보세요!</p>
+            <Bookmark className="w-16 h-16 text-ink-soft/60 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-ink mb-2">북마크한 게시물이 없습니다</h3>
+            <p className="text-ink-soft mb-4">마음에 드는 레시피나 레시피드를 북마크해보세요!</p>
             <Button onClick={() => router.push("/")}>홈으로 가기</Button>
           </div>
         ) : (

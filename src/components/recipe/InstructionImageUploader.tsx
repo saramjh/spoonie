@@ -73,10 +73,10 @@ export default function InstructionImageUploader({ imageUrl, onImageChange, plac
         </Card>
       ) : (
         <Card 
-          className="aspect-video border-2 border-dashed border-gray-300 cursor-pointer hover:border-orange-400 hover:bg-orange-50 transition-all duration-300"
+          className="aspect-video border-2 border-dashed border-border cursor-pointer hover:border-orange-ink hover:bg-muted transition-all duration-300"
           onClick={() => fileInputRef.current?.click()}
         >
-          <div className="h-full flex flex-col items-center justify-center text-gray-400 hover:text-orange-500 space-y-2 transition-colors duration-300">
+          <div className="h-full flex flex-col items-center justify-center text-ink-soft hover:text-orange-ink space-y-2 transition-colors duration-300">
             <Camera className="w-8 h-8" />
             <p className="text-sm font-medium">{placeholder}</p>
           </div>

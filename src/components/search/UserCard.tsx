@@ -26,23 +26,23 @@ export default function UserCard({ user }: UserCardProps) {
   
   return (
     <Link href={profileUrl} className="block">
-      <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+      <div className="bg-paper rounded-lg border border-border p-4 hover:shadow-md transition-shadow">
         <div className="flex items-center space-x-3 mb-3">
           {/* 👤 유저 아바타 */}
           <Avatar className="w-12 h-12">
             <AvatarImage src={user.avatar_url} alt={user.username} />
             <AvatarFallback>
-              <User className="w-6 h-6 text-gray-500" />
+              <User className="w-6 h-6 text-ink-soft" />
             </AvatarFallback>
           </Avatar>
           
           {/* 👤 유저 정보 */}
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-gray-900 truncate">
+            <h3 className="font-semibold text-ink truncate">
               			{user.username}
             </h3>
-            <p className="text-sm text-gray-500 truncate">@{user.username}</p>
-            <p className="text-xs text-gray-400">
+            <p className="text-sm text-ink-soft truncate">@{user.username}</p>
+            <p className="text-xs text-ink-soft">
               {user.items_count}개의 레시피 & 레시피드
             </p>
           </div>
@@ -52,7 +52,7 @@ export default function UserCard({ user }: UserCardProps) {
         {user.latest_items.length > 0 && (
           <div className="grid grid-cols-3 gap-1">
             {user.latest_items.slice(0, 3).map((item, index) => (
-              <div key={`${user.user_id}-${index}`} className="aspect-square relative rounded overflow-hidden bg-gray-100">
+              <div key={`${user.user_id}-${index}`} className="aspect-square relative rounded overflow-hidden bg-muted">
                 {item.image_urls && item.image_urls.length > 0 ? (
                   <Image 
                     src={item.image_urls[item.thumbnail_index || 0]} 
@@ -61,8 +61,8 @@ export default function UserCard({ user }: UserCardProps) {
                     className="object-cover" 
                   />
                 ) : (
-                  <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                    <User className="w-4 h-4 text-gray-400" />
+                  <div className="w-full h-full bg-muted flex items-center justify-center">
+                    <User className="w-4 h-4 text-ink-soft" />
                   </div>
                 )}
               </div>

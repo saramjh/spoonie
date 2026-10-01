@@ -1,98 +1,13 @@
-"use client"
+import Image from "next/image"
 
-import React, { useEffect, useState } from "react"
-import SpoonieLogoAnimation from "@/components/common/SpoonieLogoAnimation"
-
+// 홈으로 들어올 때 정적 HTML에 함께 실려 첫 바이트와 동시에 보이는 화면.
+// 그동안 브라우저는 로그인 확인과 피드 갱신을 진행하고, ClientLayoutWrapper가 확인이 끝나면 닫는다.
+// 자바스크립트 없이도 그려지도록 애니메이션 상태를 두지 않는다.
 export default function SplashScreen() {
-	const [isVisible, setIsVisible] = useState(true)
-	const [animationPhase, setAnimationPhase] = useState(0) // 0: enter, 1: morph, 2: exit
-
-	useEffect(() => {
-		// Phase 1: Enter animation (scale up)
-		const enterTimer = setTimeout(() => {
-			setAnimationPhase(1)
-		}, 500)
-
-		// Phase 2: Morphing animation
-		const morphTimer = setTimeout(() => {
-			setAnimationPhase(2)
-		}, 2200)
-
-		// Phase 3: Exit animation
-		const exitTimer = setTimeout(() => {
-			setIsVisible(false)
-		}, 2800)
-
-		// 🔧 백업 안전장치: 5초 후 강제 종료 (JavaScript 오류 시에도 홈으로 전환)
-		const emergencyExitTimer = setTimeout(() => {
-			console.warn("⚠️ 스플래시 화면 백업 타이머 실행 - 강제 종료")
-			setIsVisible(false)
-			setAnimationPhase(2)
-		}, 5000)
-
-		return () => {
-			clearTimeout(enterTimer)
-			clearTimeout(morphTimer)
-			clearTimeout(exitTimer)
-			clearTimeout(emergencyExitTimer)
-		}
-	}, [])
-
-	const getBackgroundClasses = () => {
-		const baseClasses = "fixed inset-0 z-[100] flex items-center justify-center transition-all duration-500 ease-in-out"
-
-		switch (animationPhase) {
-			case 0: // Enter: orange background
-				return `${baseClasses} bg-orange-50`
-			case 1: // Morph: gradient background
-				return `${baseClasses} bg-gradient-to-br from-orange-50 via-orange-100 to-orange-200`
-			case 2: // Exit: deeper gradient
-				return `${baseClasses} bg-gradient-to-tr from-orange-200 via-orange-300 to-orange-100`
-			default:
-				return baseClasses
-		}
-	}
-
 	return (
-		<div
-			className={getBackgroundClasses()}
-			style={{
-				opacity: isVisible ? 1 : 0,
-				transform: isVisible ? "scale(1)" : "scale(1.1)",
-				transition: "opacity 500ms ease-out, transform 500ms ease-out",
-			}}>
-			{/* Morphing circles background effect */}
-			<div className="absolute inset-0 overflow-hidden">
-				<div
-					className="absolute top-1/4 left-1/4 w-32 h-32 bg-orange-200/30 rounded-full transition-all duration-1000 ease-in-out"
-					style={{
-						transform: animationPhase === 1 ? "scale(2) translate(50px, -30px)" : "scale(1)",
-						opacity: animationPhase === 2 ? 0 : 0.6,
-					}}
-				/>
-				<div
-					className="absolute bottom-1/4 right-1/4 w-24 h-24 bg-orange-300/40 rounded-full transition-all duration-1000 ease-in-out"
-					style={{
-						transform: animationPhase === 1 ? "scale(1.5) translate(-40px, 20px)" : "scale(1)",
-						opacity: animationPhase === 2 ? 0 : 0.5,
-					}}
-				/>
-				<div
-					className="absolute top-1/2 right-1/3 w-16 h-16 bg-orange-400/20 rounded-full transition-all duration-700 ease-in-out"
-					style={{
-						transform: animationPhase === 1 ? "scale(3) translate(-80px, -60px)" : "scale(1)",
-						opacity: animationPhase === 2 ? 0 : 0.4,
-					}}
-				/>
-			</div>
-
-			{/* Logo with morphing animation */}
-			<div className="relative z-10">
-				<SpoonieLogoAnimation intro={true} showSlogan={true} useFullLogo={true} />
-			</div>
-
-			{/* Morphing overlay effect for exit */}
-			{animationPhase === 2 && <div className="absolute inset-0 bg-white transition-opacity duration-500 ease-out" style={{ opacity: isVisible ? 0 : 0.8 }} />}
+		<div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-door" role="status" aria-label="스푸니를 여는 중">
+			<Image src="/logo-full.svg" alt="스푸니" width={180} height={57} priority />
+			<p className="mt-5 text-lg font-semibold text-ink-soft">요리의 즐거움, 한 스푼</p>
 		</div>
 	)
 }

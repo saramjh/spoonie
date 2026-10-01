@@ -1,11 +1,11 @@
 import Link from "next/link"
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Share2, MessageCircle, MoreVertical, Trash2, Edit, Heart } from "lucide-react"
 import { timeAgo } from "@/lib/utils"
+import { formatCookingTime } from "@/lib/recipe-amount"
 import FollowButton from "./FollowButton"
 import { SimplifiedLikeButton } from "@/components/items/SimplifiedLikeButton"
 import { BookmarkButton } from "@/components/items/BookmarkButton"
@@ -23,6 +23,7 @@ import { enrichWithCachedAuthor, cacheAuthors } from "@/utils/author-cache"
 import { useThumbnail } from "@/hooks/useThumbnail"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import ExpandableText from "@/components/common/ExpandableText"
+import SourceLine from "@/components/items/SourceLine"
 import { cacheManager } from "@/lib/unified-cache-manager"
 import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
 
@@ -220,202 +221,124 @@ export default function PostCard({
     share({ title: 'Spoonie에서 보기', text, url })
   }
 
+  const cookingTime = formatCookingTime(displayItem.cooking_time_minutes)
+  const profileHref = `/profile/${enrichedItem.user_public_id || enrichedItem.user_id}`
+
   return (
-    <article>
-    <Card className="w-full max-w-md mx-auto bg-white border border-gray-200 shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <div className="flex items-center space-x-3">
-          <Link href={`/profile/${enrichedItem.user_public_id || enrichedItem.user_id}`}>
-            <Avatar className="w-10 h-10 cursor-pointer">
-              <AvatarImage 
-                src={enrichedItem.avatar_url || undefined} 
-                alt={enrichedItem.username || "사용자"} 
-              />
-              <AvatarFallback>
-                {(enrichedItem.username || "?").charAt(0).toUpperCase()}
-              </AvatarFallback>
+    <article className="relative rounded-[3px] bg-paper shadow-sheet">
+
+      <header className="flex items-center justify-between gap-2 py-2 pl-4 pr-1.5">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <Link href={profileHref} aria-hidden tabIndex={-1}>
+            <Avatar className="h-9 w-9">
+              <AvatarImage src={enrichedItem.avatar_url || undefined} alt="" />
+              <AvatarFallback>{(enrichedItem.username || "?").charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
           </Link>
-          <div className="flex flex-col">
-            <Link href={`/profile/${enrichedItem.user_public_id || enrichedItem.user_id}`}>
-              <p className="text-sm font-semibold text-gray-900 cursor-pointer hover:underline">
-                {enrichedItem.username || "알 수 없는 사용자"}
-              </p>
+          <div className="min-w-0">
+            <Link href={profileHref} className="block truncate text-[15px] font-semibold text-ink">
+              {enrichedItem.username || "알 수 없는 사용자"}
             </Link>
-            <p className="text-xs text-gray-500">
-              <Link href={detailUrl} className="hover:underline">
+            <p className="text-[13px] text-ink-soft">
+              <span>{isRecipe ? "레시피" : "레시피드"}</span>
+              {" · "}
+              <Link href={detailUrl}>
                 <time dateTime={item.created_at}>{timeAgo(item.created_at)}</time>
               </Link>
-              {" · "}
-              <span className={isRecipe ? "font-medium text-orange-700" : undefined}>{isRecipe ? "레시피" : "레시피드"}</span>
+              {!displayItem.is_public && <span> · 비공개</span>}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
-          {!isOwnItem && (
-            <FollowButton 
-              userId={item.user_id}
-              initialIsFollowing={item.is_following}
-            />
-          )}
-          
+        <div className="flex flex-shrink-0 items-center">
+          {!isOwnItem && <FollowButton userId={item.user_id} initialIsFollowing={item.is_following} />}
           {isOwnItem && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  <MoreVertical className="h-4 w-4" />
+                <Button variant="ghost" size="icon" className="h-11 w-11" aria-label="더보기">
+                  <MoreVertical className="h-5 w-5" aria-hidden />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-auto min-w-[80px]">
-                <DropdownMenuItem onClick={handleEditClick} className="cursor-pointer relative flex items-center justify-start px-3 py-2">
-                  <Edit className="h-4 w-4 flex-shrink-0" />
-                  <span className="flex-1 text-center">수정</span>
+              <DropdownMenuContent align="end" className="min-w-[8rem]">
+                <DropdownMenuItem onClick={handleEditClick} className="min-h-11 cursor-pointer gap-2">
+                  <Edit className="h-4 w-4" aria-hidden />
+                  수정
                 </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => setShowDeleteDialog(true)}
-                  className="text-red-600 cursor-pointer relative flex items-center justify-start px-3 py-2"
-                >
-                  <Trash2 className="h-4 w-4 flex-shrink-0" />
-                  <span className="flex-1 text-center">삭제</span>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setShowDeleteDialog(true)} className="min-h-11 cursor-pointer gap-2 text-destructive focus:text-destructive">
+                  <Trash2 className="h-4 w-4" aria-hidden />
+                  삭제
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
         </div>
-      </CardHeader>
+      </header>
 
-      {/* 🎯 이미지 영역: 프로필 그리드와 동일한 더블탭 좋아요 */}
+      {!isRecipe && !citedRecipesLoading && citedRecipes.length > 0 && (
+        <SourceLine recipes={citedRecipes} creationOrigin={displayItem.creation_origin} className="px-4 pb-2.5" />
+      )}
+
       {orderedImages.length > 0 && (
         <div className="relative">
-          <ImageCarousel 
-            images={orderedImages} 
-            alt={displayItem.title || `Post by ${item.username}`} 
+          <ImageCarousel
+            images={orderedImages}
+            frame={isRecipe ? "recipe" : "recipeed"}
+            alt={displayItem.title || `${enrichedItem.username || "작성자"}님의 레시피드 사진`}
             priority={priority}
-            onSingleClick={() => router.push(detailUrl)}  // 단일탭 = 상세페이지
-            onDoubleClick={handleDoubleTapLike}           // 더블탭 = 좋아요
+            onSingleClick={() => router.push(detailUrl)}
+            onDoubleClick={handleDoubleTapLike}
           />
-          
-          {/* 🎉 토스식 더블탭 좋아요 애니메이션 */}
           {showHeartAnimation && (
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
-              <Heart className="w-16 h-16 fill-red-500 text-red-500 animate-ping" />
-            </div>
-          )}
-          
-          {/* 비공개 표시 - 업계표준 Privacy UX */}
-          {!displayItem.is_public && (
-            <div className="absolute top-3 right-3 z-20">
-              <div className="bg-black/75 text-white text-xs px-2 py-1 rounded">
-                비공개
-              </div>
+            <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
+              <Heart className="h-16 w-16 animate-ping fill-red-500 text-red-500" aria-hidden />
             </div>
           )}
         </div>
       )}
 
-        {/* 🎯 텍스트 영역: 기존처럼 클릭으로 상세페이지 이동 */}
-        <CardContent 
-          className="p-4 cursor-pointer"
-          onClick={(e) => {
-            // 제목 링크처럼 카드 안의 링크를 누른 경우는 링크가 이동을 처리한다
-            if ((e.target as Element).closest("a")) return
-            router.push(detailUrl)
-          }}
-        >
-          {isRecipe ? (
-            <>
-              <h2 className="text-lg font-bold text-gray-900 leading-tight mb-1">
-                <Link href={detailUrl}>{displayItem.title}</Link>
-              </h2>
+      <div
+        className="cursor-pointer px-4 pt-3"
+        onClick={(e) => {
+          // 제목 링크처럼 카드 안의 링크를 누른 경우는 링크가 이동을 처리한다
+          if ((e.target as Element).closest("a")) return
+          router.push(detailUrl)
+        }}
+      >
+        {isRecipe ? (
+          <>
+            <h2 className="text-[20px] font-bold leading-snug text-ink [text-wrap:balance]">
+              <Link href={detailUrl}>{displayItem.title}</Link>
+            </h2>
+            {(displayItem.servings || cookingTime) && (
+              <p className="mt-1 text-[15px] text-ink-soft">
+                {[displayItem.servings ? `${displayItem.servings}인분` : null, cookingTime ? `조리 ${cookingTime}` : null].filter(Boolean).join(" · ")}
+              </p>
+            )}
+            {displayItem.description && (
+              <ExpandableText text={displayItem.description} maxLines={2} onExpand={() => router.push(detailUrl)} className="mt-2 text-[15px] text-ink" />
+            )}
+          </>
+        ) : (
+          <ExpandableText text={displayItem.content || ""} maxLines={3} onExpand={() => router.push(detailUrl)} className="text-[16px] leading-[1.65] text-ink" />
+        )}
 
-              {/* 조리 시간과 분량 */}
-              {(displayItem.cooking_time_minutes || displayItem.servings) && (
-                <p className="text-sm text-gray-600 mb-2">
-                  {[
-                    displayItem.cooking_time_minutes ? `${displayItem.cooking_time_minutes}분` : null,
-                    displayItem.servings ? `${displayItem.servings}인분` : null,
-                  ].filter(Boolean).join(" · ")}
-                </p>
-              )}
 
-              <ExpandableText 
-                text={displayItem.description || ""} 
-                maxLines={2}
-                onExpand={() => router.push(detailUrl)}
-                className="text-gray-700"
-              />
-            </>
-          ) : (
-            <ExpandableText 
-              text={displayItem.content || ""} 
-              maxLines={3}
-              onExpand={() => router.push(detailUrl)}
-            />
-          )}
+        {displayItem.tags && displayItem.tags.length > 0 && (
+          <ul className="mt-2 flex flex-wrap gap-x-3 gap-y-1" aria-label="태그">
+            {displayItem.tags.map((tag, idx) => (
+              <li key={idx} className="text-sm text-ink-soft">
+                #{tag}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
-          {/* 참고 레시피 표시 */}
-          {!citedRecipesLoading && citedRecipes && citedRecipes.length > 0 && (
-            <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-              <p className="text-sm font-medium text-gray-800 mb-2">참고 레시피 {citedRecipes.length}개</p>
-              <div className="space-y-1">
-                {citedRecipes.slice(0, 2).map((recipe) => {
-                  // author 정보 안전하게 추출
-                  const authorProfile = Array.isArray(recipe.author) ? recipe.author[0] : recipe.author
-                  const authorName = authorProfile?.username || "익명"
-                  const recipeDate = recipe.created_at 
-                    ? new Date(recipe.created_at).toLocaleDateString('ko-KR', { 
-                        year: 'numeric', 
-                        month: '2-digit', 
-                        day: '2-digit' 
-                      }).replace(/\./g, '.').replace(/\s/g, '') 
-                    : ""
-                  
-                  return (
-                    <Link 
-                      key={recipe.id} 
-                      href={`/recipes/${recipe.id}`}
-                      className="block text-sm text-orange-700 hover:text-orange-900 hover:underline"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <div className="flex justify-between items-center">
-                        <span>• {authorName}의 {recipe.title}</span>
-                        {recipeDate && (
-                          <span className="text-xs text-orange-600 ml-2 flex-shrink-0">
-                            {recipeDate}
-                          </span>
-                        )}
-                      </div>
-                    </Link>
-                  )
-                })}
-                {citedRecipes.length > 2 && (
-                  <p className="text-xs text-orange-600">
-                    외 {citedRecipes.length - 2}개...
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* 태그 표시 */}
-          {displayItem.tags && displayItem.tags.length > 0 && (
-            <div className="flex flex-wrap gap-x-2 gap-y-1 mt-3">
-              {displayItem.tags.map((tag, idx) => (
-                <span key={idx} className="text-sm text-gray-500">
-                  #{tag}
-                </span>
-              ))}
-            </div>
-          )}
-        </CardContent>
-
-      <CardFooter className="flex justify-between items-center p-4 pt-2">
-        <div className="flex items-center gap-1 text-gray-600">
-
-          {/* 🎯 기존 검증된 좋아요 버튼 사용 */}
-          <SimplifiedLikeButton 
-            itemId={item.item_id || item.id} 
+      <footer className="flex items-center justify-between px-2 pb-1 pt-1">
+        <div className="flex items-center text-ink-soft">
+          <SimplifiedLikeButton
+            itemId={item.item_id || item.id}
             itemType={item.item_type}
             authorId={item.user_id}
             currentUserId={currentUser?.id}
@@ -423,58 +346,44 @@ export default function PostCard({
             initialHasLiked={hasLiked}
             cachedItem={cachedItem}
           />
-          <Button variant="ghost" size="sm" onClick={handleCommentClick} className={`flex items-center gap-1 h-auto p-1 ${
-            isRecipe ? 'hover:bg-orange-100' : 'hover:bg-gray-100'
-          }`}>
-            <MessageCircle className="h-5 w-5" />
-            <span className="text-sm font-medium">{cachedItem.comments_count || 0}</span>
-          </Button>
+          <button type="button" onClick={handleCommentClick} className="flex h-11 items-center gap-1.5 px-2" aria-label={`댓글 ${cachedItem.comments_count || 0}개`}>
+            <MessageCircle className="h-5 w-5" aria-hidden />
+            <span className="text-sm font-medium tabular-nums">{cachedItem.comments_count || 0}</span>
+          </button>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center">
           <BookmarkButton
             itemId={item.item_id || item.id}
             itemType={item.item_type}
             currentUserId={currentUser?.id}
             initialBookmarksCount={(cachedItem as Item & { bookmarks_count?: number }).bookmarks_count || 0}
             initialIsBookmarked={(cachedItem as Item & { is_bookmarked?: boolean }).is_bookmarked || false}
-            className={isRecipe ? 'hover:bg-orange-100' : ''}
+            size="icon"
+            className="h-11 w-11"
             cachedItem={cachedItem}
           />
-          <Button variant="ghost" size="icon" onClick={handleShare} className={isRecipe ? 'hover:bg-orange-100' : ''}>
-            <Share2 className="h-5 w-5 text-gray-600" />
+          <Button variant="ghost" size="icon" onClick={handleShare} className="h-11 w-11 text-ink-soft" aria-label="공유하기">
+            <Share2 className="h-5 w-5" aria-hidden />
           </Button>
         </div>
-      </CardFooter>
+      </footer>
 
-      {/* 삭제 확인 다이얼로그 */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>정말 삭제하시겠습니까?</AlertDialogTitle>
-            <AlertDialogDescription>
-              이 {isRecipe ? '레시피' : '레시피드'}를 삭제하면 복구할 수 없습니다.
-            </AlertDialogDescription>
+            <AlertDialogTitle>정말 삭제할까요?</AlertDialogTitle>
+            <AlertDialogDescription>이 {isRecipe ? "레시피" : "레시피드"}를 삭제하면 되돌릴 수 없어요.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700"
-            >
+            <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               {isDeleting ? "삭제 중..." : "삭제"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      
-      {/* 🎨 토스 스타일 로그인 유도 바텀시트 */}
-      <LoginPromptSheet
-        isOpen={showLoginPrompt}
-        onClose={() => setShowLoginPrompt(false)}
-        action="like"
-      />
-    </Card>
+
+      <LoginPromptSheet isOpen={showLoginPrompt} onClose={() => setShowLoginPrompt(false)} action="like" />
     </article>
   )
 }

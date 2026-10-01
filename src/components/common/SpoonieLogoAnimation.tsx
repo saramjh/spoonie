@@ -27,7 +27,7 @@ export default function SpoonieLogoAnimation({
 
 	const logoClasses = cn("transition-transform duration-300")
 
-	const sloganClasses = cn("text-2xl font-bold text-gray-600 opacity-0 mt-5", {
+	const sloganClasses = cn("text-2xl font-bold text-ink-soft opacity-0 mt-5", {
 		"animate-slogan-fade-in": intro,
 	})
 

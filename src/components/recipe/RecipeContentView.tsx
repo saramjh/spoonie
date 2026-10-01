@@ -17,6 +17,7 @@ interface RecipeContentViewProps {
 	stepsLocked?: boolean
 	// 로그인 후 이 레시피로 돌아오는 링크
 	loginHref?: string
+	recipeId?: string
 }
 
 const MIN_MAX_SERVINGS = 20
@@ -27,7 +28,7 @@ interface Reference {
 	target: number
 }
 
-export default function RecipeContentView({ initialServings, ingredients, steps, stepsLocked = false, loginHref = "/login" }: RecipeContentViewProps) {
+export default function RecipeContentView({ initialServings, ingredients, steps, stepsLocked = false, loginHref = "/login", recipeId }: RecipeContentViewProps) {
 	const baseServings = initialServings > 0 ? initialServings : 1
 	const maxServings = Math.max(MIN_MAX_SERVINGS, baseServings * 2)
 	const [servings, setServings] = useState(baseServings)
@@ -258,7 +259,7 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 											<p className="whitespace-pre-wrap break-words text-[17px] leading-[1.65]">{step.description}</p>
 											{step.image_url && (
 												<div className="relative mt-3 aspect-[4/3] w-full overflow-hidden rounded-[3px] bg-muted">
-													<Image src={step.image_url} alt={`${index + 1}단계 사진`} fill sizes="(max-width: 768px) 90vw, 600px" className="object-cover" />
+													<Image src={step.image_url} alt={`${index + 1}단계 사진`} fill sizes="(max-width: 768px) 90vw, 600px" className="object-contain" />
 												</div>
 											)}
 										</div>
@@ -278,6 +279,7 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 					ingredients={scaled}
 					servingsLabel={reference ? "직접 맞춘 양" : `${servings}인분`}
 					startAt={stepModeAt}
+					recipeId={recipeId}
 					onStepDone={(index) => setDoneSteps((set) => new Set(set).add(index))}
 					onClose={() => setStepModeAt(null)}
 				/>

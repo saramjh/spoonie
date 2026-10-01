@@ -31,7 +31,7 @@ const toastVariants = cva(
   {
     variants: {
     variant: {
-      default: "border-gray-200/50 bg-white/90 text-gray-900 shadow-gray-900/10",
+      default: "border-border/50 bg-paper/90 text-ink shadow-gray-900/10",
       destructive: "border-red-200/50 bg-red-50/90 text-red-900 shadow-red-900/10",
       success: "border-green-200/50 bg-green-50/90 text-green-900 shadow-green-900/10",
       warning: "border-yellow-200/50 bg-yellow-50/90 text-yellow-900 shadow-yellow-900/10",
@@ -92,7 +92,7 @@ const ToastClose = React.forwardRef<
     ref={ref}
     className={cn(
       // 🎨 토스식 닫기 버튼: 부드럽고 접근 가능한 디자인
-      "absolute right-3 top-3 rounded-full p-1.5 text-gray-400 opacity-80 transition-all duration-200 hover:text-gray-600 hover:bg-gray-100/50 hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 active:scale-95 group-hover:opacity-100",
+      "absolute right-3 top-3 rounded-full p-1.5 text-ink-soft opacity-80 transition-all duration-200 hover:text-ink-soft hover:bg-muted/50 hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 active:scale-95 group-hover:opacity-100",
       className
     )}
     toast-close=""

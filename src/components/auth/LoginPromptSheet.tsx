@@ -110,19 +110,19 @@ export default function LoginPromptSheet({
 			shouldScaleBackground={false} // aria-hidden 충돌 방지
 		>
 			<DrawerContent 
-				className="bg-white focus:outline-none sm:max-w-md sm:mx-auto"
+				className="bg-paper focus:outline-none sm:max-w-md sm:mx-auto"
 			>
 				{/* 🎯 올바른 접근성 구조: DrawerHeader 사용 */}
 				<DrawerHeader className="p-6 pb-4">
 					<div className="flex items-center gap-3 mb-2">
-						<div className="bg-orange-100 p-2 rounded-xl">
+						<div className="bg-muted p-2 rounded-xl">
 							<Image src="/icon-only.svg" alt="Spoonie" width={24} height={24} />
 						</div>
 						<div>
-							<DrawerTitle className="text-lg font-bold text-gray-900 text-left">
+							<DrawerTitle className="text-lg font-bold text-ink text-left">
 								{actionInfo.title}
 							</DrawerTitle>
-							<DrawerDescription className="text-sm text-gray-600 text-left">
+							<DrawerDescription className="text-sm text-ink-soft text-left">
 								회원만 이용할 수 있는 기능이에요
 							</DrawerDescription>
 						</div>
@@ -137,7 +137,7 @@ export default function LoginPromptSheet({
 						<Button 
 							ref={loginButtonRef}
 							onClick={handleLogin}
-							className="w-full h-14 text-base font-semibold bg-orange-500 hover:bg-orange-600 rounded-2xl"
+							className="w-full h-14 text-base font-semibold bg-primary hover:brightness-95 rounded-2xl"
 						>
 							로그인
 						</Button>
@@ -145,7 +145,7 @@ export default function LoginPromptSheet({
 						<Button 
 							onClick={handleSignup}
 							variant="outline"
-							className="w-full h-14 text-base font-medium border-2 border-gray-200 text-gray-700 hover:bg-gray-50 rounded-2xl"
+							className="w-full h-14 text-base font-medium border-2 border-border text-ink hover:bg-door rounded-2xl"
 						>
 							회원가입
 						</Button>

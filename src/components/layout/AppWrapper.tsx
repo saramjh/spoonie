@@ -20,25 +20,12 @@ export default function AppWrapper({ children }: { children: React.ReactNode }) 
 		transition: 'transform 0.2s ease-out',
 	};
 
-	// 페이지별 배경색 설정
-	const isRecipeBook = pathname === "/recipes"
-	const isSearchPage = pathname === "/search"
-	const isHomePage = pathname === "/"
-	
-	// 컨테이너 배경 (최외곽) - 홈화면도 gray-50으로 통일하여 마진 일관성 확보
-	// 상세 화면은 냉장고 문 판(bg-door) 위에 종이를 붙인다
-	const isDetailPage = /^\/(recipes|posts)\/[^/]+$/.test(pathname) && !pathname.endsWith("/new")
-	const containerBg = isDetailPage ? "bg-door" : (isRecipeBook || isHomePage) ? "bg-gray-50" : "bg-white"
-	
-	// 메인 영역 배경 (컨텐츠 영역)
-	const mainBg = isDetailPage ? "bg-door" : isRecipeBook ? "bg-gray-50" : isSearchPage ? "bg-white" : "bg-gray-50"
-
 	return (
-		<div className={`relative flex flex-col min-h-screen w-full max-w-md mx-auto ${containerBg}`}>
+		<div className={`relative flex flex-col min-h-screen w-full max-w-md mx-auto bg-door`}>
 			<PullToRefreshIndicator />
 			<div style={wrapperStyle} className="relative flex flex-col w-full">
 				{!noHeader && <Header />}
-				<main className={`flex-1 w-full ${mainBg}`}>
+				<main className="flex-1 w-full bg-door">
 					<div className={`${!noBottomNav ? "pb-16" : ""}`}>{children}</div>
 				</main>
 			</div>

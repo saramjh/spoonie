@@ -62,6 +62,7 @@ export interface Item {
 	cooking_time_minutes: number | null
 	recipe_id: string | null
 	cited_recipe_ids: string[] | null // Add cited_recipe_ids field from database
+	creation_origin?: "recipe_detail" | "cook_mode" | "fork" | "manual" | null // 작성 경로 (관계 종류를 정한다)
 
 	// User/Author information (joined from profiles)
 	author?: Profile

@@ -63,15 +63,15 @@ export default function ProfileEditPage() {
 	}
 
 	return (
-		<div className="min-h-screen bg-gray-50">
+		<div className="min-h-screen bg-door">
 			{/* 🎨 토스식 헤더 */}
-			<header className="bg-white border-b border-gray-100 sticky top-0 z-50">
+			<header className="bg-paper border-b border-border sticky top-0 z-50">
 				<div className="p-4 max-w-md mx-auto">
 					<div className="flex items-center justify-between">
 						<Button variant="ghost" size="icon" onClick={() => router.back()}>
 							<ArrowLeft className="w-5 h-5" />
 						</Button>
-						<h1 className="text-lg font-bold text-gray-900">프로필 수정</h1>
+						<h1 className="text-lg font-bold text-ink">프로필 수정</h1>
 						<div className="w-10" /> {/* 스페이서 */}
 					</div>
 				</div>
@@ -80,18 +80,18 @@ export default function ProfileEditPage() {
 			{/* 🚀 메인 컨텐츠 영역 */}
 			<main className="p-4 max-w-md mx-auto">
 				{/* 토스식 프로필 에디터 */}
-				<div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+				<div className="bg-paper rounded-xl shadow-sm border border-border p-6 mb-6">
 					<TossSeamlessProfileEditor mode="inline" />
 				</div>
 
 				{/* 🔧 계정 관리 섹션 */}
-				<div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-					<h2 className="text-lg font-semibold text-gray-900 mb-4">계정 관리</h2>
+				<div className="bg-paper rounded-xl shadow-sm border border-border p-6">
+					<h2 className="text-lg font-semibold text-ink mb-4">계정 관리</h2>
 					
 					<div className="space-y-3">
 						<Button 
 							variant="ghost" 
-							className="w-full justify-start text-gray-600 hover:bg-gray-50 py-3 px-4 rounded-lg" 
+							className="w-full justify-start text-ink-soft hover:bg-door py-3 px-4 rounded-lg" 
 							onClick={handleLogout}
 						>
 							<LogOut className="w-5 h-5 mr-3" />
@@ -111,7 +111,7 @@ export default function ProfileEditPage() {
 							<AlertDialogContent className="mx-4">
 								<AlertDialogHeader>
 									<AlertDialogTitle className="text-center">정말로 탈퇴하시겠어요?</AlertDialogTitle>
-									<AlertDialogDescription className="text-center text-sm text-gray-600 leading-relaxed">
+									<AlertDialogDescription className="text-center text-sm text-ink-soft leading-relaxed">
 										회원 탈퇴 시 모든 레시피와 활동 내역이 영구적으로 삭제되며, 복구할 수 없습니다. 
 										<br /><br />
 										계속하시려면 아래에 <strong>&apos;탈퇴&apos;</strong>라고 입력해주세요.
@@ -135,7 +135,7 @@ export default function ProfileEditPage() {
 									<AlertDialogAction 
 										onClick={handleDeleteAccount} 
 										disabled={deleteConfirmText !== "탈퇴"} 
-										className="flex-1 bg-red-500 hover:bg-red-600 disabled:bg-gray-300"
+										className="flex-1 bg-red-500 hover:bg-red-600 disabled:bg-border"
 									>
 										탈퇴하기
 									</AlertDialogAction>

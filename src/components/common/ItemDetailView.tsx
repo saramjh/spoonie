@@ -17,7 +17,6 @@ import ImageCarousel from "@/components/common/ImageCarousel"
 import RecipeContentView from "@/components/recipe/RecipeContentView"
 import { cn, timeAgo } from "@/lib/utils"
 import { formatCookingTime } from "@/lib/recipe-amount"
-import { getMagnet } from "@/lib/color-options"
 import { useShare } from "@/hooks/useShare"
 import { useNavigation } from "@/hooks/useNavigation"
 import { useToast } from "@/hooks/use-toast"
@@ -25,8 +24,10 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import useSWR, { useSWRConfig } from "swr"
 import { Item, ItemDetail } from "@/types/item"
 import Link from "next/link"
+import Image from "next/image"
 
-import { useCitedRecipes, useCitingItems } from "@/hooks/useCitedRecipes"
+import { useCitedRecipes, useRecipeRelations } from "@/hooks/useCitedRecipes"
+import SourceLine from "@/components/items/SourceLine"
 import { useThumbnail } from "@/hooks/useThumbnail"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import { cacheManager } from "@/lib/unified-cache-manager"
@@ -135,14 +136,14 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 
 	// cited_recipe_ids 처리 - 캐싱된 훅 사용
 	const { citedRecipes, isLoading: citedRecipesLoading } = useCitedRecipes(item?.cited_recipe_ids)
-	const citingItems = useCitingItems(isRecipe ? item?.item_id || item?.id : null)
+	const relations = useRecipeRelations(isRecipe ? item?.item_id || item?.id : null)
 
 	// 🚀 SSA 표준: 상태 관리 - 조건부 렌더링 전에 호출
 	// ✅ commentsCount는 캐시에서 직접 사용 (실시간 동기화)
 	const [localLikesCount, setLocalLikesCount] = useState(cachedItem?.likes_count || 0)
 	const [localHasLiked, setLocalHasLiked] = useState(cachedItem?.is_liked || false)
 	const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
-	const [isAuthLoading, setIsAuthLoading] = useState(true)
+	const [, setIsAuthLoading] = useState(true)
 	const [showDeleteModal, setShowDeleteModal] = useState(false)
 	const [isDeleting, setIsDeleting] = useState(false)
 	
@@ -248,12 +249,12 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		return (
 			<div className="flex flex-col h-full items-center justify-center p-8">
 				<div className="text-center space-y-4">
-					<div className="w-16 h-16 bg-gray-200 rounded-full animate-pulse mx-auto"></div>
+					<div className="w-16 h-16 bg-border rounded-full animate-pulse mx-auto"></div>
 					<div className="space-y-2">
-						<div className="h-4 bg-gray-200 rounded animate-pulse w-48"></div>
-						<div className="h-3 bg-gray-200 rounded animate-pulse w-32 mx-auto"></div>
+						<div className="h-4 bg-border rounded animate-pulse w-48"></div>
+						<div className="h-3 bg-border rounded animate-pulse w-32 mx-auto"></div>
 					</div>
-					<p className="text-gray-500 text-sm">컨텐츠를 불러오는 중...</p>
+					<p className="text-ink-soft text-sm">컨텐츠를 불러오는 중...</p>
 				</div>
 			</div>
 		)
@@ -265,8 +266,8 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 			<div className="flex flex-col h-full items-center justify-center p-8">
 				<div className="text-center space-y-4">
 					<div className="space-y-2">
-						<h3 className="text-lg font-semibold text-gray-900">콘텐츠를 불러올 수 없습니다</h3>
-						<p className="text-gray-500 text-sm">잘못된 링크이거나 삭제된 콘텐츠일 수 있습니다.</p>
+						<h3 className="text-lg font-semibold text-ink">콘텐츠를 불러올 수 없습니다</h3>
+						<p className="text-ink-soft text-sm">잘못된 링크이거나 삭제된 콘텐츠일 수 있습니다.</p>
 					</div>
 				</div>
 			</div>
@@ -397,7 +398,6 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 
 
 	const authorName = item.username || "사용자"
-	const magnet = isRecipe ? getMagnet(cachedItem?.color_label ?? item.color_label) : null
 	const cookingTime = formatCookingTime(item.cooking_time_minutes)
 	const ingredientCount = item.ingredients?.length || 0
 	// 비로그인 방문자에게는 서버가 조리 단계를 보내지 않는다 (instructions RLS).
@@ -406,7 +406,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 
 	// 이 글이 참고한 레시피: 종이 뒤로 겹쳐 붙은 다른 종이의 가장자리로 보여 준다
 	const renderCitedPeek = () => {
-		if (citedRecipesLoading || citedRecipes.length === 0) return null
+		if (!isRecipe || citedRecipesLoading || citedRecipes.length === 0) return null
 		const shown = citedRecipes.slice(0, 2)
 		return (
 			<nav aria-label="참고한 레시피" className="relative z-0 mx-2 -mb-1.5">
@@ -433,29 +433,60 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		)
 	}
 
-	// 이 레시피를 참고해 만든 글: 인용 관계의 아래쪽
-	const renderCitingItems = () => {
-		if (!isRecipe || citingItems.length === 0) return null
+	// 로그인하지 않았으면 로그인 후 이 화면으로 돌아오게 한다
+	const requireLogin = (href: string) => (currentUser ? href : `/login?next=${encodeURIComponent(`/recipes/${stableItemId}`)}`)
+
+	// 이 레시피에서 나온 것들: 만들어 본 기록(레시피드)과 이어진 레시피(레시피). 행동은 그 머리에 둔다.
+	const renderRecipeGraph = () => {
+		if (!isRecipe) return null
 		return (
-			<section aria-labelledby="citing-heading" className="border-t border-border px-4 py-5">
-				<h2 id="citing-heading" className="text-lg font-bold text-ink">
-					이 레시피를 참고한 글 <span className="font-medium tabular-nums text-ink-soft">{citingItems.length}</span>
+			<section aria-labelledby="made-heading" className="border-t border-border px-4 pb-5 pt-5">
+				<h2 id="made-heading" className="text-lg font-bold text-ink">
+					만들어 본 기록 {relations.made.length > 0 && <span className="font-medium tabular-nums text-ink-soft">{relations.made.length}</span>}
 				</h2>
-				<ul className="mt-2 divide-y divide-border">
-					{citingItems.map((citing) => (
-						<li key={citing.id}>
-							<Link
-								href={citing.item_type === "recipe" ? `/recipes/${citing.id}` : `/posts/${citing.id}`}
-								className="flex min-h-12 items-center justify-between gap-3 py-2.5 text-[15px] text-ink"
-							>
-								<span className="min-w-0 truncate">
-									{citing.username}의 {citing.title || "레시피드"}
-								</span>
-								<span className="flex-shrink-0 text-sm text-ink-soft">{citing.item_type === "recipe" ? "레시피" : "레시피드"}</span>
-							</Link>
-						</li>
-					))}
-				</ul>
+				{relations.made.length > 0 && (
+					<ul className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1">
+						{relations.made.map((made) => (
+							<li key={made.id} className="w-28 flex-shrink-0">
+								<Link href={`/posts/${made.id}`} className="block">
+									<div className="relative aspect-square overflow-hidden rounded-[2px] bg-muted">
+										{made.image_url && <Image src={made.image_url} alt="" fill sizes="112px" className="object-cover" />}
+									</div>
+									<p className="mt-1 truncate text-[13px] text-ink-soft">{made.username}</p>
+								</Link>
+							</li>
+						))}
+					</ul>
+				)}
+				<Button asChild variant="outline" className="mt-3 w-full">
+					<Link href={requireLogin(`/posts/new?from=${stableItemId}&origin=recipe_detail`)}>이 레시피로 만들었어요</Link>
+				</Button>
+
+				{relations.continued.length > 0 && (
+					<>
+						<h2 className="mt-6 text-lg font-bold text-ink">
+							이어진 레시피 <span className="font-medium tabular-nums text-ink-soft">{relations.continued.length}</span>
+						</h2>
+						<ul className="mt-2 divide-y divide-border">
+							{relations.continued.map((next) => (
+								<li key={next.id}>
+									<Link href={`/recipes/${next.id}`} className="flex min-h-12 items-center gap-2 py-2.5 text-[15px] text-ink">
+										<span className="min-w-0 truncate">
+											{next.username}의 <span className="font-semibold">{next.title}</span>
+										</span>
+										{next.relation_type === "adapted" && <span className="flex-shrink-0 text-sm text-ink-soft">고친 버전</span>}
+									</Link>
+								</li>
+							))}
+						</ul>
+					</>
+				)}
+				<Link
+					href={requireLogin(`/recipes/new?fork=${stableItemId}`)}
+					className="mt-3 inline-flex min-h-11 items-center text-[15px] font-medium text-ink underline underline-offset-4"
+				>
+					참고해서 내 레시피 만들기
+				</Link>
 			</section>
 		)
 	}
@@ -507,13 +538,8 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 					{renderCitedPeek()}
 
 					<div className="relative z-10 rounded-[3px] bg-paper shadow-sheet">
-						{magnet && (
-							<span
-								role="img"
-								aria-label={`색상 라벨 ${magnet.label}`}
-								className="absolute -top-3 left-4 z-30 h-8 w-8 rounded-full shadow-[0_2px_4px_rgba(35,40,43,0.35)]"
-								style={{ backgroundColor: magnet.hex }}
-							/>
+						{!isRecipe && !citedRecipesLoading && (
+							<SourceLine recipes={citedRecipes} creationOrigin={item.creation_origin} className="border-b border-border px-4 py-3" />
 						)}
 
 						{orderedImages.length > 0 && (
@@ -521,6 +547,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 								<ImageCarousel
 									images={orderedImages}
 									alt={isRecipe ? item.title || "레시피 사진" : `${authorName}님의 레시피드 사진`}
+									frame={isRecipe ? "recipe" : "recipeed"}
 									priority
 									onDoubleClick={handleDoubleTapLike}
 								/>
@@ -547,7 +574,8 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 								</>
 							) : (
 								<>
-									{item.title && <h1 className="mb-2 text-xl font-bold text-ink">{item.title}</h1>}
+									{/* 레시피드는 사진과 글이 주인공이라 제목을 키우지 않는다 (DESIGN.md Interface Grammar 1) */}
+									{item.title && <h1 className="mb-1.5 text-[17px] font-semibold text-ink">{item.title}</h1>}
 									<p className="whitespace-pre-wrap break-words text-[16px] leading-[1.7] text-ink">{item.content}</p>
 								</>
 							)}
@@ -617,13 +645,17 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 								steps={item.steps || []}
 								stepsLocked={stepsLocked}
 								loginHref={`/login?next=${encodeURIComponent(`/recipes/${stableItemId}`)}`}
+								recipeId={stableItemId}
 							/>
 						)}
 
-						{renderCitingItems()}
+						{renderRecipeGraph()}
 					</div>
 
 					<div id="comments" ref={commentsRef} className="mt-3 scroll-mt-16 rounded-[3px] bg-paper p-4 shadow-sheet">
+						<h2 className="mb-3 text-lg font-bold text-ink">
+							댓글 {(cachedItem?.comments_count || 0) > 0 && <span className="font-medium tabular-nums text-ink-soft">{cachedItem?.comments_count}</span>}
+						</h2>
 						<SimplifiedCommentsSection currentUserId={currentUser?.id} itemId={stableItemId} onCommentsCountChange={undefined} cachedItem={cachedItem || item} />
 					</div>
 				</div>

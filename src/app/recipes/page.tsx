@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation"
 import { useRouter } from "@/lib/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Trash2, Search, SlidersHorizontal, List, Grid, BookUser, ChefHat, HelpCircle, X } from "lucide-react"
+import { Trash2, Search, SlidersHorizontal, List, Grid, BookUser, ChefHat } from "lucide-react"
 
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import useSWRInfinite from "swr/infinite"
@@ -256,7 +256,6 @@ export default function RecipesPage() {
 	const [selectedRecipes, setSelectedRecipes] = useState<string[]>([])
 	const [isFilterModalOpen, setIsFilterModalOpen] = useState(false)
 	const [currentTab, setCurrentTab] = useState<Tab>("my_recipes")
-	const [showTooltip, setShowTooltip] = useState<"my_recipes" | "all_recipes" | null>(null)
 
 	const { viewMode, setViewMode, setCurrentTab: setStoreCurrentTab, getCurrentTabState, setSearchTerm } = useRecipeStore()
 	const currentTabState = getCurrentTabState()
@@ -281,22 +280,6 @@ export default function RecipesPage() {
 		getUserAndSetInitialTab()
 	}, [supabase.auth, searchParams, setStoreCurrentTab])
 
-	// 툴팁 외부 클릭 시 닫기
-	useEffect(() => {
-		const handleClickOutside = (event: MouseEvent) => {
-			if (showTooltip && !(event.target as Element).closest('.tooltip-container')) {
-				setShowTooltip(null)
-			}
-		}
-
-		if (showTooltip) {
-			document.addEventListener('mousedown', handleClickOutside)
-		}
-
-		return () => {
-			document.removeEventListener('mousedown', handleClickOutside)
-		}
-	}, [showTooltip])
 
 	useEffect(() => {
 		const handler = setTimeout(() => {
@@ -356,7 +339,6 @@ export default function RecipesPage() {
 		setCurrentTab(tab)
 		setStoreCurrentTab(tab)
 		setSelectedRecipes([])
-		setShowTooltip(null) // 탭 전환 시 툴팁 닫기
 		router.push(`/recipes?tab=${tab === "my_recipes" ? "my" : "all"}`, { scroll: false })
 	}
 
@@ -509,121 +491,49 @@ export default function RecipesPage() {
 	const isGuest = !currentUser && !userLoading
 
 	return (
-		<div className="flex flex-col w-full h-screen bg-gray-50 text-gray-900 relative overflow-hidden">
-			{/* 비회원 블러 오버레이 - ItemDetailView와 동일한 방식 (약한 블러) */}
-			{isGuest && (
-				<div className="absolute inset-0 z-50 bg-black/15 flex items-start justify-center p-6 pt-8 sm:pt-12">
-					<div className="bg-white rounded-3xl p-8 max-w-sm mx-auto text-center shadow-2xl border border-gray-100">
-						<div className="mb-6">
-							<div className="w-16 h-16 mx-auto mb-4 bg-orange-100 rounded-full flex items-center justify-center">
-								<ChefHat className="w-8 h-8 text-orange-500" />
-							</div>
-							<h2 className="text-xl font-bold text-gray-900 mb-2">레시피북은 회원만 이용할 수 있어요</h2>
-							<p className="text-sm text-gray-600 leading-relaxed">
-								Spoonie에 가입하고 나만의 레시피를 기록하고, 관리하고, 다른 사용자들의 레시피를 탐색해보세요!
-							</p>
-						</div>
-						<div className="space-y-3">
-							<Button asChild className="w-full h-14 text-base font-semibold bg-orange-500 hover:bg-orange-600 rounded-2xl">
-								<Link href="/login">로그인 / 회원가입</Link>
-							</Button>
-							<Button 
-								variant="outline" 
-								className="w-full h-14 text-base font-medium border-2 border-gray-200 text-gray-700 hover:bg-gray-50 rounded-2xl" 
-								onClick={() => router.back()}
-							>
-								뒤로 가기
-							</Button>
-						</div>
-					</div>
+		<div className="flex flex-col w-full h-screen bg-door text-ink relative overflow-hidden">
+			{isGuest ? (
+				<div className="px-3 pt-3">
+					<section className="rounded-[3px] bg-paper px-5 py-6 shadow-sheet">
+						<h1 className="text-xl font-bold text-ink">레시피북은 회원이 쓰는 공간이에요</h1>
+						<p className="mt-2 text-[15px] leading-relaxed text-ink-soft">내 레시피를 기록하고 색상 라벨로 정리해 두었다가 요리할 때 다시 꺼내 볼 수 있어요.</p>
+						<Button asChild className="mt-5">
+							<Link href="/login?next=/recipes">로그인하고 레시피북 열기</Link>
+						</Button>
+					</section>
 				</div>
-			)}
-
-			{/* 기존 콘텐츠 (비회원일 때 블러 처리 - 아주 약함) */}
-			<div className={`flex flex-col h-full ${isGuest ? "filter blur-[1px] pointer-events-none" : ""}`}>
-				<div className="sticky top-0 bg-white z-[60] border-b border-gray-200">
+			) : (
+			<div className="flex flex-col h-full">
+				<div className="sticky top-0 bg-paper z-[60] border-b border-border">
 					<div className="flex justify-around max-w-md mx-auto relative">
 					<div className="flex-1 flex items-center justify-center relative">
 						<button 
 							onClick={() => handleTabChange("my_recipes")} 
-							className={`flex items-center justify-center py-3 text-sm font-semibold transition-colors ${currentTab === "my_recipes" ? "text-orange-500 border-b-2 border-orange-500" : "text-gray-500"}`}
+							className={`flex h-12 items-center justify-center px-2 text-[15px] font-semibold transition-colors ${currentTab === "my_recipes" ? "text-ink border-b-2 border-ink" : "text-ink-soft"}`}
 						>
 							<BookUser className="w-5 h-5 mr-2" />
 							나의 레시피
 						</button>
-						<span
-							onClick={(e) => {
-								e.stopPropagation()
-								setShowTooltip(showTooltip === "my_recipes" ? null : "my_recipes")
-							}}
-							className="ml-1 p-0.5 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-						>
-							<HelpCircle className="w-3 h-3" />
-						</span>
 					</div>
 					<div className="flex-1 flex items-center justify-center relative">
 						<button 
 							onClick={() => handleTabChange("all_recipes")} 
-							className={`flex items-center justify-center py-3 text-sm font-semibold transition-colors ${currentTab === "all_recipes" ? "text-orange-500 border-b-2 border-orange-500" : "text-gray-500"}`}
+							className={`flex h-12 items-center justify-center px-2 text-[15px] font-semibold transition-colors ${currentTab === "all_recipes" ? "text-ink border-b-2 border-ink" : "text-ink-soft"}`}
 						>
 							<ChefHat className="w-5 h-5 mr-2" />
 							모두의 레시피
 						</button>
-						<span
-							onClick={(e) => {
-								e.stopPropagation()
-								setShowTooltip(showTooltip === "all_recipes" ? null : "all_recipes")
-							}}
-							className="ml-1 p-0.5 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-						>
-							<HelpCircle className="w-3 h-3" />
-						</span>
 					</div>
 					
-					{/* 툴팁 팝업 */}
-					{showTooltip && (
-						<div className="absolute top-full left-0 right-0 z-[100] mt-1 mx-4 tooltip-container">
-							<div className="bg-white rounded-lg shadow-lg border border-gray-200 p-4 relative">
-								<button
-									onClick={() => setShowTooltip(null)}
-									className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-600 transition-colors"
-								>
-									<X className="w-4 h-4" />
-								</button>
-								
-								{showTooltip === "my_recipes" ? (
-									<div>
-										<h3 className="font-semibold text-sm text-gray-900 mb-2">나의 레시피</h3>
-										<ul className="text-xs text-gray-600 space-y-1">
-											<li>• 내가 작성한 레시피들을 모아서 관리</li>
-											<li>• 색상 라벨과 카테고리로 분류 및 필터링</li>
-											<li>• 레시피명, 재료명으로 검색</li>
-											<li>• 복수 선택으로 일괄 삭제 가능</li>
-										</ul>
-									</div>
-								) : (
-									<div>
-										<h3 className="font-semibold text-sm text-gray-900 mb-2">모두의 레시피</h3>
-										<ul className="text-xs text-gray-600 space-y-1">
-											<li>• 팔로우한 사용자들의 공개 레시피 탐색</li>
-											<li>• 레시피명, 사용자명, 재료명, 태그로 검색</li>
-											<li>• 좋아요와 댓글 수로 인기 레시피 확인</li>
-											<li>• 새로운 레시피 발견 및 영감 얻기</li>
-										</ul>
-									</div>
-								)}
-							</div>
-						</div>
-					)}
 				</div>
 			</div>
 
 			{/* 🔧 반응형 최적화: 컨테이너 최대 너비 + 패딩 조정 */}
-			<main className="flex-1 overflow-y-auto px-2 py-3 max-w-7xl mx-auto w-full">
+			<main className="flex-1 overflow-y-auto px-3 py-3 max-w-7xl mx-auto w-full">
 				{/* 🔧 검색/필터 영역 - 모바일 최적화 */}
-				<div className="flex gap-1 sm:gap-2 mb-3 sm:mb-4">
+				<div className="flex gap-2 mb-3">
 					<div className="relative flex-grow min-w-0">
-						<Search className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+						<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-ink-soft" aria-hidden />
 						<Input 
 							placeholder={
 								currentTab === "my_recipes" 
@@ -632,16 +542,16 @@ export default function RecipesPage() {
 							} 
 							value={localSearchTerm} 
 							onChange={(e) => setLocalSearchTerm(e.target.value)} 
-							className="pl-7 sm:pl-10 bg-white text-sm" 
+							aria-label="레시피 검색" className="h-11 pl-10 bg-paper text-[15px]" 
 						/>
 					</div>
 					{/* 🎯 필터 버튼은 나의 레시피에서만 표시 */}
 					{currentTab === "my_recipes" && (
-						<Button variant="outline" size="icon" onClick={() => setIsFilterModalOpen(true)} className="h-9 w-9 sm:h-10 sm:w-10">
+						<Button variant="outline" size="icon" onClick={() => setIsFilterModalOpen(true)} aria-label="색상 라벨로 거르기">
 							<SlidersHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
 						</Button>
 					)}
-					<Button variant="outline" size="icon" onClick={() => setViewMode(viewMode === "card" ? "list" : "card")} className="h-9 w-9 sm:h-10 sm:w-10">
+					<Button variant="outline" size="icon" onClick={() => setViewMode(viewMode === "card" ? "list" : "card")} aria-label={viewMode === "card" ? "목록으로 보기" : "격자로 보기"}>
 						{viewMode === "card" ? <List className="w-4 h-4 sm:w-5 sm:h-5" /> : <Grid className="w-4 h-4 sm:w-5 sm:h-5" />}
 					</Button>
 				</div>
@@ -674,14 +584,14 @@ export default function RecipesPage() {
 					<div className={
 						viewMode === "card" 
 							? "grid grid-cols-2 gap-3" 
-							: "space-y-5"
+							: "space-y-2.5"
 					}>
 						{Array.from({ length: viewMode === "card" ? 4 : 3 }).map((_, i) => (
 							<RecipeCardSkeleton key={i} />
 						))}
 					</div>
 				) : isEmpty ? (
-					<div className="text-center py-12 sm:py-16 text-gray-500 px-4">
+					<div className="text-center py-12 sm:py-16 text-ink-soft px-4">
 						<p className="font-semibold mb-2 text-sm sm:text-base">{currentTab === "my_recipes" ? "아직 작성한 레시피가 없어요." : "팔로우한 사용자의 레시피가 없어요."}</p>
 						<p className="text-xs sm:text-sm">{currentTab === "my_recipes" ? "새로운 레시피를 추가해보세요!" : "다른 사용자를 팔로우하고 레시피를 확인해보세요."}</p>
 						{currentTab === "my_recipes" && (
@@ -694,7 +604,7 @@ export default function RecipesPage() {
 					<div className={
 						viewMode === "card" 
 							? "grid grid-cols-2 gap-3" 
-							: "space-y-5"
+							: "space-y-2.5"
 					}>
 						{recipes.map((item, index) =>
 							viewMode === "card" ? (
@@ -726,7 +636,7 @@ export default function RecipesPage() {
 					<div className={
 						viewMode === "card" 
 							? "grid grid-cols-2 gap-3 mt-4" 
-							: "space-y-5 mt-4"
+							: "space-y-2.5 mt-4"
 					}>
 						{Array.from({ length: viewMode === "card" ? 2 : 1 }).map((_, i) => (
 							<RecipeCardSkeleton key={i} />
@@ -736,11 +646,12 @@ export default function RecipesPage() {
 
 				<div ref={observerElem} style={{ height: "1px" }} />
 
-				{isReachingEnd && !isEmpty && <p className="text-center text-xs sm:text-sm text-gray-500 py-6 sm:py-8">모든 레시피를 불러왔습니다.</p>}
+				{isReachingEnd && !isEmpty && <p className="text-center text-xs sm:text-sm text-ink-soft py-6 sm:py-8">모든 레시피를 불러왔습니다.</p>}
 			</main>
 
 			<FilterModal isOpen={isFilterModalOpen} onClose={() => setIsFilterModalOpen(false)} />
 			</div>
+			)}
 		</div>
 	)
 }

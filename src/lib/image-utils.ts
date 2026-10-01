@@ -10,7 +10,7 @@ export interface OptimizedImage {
 /**
  * 이미지 파일을 최적화하여 품질과 크기를 조절합니다
  */
-const optimizeImage = (file: File, maxWidth = 800, quality = 0.8): Promise<OptimizedImage> => {
+const optimizeImage = (file: File, maxSide = 1280, quality = 0.8): Promise<OptimizedImage> => {
 	return new Promise((resolve, reject) => {
 		const canvas = document.createElement("canvas")
 		const ctx = canvas.getContext("2d")
@@ -18,7 +18,7 @@ const optimizeImage = (file: File, maxWidth = 800, quality = 0.8): Promise<Optim
 
 		img.onload = () => {
 			// 비율 유지하며 크기 조절
-			const { width, height } = calculateNewDimensions(img.width, img.height, maxWidth)
+			const { width, height } = calculateNewDimensions(img.width, img.height, maxSide)
 
 			canvas.width = width
 			canvas.height = height
@@ -67,23 +67,24 @@ const optimizeImage = (file: File, maxWidth = 800, quality = 0.8): Promise<Optim
 /**
  * 새로운 이미지 크기 계산 (비율 유지)
  */
-const calculateNewDimensions = (originalWidth: number, originalHeight: number, maxWidth: number) => {
-	if (originalWidth <= maxWidth) {
+const calculateNewDimensions = (originalWidth: number, originalHeight: number, maxSide: number) => {
+	// 긴 변을 maxSide 이하로 줄인다 (세로로 긴 사진도 과하게 크지 않게)
+	const longest = Math.max(originalWidth, originalHeight)
+	if (longest <= maxSide) {
 		return { width: originalWidth, height: originalHeight }
 	}
-
-	const ratio = originalHeight / originalWidth
+	const scale = maxSide / longest
 	return {
-		width: maxWidth,
-		height: Math.round(maxWidth * ratio),
+		width: Math.round(originalWidth * scale),
+		height: Math.round(originalHeight * scale),
 	}
 }
 
 /**
  * 여러 이미지 파일을 최적화
  */
-export const optimizeImages = async (files: File[], maxWidth = 800, quality = 0.8): Promise<OptimizedImage[]> => {
-	const promises = files.map((file) => optimizeImage(file, maxWidth, quality))
+export const optimizeImages = async (files: File[], maxSide = 1280, quality = 0.8): Promise<OptimizedImage[]> => {
+	const promises = files.map((file) => optimizeImage(file, maxSide, quality))
 	return Promise.all(promises)
 }
 

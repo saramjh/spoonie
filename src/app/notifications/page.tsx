@@ -408,11 +408,11 @@ export default function NotificationsPage() {
       case 'follow':
         return { icon: UserPlus, color: 'text-green-500', bgColor: 'bg-green-50', borderColor: 'border-green-200' };
       case 'recipe_cited':
-        return { icon: ChefHat, color: 'text-orange-500', bgColor: 'bg-orange-50', borderColor: 'border-orange-200' };
+        return { icon: ChefHat, color: 'text-orange-ink', bgColor: 'bg-muted', borderColor: 'border-border' };
       case 'admin':
         return { icon: Bell, color: 'text-purple-500', bgColor: 'bg-purple-50', borderColor: 'border-purple-200' };
       default:
-        return { icon: Bell, color: 'text-gray-500', bgColor: 'bg-gray-50', borderColor: 'border-gray-200' };
+        return { icon: Bell, color: 'text-ink-soft', bgColor: 'bg-door', borderColor: 'border-border' };
     }
   };
 
@@ -443,12 +443,12 @@ export default function NotificationsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-paper">
         {/* 🎨 로딩 상태 헤더 */}
-        <div className="sticky top-0 z-10 bg-white border-b border-gray-100">
+        <div className="sticky top-0 z-10 bg-paper border-b border-border">
           <div className="flex items-center justify-between px-4 py-4">
-            <h1 className="text-xl font-bold text-gray-900">알림</h1>
-            <div className="w-12 h-7 bg-gray-100 rounded-lg animate-pulse"></div>
+            <h1 className="text-xl font-bold text-ink">알림</h1>
+            <div className="w-12 h-7 bg-muted rounded-lg animate-pulse"></div>
           </div>
         </div>
         
@@ -457,15 +457,15 @@ export default function NotificationsPage() {
           <div className="space-y-1 mt-4">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="p-4 flex items-start gap-3">
-                <div className="w-10 h-10 bg-gray-100 rounded-full animate-pulse flex-shrink-0"></div>
+                <div className="w-10 h-10 bg-muted rounded-full animate-pulse flex-shrink-0"></div>
                 <div className="flex-1 space-y-2">
                   <div className="flex items-center gap-2">
-                    <div className="h-4 bg-gray-100 rounded-md animate-pulse w-20"></div>
-                    <div className="h-4 bg-gray-100 rounded-md animate-pulse flex-1"></div>
+                    <div className="h-4 bg-muted rounded-md animate-pulse w-20"></div>
+                    <div className="h-4 bg-muted rounded-md animate-pulse flex-1"></div>
                   </div>
-                  <div className="h-3 bg-gray-100 rounded-md animate-pulse w-16"></div>
+                  <div className="h-3 bg-muted rounded-md animate-pulse w-16"></div>
                 </div>
-                <div className="w-2 h-2 bg-gray-100 rounded-full animate-pulse flex-shrink-0 mt-1"></div>
+                <div className="w-2 h-2 bg-muted rounded-full animate-pulse flex-shrink-0 mt-1"></div>
               </div>
             ))}
           </div>
@@ -475,15 +475,15 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-paper">
       {/* 🎨 토스 스타일 헤더 */}
-      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-100">
+      <div className="sticky top-0 z-10 bg-paper/95 backdrop-blur-sm border-b border-border">
         <div className="flex items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold text-gray-900">알림</h1>
+            <h1 className="text-xl font-bold text-ink">알림</h1>
             {notifications.length > 0 && !isSelecting && (
-              <div className="px-2 py-1 bg-gray-100 rounded-full">
-                <span className="text-xs font-medium text-gray-600">{notifications.length}</span>
+              <div className="px-2 py-1 bg-muted rounded-full">
+                <span className="text-xs font-medium text-ink-soft">{notifications.length}</span>
               </div>
             )}
           </div>
@@ -493,7 +493,7 @@ export default function NotificationsPage() {
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                 isSelecting 
                   ? 'text-blue-600 bg-blue-50 hover:bg-blue-100' 
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  : 'text-ink-soft hover:text-ink hover:bg-door'
               }`}
             >
               {isSelecting ? '완료' : '편집'}
@@ -521,10 +521,10 @@ export default function NotificationsPage() {
                 >
                   {selectedIds.size === notifications.length ? (
                     <div className="w-5 h-5 bg-blue-600 rounded border flex items-center justify-center">
-                      <div className="w-2 h-2 bg-white rounded-sm"></div>
+                      <div className="w-2 h-2 bg-paper rounded-sm"></div>
                     </div>
                   ) : (
-                    <div className="w-5 h-5 border-2 border-blue-300 rounded bg-white"></div>
+                    <div className="w-5 h-5 border-2 border-blue-300 rounded bg-paper"></div>
                   )}
                   <span>전체선택</span>
                 </button>
@@ -553,11 +553,11 @@ export default function NotificationsPage() {
         <div className="mt-4">
           {notifications.length === 0 ? (
             <div className="text-center py-16 px-4">
-              <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-                <BellOff className="h-8 w-8 text-gray-400" />
+              <div className="w-20 h-20 mx-auto mb-6 bg-muted rounded-full flex items-center justify-center">
+                <BellOff className="h-8 w-8 text-ink-soft" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">아직 알림이 없어요</h3>
-              <p className="text-sm text-gray-500 leading-relaxed">
+              <h3 className="text-lg font-semibold text-ink mb-2">아직 알림이 없어요</h3>
+              <p className="text-sm text-ink-soft leading-relaxed">
                 새로운 좋아요나 댓글이 있으면<br/>
                 여기서 확인할 수 있어요
               </p>
@@ -594,7 +594,7 @@ export default function NotificationsPage() {
                       isSelecting && selectedIds.has(notification.id)
                         ? 'bg-transparent'
                         : notification.is_read 
-                          ? 'hover:bg-gray-50 active:bg-gray-100' 
+                          ? 'hover:bg-door active:bg-muted' 
                           : 'bg-blue-50/30 hover:bg-blue-50/50 active:bg-blue-50/70'
                     } ${!isSelecting && !notification.is_read ? 'border-l-4 border-l-blue-400' : ''}`}>
                       
@@ -604,7 +604,7 @@ export default function NotificationsPage() {
                           <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
                             selectedIds.has(notification.id)
                               ? 'bg-blue-600 border-blue-600'
-                              : 'border-gray-300 bg-white hover:border-blue-400'
+                              : 'border-border bg-paper hover:border-blue-400'
                           }`}>
                             {selectedIds.has(notification.id) && (
                               <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor">
@@ -617,7 +617,7 @@ export default function NotificationsPage() {
                       
                       {/* 🎭 프로필 이미지 + 타입 아이콘 */}
                       <div className="flex-shrink-0 relative">
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 ring-2 ring-white shadow-sm">
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-muted ring-2 ring-white shadow-sm">
                           {notification.from_profile?.avatar_url ? (
                             <Image 
                               src={notification.from_profile.avatar_url} 
@@ -628,7 +628,7 @@ export default function NotificationsPage() {
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
-                              <UserCircle2 className="h-6 w-6 text-gray-400" />
+                              <UserCircle2 className="h-6 w-6 text-ink-soft" />
                             </div>
                           )}
                         </div>
@@ -643,10 +643,10 @@ export default function NotificationsPage() {
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
                             <p className={`text-sm leading-relaxed ${
-                              notification.is_read ? 'text-gray-600' : 'text-gray-900'
+                              notification.is_read ? 'text-ink-soft' : 'text-ink'
                             }`}>
                               <span className={`font-semibold ${
-                                notification.is_read ? 'text-gray-700' : 'text-gray-900'
+                                notification.is_read ? 'text-ink' : 'text-ink'
                               }`}>
                                 {notification.from_profile?.username || 'Spoonie'}
                               </span>
@@ -654,7 +654,7 @@ export default function NotificationsPage() {
                                 {generateNotificationMessage(notification)}
                               </span>
                             </p>
-                            <p className="text-xs text-gray-500 mt-1 font-medium">
+                            <p className="text-xs text-ink-soft mt-1 font-medium">
                               {formatDistanceToNowStrict(new Date(notification.created_at), { 
                                 addSuffix: true, 
                                 locale: ko 
@@ -673,7 +673,7 @@ export default function NotificationsPage() {
                                   e.stopPropagation();
                                   deleteNotification(notification.id);
                                 }}
-                                className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1.5 rounded-full hover:bg-red-50 text-gray-400 hover:text-red-500"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1.5 rounded-full hover:bg-red-50 text-ink-soft hover:text-red-500"
                                 title="알림 삭제"
                               >
                                 <X className="h-3.5 w-3.5" />

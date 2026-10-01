@@ -21,7 +21,7 @@ export default function BottomNavBar() {
 
 	const getLinkClass = (href: string, disabled = false) => {
 		const isActive = pathname === href || (href.startsWith("/profile") && pathname.startsWith("/profile"))
-		let classes = `flex flex-col items-center gap-1 ${isActive ? "text-orange-500" : "text-gray-500"}`
+		let classes = `flex min-w-14 flex-col items-center gap-1 py-1 ${isActive ? "text-ink font-semibold" : "text-ink-soft"}`
 		if (disabled) {
 			classes += " cursor-not-allowed opacity-50"
 		}
@@ -36,7 +36,7 @@ export default function BottomNavBar() {
 
 			return (
 				<Link href="/login" className={getLinkClass("/login")}>
-					<User className="w-6 h-6" />
+					<User className="w-6 h-6" aria-hidden />
 					<span className="text-xs font-medium">로그인</span>
 				</Link>
 			)
@@ -49,10 +49,10 @@ export default function BottomNavBar() {
 
 
 			return (
-				<Link href={profileHref} className="flex flex-col items-center gap-1">
-					<Avatar className="w-7 h-7 ring-2 ring-transparent hover:ring-orange-200 transition-all">
+				<Link href={profileHref} aria-label="내 프로필" className="flex min-w-14 flex-col items-center gap-1 py-1">
+					<Avatar className="w-7 h-7 ring-2 ring-transparent">
 						<AvatarImage src={profile.avatar_url || ""} alt={profile.username || "User"} />
-						<AvatarFallback className="bg-orange-100 text-orange-600">{profile.username?.charAt(0) || "S"}</AvatarFallback>
+						<AvatarFallback className="bg-muted text-orange-ink">{profile.username?.charAt(0) || "S"}</AvatarFallback>
 					</Avatar>
 				</Link>
 			)
@@ -73,30 +73,30 @@ export default function BottomNavBar() {
 	return (
 		<>
 
-			<nav className="fixed bottom-0 left-0 right-0 bg-white border-t z-50 max-w-md mx-auto">
+			<nav aria-label="주요 메뉴" className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-md border-t border-border bg-paper pb-[env(safe-area-inset-bottom)]">
 				<div className="flex justify-around items-center h-16">
 					{/* 1. 홈 */}
 					<Link href="/" className={getLinkClass("/")}>
-						<Home className="w-6 h-6" />
+						<Home className="w-6 h-6" aria-hidden />
 						<span className="text-xs font-medium">홈</span>
 					</Link>
 
 					{/* 2. 레시피북 */}
 					<Link href="/recipes" className={getLinkClass("/recipes")}>
-						<Book className="w-6 h-6" />
+						<Book className="w-6 h-6" aria-hidden />
 						<span className="text-xs font-medium">레시피북</span>
 					</Link>
 
 					{/* 3. 중앙 생성 버튼 (+) */}
-					<button onClick={handleCreateButtonClick} className="flex flex-col items-center gap-1 text-gray-500 transition-all duration-200 hover:text-orange-500 active:scale-95">
-						<div className="bg-orange-500 hover:bg-orange-600 active:bg-orange-700 rounded-xl p-3 shadow-bauhaus hover:shadow-bauhaus-lg transition-all duration-200 transform hover:scale-105 active:scale-95">
-							<Plus className="w-6 h-6 text-white" />
-						</div>
+					<button onClick={handleCreateButtonClick} aria-label="새 글 쓰기" className="flex items-center justify-center">
+						<span className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary text-primary-foreground active:brightness-95">
+							<Plus className="h-6 w-6" strokeWidth={2.5} aria-hidden />
+						</span>
 					</button>
 
 					{/* 4. 검색 */}
 					<Link href="/search" className={getLinkClass("/search")}>
-						<Search className="w-6 h-6" />
+						<Search className="w-6 h-6" aria-hidden />
 						<span className="text-xs font-medium">검색</span>
 					</Link>
 

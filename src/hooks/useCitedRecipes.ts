@@ -130,40 +130,54 @@ export function useCitedRecipes(citedRecipeIds: string[] | null | undefined) {
 	}
 }
  
-export interface CitingItem {
+export interface RelatedItem {
 	id: string
 	title: string | null
 	item_type: "recipe" | "post"
 	username: string
+	image_url: string | null
+	relation_type: "cooked" | "adapted" | "referenced"
 }
 
-// 이 레시피를 참고 레시피로 인용한 공개 글 (레시피와 레시피드)
-const fetchCitingItems = async (recipeId: string): Promise<CitingItem[]> => {
+// 이 레시피에서 나온 공개 글: 만들어 본 기록(레시피드)과 이어진 레시피(레시피)
+const fetchRecipeRelations = async (recipeId: string): Promise<RelatedItem[]> => {
 	const supabase = createSupabaseBrowserClient()
 	const { data, error } = await supabase
-		.from("items")
-		.select("id, title, item_type, author:profiles!user_id(username)")
-		.contains("cited_recipe_ids", [recipeId])
-		.eq("is_public", true)
+		.from("content_relations")
+		.select(
+			"relation_type, item:items!content_relations_from_item_id_fkey(id, title, item_type, image_urls, thumbnail_index, is_public, author:profiles!user_id(username))"
+		)
+		.eq("to_recipe_id", recipeId)
 		.order("created_at", { ascending: false })
-		.limit(20)
+		.limit(30)
 	if (error) throw error
-	return (data || []).map((row) => {
-		const author = Array.isArray(row.author) ? row.author[0] : row.author
-		return {
-			id: String(row.id),
-			title: row.title as string | null,
-			item_type: row.item_type === "recipe" ? "recipe" : "post",
-			username: (author as { username?: string } | null)?.username || "익명",
-		}
+	return (data || []).flatMap((row) => {
+		const item = (Array.isArray(row.item) ? row.item[0] : row.item) as Record<string, unknown> | null
+		if (!item || item.is_public === false) return []
+		const author = Array.isArray(item.author) ? item.author[0] : item.author
+		const images = (item.image_urls as string[] | null) || []
+		return [
+			{
+				id: String(item.id),
+				title: (item.title as string | null) ?? null,
+				item_type: item.item_type === "recipe" ? "recipe" : "post",
+				username: (author as { username?: string } | null)?.username || "익명",
+				image_url: images[(item.thumbnail_index as number) || 0] || images[0] || null,
+				relation_type: row.relation_type as RelatedItem["relation_type"],
+			},
+		]
 	})
 }
 
-export function useCitingItems(recipeId: string | null | undefined) {
-	const { data } = useSWR(recipeId ? `citing-items:${recipeId}` : null, () => fetchCitingItems(recipeId!), {
+export function useRecipeRelations(recipeId: string | null | undefined) {
+	const { data } = useSWR(recipeId ? `recipe-relations:${recipeId}` : null, () => fetchRecipeRelations(recipeId!), {
 		revalidateOnFocus: false,
 		dedupingInterval: 5 * 60 * 1000,
 		errorRetryCount: 1,
 	})
-	return data || []
+	const related = data || []
+	return {
+		made: related.filter((r) => r.item_type === "post"),
+		continued: related.filter((r) => r.item_type === "recipe"),
+	}
 }

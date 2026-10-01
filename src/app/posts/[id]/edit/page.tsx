@@ -88,10 +88,10 @@ export default function PostEditPage() {
 		return (
 			<div className="p-4">
 				<div className="text-center">
-					<h1 className="text-2xl font-bold text-gray-900 mb-2">
+					<h1 className="text-2xl font-bold text-ink mb-2">
 						레시피드를 찾을 수 없습니다
 					</h1>
-					<p className="text-gray-600">
+					<p className="text-ink-soft">
 						요청하신 레시피드가 존재하지 않거나 삭제되었습니다.
 					</p>
 				</div>
@@ -112,8 +112,8 @@ export default function PostEditPage() {
 		return (
 			<div className="p-4">
 				<div className="text-center">
-					<h1 className="text-2xl font-bold text-gray-900 mb-2">잘못된 요청입니다</h1>
-					<p className="text-gray-600">이 항목은 레시피드가 아닙니다.</p>
+					<h1 className="text-2xl font-bold text-ink mb-2">잘못된 요청입니다</h1>
+					<p className="text-ink-soft">이 항목은 레시피드가 아닙니다.</p>
 				</div>
 			</div>
 		)

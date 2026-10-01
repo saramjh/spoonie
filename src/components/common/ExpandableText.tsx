@@ -25,8 +25,8 @@ export default function ExpandableText({
   text, 
   maxLines = 2, 
   maxCharacters = 120,
-  className = "text-sm text-gray-700",
-  expandButtonClass = "text-orange-500 hover:text-orange-600 text-sm font-medium ml-1",
+  className = "text-sm text-ink",
+  expandButtonClass = "text-orange-ink hover:text-orange-ink text-sm font-medium ml-1",
   onExpand
 }: ExpandableTextProps) {
   const [isExpanded, setIsExpanded] = useState(false)

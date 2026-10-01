@@ -1,9 +1,11 @@
 import { Metadata } from 'next'
 import SeamlessItemList from "@/components/items/SeamlessItemList"
-import { getInitialFeedData } from "@/lib/server-data"
+import { getPublicFeedData } from "@/lib/server-data"
 
 // 🔧 동적 라우팅 강제 (개인화된 피드 때문에)
-export const dynamic = 'force-dynamic'
+// 홈 HTML은 공개 피드로 정적 생성해 CDN에서 바로 보낸다 (스플래시가 즉시 보이도록).
+// 60초마다 다시 만들고, 로그인 사용자 정보는 클라이언트가 스플래시 동안 채운다.
+export const revalidate = 60
 
 // 🚀 홈페이지 SEO 최적화 (TBWA 가이드 적용)
 export const metadata: Metadata = {
@@ -59,12 +61,12 @@ import PostCardSkeleton from "@/components/items/PostCardSkeleton"
 export default async function HomePage() {
 	try {
 		// 🏃‍♂️ 서버에서 초기 데이터 미리 로딩 (3번 요청 → 1번으로 통합)
-		const initialData = await getInitialFeedData()
+		const initialData = await getPublicFeedData()
 		
 		
 
 		return (
-			<div className="min-h-screen bg-gray-50">
+			<div className="min-h-screen bg-door">
 				<h1 className="sr-only">스푸니 - 레시피와 요리 이야기를 나누는 커뮤니티</h1>
 				{/* Google 검색 결과의 사이트 이름 */}
 				<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(websiteSchema) }} />
@@ -78,7 +80,7 @@ export default async function HomePage() {
 		
 		// 서버 에러 시 클라이언트에서 재시도 가능한 폴백
 		return (
-			<div className="min-h-screen bg-gray-50">
+			<div className="min-h-screen bg-door">
 				<SeamlessItemList initialData={null} />
 			</div>
 		)

@@ -120,7 +120,7 @@ export default function PushNotificationSettings() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-orange-500" />
+            <AlertCircle className="h-5 w-5 text-orange-ink" />
             푸시 알림 미지원
           </CardTitle>
           <CardDescription>
@@ -136,7 +136,7 @@ export default function PushNotificationSettings() {
     return (
       <Card className="w-full max-w-md">
         <CardHeader 
-          className="cursor-pointer hover:bg-gray-50 transition-colors"
+          className="cursor-pointer hover:bg-door transition-colors"
           onClick={() => setIsExpanded(true)}
         >
           <div className="flex items-center justify-between">
@@ -149,7 +149,7 @@ export default function PushNotificationSettings() {
                 </CardDescription>
               </div>
             </div>
-            <ChevronDown className="h-4 w-4 text-gray-400" />
+            <ChevronDown className="h-4 w-4 text-ink-soft" />
           </div>
         </CardHeader>
       </Card>
@@ -186,13 +186,13 @@ export default function PushNotificationSettings() {
             {isSubscribed ? (
               <Bell className="h-5 w-5 text-green-600" />
             ) : (
-              <BellOff className="h-5 w-5 text-gray-400" />
+              <BellOff className="h-5 w-5 text-ink-soft" />
             )}
             <div>
               <p className="font-medium">
                 {isSubscribed ? '푸시 알림 켜짐' : '푸시 알림 꺼짐'}
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-ink-soft">
                 {isSubscribed 
                   ? '실시간 알림을 받고 있습니다' 
                   : '브라우저가 열려있을 때만 알림을 받습니다'

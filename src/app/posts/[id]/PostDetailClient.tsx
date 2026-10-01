@@ -39,10 +39,10 @@ export default function PostDetailClient({ params, initialItem }: PostDetailClie
 		return (
 			<div className="p-4">
 				<div className="text-center">
-					<h1 className="text-2xl font-bold text-gray-900 mb-2">
+					<h1 className="text-2xl font-bold text-ink mb-2">
 						{isNotFound || is404 ? "레시피드를 찾을 수 없습니다" : "레시피드 로딩 오류"}
 					</h1>
-					<p className="text-gray-600 mb-4">
+					<p className="text-ink-soft mb-4">
 						{isNotFound || is404 
 							? "요청하신 레시피드가 존재하지 않거나 삭제되었습니다." 
 							: "레시피드 데이터를 불러오는 중 오류가 발생했습니다."
@@ -50,10 +50,10 @@ export default function PostDetailClient({ params, initialItem }: PostDetailClie
 					</p>
 					{!isNotFound && !is404 && (
 						<div className="space-y-2">
-							<p className="text-sm text-gray-500">오류 세부정보: {error.message}</p>
+							<p className="text-sm text-ink-soft">오류 세부정보: {error.message}</p>
 							<button 
 								onClick={refresh}
-								className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors"
+								className="px-4 py-2 bg-primary text-primary-foreground rounded hover:brightness-95 transition-colors"
 							>
 								다시 시도
 							</button>
@@ -70,11 +70,11 @@ export default function PostDetailClient({ params, initialItem }: PostDetailClie
 		return (
 			<div className="p-4">
 				<div className="text-center">
-					<h1 className="text-2xl font-bold text-gray-900 mb-2">레시피드가 없습니다</h1>
-					<p className="text-gray-600 mb-4">레시피드 데이터를 불러올 수 없습니다.</p>
+					<h1 className="text-2xl font-bold text-ink mb-2">레시피드가 없습니다</h1>
+					<p className="text-ink-soft mb-4">레시피드 데이터를 불러올 수 없습니다.</p>
 					<button 
 						onClick={refresh}
-						className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors"
+						className="px-4 py-2 bg-primary text-primary-foreground rounded hover:brightness-95 transition-colors"
 					>
 						다시 시도
 					</button>
@@ -88,8 +88,8 @@ export default function PostDetailClient({ params, initialItem }: PostDetailClie
 		return (
 			<div className="p-4">
 				<div className="text-center">
-					<h1 className="text-2xl font-bold text-gray-900 mb-2">잘못된 요청입니다</h1>
-					<p className="text-gray-600">이 항목은 게시물이 아닙니다.</p>
+					<h1 className="text-2xl font-bold text-ink mb-2">잘못된 요청입니다</h1>
+					<p className="text-ink-soft">이 항목은 게시물이 아닙니다.</p>
 				</div>
 			</div>
 		)
