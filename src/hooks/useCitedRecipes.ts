@@ -135,6 +135,7 @@ export interface RelatedItem {
 	title: string | null
 	item_type: "recipe" | "post"
 	username: string
+	user_id: string
 	image_url: string | null
 	relation_type: "cooked" | "adapted" | "referenced"
 }
@@ -145,7 +146,7 @@ const fetchRecipeRelations = async (recipeId: string): Promise<RelatedItem[]> =>
 	const { data, error } = await supabase
 		.from("content_relations")
 		.select(
-			"relation_type, item:items!content_relations_from_item_id_fkey(id, title, item_type, image_urls, thumbnail_index, author:profiles!user_id(username))"
+			"relation_type, item:items!content_relations_from_item_id_fkey(id, user_id, title, item_type, image_urls, thumbnail_index, author:profiles!user_id(username))"
 		)
 		.eq("to_recipe_id", recipeId)
 		.order("created_at", { ascending: false })
@@ -163,6 +164,7 @@ const fetchRecipeRelations = async (recipeId: string): Promise<RelatedItem[]> =>
 				title: (item.title as string | null) ?? null,
 				item_type: item.item_type === "recipe" ? "recipe" : "post",
 				username: (author as { username?: string } | null)?.username || "익명",
+				user_id: String(item.user_id),
 				image_url: images[(item.thumbnail_index as number) || 0] || images[0] || null,
 				relation_type: row.relation_type as RelatedItem["relation_type"],
 			},
@@ -181,4 +183,22 @@ export function useRecipeRelations(recipeId: string | null | undefined) {
 		made: related.filter((r) => r.item_type === "post"),
 		continued: related.filter((r) => r.item_type === "recipe"),
 	}
+}
+
+// 작성자의 다른 공개 레시피 (작성자 발견: 레시피드·레시피를 보다가 그 사람의 다른 레시피로)
+export function useAuthorRecipes(authorId: string | null | undefined, excludeId: string | null | undefined) {
+	const { data } = useSWR(authorId ? `author-recipes:${authorId}` : null, async () => {
+		const supabase = createSupabaseBrowserClient()
+		const { data, error } = await supabase
+			.from("items")
+			.select("id, title, image_urls, thumbnail_index, servings, cooking_time_minutes, created_at, item_type, user_id, is_public")
+			.eq("user_id", authorId!)
+			.eq("item_type", "recipe")
+			.eq("is_public", true)
+			.order("created_at", { ascending: false })
+			.limit(5)
+		if (error) throw error
+		return (data || []) as Item[]
+	}, { revalidateOnFocus: false, dedupingInterval: 5 * 60 * 1000 })
+	return (data || []).filter((r) => r.id !== excludeId).slice(0, 4)
 }

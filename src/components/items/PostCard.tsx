@@ -21,10 +21,9 @@ import { enrichWithCachedAuthor, cacheAuthors } from "@/utils/author-cache"
 import { useThumbnail } from "@/hooks/useThumbnail"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import ExpandableText from "@/components/common/ExpandableText"
-import SourceLine from "@/components/items/SourceLine"
 import { cacheManager } from "@/lib/unified-cache-manager"
 import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
-import { IntentLink, RelativeTime, Sheet } from "@/components/kit"
+import { IntentLink, MadeProof, RelativeTime, Sheet, SourceRow } from "@/components/kit"
 import { revalidateItemPage } from "@/lib/revalidate-item"
 import { collectItemImageUrls, removeItemImages } from "@/lib/item-images"
 
@@ -228,6 +227,11 @@ export default function PostCard({
 
   const cookingTime = formatCookingTime(displayItem.cooking_time_minutes)
   const profileHref = `/profile/${enrichedItem.user_public_id || enrichedItem.user_id}`
+  // 카드 글 영역을 누르면 상세로 (안의 링크를 누른 경우는 링크가 이동을 맡는다)
+  const goDetail = (e: React.MouseEvent) => {
+    if ((e.target as Element).closest("a")) return
+    router.push(detailUrl)
+  }
 
   return (
     <Sheet as="article" className="relative">
@@ -280,9 +284,22 @@ export default function PostCard({
         </div>
       </header>
 
-      {!isRecipe && !citedRecipesLoading && citedRecipes.length > 0 && (
-        <SourceLine recipes={citedRecipes} creationOrigin={displayItem.creation_origin} className="px-4 pb-2.5" />
+      {/* 레시피(자산)는 글이 먼저: 제목·메타가 사진 위에 온다 */}
+      {isRecipe && (
+        <div className="cursor-pointer px-4 pb-3" onClick={goDetail}>
+          <h2 className="text-[20px] font-bold leading-snug text-ink [text-wrap:balance]">
+            <IntentLink href={detailUrl}>{displayItem.title}</IntentLink>
+          </h2>
+          {(displayItem.servings || cookingTime) && (
+            <p className="mt-1 text-[15px] text-ink-soft">
+              {[displayItem.servings ? `${displayItem.servings}인분` : null, cookingTime ? `조리 ${cookingTime}` : null].filter(Boolean).join(" · ")}
+            </p>
+          )}
+        </div>
       )}
+
+      {/* 레시피드(활동)는 어떤 레시피에서 나왔는지가 먼저: 출처 행 */}
+      {!isRecipe && !citedRecipesLoading && <SourceRow recipes={citedRecipes} creationOrigin={displayItem.creation_origin} />}
 
       {orderedImages.length > 0 && (
         <div className="relative">
@@ -302,32 +319,26 @@ export default function PostCard({
         </div>
       )}
 
-      <div
-        className="cursor-pointer px-4 pt-3"
-        onClick={(e) => {
-          // 제목 링크처럼 카드 안의 링크를 누른 경우는 링크가 이동을 처리한다
-          if ((e.target as Element).closest("a")) return
-          router.push(detailUrl)
-        }}
-      >
+      <div className="cursor-pointer px-4 pt-3" onClick={goDetail}>
         {isRecipe ? (
           <>
-            <h2 className="text-[20px] font-bold leading-snug text-ink [text-wrap:balance]">
-              <IntentLink href={detailUrl}>{displayItem.title}</IntentLink>
-            </h2>
-            {(displayItem.servings || cookingTime) && (
-              <p className="mt-1 text-[15px] text-ink-soft">
-                {[displayItem.servings ? `${displayItem.servings}인분` : null, cookingTime ? `조리 ${cookingTime}` : null].filter(Boolean).join(" · ")}
-              </p>
-            )}
             {displayItem.description && (
-              <ExpandableText text={displayItem.description} maxLines={2} onExpand={() => router.push(detailUrl)} className="mt-2 text-[15px] text-ink" />
+              <ExpandableText text={displayItem.description} maxLines={2} onExpand={() => router.push(detailUrl)} className="text-[15px] text-ink" />
             )}
+            {/* 다른 사람이 실제로 만든 기록: 레시피의 신뢰 증거 */}
+            <MadeProof
+              madeCount={displayItem.made_count}
+              continuedCount={displayItem.continued_count}
+              thumbs={displayItem.made_thumbs}
+              className={displayItem.description ? "mt-2.5" : ""}
+            />
           </>
         ) : (
-          <ExpandableText text={displayItem.content || ""} maxLines={3} onExpand={() => router.push(detailUrl)} className="text-[16px] leading-[1.65] text-ink" />
+          <>
+            {displayItem.title && <p className="mb-1 text-[15px] font-semibold text-ink">{displayItem.title}</p>}
+            <ExpandableText text={displayItem.content || ""} maxLines={3} onExpand={() => router.push(detailUrl)} className="text-[16px] leading-[1.65] text-ink" />
+          </>
         )}
-
 
         {displayItem.tags && displayItem.tags.length > 0 && (
           <ul className="mt-2 flex flex-wrap gap-x-3 gap-y-1" aria-label="태그">

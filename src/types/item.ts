@@ -63,6 +63,9 @@ export interface Item {
 	recipe_id: string | null
 	cited_recipe_ids: string[] | null // Add cited_recipe_ids field from database
 	creation_origin?: "recipe_detail" | "cook_mode" | "fork" | "manual" | null // 작성 경로 (관계 종류를 정한다)
+	made_count?: number // 다른 사람이 이 레시피로 만든 공개 기록 수 (사람 수, optimized_feed_view)
+	continued_count?: number // 이 레시피에서 이어진 공개 레시피 수
+	made_thumbs?: string[] // 만든 기록의 사진 최대 3장
 
 	// User/Author information (joined from profiles)
 	author?: Profile

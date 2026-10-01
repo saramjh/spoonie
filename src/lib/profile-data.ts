@@ -163,6 +163,10 @@ export const fetchUserItems = async (userId: string, currentUserId?: string, sup
 			cooking_time_minutes: item.cooking_time_minutes,
 			recipe_id: item.recipe_id,
 			cited_recipe_ids: item.cited_recipe_ids,
+			creation_origin: item.creation_origin ?? null, // 작성 경로 (출처 쪽지의 "만들었어요"/"참고한")
+			made_count: Number(item.made_count) || 0, // 다른 사람이 만든 기록 수
+			continued_count: Number(item.continued_count) || 0,
+			made_thumbs: item.made_thumbs || [],
 					// 홈 피드와 동일한 정확한 좋아요/댓글 수 처리
 		likes_count: currentUserId === userId 
 			? (item.likes_count?.[0]?.count ?? 0)   // 본인 프로필: items 테이블 집계 결과

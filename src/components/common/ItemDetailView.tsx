@@ -15,6 +15,7 @@ import SimplifiedCommentsSection from "@/components/items/SimplifiedCommentsSect
 import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
 import ImageCarousel from "@/components/common/ImageCarousel"
 import RecipeContentView from "@/components/recipe/RecipeContentView"
+import RecipeCard from "@/components/recipe/RecipeCard"
 import { cn } from "@/lib/utils"
 import { formatCookingTime } from "@/lib/recipe-amount"
 import { useShare } from "@/hooks/useShare"
@@ -25,12 +26,11 @@ import useSWR, { useSWRConfig } from "swr"
 import { Item, ItemDetail } from "@/types/item"
 import Link from "next/link"
 
-import { useCitedRecipes, useRecipeRelations } from "@/hooks/useCitedRecipes"
-import SourceLine from "@/components/items/SourceLine"
+import { useAuthorRecipes, useCitedRecipes, useRecipeRelations } from "@/hooks/useCitedRecipes"
 import { useThumbnail } from "@/hooks/useThumbnail"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import { cacheManager } from "@/lib/unified-cache-manager"
-import { IntentLink, Photo, RelativeTime, SectionHeading, Sheet } from "@/components/kit"
+import { IntentLink, MadeProof, Photo, RelativeTime, SectionHeading, Sheet, SourceRow } from "@/components/kit"
 import { revalidateItemPage } from "@/lib/revalidate-item"
 import { collectItemImageUrls, removeItemImages } from "@/lib/item-images"
 
@@ -139,6 +139,10 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	// cited_recipe_ids 처리 - 캐싱된 훅 사용
 	const { citedRecipes, isLoading: citedRecipesLoading } = useCitedRecipes(item?.cited_recipe_ids)
 	const relations = useRecipeRelations(isRecipe ? item?.item_id || item?.id : null)
+	// 레시피드: 같은 레시피로 만든 다른 기록 (출처 레시피의 관계에서 이 글을 뺀 것)
+	const sourceRelations = useRecipeRelations(!isRecipe ? item?.cited_recipe_ids?.[0] : null)
+	// 작성자의 다른 레시피 (작성자 발견)
+	const authorRecipes = useAuthorRecipes(item?.user_id, item?.item_id || item?.id)
 
 	// SSA 표준: 상태 관리 - 조건부 렌더링 전에 호출
 	// commentsCount는 캐시에서 직접 사용 (실시간 동기화)
@@ -458,6 +462,14 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		)
 	}
 
+	// 다른 사람이 만든 기록(사람 수)과 사진, 이어진 레시피 수 — 작성자 본인의 글은 증거에서 뺀다
+	const madeByOthers = (() => {
+		const others = relations.made.filter((r) => r.user_id !== item.user_id)
+		return { count: new Set(others.map((r) => r.user_id)).size, thumbs: others.map((r) => r.image_url).filter((u): u is string => !!u).slice(0, 3) }
+	})()
+	const continuedByOthers = relations.continued.filter((r) => r.user_id !== item.user_id).length
+	const siblingRecords = sourceRelations.made.filter((r) => r.id !== stableItemId)
+
 	// 요리한 경험을 나누려 할 때 가입을 권한다: 비로그인이면 로그인 후 바로 그 작성 화면으로 이어진다
 	const requireLogin = (href: string) => (currentUser ? href : `/login?next=${encodeURIComponent(href)}`)
 
@@ -563,9 +575,8 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 					{renderCitedPeek()}
 
 					<Sheet className="relative z-10">
-						{!isRecipe && !citedRecipesLoading && (
-							<SourceLine recipes={citedRecipes} creationOrigin={item.creation_origin} className="border-b border-border px-4 py-3" />
-						)}
+						{/* 레시피드: 어떤 레시피에서 나왔는지가 먼저 (성장 고리의 연결점) */}
+						{!isRecipe && !citedRecipesLoading && <SourceRow recipes={citedRecipes} creationOrigin={item.creation_origin} className="border-t-0" />}
 
 						{orderedImages.length > 0 && (
 							<div className="relative overflow-hidden rounded-t-[3px]">
@@ -595,6 +606,12 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 										{" · "}
 										<RelativeTime iso={item.created_at} />
 									</p>
+									{/* 다른 사람이 실제로 만든 기록: 누르면 아래 '만들어 본 기록'으로 */}
+									{(madeByOthers.count > 0 || continuedByOthers > 0) && (
+										<a href="#made-heading" className="mt-3 inline-flex min-h-11 items-center">
+											<MadeProof madeCount={madeByOthers.count} continuedCount={continuedByOthers} thumbs={madeByOthers.thumbs} />
+										</a>
+									)}
 									{item.description && <p className="mt-4 whitespace-pre-wrap break-words text-[16px] leading-[1.65] text-ink">{item.description}</p>}
 								</>
 							) : (
@@ -673,6 +690,37 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 						)}
 
 						{renderRecipeGraph()}
+
+						{/* 레시피드: 같은 레시피로 만든 다른 기록 → 다른 사람의 결과와 작성자로 이어진다 */}
+						{!isRecipe && siblingRecords.length > 0 && (
+							<section aria-labelledby="siblings-heading" className="border-t border-border px-4 pb-5 pt-5">
+								<SectionHeading id="siblings-heading" count={siblingRecords.length}>
+									같은 레시피로 만든 다른 기록
+								</SectionHeading>
+								<ul className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1">
+									{siblingRecords.map((made) => (
+										<li key={made.id} className="w-28 flex-shrink-0">
+											<IntentLink href={`/posts/${made.id}`} className="block">
+												<div className="relative aspect-square overflow-hidden rounded-[2px] bg-muted">{made.image_url && <Photo src={made.image_url} sizes="112px" />}</div>
+												<p className="mt-1 truncate text-[13px] text-ink-soft">{made.username}</p>
+											</IntentLink>
+										</li>
+									))}
+								</ul>
+							</section>
+						)}
+
+						{/* 작성자의 다른 레시피: 이 글을 보고 그 사람의 다른 레시피로 (작성자 발견) */}
+						{authorRecipes.length > 0 && (
+							<section aria-labelledby="author-recipes-heading" className="border-t border-border px-4 pb-5 pt-5">
+								<SectionHeading id="author-recipes-heading">{authorName}의 {isRecipe ? "다른 " : ""}레시피</SectionHeading>
+								<div className="mt-3 grid grid-cols-2 gap-3">
+									{authorRecipes.map((recipe) => (
+										<RecipeCard key={recipe.id} item={{ ...recipe, item_id: recipe.id } as Item} showColorLabel={false} />
+									))}
+								</div>
+							</section>
+						)}
 					</Sheet>
 
 					<div id="comments" ref={commentsRef} className="mt-3 scroll-mt-16 rounded-[3px] bg-paper p-4 shadow-sheet">

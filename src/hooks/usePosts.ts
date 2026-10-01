@@ -124,6 +124,10 @@ const fetcher = async (key: string): Promise<Item[]> => {
       cooking_time_minutes: item.cooking_time_minutes,
       recipe_id: item.recipe_id,
 			cited_recipe_ids: item.cited_recipe_ids, // 참고 레시피 ID 목록
+      creation_origin: item.creation_origin ?? null, // 작성 경로 (출처 쪽지의 "만들었어요"/"참고한")
+      made_count: Number(item.made_count) || 0, // 다른 사람이 만든 기록 수
+      continued_count: Number(item.continued_count) || 0,
+      made_thumbs: item.made_thumbs || [],
       likes_count: item.likes_count || 0,
       comments_count: item.comments_count || 0,
       is_liked: isLikedValue, // null 허용으로 불확실한 상태 표현
