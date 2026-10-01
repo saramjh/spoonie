@@ -18,8 +18,10 @@ export const metadata: Metadata = {
     type: 'website',
   },
 
+  // 레시피북은 회원 전용이라 비로그인 사용자와 검색 로봇에게는 안내 문구만 보인다.
+  // 레시피 상세(/recipes/[id])는 자체 메타데이터에서 색인을 허용한다.
   robots: {
-    index: true,
+    index: false,
     follow: true,
   },
 

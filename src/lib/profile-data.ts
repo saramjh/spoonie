@@ -2,6 +2,10 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import { getCommentCountConcurrencySafe } from "@/utils/concurrency-helpers"
 
+/** 누구나 읽을 수 있는 프로필 컬럼. email, role은 포함하지 않는다. */
+export const PUBLIC_PROFILE_COLUMNS =
+	"id, username, display_name, avatar_url, bio, profile_message, created_at, updated_at, public_id, is_profile_public, show_follower_count, show_join_date, username_changed_count"
+
 /**
  * 프로필 화면 데이터 조회. 서버 컴포넌트(공개 데이터 초기 렌더링)와
  * ProfilePageClient(로그인 사용자 기준 갱신)가 함께 사용한다. supabase를 넘기지 않으면 브라우저 클라이언트를 쓴다.
@@ -26,7 +30,8 @@ export const fetchProfile = async (identifier: string, supabase: SupabaseClient 
 
 	const column = isUUID ? "id" : "public_id"
 
-	const { data, error } = await supabase.from("profiles").select("*").eq(column, identifier).single()
+	// 공개 컬럼만 조회한다 (email 등 개인정보 컬럼은 조회 권한이 없다)
+	const { data, error } = await supabase.from("profiles").select(PUBLIC_PROFILE_COLUMNS).eq(column, identifier).single()
 
 	if (error) {
 		// If it was a UUID and it failed, maybe it's a public_id that looks like a UUID? Unlikely.

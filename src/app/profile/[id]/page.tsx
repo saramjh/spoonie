@@ -13,7 +13,7 @@ import { Metadata } from 'next'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { notFound } from 'next/navigation'
 import ProfilePageClient from './ProfilePageClient'
-import { fetchUserItems, fetchFollowCounts, type UserProfile } from '@/lib/profile-data'
+import { fetchUserItems, fetchFollowCounts, PUBLIC_PROFILE_COLUMNS, type UserProfile } from '@/lib/profile-data'
 import BreadcrumbSchema, { createBreadcrumbs } from '@/components/ai-search-optimization/BreadcrumbSchema'
 
 interface Props {
@@ -34,10 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         username,
         avatar_url,
         profile_message,
-        created_at,
-        followers_count,
-        following_count,
-        posts_count
+        created_at
       `)
       .eq('public_id', params.id)
       .single()
@@ -60,7 +57,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         .replace(/\n/g, ' ')
         .slice(0, 160)
     } else {
-      profileDescription = `${displayName}님의 프로필입니다. 팔로워 ${profile.followers_count || 0}명, 게시물 ${profile.posts_count || 0}개`
+      profileDescription = `${displayName}님의 스푸니 프로필입니다. 레시피와 요리 이야기를 확인해보세요.`
     }
     
     // 🎯 SEO 최적화된 제목 생성  
@@ -123,8 +120,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       // 🎯 추가 프로필 정보
       other: {
         'profile:username': profile.username || profile.public_id,
-        'profile:followers': profile.followers_count?.toString() || '0',
-        'profile:posts': profile.posts_count?.toString() || '0',
         'profile:joined': new Date(profile.created_at).toISOString().split('T')[0],
       },
     }
@@ -146,7 +141,7 @@ async function loadInitialProfileData(identifier: string) {
     const supabase = createSupabaseServerClient()
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier)
     const [{ data: profile, error }, { data: { user } }] = await Promise.all([
-      supabase.from('profiles').select('*').eq(isUUID ? 'id' : 'public_id', identifier).maybeSingle(),
+      supabase.from('profiles').select(PUBLIC_PROFILE_COLUMNS).eq(isUUID ? 'id' : 'public_id', identifier).maybeSingle(),
       supabase.auth.getUser(),
     ])
     if (error) throw error

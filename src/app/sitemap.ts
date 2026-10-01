@@ -41,10 +41,9 @@ async function getPublicItems(supabase: SupabaseServerClient, itemType: 'recipe'
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'
 
-  // 검색 결과, 로그인, 회원가입 페이지는 색인 대상이 아니므로 넣지 않는다
+  // 검색 결과, 로그인, 회원가입, 회원 전용 레시피북은 색인 대상이 아니므로 넣지 않는다
   const staticPages: MetadataRoute.Sitemap = [
     { url: baseUrl, lastModified: new Date(), changeFrequency: 'daily', priority: 1.0 },
-    { url: `${baseUrl}/recipes`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
   ]
 
   try {

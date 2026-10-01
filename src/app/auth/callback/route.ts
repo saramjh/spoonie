@@ -79,7 +79,7 @@ export async function GET(request: Request) {
 						const { data: insertedProfile, error: insertError } = await supabase
 							.from("profiles")
 							.insert(profileData)
-							.select()
+							.select("id")
 							.single()
 
 						if (insertError) {
