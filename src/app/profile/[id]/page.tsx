@@ -1,11 +1,11 @@
 /**
- * 👤 프로필 페이지 - 하이브리드 래퍼 패턴
+ * 프로필 페이지 - 하이브리드 래퍼 패턴
  * 
- * 🎯 구조:
+ * 구조:
  * - 서버 컴포넌트: SEO 최적화된 메타데이터 생성  
  * - 클라이언트 컴포넌트: 기존 복잡한 프로필 로직 완전 보존
  * 
- * 🛡️ 기존 기능 보호:
+ * 기존 기능 보호:
  * - SSA, SWR 캐싱, 팔로우 시스템, 복잡한 상태 관리 모두 유지
  */
 
@@ -20,13 +20,13 @@ interface Props {
   params: Promise<{ id: string }>
 }
 
-// 🎯 동적 메타데이터 생성 (기존 기능에 영향 없음)
+// 동적 메타데이터 생성 (기존 기능에 영향 없음)
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
   try {
     const supabase = await createSupabaseServerClient()
     
-    // 🔥 최소한의 데이터만 가져와서 메타데이터 생성 (성능 최적화)
+    // 최소한의 데이터만 가져와서 메타데이터 생성 (성능 최적화)
     const { data: profile, error } = await supabase
       .from('profiles')
       .select(`
@@ -41,7 +41,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       .single()
 
     if (error || !profile) {
-      // 🛡️ 에러 시 기본 메타데이터 (기존 기능에 영향 없음)
+      // 에러 시 기본 메타데이터 (기존 기능에 영향 없음)
       return { 
         title: '프로필 - 스푸니',
         description: '요리를 사랑하는 사람들의 프로필을 확인해보세요.',
@@ -51,7 +51,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     const displayName = profile.username || '익명'
     const profileImageUrl = profile.avatar_url || '/default-avatar.jpg'
     
-    // 🎯 프로필 설명 생성 (profile_message 우선, 없으면 통계 기반)
+    // 프로필 설명 생성 (profile_message 우선, 없으면 통계 기반)
     let profileDescription = ''
     if (profile.profile_message) {
       profileDescription = profile.profile_message
@@ -61,10 +61,10 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       profileDescription = `${displayName}님의 스푸니 프로필입니다. 레시피와 요리 이야기를 확인해보세요.`
     }
     
-    // 🎯 SEO 최적화된 제목 생성  
+    // SEO 최적화된 제목 생성  
     const seoTitle = `${displayName} (@${profile.username || profile.public_id}) - 스푸니`
     
-    // 🎯 키워드 생성
+    // 키워드 생성
     const keywords = [
       displayName,
       profile.username,
@@ -80,7 +80,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       description: profileDescription,
       keywords,
       
-      // 🎯 Open Graph 최적화 (소셜 공유)
+      // Open Graph 최적화 (소셜 공유)
       openGraph: {
         title: `${displayName} - 스푸니`,
         description: profileDescription,
@@ -94,7 +94,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         siteName: '스푸니',
       },
       
-      // 🎯 Twitter Cards 최적화
+      // Twitter Cards 최적화
       twitter: {
         card: 'summary',
         title: seoTitle,
@@ -103,7 +103,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         creator: `@${profile.username || 'spoonie'}`,
       },
       
-      // 🎯 검색 엔진 최적화
+      // 검색 엔진 최적화
       robots: {
         index: true,
         follow: true,
@@ -113,19 +113,19 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         },
       },
       
-      // 🎯 정규 URL 설정
+      // 정규 URL 설정
       alternates: {
         canonical: `${process.env.NEXT_PUBLIC_APP_URL}/profile/${params.id}`,
       },
       
-      // 🎯 추가 프로필 정보
+      // 추가 프로필 정보
       other: {
         'profile:username': profile.username || profile.public_id,
         'profile:joined': new Date(profile.created_at).toISOString().split('T')[0],
       },
     }
   } catch (error) {
-    // 🛡️ 에러 로깅 및 안전한 fallback
+    // 에러 로깅 및 안전한 fallback
     console.error('❌ Profile metadata generation failed:', error)
     return { 
       title: '프로필 - 스푸니',

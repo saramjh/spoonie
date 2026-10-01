@@ -69,8 +69,8 @@ export default function SignupPage() {
 			})
 		} else {
 			toast({
-				title: "회원가입 성공!",
-				description: "인증 메일을 확인 후 서비스를 이용해주세요.",
+				title: "가입 신청이 끝났어요",
+				description: "보내 드린 인증 메일의 링크를 누르면 로그인할 수 있어요.",
 			})
 			setIsRedirecting(true)
 			router.push(next === "/" ? "/login" : `/login?next=${encodeURIComponent(next)}`)
@@ -79,15 +79,15 @@ export default function SignupPage() {
 
 				return (
 					<div className="min-h-screen flex flex-col items-center justify-start p-4 bg-door">
-			{/* 🎨 토스 스타일 그라디언트 배경 */}
-			{/* 📱 상단 여백 + 카드 컨테이너 */}
+			{/* 토스 스타일 그라디언트 배경 */}
+			{/* 상단 여백 + 카드 컨테이너 */}
 			<main className="w-full max-w-sm mx-auto pt-8">
-				{/* 🏷️ 컴팩트한 브랜드 영역 */}
+				{/* 컴팩트한 브랜드 영역 */}
 				<div className="text-center mb-6">
 					<h1 className="text-[22px] font-bold text-ink">회원가입</h1>
 				</div>
 
-				{/* 📋 회원가입 카드 */}
+				{/* 회원가입 카드 */}
 				<div className="rounded-[3px] bg-paper p-6 shadow-sheet">
 
 					<Form {...form}>
@@ -160,7 +160,7 @@ export default function SignupPage() {
 						</form>
 					</Form>
 
-						{/* 📋 로그인 링크 */}
+						{/* 로그인 링크 */}
 						<div className="mt-8 text-center">
 							<span className="text-sm text-ink-soft">이미 계정이 있으신가요? </span>
 							<Link href="/login" className="text-sm font-semibold text-orange-ink hover:text-orange-ink transition-colors duration-200">
@@ -168,17 +168,17 @@ export default function SignupPage() {
 							</Link>
 						</div>
 
-						{/* ⚖️ 법적 문서 링크 */}
+						{/* 법적 문서 링크 */}
 						<div className="mt-6 text-center space-x-3">
-							<Link href="/legal/privacy" className="text-xs text-ink-soft hover:text-ink transition-colors duration-200">
+							<Link href="/legal/privacy" className="text-[13px] text-ink-soft hover:text-ink transition-colors duration-200">
 								개인정보처리방침
 							</Link>
-							<span className="text-xs text-ink-soft/60">|</span>
-							<Link href="/legal/terms" className="text-xs text-ink-soft hover:text-ink transition-colors duration-200">
+							<span className="text-[13px] text-ink-soft/60">|</span>
+							<Link href="/legal/terms" className="text-[13px] text-ink-soft hover:text-ink transition-colors duration-200">
 								이용약관
 							</Link>
-							<span className="text-xs text-ink-soft/60">|</span>
-							<Link href="/legal/policy" className="text-xs text-ink-soft hover:text-ink transition-colors duration-200">
+							<span className="text-[13px] text-ink-soft/60">|</span>
+							<Link href="/legal/policy" className="text-[13px] text-ink-soft hover:text-ink transition-colors duration-200">
 								운영정책
 							</Link>
 						</div>

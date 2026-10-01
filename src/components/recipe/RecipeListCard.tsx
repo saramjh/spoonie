@@ -31,14 +31,14 @@ export default function RecipeListCard({
 }: RecipeListCardProps) {
   const { createLinkWithOrigin } = useNavigation()
   
-  // 🚀 SSA 기반 캐시 연동 (이미지 포함)
+  // SSA 기반 캐시 연동 (이미지 포함)
   const fallbackItem = {
     ...item,
     likes_count: item.likes_count || 0,
     comments_count: item.comments_count || 0,
     is_liked: item.is_liked || false,
     is_bookmarked: (item as Item & { is_bookmarked?: boolean }).is_bookmarked || false,
-    image_urls: item.image_urls || null, // 🖼️ 섬네일 실시간 업데이트 지원
+    image_urls: item.image_urls || null, // 섬네일 실시간 업데이트 지원
     thumbnail_index: item.thumbnail_index || 0
   }
   const cachedItem = useSSAItemCache(item.item_id, fallbackItem)

@@ -13,15 +13,15 @@ import type { Item } from '@/types/item';
 import { getPopularKeywordsCached, getPopularPostsCached, optimizedSearch, searchUsers, SearchMetrics, type UserSearchResult } from '@/utils/search-optimization';
 import { useFollowStore } from '@/store/followStore';
 import { useNavigation } from '@/hooks/useNavigation';
-// 🚀 업계 표준: 사용하지 않는 import 제거 // �� 업계 표준: 글로벌 팔로우 상태
+// 업계 표준: 사용하지 않는 import 제거 // �� 업계 표준: 글로벌 팔로우 상태
 
-// 📊 서버 부담 최소화를 위한 페이지 크기
+// 서버 부담 최소화를 위한 페이지 크기
 const PAGE_SIZE = 12;
 
-// 🔄 검색 결과 타입
+// 검색 결과 타입
 type SearchTab = 'content' | 'users';
 
-// 👤 유저 검색 결과 타입
+// 유저 검색 결과 타입
 interface UserResult {
   user_id: string;
   username: string;
@@ -36,7 +36,7 @@ const fetcher = async (key: string): Promise<unknown> => {
 
   switch (type) {
     case 'popular_keywords':
-      // 🚀 최적화된 캐시 기반 인기 키워드 조회
+      // 최적화된 캐시 기반 인기 키워드 조회
       const startTime = performance.now();
       try {
         const keywords = await getPopularKeywordsCached();
@@ -50,7 +50,7 @@ const fetcher = async (key: string): Promise<unknown> => {
       }
 
     case 'popular_posts':
-      // 🚀 최적화된 캐시 기반 인기 게시물 조회
+      // 최적화된 캐시 기반 인기 게시물 조회
       try {
         const posts = await getPopularPostsCached();
         return posts;
@@ -62,7 +62,7 @@ const fetcher = async (key: string): Promise<unknown> => {
     case 'search':
       if (!query) return [];
       
-      // 🚀 디바운싱된 최적화 검색 (콘텐츠용)
+      // 디바운싱된 최적화 검색 (콘텐츠용)
       const searchStartTime = performance.now();
       try {
         const results = await optimizedSearch.search(query);
@@ -78,7 +78,7 @@ const fetcher = async (key: string): Promise<unknown> => {
     case 'search_users':
       if (!query) return [];
       
-      // 👤 유저네임 전용 검색
+      // 유저네임 전용 검색
       const userSearchStartTime = performance.now();
       try {
         const userResults = await searchUsers(query);
@@ -96,7 +96,7 @@ const fetcher = async (key: string): Promise<unknown> => {
   }
 };
 
-// 🚀 무한스크롤을 위한 페이지네이션 fetcher
+// 무한스크롤을 위한 페이지네이션 fetcher
 const getSearchPageKey = (pageIndex: number, previousPageData: Item[], searchTerm: string) => {
   if (!searchTerm.trim()) return null;
   if (previousPageData && previousPageData.length === 0) return null;
@@ -104,7 +104,7 @@ const getSearchPageKey = (pageIndex: number, previousPageData: Item[], searchTer
   return `search_page|${searchTerm}|${pageIndex}|${PAGE_SIZE}`;
 };
 
-// 🔄 SearchResult를 Item으로 변환
+// SearchResult를 Item으로 변환
 interface SearchResultType {
   id: string;
   title: string;
@@ -119,8 +119,8 @@ interface SearchResultType {
   tags?: string[];
   likes_count?: number;
   comments_count?: number;
-  is_liked?: boolean; // 🔧 추가: 좋아요 상태
-  is_following?: boolean; // 🔧 추가: 팔로우 상태
+  is_liked?: boolean; // 추가: 좋아요 상태
+  is_following?: boolean; // 추가: 팔로우 상태
   cooking_time_minutes?: number;
   servings?: number;
   color_label?: string;
@@ -145,8 +145,8 @@ const convertSearchResultToItem = (searchResult: SearchResultType): Item => {
     created_at: searchResult.created_at || new Date().toISOString(),
     likes_count: searchResult.likes_count || 0,
     comments_count: searchResult.comments_count || 0,
-    is_liked: searchResult.is_liked || false, // 🔧 검색 결과에서 실제 좋아요 상태 사용
-    is_following: searchResult.is_following || false, // 🔧 수정: 검색 결과에서 실제 팔로우 상태 사용
+    is_liked: searchResult.is_liked || false, // 검색 결과에서 실제 좋아요 상태 사용
+    is_following: searchResult.is_following || false, // 수정: 검색 결과에서 실제 팔로우 상태 사용
     is_public: true,
     display_name: searchResult.display_name || null,
     username: searchResult.username,
@@ -158,7 +158,7 @@ const convertSearchResultToItem = (searchResult: SearchResultType): Item => {
     cited_recipe_ids: null,
     ingredients: searchResult.ingredients || undefined,
     instructions: searchResult.instructions || undefined,
-    thumbnail_index: 0, // 🔧 기본 썸네일 인덱스
+    thumbnail_index: 0, // 기본 썸네일 인덱스
   };
 };
 
@@ -184,13 +184,13 @@ const infiniteSearchFetcher = async (key: string): Promise<Item[]> => {
 };
 
 export default function SearchPage() {
-  // 🧭 Smart Navigation: 이 페이지를 거쳐간 navigation history 추적
+  // Smart Navigation: 이 페이지를 거쳐간 navigation history 추적
   useNavigation({ trackHistory: true })
 
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState<SearchTab>('content'); // 🔄 탭 상태
-  const { setFollowing } = useFollowStore() // 🚀 업계 표준: 글로벌 팔로우 상태 동기화
+  const [activeTab, setActiveTab] = useState<SearchTab>('content'); // 탭 상태
+  const { setFollowing } = useFollowStore() // 업계 표준: 글로벌 팔로우 상태 동기화
   const observerRef = useRef<HTMLDivElement>(null);
 
   const { data: popularKeywords, isLoading: keywordsLoading } = useSWR('popular_keywords', fetcher, {
@@ -199,12 +199,12 @@ export default function SearchPage() {
     dedupingInterval: 60000, // 1분간 중복 요청 방지
   });
   const { data: popularPosts, isLoading: postsLoading } = useSWR('popular_posts', fetcher, {
-    revalidateOnFocus: false,    // 🚀 페이지 포커스 시 재검증 방지
-    revalidateOnReconnect: false, // 🚀 네트워크 재연결 시 재검증 방지
-    dedupingInterval: 60000,     // 🚀 1분간 중복 요청 방지
+    revalidateOnFocus: false,    // 페이지 포커스 시 재검증 방지
+    revalidateOnReconnect: false, // 네트워크 재연결 시 재검증 방지
+    dedupingInterval: 60000,     // 1분간 중복 요청 방지
   });
   
-  // 🚀 이전 데이터 유지 로직 (SWR v2 호환) - 영구 저장소 활용
+  // 이전 데이터 유지 로직 (SWR v2 호환) - 영구 저장소 활용
   const [stablePopularPosts, setStablePopularPosts] = useState<Item[] | null>(() => {
     // 초기 로드 시 sessionStorage에서 복원
     if (typeof window !== 'undefined') {
@@ -241,7 +241,7 @@ export default function SearchPage() {
     }
   }, [popularPosts, hasInitialized, stablePopularPosts]);
   
-  // 🎯 실제로 사용할 데이터 (더 안전한 fallback)
+  // 실제로 사용할 데이터 (더 안전한 fallback)
   const displayPopularPosts = useMemo(() => {
     const result = popularPosts || stablePopularPosts || [];
 
@@ -252,7 +252,7 @@ export default function SearchPage() {
   
 
   
-  // 🚀 무한스크롤 검색 결과
+  // 무한스크롤 검색 결과
   const {
     data: searchPages,
     isLoading: searchLoading,
@@ -263,12 +263,12 @@ export default function SearchPage() {
     (pageIndex, previousPageData) => getSearchPageKey(pageIndex, previousPageData as Item[], debouncedSearchTerm),
     infiniteSearchFetcher,
     {
-      revalidateFirstPage: true,  // 🔧 수정: 검색어가 바뀔 때 첫 페이지도 재검증
+      revalidateFirstPage: true,  // 수정: 검색어가 바뀔 때 첫 페이지도 재검증
       revalidateOnFocus: false,
     }
   );
 
-  // 🚀 검색어 디바운싱
+  // 검색어 디바운싱
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm.trim());
@@ -276,7 +276,7 @@ export default function SearchPage() {
     return () => clearTimeout(handler);
   }, [searchTerm]);
 
-  // 👤 사용자 검색 결과 (유저네임 전용)
+  // 사용자 검색 결과 (유저네임 전용)
   const userSearchKey = debouncedSearchTerm ? `search_users|${debouncedSearchTerm}` : null;
 
   
@@ -289,7 +289,7 @@ export default function SearchPage() {
     }
   );
 
-  // 🔧 검색어가 변경될 때 캐시 클리어 및 페이지 리셋
+  // 검색어가 변경될 때 캐시 클리어 및 페이지 리셋
   useEffect(() => {
     if (debouncedSearchTerm) {
       setSize(1); // 페이지를 첫 페이지로 리셋
@@ -299,7 +299,7 @@ export default function SearchPage() {
     }
   }, [debouncedSearchTerm, setSize, mutateSearch]);
 
-  // 🚀 무한스크롤 Intersection Observer
+  // 무한스크롤 Intersection Observer
   useEffect(() => {
     if (!observerRef.current || !searchPages) return;
 
@@ -320,7 +320,7 @@ export default function SearchPage() {
     setSearchTerm(keyword);
   };
 
-  // 👤 유저네임 검색 결과를 UserResult 인터페이스에 맞게 변환
+  // 유저네임 검색 결과를 UserResult 인터페이스에 맞게 변환
   const convertUserSearchResults = (results: UserSearchResult[]): UserResult[] => {
     return results.map(user => ({
       user_id: user.user_id,
@@ -340,7 +340,7 @@ export default function SearchPage() {
   const isLoadingMore = searchLoading || searchValidating;
   const isReachingEnd = searchPages && searchPages.length > 0 && searchPages[searchPages.length - 1]?.length < PAGE_SIZE;
 
-  // 👤 유저 검색 결과 처리 (유저네임 전용 검색 결과 사용)
+  // 유저 검색 결과 처리 (유저네임 전용 검색 결과 사용)
   const userResults = useMemo(() => {
 
     
@@ -350,7 +350,7 @@ export default function SearchPage() {
     return convertUserSearchResults(userSearchResults);
   }, [userSearchResults]);
 
-  // 🚀 업계 표준: 검색 결과의 팔로우 상태를 글로벌 상태와 동기화 (무한 루프 방지)
+  // 업계 표준: 검색 결과의 팔로우 상태를 글로벌 상태와 동기화 (무한 루프 방지)
   useEffect(() => {
     if (searchResults.length > 0) {
       searchResults.forEach((item: Item) => {
@@ -367,7 +367,7 @@ export default function SearchPage() {
   return (
     <div className="min-h-screen bg-door">
       <div className="px-2 py-4 pb-20">
-      {/* 🔍 Instagram 스타일 검색바 */}
+      {/* Instagram 스타일 검색바 */}
       <div className="relative mb-6">
         <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-ink-soft" />
         <Input
@@ -377,7 +377,7 @@ export default function SearchPage() {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        {/* 🚀 유튜브 스타일 X 버튼 (검색어가 있을 때만 표시) */}
+        {/* 유튜브 스타일 X 버튼 (검색어가 있을 때만 표시) */}
         {searchTerm && (
           <button
             onClick={() => setSearchTerm('')}
@@ -390,9 +390,9 @@ export default function SearchPage() {
       </div>
 
       {debouncedSearchTerm ? (
-        /* 🔍 검색 결과 - 탭 기반 */
+        /* 검색 결과 - 탭 기반 */
         <div>
-          {/* 📱 검색 결과 탭 */}
+          {/* 검색 결과 탭 */}
           <div className="mb-4 border-b border-border">
             <div className="flex" role="tablist">
               <button
@@ -422,9 +422,9 @@ export default function SearchPage() {
             </div>
           </div>
 
-          {/* 🔍 검색 결과 내용 */}
+          {/* 검색 결과 내용 */}
           {activeTab === 'content' ? (
-            /* 📱 콘텐츠 탭 - Instagram 그리드 */
+            /* 콘텐츠 탭 - Instagram 그리드 */
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <Grid3X3 className="w-5 h-5 text-ink-soft" />
@@ -468,7 +468,7 @@ export default function SearchPage() {
               )}
             </div>
           ) : (
-            /* 👤 사용자 탭 - 유저 카드 */
+            /* 사용자 탭 - 유저 카드 */
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <User className="w-5 h-5 text-ink-soft" />
@@ -495,7 +495,7 @@ export default function SearchPage() {
           )}
         </div>
       ) : (
-        /* 🏠 홈 화면 - 인기 콘텐츠 */
+        /* 홈 화면 - 인기 콘텐츠 */
         <div className="space-y-5">
           <PopularKeywords 
             keywords={popularKeywords as { keyword: string }[]} 
@@ -509,7 +509,7 @@ export default function SearchPage() {
             </div>
             
             <div className="grid grid-cols-3 gap-1 sm:gap-2">
-              {/* 🚀 단순화된 렌더링 로직 */}
+              {/* 단순화된 렌더링 로직 */}
               {(() => {
 
 

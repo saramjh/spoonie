@@ -1,5 +1,5 @@
 /**
- * 📊 통합 모니터링 & 로깅 시스템
+ * 통합 모니터링 & 로깅 시스템
  * 에러 추적, 성능 모니터링, 사용자 행동 분석
  */
 
@@ -398,7 +398,7 @@ class UserActionTracker {
 
 const logger = new Logger()
 
-// 🔧 메모리 안전: React Hook 기반 모니터링 시스템으로 변경
+// 메모리 안전: React Hook 기반 모니터링 시스템으로 변경
 // 전역 이벤트 리스너 대신 useEffect에서 관리하도록 수정
 
 let clickListener: ((event: Event) => void) | null = null

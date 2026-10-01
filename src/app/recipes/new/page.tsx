@@ -16,7 +16,7 @@ export default function NewRecipePage() {
 	const [forkFrom, setForkFrom] = useState<ItemDetail | null>(null)
 	const supabase = createSupabaseBrowserClient()
 
-	// 🧭 스마트 네비게이션 (이전 경로 추적)
+	// 스마트 네비게이션 (이전 경로 추적)
 	const { navigateBack } = useNavigation({ trackHistory: true })
 
 	useEffect(() => {
@@ -43,9 +43,7 @@ export default function NewRecipePage() {
 
 	if (!user) {
 		return (
-			<CreateContentAuthPrompt contentType="recipe">
-				<RecipeForm onNavigateBack={navigateBack} />
-			</CreateContentAuthPrompt>
+			<CreateContentAuthPrompt contentType="recipe" />
 		)
 	}
 

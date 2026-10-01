@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       ]
     })
 
-    // 🚀 로컬에서도 실제 web-push 발송
+    // 로컬에서도 실제 web-push 발송
     await webpush.sendNotification(subscription, payload)
 
     return NextResponse.json({ 

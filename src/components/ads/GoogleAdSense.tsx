@@ -1,5 +1,5 @@
 /**
- * 🎨 토스 스타일 Google AdSense
+ * 토스 스타일 Google AdSense
  * 
  * AdSense 호환 구현:
  * 1. Native script 태그 사용 (data-nscript 속성 방지)
@@ -14,12 +14,12 @@ import { useEffect } from 'react'
 
 const ADSENSE_PUBLISHER_ID = process.env.NEXT_PUBLIC_ADSENSE_ID || 'ca-pub-4410729598083068'
 
-// 🚨 전역 플래그로 중복 로드 완전 방지 (React StrictMode 대응)
+// 전역 플래그로 중복 로드 완전 방지 (React StrictMode 대응)
 let isAdSenseInitialized = false
 
 export default function GoogleAdSense() {
   useEffect(() => {
-    // 🛡️ 전역 플래그로 1차 체크 (React StrictMode 완전 대응)
+    // 전역 플래그로 1차 체크 (React StrictMode 완전 대응)
     if (isAdSenseInitialized) {
       if (process.env.NODE_ENV === 'development') {
         console.log('🔄 AdSense already initialized, skipping')
@@ -45,7 +45,7 @@ export default function GoogleAdSense() {
     // 플래그 설정 (로드 시작 시점에 바로 설정)
     isAdSenseInitialized = true
 
-    // 🚀 네이티브 script 태그 생성 (data-nscript 속성 방지)
+    // 네이티브 script 태그 생성 (data-nscript 속성 방지)
     const script = document.createElement('script')
     script.async = true
     script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_PUBLISHER_ID}`

@@ -6,7 +6,7 @@ import { useRouter } from "@/lib/navigation"
 import { useSWRConfig } from "swr"
 
 /**
- * 🧭 페이지 간 seamless 네비게이션 최적화 훅
+ * 페이지 간 seamless 네비게이션 최적화 훅
  * 페이지 이동 시 데이터 사전 로딩과 캐시 무효화를 지능적으로 처리
  */
 
@@ -36,7 +36,7 @@ export function useNavigation(options: NavigationOptions = {}) {
   const preloadedRoutesRef = useRef<Map<string, PreloadedRoute>>(new Map())
   const hoverTimeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map())
   
-  // 🧭 이전 경로 추적 (Smart Navigation용)
+  // 이전 경로 추적 (Smart Navigation용)
   const [previousPath, setPreviousPath] = useState<string | null>(null)
   const [navigationHistory, setNavigationHistory] = useState<string[]>(() => {
     // SessionStorage에서 네비게이션 히스토리 복원
@@ -55,7 +55,7 @@ export function useNavigation(options: NavigationOptions = {}) {
     return []
   })
 
-  // 🧭 이전 경로 추적 - 현재 경로가 변경될 때마다 업데이트
+  // 이전 경로 추적 - 현재 경로가 변경될 때마다 업데이트
   useEffect(() => {
     if (trackHistory && pathname) {
       setPreviousPath(prevPath => {
@@ -64,7 +64,7 @@ export function useNavigation(options: NavigationOptions = {}) {
           const newHistory = [...navigationHistory.slice(-4), prevPath] // 최근 5개 경로만 유지
           setNavigationHistory(newHistory)
           
-          // 🚀 SessionStorage 영속화 (새로고침/직접 접근 대응)
+          // SessionStorage 영속화 (새로고침/직접 접근 대응)
           if (typeof window !== 'undefined') {
             try {
               sessionStorage.setItem('spoonie_nav_history', JSON.stringify(newHistory))
@@ -80,7 +80,7 @@ export function useNavigation(options: NavigationOptions = {}) {
   }, [pathname, trackHistory, navigationHistory])
 
   /**
-   * 🚀 인텔리전트 페이지 사전 로딩
+   * 인텔리전트 페이지 사전 로딩
    * 사용자가 링크에 마우스를 올리면 데이터를 미리 가져옴
    */
   const preloadRoute = useCallback(async (path: string) => {
@@ -111,7 +111,7 @@ export function useNavigation(options: NavigationOptions = {}) {
   }, [cacheRetention])
 
   /**
-   * 📝 레시피 데이터 사전 로딩
+   * 레시피 데이터 사전 로딩
    */
   const preloadRecipeData = useCallback(async (path: string) => {
     const recipeId = path.split('/recipes/')[1]?.split('/')[0]
@@ -131,7 +131,7 @@ export function useNavigation(options: NavigationOptions = {}) {
   }, [mutate])
 
   /**
-   * 📱 레시피드 데이터 사전 로딩
+   * 레시피드 데이터 사전 로딩
    */
   const preloadPostData = useCallback(async (path: string) => {
     const postId = path.split('/')[2] // /feed/[id] 또는 /posts/[id]
@@ -150,7 +150,7 @@ export function useNavigation(options: NavigationOptions = {}) {
   }, [mutate])
 
   /**
-   * 👤 프로필 데이터 사전 로딩
+   * 프로필 데이터 사전 로딩
    */
   const preloadProfileData = useCallback(async (path: string) => {
     const userId = path.split('/profile/')[1]?.split('/')[0]
@@ -169,7 +169,7 @@ export function useNavigation(options: NavigationOptions = {}) {
   }, [mutate])
 
   /**
-   * 🏠 홈 데이터 사전 로딩
+   * 홈 데이터 사전 로딩
    */
   const preloadHomeData = useCallback(async () => {
     // 홈피드 첫 페이지 사전 로딩
@@ -185,7 +185,7 @@ export function useNavigation(options: NavigationOptions = {}) {
   }, [mutate])
 
   /**
-   * 🧹 스마트 캐시 정리
+   * 스마트 캐시 정리
    * 메모리 사용량을 최적화하기 위해 오래된 캐시 제거
    */
   const cleanupCache = useCallback(() => {
@@ -222,7 +222,7 @@ export function useNavigation(options: NavigationOptions = {}) {
   }, [cache, cacheRetention])
 
   /**
-   * 🖱️ 링크 호버 핸들러
+   * 링크 호버 핸들러
    */
   const handleLinkHover = useCallback((path: string) => {
     // 기존 타이머 취소
@@ -241,7 +241,7 @@ export function useNavigation(options: NavigationOptions = {}) {
   }, [preloadRoute, preloadDelay])
 
   /**
-   * 🖱️ 링크 호버 종료 핸들러
+   * 링크 호버 종료 핸들러
    */
   const handleLinkHoverEnd = useCallback((path: string) => {
     const timeout = hoverTimeoutsRef.current.get(path)
@@ -252,7 +252,7 @@ export function useNavigation(options: NavigationOptions = {}) {
   }, [])
 
   /**
-   * 🧭 최적화된 네비게이션
+   * 최적화된 네비게이션
    */
   const navigateOptimized = useCallback((path: string) => {
 
@@ -267,7 +267,7 @@ export function useNavigation(options: NavigationOptions = {}) {
   }, [router])
 
   /**
-   * 📊 현재 페이지 변경 감지 및 캐시 최적화
+   * 현재 페이지 변경 감지 및 캐시 최적화
    */
   useEffect(() => {
 
@@ -279,7 +279,7 @@ export function useNavigation(options: NavigationOptions = {}) {
   }, [pathname, cleanupCache])
 
   /**
-   * 🔄 정기적 캐시 정리 (5분마다)
+   * 정기적 캐시 정리 (5분마다)
    */
   useEffect(() => {
     const interval = setInterval(cleanupCache, 5 * 60 * 1000)
@@ -287,7 +287,7 @@ export function useNavigation(options: NavigationOptions = {}) {
   }, [cleanupCache])
 
   /**
-   * 🌐 URL 쿼리에서 origin 정보 추출
+   * URL 쿼리에서 origin 정보 추출
    */
   const getOriginFromURL = useCallback((): string | null => {
     if (typeof window === 'undefined') return null
@@ -297,7 +297,7 @@ export function useNavigation(options: NavigationOptions = {}) {
   }, [])
 
   /**
-   * 🧭 스마트 리턴 경로 결정 (사용자가 어디서 왔는지 기반)
+   * 스마트 리턴 경로 결정 (사용자가 어디서 왔는지 기반)
    */
   const getSmartReturnPath = useCallback((_currentItemId?: string): string => {
     // 1. URL origin 파라미터 확인 (최우선)
@@ -356,14 +356,14 @@ export function useNavigation(options: NavigationOptions = {}) {
   }, [navigationHistory, getOriginFromURL])
 
   /**
-   * 🚀 스마트 네비게이션 (적절한 곳으로 돌아가기)
+   * 스마트 네비게이션 (적절한 곳으로 돌아가기)
    */
   const navigateBack = useCallback((itemId?: string, options?: { replace?: boolean }) => {
     const returnPath = getSmartReturnPath(itemId)
     
 
     
-    // 🚀 업계 표준: History Replace를 통한 네비게이션 체인 정리
+    // 업계 표준: History Replace를 통한 네비게이션 체인 정리
     if (options?.replace) {
       // 수정폼 → 상세페이지: 수정폼을 히스토리에서 제거
       router.replace(returnPath)
@@ -374,11 +374,11 @@ export function useNavigation(options: NavigationOptions = {}) {
   }, [getSmartReturnPath, router])
 
   /**
-   * 🧹 컴포넌트 언마운트 시 정리
+   * 컴포넌트 언마운트 시 정리
    */
   useEffect(() => {
     return () => {
-      // 🛡️ Ref 안전성: cleanup 시점에 ref 값을 로컬 변수로 저장
+      // Ref 안전성: cleanup 시점에 ref 값을 로컬 변수로 저장
       const hoverTimeouts = hoverTimeoutsRef.current
       const preloadedRoutes = preloadedRoutesRef.current
       
@@ -390,7 +390,7 @@ export function useNavigation(options: NavigationOptions = {}) {
   }, [])
 
   /**
-   * 🔗 Origin 정보가 포함된 링크 생성
+   * Origin 정보가 포함된 링크 생성
    */
   const createLinkWithOrigin = useCallback((path: string, currentPath?: string): string => {
     const origin = currentPath || pathname
@@ -407,7 +407,7 @@ export function useNavigation(options: NavigationOptions = {}) {
     navigateOptimized,
     cleanupCache,
     isPreloaded: (path: string) => preloadedRoutesRef.current.has(path),
-    // 🧭 Smart Navigation 기능들
+    // Smart Navigation 기능들
     getSmartReturnPath,
     navigateBack,
     previousPath,

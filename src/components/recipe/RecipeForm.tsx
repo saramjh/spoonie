@@ -76,7 +76,7 @@ interface RecipeFormProps {
 	initialData?: Item | null
 	// "참고해서 내 레시피 만들기": 원본의 분량·재료·단계를 미리 채우고 출처를 자동으로 남긴다
 	forkFrom?: ItemDetail | null
-	onNavigateBack?: (itemId?: string, options?: { replace?: boolean }) => void // 🧭 스마트 네비게이션 콜백
+	onNavigateBack?: (itemId?: string, options?: { replace?: boolean }) => void // 스마트 네비게이션 콜백
 }
 
 export default function RecipeForm({ initialData, onNavigateBack, forkFrom = null }: RecipeFormProps) {
@@ -92,7 +92,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 	const [mainImages, setMainImages] = useState<OptimizedImage[]>([])
 	const [thumbnailIndex, setThumbnailIndex] = useState(0)
 	
-	// 🚀 SSA: 섬네일 변경 시 즉시 캐시 업데이트를 위한 wrapper 함수
+	// SSA: 섬네일 변경 시 즉시 캐시 업데이트를 위한 wrapper 함수
 	const handleThumbnailChange = useCallback(async (newIndex: number) => {
 
 		setThumbnailIndex(newIndex)
@@ -151,7 +151,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 				is_public: initialData.is_public !== undefined ? initialData.is_public : true,
 				ingredients: (initialData.ingredients && initialData.ingredients.length > 0) 
 					? initialData.ingredients
-						.sort((a, b) => (a.order_index || 0) - (b.order_index || 0)) // 🎯 order_index로 정렬
+						.sort((a, b) => (a.order_index || 0) - (b.order_index || 0)) // order_index로 정렬
 						.map((i) => ({ name: i.name, amount: i.amount, unit: i.unit || "개" })) 
 					: [{ name: "", amount: 1, unit: "개" }],
 				instructions: (initialData.instructions && initialData.instructions.length > 0) ? initialData.instructions.map((i) => ({ description: i.description, image_url: i.image_url || "" })) : [{ description: "", image_url: "" }],
@@ -169,7 +169,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 					height: 600, // 기본값 설정
 				}))
 				setMainImages(fetchedImages)
-				// 🚀 업계 표준: 저장된 썸네일 인덱스 복원 또는 기본값(0) 사용
+				// 업계 표준: 저장된 썸네일 인덱스 복원 또는 기본값(0) 사용
 				const savedThumbnailIndex = initialData.thumbnail_index ?? 0
 				setThumbnailIndex(Math.min(savedThumbnailIndex, fetchedImages.length - 1))
 				
@@ -262,7 +262,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 	const { fields: ingredients, append: appendIngredient, remove: removeIngredient } = useFieldArray({ control: form.control, name: "ingredients" })
 	const { fields: instructions, append: appendInstruction, remove: removeInstruction } = useFieldArray({ control: form.control, name: "instructions" })
 
-	// 🎯 토스 스타일 드래그앤드롭: 재료 순서 변경 핸들러 (직접 setValue 사용)
+	// 토스 스타일 드래그앤드롭: 재료 순서 변경 핸들러 (직접 setValue 사용)
 	const handleIngredientsReorder = (newIngredients: DraggableIngredient[]) => {
 	
 		
@@ -334,8 +334,8 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 				throw new Error("Supabase storage bucket ID is not configured.")
 			}
 
-					// 🚀 최적화된 메인 이미지 병렬 업로드 (기존: 순차 → 새로운: 병렬 + 캐싱)
-		// 🚀 업계 표준: 원본 순서 유지 + 썸네일 인덱스 정보 저장 (개선된 Instagram/Facebook 방식)
+					// 최적화된 메인 이미지 병렬 업로드 (기존: 순차 → 새로운: 병렬 + 캐싱)
+		// 업계 표준: 원본 순서 유지 + 썸네일 인덱스 정보 저장 (개선된 Instagram/Facebook 방식)
 		
 
 		const uploadStartTime = Date.now()
@@ -378,7 +378,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 			
 		}
 		
-					// 🚀 원본 순서 유지로 최종 URL 배열 생성
+					// 원본 순서 유지로 최종 URL 배열 생성
 			const finalImageUrls = [...existingImageUrls, ...uploadedImageUrls]
 
 			// Instruction images upload
@@ -417,7 +417,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 				color_label: values.color_label,
 				tags: values.tags,
 				cited_recipe_ids: values.cited_recipe_ids,
-				thumbnail_index: thumbnailIndex, // 🚀 썸네일 인덱스 저장
+				thumbnail_index: thumbnailIndex, // 썸네일 인덱스 저장
 				// 작성 경로: fork로 시작해 원본을 그대로 인용하면 fork(이어진 레시피 - 고친 버전), 직접 고른 인용은 manual
 				...(isEditMode
 					? {}
@@ -450,7 +450,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 				
 			}
 
-			// 🎯 재료 순서 정보 포함하여 저장 (드래그앤드롭 순서 유지)
+			// 재료 순서 정보 포함하여 저장 (드래그앤드롭 순서 유지)
 			const ingredientsToInsert = values.ingredients.map((ing, index) => ({ 
 				...ing, 
 				item_id: itemId,
@@ -462,15 +462,15 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 			const instructionsToInsert = instructionsWithImages.map((inst, index) => ({ ...inst, item_id: itemId, step_number: index + 1 }))
 			await supabase.from("instructions").insert(instructionsToInsert)
 
-			// 🚀 SSA 기반: 통합 캐시 관리로 최신 데이터 보장 (thumbnail_index 포함)
+			// SSA 기반: 통합 캐시 관리로 최신 데이터 보장 (thumbnail_index 포함)
 			if (isEditMode) {
 				
-				// 🚀 SSA: 아이템 업데이트 - 홈화면에 즉시 반영!
+				// SSA: 아이템 업데이트 - 홈화면에 즉시 반영!
 				const fullItemPayload = {
 					...itemPayload,
 					id: itemId,
 					item_id: itemId,
-					// 🎯 order_index 포함한 완전한 재료 데이터 사용
+					// order_index 포함한 완전한 재료 데이터 사용
 					ingredients: ingredientsToInsert.map((item) => {
 						// eslint-disable-next-line @typescript-eslint/no-unused-vars
 						const { item_id, ...ing } = item
@@ -480,20 +480,20 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 						...inst, 
 						step_number: index + 1 
 					})),
-					// 🔧 작성자 정보 (수정 모드에서는 기존 작성자 정보 유지)
+					// 작성자 정보 (수정 모드에서는 기존 작성자 정보 유지)
 					display_name: initialData?.display_name || initialData?.username || user.user_metadata?.username || user.email?.split('@')[0] || 'Anonymous',
 					username: initialData?.username || user.user_metadata?.username || user.email?.split('@')[0] || 'anonymous',
 					avatar_url: initialData?.avatar_url || user.user_metadata?.avatar_url || null,
 					user_public_id: initialData?.user_public_id || user.user_metadata?.public_id || null,
-					// 🎯 author 정보도 함께 설정 (ItemDetail 호환성)
+					// author 정보도 함께 설정 (ItemDetail 호환성)
 					author: {
-						id: initialData?.user_id || user.id, // ✅ Profile 타입 호환성: id 필드 추가
+						id: initialData?.user_id || user.id, // Profile 타입 호환성: id 필드 추가
 						display_name: initialData?.username || user.user_metadata?.username || user.email?.split('@')[0] || 'Anonymous',
 						username: initialData?.username || user.user_metadata?.username || user.email?.split('@')[0] || 'anonymous',
 						avatar_url: initialData?.avatar_url || user.user_metadata?.avatar_url || null,
 						public_id: initialData?.user_public_id || user.user_metadata?.public_id || null,
 					},
-					// 🔧 초기 통계 값 (기존 값 유지)
+					// 초기 통계 값 (기존 값 유지)
 					likes_count: initialData?.likes_count || 0,
 					comments_count: initialData?.comments_count || 0,
 					is_liked: initialData?.is_liked || false,
@@ -501,7 +501,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 					created_at: initialData?.created_at || new Date().toISOString(),
 				}
 				
-				// 🎯 중요: 모든 캐시 즉시 갱신 (홈피드, 프로필, 레시피북 등)
+				// 중요: 모든 캐시 즉시 갱신 (홈피드, 프로필, 레시피북 등)
 				await cacheManager.updateItem(itemId, fullItemPayload)
 			
 					} else {
@@ -510,7 +510,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 					...itemPayload,
 					id: itemId,
 					item_id: itemId,
-					// 🎯 order_index 포함한 완전한 재료 데이터 사용
+					// order_index 포함한 완전한 재료 데이터 사용
 					ingredients: ingredientsToInsert.map((item) => {
 						// eslint-disable-next-line @typescript-eslint/no-unused-vars
 						const { item_id, ...ing } = item
@@ -520,27 +520,27 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 						...inst, 
 						step_number: index + 1 
 					})),
-					// 🔧 작성자 정보 (신규 작성, username을 display_name으로 사용)
+					// 작성자 정보 (신규 작성, username을 display_name으로 사용)
 					display_name: user.user_metadata?.username || user.email?.split('@')[0] || 'Anonymous',
 					username: user.user_metadata?.username || user.email?.split('@')[0] || 'anonymous',
 					avatar_url: user.user_metadata?.avatar_url || null,
 					user_public_id: user.user_metadata?.public_id || null,
-					// 🎯 author 정보도 함께 설정 (ItemDetail 호환성)
+					// author 정보도 함께 설정 (ItemDetail 호환성)
 					author: {
-						id: user.id, // ✅ Profile 타입 호환성: id 필드 추가
+						id: user.id, // Profile 타입 호환성: id 필드 추가
 						display_name: user.user_metadata?.username || user.email?.split('@')[0] || 'Anonymous',
 						username: user.user_metadata?.username || user.email?.split('@')[0] || 'anonymous',
 						avatar_url: user.user_metadata?.avatar_url || null,
 						public_id: user.user_metadata?.public_id || null,
 					},
-					// 🔧 초기 통계 값
+					// 초기 통계 값
 					likes_count: 0,
 					comments_count: 0,
 					is_liked: false,
 					is_following: false,
 					created_at: new Date().toISOString(),
 				}
-				// 🚀 SSA: 새로운 레시피 추가 - 홈피드 맨 위에 즉시 표시!
+				// SSA: 새로운 레시피 추가 - 홈피드 맨 위에 즉시 표시!
 				await cacheManager.addNewItem(fullItemPayload as Item)
 			}
 
@@ -551,7 +551,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 		// 원본 레시피 상세의 "이어진 레시피"가 바로 보이도록 관계 캐시를 비운다
 		values.cited_recipe_ids?.forEach((id) => globalMutate(`recipe-relations:${id}`))
 		
-		// 🔔 참고레시피 알림 발송 
+		// 참고레시피 알림 발송 
 		if (values.cited_recipe_ids && values.cited_recipe_ids.length > 0) {
 			if (!isEditMode) {
 				// 새로 작성하는 경우: 공개 설정 시에만 알림 발송
@@ -575,9 +575,9 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 			return
 		}
 
-		// 🧭 스마트 네비게이션: 사용자가 온 곳으로 적절히 돌아가기
+		// 스마트 네비게이션: 사용자가 온 곳으로 적절히 돌아가기
 		if (onNavigateBack) {
-			// 🚀 업계 표준: 수정 완료 후 History Replace로 수정폼 제거
+			// 업계 표준: 수정 완료 후 History Replace로 수정폼 제거
 			onNavigateBack(itemId, { replace: isEditMode })
 		} else {
 			// 폴백: 홈화면으로 이동 (새로운 아이템이 이미 캐시에 추가됨)

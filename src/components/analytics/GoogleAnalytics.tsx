@@ -1,5 +1,5 @@
 /**
- * 🎨 토스 스타일 Google Analytics
+ * 토스 스타일 Google Analytics
  * 
  * Next.js 업계 표준 구현:
  * 1. Script 컴포넌트 사용
@@ -14,7 +14,7 @@ import { useEffect } from 'react'
 
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-16DKDXVQ9T'
 
-// 🎯 GTM 타입 정의
+// GTM 타입 정의
 declare global {
   interface Window {
     gtag: (...args: any[]) => void
@@ -22,7 +22,7 @@ declare global {
   }
 }
 
-// 🚨 window 객체에 플래그 저장으로 완전 중복 방지
+// window 객체에 플래그 저장으로 완전 중복 방지
 declare global {
   interface Window {
     __SPOONIE_GA_INITIALIZED__: boolean
@@ -30,10 +30,10 @@ declare global {
   }
 }
 
-// 🎯 메인 GoogleAnalytics 컴포넌트 (Service Worker 호환)
+// 메인 GoogleAnalytics 컴포넌트 (Service Worker 호환)
 export default function GoogleAnalytics() {
   useEffect(() => {
-    // 🛡️ 개발 환경에서는 애드블로커 충돌 방지를 위해 완전 비활성화
+    // 개발 환경에서는 애드블로커 충돌 방지를 위해 완전 비활성화
     if (process.env.NEXT_PUBLIC_ENABLE_ANALYTICS_LOGS === 'true') {
       if (!window.__SPOONIE_GA_BLOCKED__) {
         console.log('🛡️ [개발환경] GA 비활성화 - 애드블로커 충돌 방지')
@@ -42,7 +42,7 @@ export default function GoogleAnalytics() {
       return
     }
 
-    // 🛡️ Window 객체 기반 중복 방지 (더 강력함)
+    // Window 객체 기반 중복 방지 (더 강력함)
     if (window.__SPOONIE_GA_INITIALIZED__) {
       return
     }
@@ -65,7 +65,7 @@ export default function GoogleAnalytics() {
     // 플래그 설정 (로드 시작 시점에 바로 설정)
     window.__SPOONIE_GA_INITIALIZED__ = true
 
-    // 🚀 네이티브 script 태그 생성 (Service Worker 호환)
+    // 네이티브 script 태그 생성 (Service Worker 호환)
     const script = document.createElement('script')
     script.async = true
     script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`
@@ -89,7 +89,7 @@ export default function GoogleAnalytics() {
         console.log('✅ GA 스크립트 로드 성공!')
       }
 
-      // 🧪 GA 테스트 함수 (글로벌로 노출)
+      // GA 테스트 함수 (글로벌로 노출)
       (window as any).testGA = () => {
         if (window.gtag) {
           window.gtag('event', 'test_event', {

@@ -5,17 +5,13 @@
 
 'use client';
 
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bell, BellOff, Smartphone, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { usePushNotification } from '@/hooks/usePushNotification';
 import { useToast } from '@/hooks/use-toast';
 import { createSupabaseBrowserClient } from '@/lib/supabase-client';
 
 export default function PushNotificationSettings() {
   const { toast } = useToast();
-  const [isExpanded, setIsExpanded] = useState(false);
   const {
     isSupported,
     isSubscribed,
@@ -38,7 +34,7 @@ export default function PushNotificationSettings() {
         if (success) {
           toast({
             title: "푸시 알림 활성화됨",
-            description: "이제 브라우저가 닫혀있어도 알림을 받을 수 있습니다!",
+            description: "앱을 닫아도 새 소식을 알려 드려요.",
           });
         }
       }
@@ -97,7 +93,7 @@ export default function PushNotificationSettings() {
       if (response.ok) {
         toast({
           title: "테스트 알림 발송됨",
-          description: "잠시 후 푸시 알림이 표시됩니다!",
+          description: "잠시 후 휴대폰 알림이 올 거예요.",
         });
       } else {
         toast({
@@ -115,127 +111,31 @@ export default function PushNotificationSettings() {
     }
   };
 
+  // 한 줄 설정: 무엇을 받는지와 켜고 끄는 버튼 하나
   if (!isSupported) {
     return (
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-orange-ink" />
-            푸시 알림 미지원
-          </CardTitle>
-          <CardDescription>
-            현재 브라우저에서는 푸시 알림을 지원하지 않습니다.
-          </CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
-
-  // 푸시 알림이 켜져 있을 때 축소된 UI
-  if (isSubscribed && !isExpanded) {
-    return (
-      <Card className="w-full max-w-md">
-        <CardHeader 
-          className="cursor-pointer hover:bg-door transition-colors"
-          onClick={() => setIsExpanded(true)}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Bell className="h-5 w-5 text-green-600" />
-              <div>
-                <CardTitle className="text-sm">푸시 알림 활성화됨</CardTitle>
-                <CardDescription className="text-xs">
-                  실시간 알림을 받고 있습니다
-                </CardDescription>
-              </div>
-            </div>
-            <ChevronDown className="h-4 w-4 text-ink-soft" />
-          </div>
-        </CardHeader>
-      </Card>
-    );
+      <p className="rounded-[3px] bg-paper px-4 py-3 text-sm text-ink-soft shadow-sheet">
+        이 브라우저에서는 휴대폰 알림을 받을 수 없어요. 홈 화면에 스푸니를 추가하면 받을 수 있어요.
+      </p>
+    )
   }
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Smartphone className="h-5 w-5" />
-            <CardTitle>푸시 알림 설정</CardTitle>
-          </div>
-          {isSubscribed && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsExpanded(false)}
-              className="h-6 w-6 p-0"
-            >
-              <ChevronUp className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-        <CardDescription>
-          브라우저가 닫혀있어도 새로운 댓글, 좋아요, 팔로우 알림을 받을 수 있습니다.
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {isSubscribed ? (
-              <Bell className="h-5 w-5 text-green-600" />
-            ) : (
-              <BellOff className="h-5 w-5 text-ink-soft" />
-            )}
-            <div>
-              <p className="font-medium">
-                {isSubscribed ? '푸시 알림 켜짐' : '푸시 알림 꺼짐'}
-              </p>
-              <p className="text-sm text-ink-soft">
-                {isSubscribed 
-                  ? '실시간 알림을 받고 있습니다' 
-                  : '브라우저가 열려있을 때만 알림을 받습니다'
-                }
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Button
-            onClick={handleTogglePush}
-            disabled={isLoading}
-            variant={isSubscribed ? "outline" : "default"}
-            className="w-full"
-          >
-            {isLoading ? (
-              "처리 중..."
-            ) : isSubscribed ? (
-              <>
-                <BellOff className="mr-2 h-4 w-4" />
-                푸시 알림 끄기
-              </>
-            ) : (
-              <>
-                <Bell className="mr-2 h-4 w-4" />
-                푸시 알림 켜기
-              </>
-            )}
-          </Button>
-
-          {isSubscribed && process.env.NODE_ENV === 'development' && (
-            <Button
-              onClick={handleTestPush}
-              variant="secondary"
-              className="w-full"
-              size="sm"
-            >
-              테스트 알림 보내기
-            </Button>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
+    <section className="flex items-center gap-3 rounded-[3px] bg-paper px-4 py-3 shadow-sheet">
+      <div className="min-w-0 flex-1">
+        <h2 className="text-[15px] font-semibold text-ink">휴대폰 알림 {isSubscribed ? "켜짐" : "꺼짐"}</h2>
+        <p className="mt-0.5 text-[13px] text-ink-soft">
+          {isSubscribed ? "앱을 닫아도 만들었어요·댓글·좋아요·팔로우를 알려 드려요." : "켜면 앱을 닫아도 새 소식을 알려 드려요."}
+        </p>
+        {isSubscribed && process.env.NODE_ENV === "development" && (
+          <button type="button" onClick={handleTestPush} className="mt-1 text-[13px] text-ink underline underline-offset-4">
+            테스트 알림 보내기
+          </button>
+        )}
+      </div>
+      <Button onClick={handleTogglePush} disabled={isLoading} variant={isSubscribed ? "outline" : "default"} className="flex-shrink-0">
+        {isLoading ? "처리 중" : isSubscribed ? "끄기" : "켜기"}
+      </Button>
+    </section>
+  )
 }

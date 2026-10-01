@@ -35,7 +35,7 @@ export default function FollowingModal({ isOpen, onClose, userId, currentUserId 
 	const [error, setError] = useState<string | null>(null)
 	const supabase = createSupabaseBrowserClient()
 	
-	// 🚀 글로벌 팔로우 상태 연동
+	// 글로벌 팔로우 상태 연동
 	const { isFollowing: getIsFollowing } = useFollowStore()
 
 	useEffect(() => {
@@ -125,7 +125,6 @@ export default function FollowingModal({ isOpen, onClose, userId, currentUserId 
 			<DialogContent className="max-w-md max-h-[80vh] flex flex-col">
 				<DialogHeader>
 					<DialogTitle className="flex items-center gap-2">
-						<UserPlus className="w-5 h-5 text-green-600" />
 						팔로잉
 					</DialogTitle>
 					<DialogDescription>
@@ -150,7 +149,7 @@ export default function FollowingModal({ isOpen, onClose, userId, currentUserId 
 					) : error ? (
 						<div className="text-center py-8">
 							<UserPlus className="w-12 h-12 text-ink-soft/60 mx-auto mb-4" />
-							<p className="text-red-500 text-sm">{error}</p>
+							<p className="text-destructive text-sm">{error}</p>
 							<Button
 								variant="outline"
 								size="sm"
@@ -186,7 +185,7 @@ export default function FollowingModal({ isOpen, onClose, userId, currentUserId 
 												</p>
 											</div>
 
-											<div className="flex items-center gap-1 text-xs text-ink-soft">
+											<div className="flex items-center gap-1 text-[13px] text-ink-soft">
 												<Clock className="w-3 h-3" />
 												<span>
 													{formatDistanceToNow(new Date(followingUser.followed_at), {

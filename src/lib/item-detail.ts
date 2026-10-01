@@ -141,7 +141,7 @@ export async function fetchItemDetail(supabase: SupabaseClient, itemId: string):
 			username: itemData.author?.username,
 			avatar_url: itemData.author?.avatar_url,
 			user_public_id: itemData.author?.public_id,
-			is_following: false, // 🚀 업계 표준: 글로벌 상태에서 관리, 초기값만 제공
+			is_following: false, // 업계 표준: 글로벌 상태에서 관리, 초기값만 제공
 			comments: transformedComments, // 별칭
 		}
 

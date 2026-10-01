@@ -1,21 +1,18 @@
-'use client'
-
 import Link from 'next/link'
-import { WifiOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export default function OfflinePage() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-door p-4 text-center">
-      <WifiOff className="w-24 h-24 text-ink-soft mb-6" />
-      <h1 className="text-3xl font-bold text-ink mb-4">오프라인 상태입니다.</h1>
-      <p className="text-ink-soft mb-8">
-        현재 인터넷 연결이 불안정하거나 끊어졌습니다. <br />
-        일부 기능은 제한될 수 있지만, 이전에 방문했던 페이지는 계속 이용할 수 있습니다.
-      </p>
-      <Button asChild>
-        <Link href="/">홈으로 돌아가기</Link>
-      </Button>
+    <div className="min-h-screen bg-door px-3 pt-3">
+      <section className="rounded-[3px] bg-paper px-5 py-6 shadow-sheet">
+        <h1 className="text-xl font-bold text-ink">인터넷에 연결되어 있지 않아요</h1>
+        <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
+          연결되면 다시 불러올게요. 전에 열어 본 레시피는 연결 없이도 볼 수 있어요.
+        </p>
+        <Button asChild className="mt-5">
+          <Link href="/">홈으로</Link>
+        </Button>
+      </section>
     </div>
   )
 }

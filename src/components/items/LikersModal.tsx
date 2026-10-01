@@ -149,9 +149,9 @@ export default function LikersModal({ isOpen, onClose, itemId, itemType, current
 										<div className="flex-1 min-w-0">
 											<div className="flex items-center gap-2">
 												<p className="font-medium text-sm truncate">{liker.username}</p>
-												{liker.id === currentUserId && <span className="text-xs bg-muted text-orange-ink px-1.5 py-0.5 rounded">나</span>}
+												{liker.id === currentUserId && <span className="text-[13px] text-ink-soft">(나)</span>}
 											</div>
-											<div className="flex items-center gap-1 text-xs text-ink-soft">
+											<div className="flex items-center gap-1 text-[13px] text-ink-soft">
 												<Clock className="w-3 h-3" />
 												<span>
 													{formatDistanceToNow(new Date(liker.liked_at), {
@@ -168,7 +168,7 @@ export default function LikersModal({ isOpen, onClose, itemId, itemType, current
 					)}
 				</div>
 
-				{likers.length >= 50 && <div className="text-center text-xs text-ink-soft pt-2 border-t">최근 50명까지 표시됩니다</div>}
+				{likers.length >= 50 && <div className="text-center text-[13px] text-ink-soft pt-2 border-t">최근 50명까지 표시됩니다</div>}
 			</DialogContent>
 		</Dialog>
 	)

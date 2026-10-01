@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton"
  */
 export function FeedLoading() {
   return (
-    <div className="space-y-4 p-4" aria-busy="true">
+    <div className="space-y-3 px-3 py-3" aria-busy="true">
       <span className="sr-only">불러오는 중</span>
       {Array.from({ length: 3 }).map((_, i) => (
         <PostCardSkeleton key={i} />
@@ -18,7 +18,7 @@ export function FeedLoading() {
 
 export function DetailLoading() {
   return (
-    <div className="p-4" aria-busy="true">
+    <div className="px-3 pt-3" aria-busy="true">
       <span className="sr-only">불러오는 중</span>
       <PostCardSkeleton />
     </div>
@@ -27,19 +27,18 @@ export function DetailLoading() {
 
 export function ProfileLoading() {
   return (
-    <div className="max-w-md mx-auto p-4 space-y-6" aria-busy="true">
+    <div aria-busy="true">
       <span className="sr-only">불러오는 중</span>
-      <div className="flex items-center gap-4">
-        <Skeleton className="h-20 w-20 rounded-full" />
-        <div className="flex-1 space-y-2">
-          <Skeleton className="h-5 w-1/2" />
-          <Skeleton className="h-4 w-1/3" />
+      <div className="flex items-start gap-4 border-b border-border bg-paper px-4 pb-4 pt-5">
+        <Skeleton className="h-[72px] w-[72px] rounded-full" />
+        <div className="flex-1 space-y-2 pt-1">
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-4 w-44" />
         </div>
       </div>
-      <Skeleton className="h-4 w-3/4" />
-      <div className="grid grid-cols-3 gap-1">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="aspect-square w-full" />
+      <div className="grid grid-cols-2 gap-3 px-3 py-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="aspect-[4/5] w-full" />
         ))}
       </div>
     </div>

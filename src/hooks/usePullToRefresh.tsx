@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import SpoonieLogoAnimation from "@/components/common/SpoonieLogoAnimation";
 import { mutate } from 'swr';
 import { useRefresh } from "@/contexts/RefreshContext";
 
@@ -7,7 +6,7 @@ const PULL_THRESHOLD = 80; // 당겨야 하는 최소 거리 (px)
 const PULL_TO_REFRESH_TEXT = "당겨서 새로고침";
 
 /**
- * 🚀 완전한 Pull-to-Refresh 시스템
+ * 완전한 Pull-to-Refresh 시스템
  * PWA 환경에서 네트워크 오류/캐시 문제 시 실제 데이터 갱신 수행
  */
 export const usePullToRefresh = () => {
@@ -132,15 +131,15 @@ export const usePullToRefresh = () => {
 
         if (isRefreshing) {
             return (
-                <div className="fixed inset-0 bg-paper bg-opacity-20 flex items-center justify-center z-50">
-                    <SpoonieLogoAnimation isLoading={true} useFullLogo={true} />
+                <div className="fixed inset-x-0 top-0 z-50 flex justify-center pt-3" role="status" aria-label="새로 불러오는 중">
+                    <span className="rounded-full bg-paper px-4 py-2 text-sm font-medium text-ink shadow-sheet">새로 불러오는 중</span>
                 </div>
             );
         }
 
         return (
-            <div style={indicatorStyle} className="overflow-hidden text-center flex items-center justify-center bg-muted">
-                <div style={textStyle} className="text-orange-ink font-bold">
+            <div style={indicatorStyle} className="overflow-hidden text-center flex items-center justify-center bg-door">
+                <div style={textStyle} className="text-sm font-medium text-ink-soft">
                     {pullDistance >= PULL_THRESHOLD ? "놓으면 새로고침" : PULL_TO_REFRESH_TEXT}
                 </div>
             </div>

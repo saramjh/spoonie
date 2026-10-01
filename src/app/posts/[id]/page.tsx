@@ -1,11 +1,11 @@
 /**
- * 📝 포스트 상세 페이지 - 하이브리드 래퍼 패턴
+ * 포스트 상세 페이지 - 하이브리드 래퍼 패턴
  * 
- * 🎯 구조:
+ * 구조:
  * - 서버 컴포넌트: SEO 최적화된 메타데이터 생성
  * - 클라이언트 컴포넌트: 기존 SSA 아키텍처 완전 보존
  * 
- * 🛡️ 기존 기능 보호:
+ * 기존 기능 보호:
  * - SWR 캐싱, UnifiedCacheManager, 실시간 동기화 모두 유지
  */
 
@@ -21,13 +21,13 @@ interface Props {
   params: Promise<{ id: string }>
 }
 
-// 🎯 동적 메타데이터 생성 (기존 기능에 영향 없음)
+// 동적 메타데이터 생성 (기존 기능에 영향 없음)
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
   try {
     const supabase = await createSupabaseServerClient()
     
-    // 🔥 최소한의 데이터만 가져와서 메타데이터 생성 (성능 최적화)
+    // 최소한의 데이터만 가져와서 메타데이터 생성 (성능 최적화)
     const { data: post, error } = await supabase
       .from('items')
       .select(`
@@ -45,7 +45,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       .single()
 
     if (error || !post) {
-      // 🛡️ 에러 시 기본 메타데이터 (기존 기능에 영향 없음)
+      // 에러 시 기본 메타데이터 (기존 기능에 영향 없음)
       return { 
         title: '레시피드 - 스푸니',
         description: '요리와 관련된 이야기를 공유하는 스푸니입니다.',
@@ -56,7 +56,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     const authorName = profileData?.username || '익명'
     const imageUrl = post.image_urls?.[0] || '/default-post.jpg'
     
-    // 🎯 설명 생성 (description 우선, 없으면 content에서 추출)
+    // 설명 생성 (description 우선, 없으면 content에서 추출)
     let cleanDescription = ''
     if (post.description) {
       cleanDescription = post.description.replace(/\n/g, ' ').slice(0, 160)
@@ -73,10 +73,10 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       cleanDescription = '요리와 관련된 흥미로운 이야기입니다.'
     }
     
-    // 🎯 SEO 최적화된 제목 생성
+    // SEO 최적화된 제목 생성
     const seoTitle = `${post.title} - ${authorName}님의 레시피드 | 스푸니`
     
-    // 🎯 추가 키워드 생성
+    // 추가 키워드 생성
     const keywords = [
       post.title,
       ...(post.tags || []),
@@ -92,7 +92,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       description: cleanDescription,
       keywords,
       
-      // 🎯 Open Graph 최적화 (소셜 공유)
+      // Open Graph 최적화 (소셜 공유)
       openGraph: {
         title: `${post.title} - 스푸니`,
         description: cleanDescription,
@@ -109,7 +109,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         siteName: '스푸니',
       },
       
-      // 🎯 Twitter Cards 최적화
+      // Twitter Cards 최적화
       twitter: {
         card: 'summary_large_image',
         title: seoTitle,
@@ -118,7 +118,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         creator: `@${profileData?.username || 'spoonie'}`,
       },
       
-      // 🎯 검색 엔진 최적화
+      // 검색 엔진 최적화
       robots: {
         index: true,
         follow: true,
@@ -129,12 +129,12 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         },
       },
       
-      // 🎯 정규 URL 설정
+      // 정규 URL 설정
       alternates: {
         canonical: `${process.env.NEXT_PUBLIC_APP_URL}/posts/${params.id}`,
       },
       
-      // 🎯 Article Schema 힌트
+      // Article Schema 힌트
       other: {
         'article:author': authorName,
         'article:section': '레시피드',
@@ -142,7 +142,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       },
     }
   } catch (error) {
-    // 🛡️ 에러 로깅 및 안전한 fallback
+    // 에러 로깅 및 안전한 fallback
     console.error('❌ Post metadata generation failed:', error)
     return { 
       title: '레시피드 - 스푸니',

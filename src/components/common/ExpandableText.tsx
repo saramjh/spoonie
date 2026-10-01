@@ -12,7 +12,7 @@ interface ExpandableTextProps {
 }
 
 /**
- * 🚀 업계 표준 방식의 확장 가능한 텍스트 컴포넌트 (Instagram/Facebook/Twitter 스타일)
+ * 업계 표준 방식의 확장 가능한 텍스트 컴포넌트 (Instagram/Facebook/Twitter 스타일)
  * 
  * @param text - 표시할 텍스트
  * @param maxLines - 초기 표시할 최대 줄 수 (기본: 2줄)
@@ -33,7 +33,7 @@ export default function ExpandableText({
 
   if (!text) return null
 
-  // 🎯 간단한 방식: 글자 수와 줄바꿈 개수 기준으로 생략 여부 결정
+  // 간단한 방식: 글자 수와 줄바꿈 개수 기준으로 생략 여부 결정
   const lineCount = text.split('\n').length
   const isLongText = text.length > maxCharacters || lineCount > maxLines
   const shouldTruncate = isLongText && !isExpanded
@@ -62,13 +62,13 @@ export default function ExpandableText({
         style={{
           wordBreak: 'break-word',
           overflowWrap: 'break-word',
-          whiteSpace: 'pre-line', // 🚀 줄바꿈 보존
+          whiteSpace: 'pre-line', // 줄바꿈 보존
         }}
       >
         {displayText}
       </div>
       
-      {/* 🎯 Instagram/Facebook 스타일 더보기 버튼 */}
+      {/* Instagram/Facebook 스타일 더보기 버튼 */}
       {isLongText && !isExpanded && (
         <button
           onClick={handleExpand}

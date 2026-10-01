@@ -15,7 +15,7 @@ import type { ServerFeedData } from "@/lib/server-data"
 import { usePageVisibility } from "@/hooks/usePageVisibility"
 import { useHistorySync } from "@/hooks/useHistorySync"
 import { useNavigation } from "@/hooks/useNavigation"
-// 🚀 통합 캐시 매니저가 모든 동기화를 처리
+// 통합 캐시 매니저가 모든 동기화를 처리
 
 
 interface SeamlessItemListProps {
@@ -27,7 +27,7 @@ interface SeamlessItemListProps {
 }
 
 /**
- * 🚀 심리스한 실시간 아이템 리스트 컴포넌트 (SSR + 실시간 동기화)
+ * 심리스한 실시간 아이템 리스트 컴포넌트 (SSR + 실시간 동기화)
  * 레시피/레시피드 변경사항을 즉시 반영하여 완벽한 사용자 경험 제공
  * 
  * @param initialData - 서버에서 미리 로딩된 데이터 (성능 최적화)
@@ -39,13 +39,13 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
 
   const supabase = createSupabaseBrowserClient()
 
-  // 🧭 Smart Navigation: 홈피드 navigation history 추적
+  // Smart Navigation: 홈피드 navigation history 추적
   useNavigation({ trackHistory: true })
 
   // 피드는 화면 복귀 시 갱신한다 (usePageVisibility). 테이블 전체를 구독하는 실시간 채널은
   // 모든 방문자에게 사이트 전체 변경을 보내 부담이 커지므로 사용하지 않는다.
 
-  // 🚀 업계 표준: 히스토리 뒤로가기 완벽 보장
+  // 업계 표준: 히스토리 뒤로가기 완벽 보장
   usePageVisibility({
     revalidateKeys: ['items|', 'comments_'],
     debug: process.env.NODE_ENV === 'development'
@@ -75,14 +75,14 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
   }, [supabase, initialData])
 
   /**
-   * 🎯 스마트 백그라운드 동기화
+   * 스마트 백그라운드 동기화
    * 현재 화면에 보이는 아이템들만 선별적으로 동기화
    */
   const performSmartSync = useCallback(async (_priority: 'low' | 'normal' | 'high' = 'normal') => {
     
     
     try {
-      // 🚀 통합 캐시 매니저가 자동으로 모든 동기화를 처리
+      // 통합 캐시 매니저가 자동으로 모든 동기화를 처리
       const result = { success: true, itemsUpdated: 0, syncTime: 0 }
       
       if (result.success) {
@@ -96,13 +96,13 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
   }, [])
 
   /**
-   * 📊 디바운스된 통계 동기화
+   * 디바운스된 통계 동기화
    */
   const debouncedStatsSync = useCallback(() => {
     const timeoutId = setTimeout(async () => {
       const visibleIds = Array.from(visibleItemsRef.current)
       if (visibleIds.length > 0) {
-        // 🚀 통합 캐시 매니저가 자동으로 통계 동기화를 처리
+        // 통합 캐시 매니저가 자동으로 통계 동기화를 처리
         
       }
     }, 5000)
@@ -111,7 +111,7 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
   }, [])
 
   /**
-   * 👁️ 화면에 보이는 아이템 추적 (Intersection Observer)
+   * 화면에 보이는 아이템 추적 (Intersection Observer)
    */
   const trackVisibleItems = useCallback(() => {
     if (!window.IntersectionObserver) return
@@ -144,7 +144,7 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
     return () => observer.disconnect()
   }, [debouncedStatsSync])
 
-  // 🚀 Optimistic Updates: 통합 캐시 매니저로 완전 자동화 (데드코드 정리 완료)
+  // Optimistic Updates: 통합 캐시 매니저로 완전 자동화 (데드코드 정리 완료)
 
   // 페이지 포커스 및 네비게이션 감지
   useEffect(() => {
@@ -254,7 +254,7 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
       {/* 아이템 목록 */}
       <div className="space-y-3 px-3 py-3">
         {feedItems.map((item, index) => {
-          // 🚀 LCP 최적화: 첫 번째 3개 포스트에만 priority 적용
+          // LCP 최적화: 첫 번째 3개 포스트에만 priority 적용
           const isPriorityPost = index < 3
           
           return (
@@ -263,7 +263,7 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
                 item={item} 
                 currentUser={currentUser}
                 priority={isPriorityPost}
-                onItemUpdate={() => { swrMutate(); }} // 🚀 삭제시 즉시 업데이트를 위한 mutate 함수 전달
+                onItemUpdate={() => { swrMutate(); }} // 삭제시 즉시 업데이트를 위한 mutate 함수 전달
               />
             </div>
           )

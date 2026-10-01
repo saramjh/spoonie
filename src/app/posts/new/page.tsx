@@ -14,7 +14,7 @@ export default function NewPostPage() {
 	const [source, setSource] = useState<{ id: string | null; origin: "recipe_detail" | "cook_mode" | null }>({ id: null, origin: null })
 	const supabase = createSupabaseBrowserClient()
 
-	// 🧭 스마트 네비게이션 (이전 경로 추적)
+	// 스마트 네비게이션 (이전 경로 추적)
 	const { navigateBack } = useNavigation({ trackHistory: true })
 
 	useEffect(() => {
@@ -43,9 +43,7 @@ export default function NewPostPage() {
 
 	if (!user) {
 		return (
-			<CreateContentAuthPrompt contentType="post">
-				<PostForm onNavigateBack={navigateBack} sourceRecipeId={source.id} sourceOrigin={source.origin} />
-			</CreateContentAuthPrompt>
+			<CreateContentAuthPrompt contentType="post" />
 		)
 	}
 

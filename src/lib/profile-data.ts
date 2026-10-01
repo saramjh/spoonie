@@ -48,12 +48,12 @@ export const fetchProfile = async (identifier: string, supabase: SupabaseClient 
 
 export const fetchUserItems = async (userId: string, currentUserId?: string, supabase: SupabaseClient = createSupabaseBrowserClient()) => {
 
-	// 🚀 업계표준 Privacy Logic: 본인/타인 구분하여 다른 데이터 소스 사용
+	// 업계표준 Privacy Logic: 본인/타인 구분하여 다른 데이터 소스 사용
 	let query
 	
 	if (currentUserId === userId) {
-		// 🔒 본인 프로필: items 테이블 직접 사용하여 비공개 게시물도 포함
-		// 🚀 홈 피드와 동일한 정확한 댓글 수 계산 방식 사용
+		// 본인 프로필: items 테이블 직접 사용하여 비공개 게시물도 포함
+		// 홈 피드와 동일한 정확한 댓글 수 계산 방식 사용
 		query = supabase
 			.from("items")
 			.select(`
@@ -70,7 +70,7 @@ export const fetchUserItems = async (userId: string, currentUserId?: string, sup
 			.in("item_type", ["recipe", "post"])
 			.order("created_at", { ascending: false })
 	} else {
-		// 🌍 타인 프로필: optimized_feed_view 사용 (공개 게시물만)
+		// 타인 프로필: optimized_feed_view 사용 (공개 게시물만)
 		query = supabase
 			.from("optimized_feed_view")
 			.select(`
@@ -92,7 +92,7 @@ export const fetchUserItems = async (userId: string, currentUserId?: string, sup
 	if (error) throw new Error(error.message)
 	if (!items || items.length === 0) return []
 
-	// 🚀 정확한 댓글 수 계산 (본인 프로필의 경우에만)
+	// 정확한 댓글 수 계산 (본인 프로필의 경우에만)
 	const itemsWithAccurateComments = currentUserId === userId 
 		? await Promise.all(items.map(async (item) => {
 			const accurateCommentsCount = await getCommentCountConcurrencySafe(item.id)
@@ -100,7 +100,7 @@ export const fetchUserItems = async (userId: string, currentUserId?: string, sup
 		}))
 		: items
 
-	// 🔄 홈화면과 동일한 좋아요/팔로우 상태 확인
+	// 홈화면과 동일한 좋아요/팔로우 상태 확인
 	const itemIds = itemsWithAccurateComments.map((item) => item.id)
 	const userLikesMap = new Map<string, boolean>()
 	const userFollowsMap = new Map<string, boolean>()
@@ -132,7 +132,7 @@ export const fetchUserItems = async (userId: string, currentUserId?: string, sup
 		}
 	}
 
-	// 🎯 홈화면과 동일한 Item 형태로 변환
+	// 홈화면과 동일한 Item 형태로 변환
 	return itemsWithAccurateComments.map((item) => {
 		const profileData = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
 		const userLikeStatus = userLikesMap.get(item.id)
@@ -156,14 +156,14 @@ export const fetchUserItems = async (userId: string, currentUserId?: string, sup
 			content: item.content,
 			description: item.description,
 			image_urls: item.image_urls,
-			thumbnail_index: item.thumbnail_index ?? 0, // 🖼️ 썸네일 인덱스 추가
+			thumbnail_index: item.thumbnail_index ?? 0, // 썸네일 인덱스 추가
 			tags: item.tags,
 			color_label: item.color_label,
 			servings: item.servings,
 			cooking_time_minutes: item.cooking_time_minutes,
 			recipe_id: item.recipe_id,
 			cited_recipe_ids: item.cited_recipe_ids,
-					// 🚀 홈 피드와 동일한 정확한 좋아요/댓글 수 처리
+					// 홈 피드와 동일한 정확한 좋아요/댓글 수 처리
 		likes_count: currentUserId === userId 
 			? (item.likes_count?.[0]?.count ?? 0)   // 본인 프로필: items 테이블 집계 결과
 			: (item.likes_count || 0),              // 타인 프로필: optimized_feed_view 결과

@@ -30,7 +30,7 @@ export function formatQuantity(quantity: number): string {
 }
 
 /**
- * 🔢 대용량 숫자를 사용자 친화적으로 축약 (Instagram/YouTube 방식)
+ * 대용량 숫자를 사용자 친화적으로 축약 (Instagram/YouTube 방식)
  * @param count 숫자
  * @returns 축약된 문자열 (예: 1.2K, 5.8M)
  */
@@ -61,7 +61,7 @@ export function formatCount(count: number): string {
 }
 
 /**
- * 📅 시간을 간단한 형태로 표시 (모바일 친화적)
+ * 시간을 간단한 형태로 표시 (모바일 친화적)
  * @param dateString ISO 날짜 문자열
  * @returns 축약된 시간 (예: 2시간, 3일, 1개월)
  */

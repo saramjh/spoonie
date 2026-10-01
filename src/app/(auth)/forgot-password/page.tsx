@@ -52,10 +52,10 @@ export default function ForgotPasswordPage() {
 
 					return (
 			<div className="min-h-screen flex flex-col items-center justify-start p-4 bg-door">
-				{/* 🎨 토스 스타일 그라디언트 배경 */}
-				{/* 📱 상단 여백 + 카드 컨테이너 */}
+				{/* 토스 스타일 그라디언트 배경 */}
+				{/* 상단 여백 + 카드 컨테이너 */}
 				<main className="w-full max-w-sm mx-auto pt-16 sm:pt-20">
-					{/* 🏷️ 컴팩트한 브랜드 영역 */}
+					{/* 컴팩트한 브랜드 영역 */}
 					<div className="text-center mb-6">
 					<Link href="/" className="inline-block">
 						<div className="inline-block mb-4">
@@ -66,7 +66,7 @@ export default function ForgotPasswordPage() {
 					<p className="text-sm text-ink-soft">가입 시 사용한 이메일 주소를 입력해주세요.</p>
 				</div>
 
-				{/* 📋 비밀번호 찾기 카드 */}
+				{/* 비밀번호 찾기 카드 */}
 				<div className="rounded-[3px] bg-paper p-6 shadow-sheet">
 
 					<Form {...form}>
@@ -97,7 +97,7 @@ export default function ForgotPasswordPage() {
 						</form>
 					</Form>
 
-						{/* 📋 로그인 링크 */}
+						{/* 로그인 링크 */}
 						<div className="mt-8 text-center">
 							<Link href="/login" className="text-sm font-semibold text-orange-ink hover:text-orange-ink transition-colors duration-200">
 								로그인으로 돌아가기

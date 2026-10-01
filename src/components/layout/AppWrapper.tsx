@@ -10,7 +10,7 @@ export default function AppWrapper({ children }: { children: React.ReactNode }) 
 
 	const { PullToRefreshIndicator, pullDistance } = usePullToRefresh()
 
-	// ✅ 헤더는 항상 표시 (뒤로가기 + 브랜딩 + 위치 인식)
+	// 헤더는 항상 표시 (뒤로가기 + 브랜딩 + 위치 인식)
 	const noHeader = false
 
 	const noBottomNav = (pathname.startsWith("/recipes/") && pathname !== "/recipes") || (pathname.startsWith("/posts/") && pathname !== "/posts")

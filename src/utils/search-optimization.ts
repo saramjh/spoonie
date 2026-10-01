@@ -1,7 +1,7 @@
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 
 /**
- * 🚀 검색 기능 최적화 유틸리티
+ * 검색 기능 최적화 유틸리티
  * 서버 부담을 대폭 줄이는 효율적인 검색 구현
  */
 
@@ -16,7 +16,7 @@ interface PopularPost {
 		username?: string
 		avatar_url?: string
 	}
-	// 🚀 SSA 원칙: 서버에서 정확한 초기 상태 제공
+	// SSA 원칙: 서버에서 정확한 초기 상태 제공
 	is_liked?: boolean
 	likes_count?: number
 	comments_count?: number
@@ -39,7 +39,7 @@ interface SearchResult {
 	comments_count?: number // 추가: 댓글 수
 	user_id?: string       // 추가: 사용자 ID
 	is_following?: boolean // 추가: 팔로우 상태
-	is_liked?: boolean     // 🚀 SSA 원칙: 좋아요 상태
+	is_liked?: boolean     // SSA 원칙: 좋아요 상태
 }
 
 interface CachedSearchResults {
@@ -70,7 +70,7 @@ export async function getPopularKeywordsCached(): Promise<Array<{ keyword: strin
 	const supabase = createSupabaseBrowserClient()
 
 	try {
-		// 🚀 서버 사이드 집계로 최적화 (PostgreSQL 네이티브 함수 사용)
+		// 서버 사이드 집계로 최적화 (PostgreSQL 네이티브 함수 사용)
 		const { data, error } = await supabase.rpc('get_popular_tags', { 
 			limit_count: 10 
 		})
@@ -117,7 +117,7 @@ export async function getPopularPostsCached(): Promise<PopularPost[]> {
 		const { data: { user } } = await supabase.auth.getUser()
 		const currentUserId = user?.id || null
 
-		// 🚀 미리 계산된 뷰에서 조회 (인덱스 최적화됨)
+		// 미리 계산된 뷰에서 조회 (인덱스 최적화됨)
 		const { data, error } = await supabase
 			.from('popular_items_view')
 			.select('*')
@@ -130,7 +130,7 @@ export async function getPopularPostsCached(): Promise<PopularPost[]> {
 
 		let result = data || []
 
-		// 🚀 SSA 원칙: 서버에서 정확한 is_liked 초기 상태 제공
+		// SSA 원칙: 서버에서 정확한 is_liked 초기 상태 제공
 		if (currentUserId && result.length > 0) {
 			const itemIds = result.map(item => item.item_id || item.id).filter(Boolean)
 			
@@ -228,7 +228,7 @@ class DebouncedSearch {
 		const { data: { user } } = await supabase.auth.getUser()
 		const currentUserId = user?.id || null
 
-		// 🚀 전문검색 RPC 함수 사용 (GIN 인덱스 활용, 팔로우 상태 포함)
+		// 전문검색 RPC 함수 사용 (GIN 인덱스 활용, 팔로우 상태 포함)
 		const { data, error } = await supabase
 			.rpc('search_items_optimized', { 
 				search_term: query,
@@ -307,7 +307,7 @@ export class SearchMetrics {
 }
 
 // ==========================================
-// 👤 유저네임 전용 검색 인터페이스 및 함수
+// 유저네임 전용 검색 인터페이스 및 함수
 // ==========================================
 
 export interface UserSearchResult {
@@ -335,7 +335,7 @@ export async function searchUsers(query: string): Promise<UserSearchResult[]> {
 
 	    // [UserSearch] Searching for users: { currentUserId, trimmedQuery }
 
-	// 🎯 유저네임 전용 RPC 함수 호출
+	// 유저네임 전용 RPC 함수 호출
 	const { data, error } = await supabase
 		.rpc('search_users', {
 			search_term: query.trim(),

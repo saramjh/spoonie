@@ -4,7 +4,7 @@ import { useEffect, useCallback, useRef } from 'react'
 import { mutate } from 'swr'
 
 /**
- * 🚀 업계 표준: History API 기반 히스토리 뒤로가기 동기화
+ * 업계 표준: History API 기반 히스토리 뒤로가기 동기화
  * Twitter/Instagram처럼 브라우저 네이티브 뒤로가기 완벽 보장
  * 
  * 작동 원리:
@@ -39,7 +39,7 @@ export function useHistorySync(options: {
       // console.log(`🔄 HistorySync: PopState detected - ${lastPathRef.current} → ${currentPath}`)
     }
 
-    // 🎯 홈페이지로 돌아오는 경우 즉시 동기화
+    // 홈페이지로 돌아오는 경우 즉시 동기화
     if (isReturningHome && lastPathRef.current !== currentPath) {
       if (debug) {
         // console.log('🚀 HistorySync: Returning to home - triggering cache sync...')
@@ -76,7 +76,7 @@ export function useHistorySync(options: {
     lastPathRef.current = currentPath
   }, [homePathPatterns, debug])
 
-  // 🎯 페이지 이동 감지
+  // 페이지 이동 감지
   const handleBeforeUnload = useCallback(() => {
     if (typeof window !== 'undefined') {
       lastPathRef.current = window.location.pathname
@@ -89,11 +89,11 @@ export function useHistorySync(options: {
     // 현재 경로 저장
     lastPathRef.current = window.location.pathname
 
-    // 🎯 히스토리 이벤트 리스너 등록
+    // 히스토리 이벤트 리스너 등록
     window.addEventListener('popstate', handlePopState)
     window.addEventListener('beforeunload', handleBeforeUnload)
 
-    // 🎯 추가 보장: Next.js 라우터 이벤트도 처리
+    // 추가 보장: Next.js 라우터 이벤트도 처리
     // const handleRouteChange = (url: string) => {
     //   if (debug) {
     //     // console.log(`🔄 HistorySync: Route change detected - ${url}`)

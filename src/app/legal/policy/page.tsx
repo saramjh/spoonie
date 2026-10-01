@@ -3,24 +3,22 @@ import Link from "next/link"
 export default function OperationPolicyPage() {
   return (
     <div className="min-h-screen bg-door">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="px-3 py-4">
         {/* 헤더 */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-block mb-6">
-            <div className="text-orange-ink hover:text-orange-ink transition-colors">
-              ← 홈으로 돌아가기
-            </div>
+        <div className="mb-4 px-1">
+          <Link href="/" className="mb-4 inline-flex h-11 items-center text-[15px] text-ink underline underline-offset-4">
+            홈으로
           </Link>
-          <h1 className="text-3xl font-bold text-ink mb-2">운영정책</h1>
+          <h1 className="text-[22px] font-bold text-ink">운영정책</h1>
           <p className="text-ink-soft">최종 업데이트: 2025년 8월 7일</p>
         </div>
 
         {/* 내용 */}
-        <div className="bg-paper rounded-3xl shadow-xl border border-border p-8">
+        <div className="rounded-[3px] bg-paper px-5 py-6 shadow-sheet">
           <div className="prose max-w-none">
             
             <section className="mb-8">
-              <h2 className="text-xl font-bold text-ink mb-4">1. 커뮤니티 가이드라인</h2>
+              <h2 className="text-lg font-bold text-ink mb-3">1. 커뮤니티 가이드라인</h2>
               <p className="text-ink leading-relaxed mb-4">
                 Spoonie는 모든 이용자가 안전하고 즐겁게 이용할 수 있는 요리 커뮤니티를 만들기 위해 다음 가이드라인을 운영합니다.
               </p>
@@ -49,7 +47,7 @@ export default function OperationPolicyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-bold text-ink mb-4">2. 광고 서비스 안내</h2>
+              <h2 className="text-lg font-bold text-ink mb-3">2. 광고 서비스 안내</h2>
               <p className="text-ink leading-relaxed mb-4">
                 서비스 운영 비용 충당을 위해 Google AdSense 등의 광고 서비스를 이용합니다.
               </p>
@@ -61,7 +59,7 @@ export default function OperationPolicyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-bold text-ink mb-4">3. 금지 행위</h2>
+              <h2 className="text-lg font-bold text-ink mb-3">3. 금지 행위</h2>
               
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-ink mb-2">콘텐츠 관련 금지사항</h3>
@@ -89,7 +87,7 @@ export default function OperationPolicyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-bold text-ink mb-4">4. 신고 및 제재</h2>
+              <h2 className="text-lg font-bold text-ink mb-3">4. 신고 및 제재</h2>
               
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-ink mb-2">신고 절차</h3>
@@ -119,7 +117,7 @@ export default function OperationPolicyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-bold text-ink mb-4">5. 지적재산권 보호</h2>
+              <h2 className="text-lg font-bold text-ink mb-3">5. 지적재산권 보호</h2>
               
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-ink mb-2">저작권 정책</h3>
@@ -146,7 +144,7 @@ export default function OperationPolicyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-bold text-ink mb-4">6. 개인정보 보호</h2>
+              <h2 className="text-lg font-bold text-ink mb-3">6. 개인정보 보호</h2>
               <ul className="list-disc pl-6 text-ink space-y-2">
                 <li>다른 이용자의 개인정보를 무단으로 수집하거나 공개하지 마세요</li>
                 <li>실명, 전화번호, 주소 등 개인정보 공개를 요구하거나 강요하지 마세요</li>
@@ -156,7 +154,7 @@ export default function OperationPolicyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-bold text-ink mb-4">7. 건강 및 안전</h2>
+              <h2 className="text-lg font-bold text-ink mb-3">7. 건강 및 안전</h2>
               <ul className="list-disc pl-6 text-ink space-y-2">
                 <li>알레르기 유발 가능 식재료는 반드시 명시해주세요</li>
                 <li>위험한 조리법이나 식재료 사용법은 게시하지 마세요</li>
@@ -167,11 +165,11 @@ export default function OperationPolicyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-bold text-ink mb-4">8. 이의제기 및 문의</h2>
+              <h2 className="text-lg font-bold text-ink mb-3">8. 이의제기 및 문의</h2>
               <p className="text-ink leading-relaxed mb-4">
                 제재 조치에 대해 이의가 있거나 기타 문의사항이 있으신 경우:
               </p>
-              <div className="bg-door p-4 rounded-2xl">
+              <div className="bg-door p-4 rounded-[3px]">
                 <p className="text-ink">
                   <strong>연락처:</strong> devTestudinidae@gmail.com<br/>
                   <strong>처리 시간:</strong> 가능한 범위 내에서 신속히 처리 (일반적으로 1주일 이내)<br/>
@@ -182,8 +180,8 @@ export default function OperationPolicyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-bold text-ink mb-4">9. 운영 유연성</h2>
-              <div className="bg-blue-50 p-4 rounded-2xl border border-blue-200 mb-6">
+              <h2 className="text-lg font-bold text-ink mb-3">9. 운영 유연성</h2>
+              <div className="bg-door p-4 rounded-[3px] mb-6">
                 <p className="text-ink leading-relaxed">
                   <strong>운영 방침:</strong> 본 서비스는 개인이 취미로 운영하는 커뮤니티 서비스입니다.
                 </p>
@@ -196,7 +194,7 @@ export default function OperationPolicyPage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-bold text-ink mb-4">10. 정책 개정</h2>
+              <h2 className="text-lg font-bold text-ink mb-3">10. 정책 개정</h2>
               <p className="text-ink leading-relaxed">
                 이 운영정책은 서비스 개선 및 법령 변경 등에 따라 수정될 수 있습니다. 
                 개정된 정책은 서비스 내 공지를 통해 최소 7일 전에 안내되며, 

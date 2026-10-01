@@ -34,7 +34,7 @@ const PAGE_SIZE = 12
 		const from = parseInt(pageIndex) * PAGE_SIZE
 		const to = from + PAGE_SIZE - 1
 
-		// ✅ SSA 원칙: 모든 곳에서 정확한 댓글 수 계산
+		// SSA 원칙: 모든 곳에서 정확한 댓글 수 계산
 		let query
 		if (tab === "my_recipes") {
 			// 나의 레시피: 정확한 댓글 수 계산 RPC 함수 사용 (optimized_feed_view와 동일한 로직)
@@ -54,7 +54,7 @@ const PAGE_SIZE = 12
 		// RPC 함수는 이미 사용자 필터링 포함
 
 		if (searchTerm) {
-			// 🔍 재료명과 레시피명 통합 검색
+			// 재료명과 레시피명 통합 검색
 			try {
 				// 1. ingredients 테이블에서 재료명 검색
 				const { data: ingredientMatches } = await supabase
@@ -103,7 +103,7 @@ const PAGE_SIZE = 12
 		query = query.in("user_id", followingIds)
 		
 		if (searchTerm) {
-			// 🔍 종합 검색: 레시피명, 사용자명, 재료명, 태그 검색
+			// 종합 검색: 레시피명, 사용자명, 재료명, 태그 검색
 			try {
 				// 1. 사용자명으로 검색
 				const { data: userMatches } = await supabase
@@ -153,8 +153,8 @@ const PAGE_SIZE = 12
 		return []
 	}
 
-	// 🔄 SSA 기반: 사용자별 좋아요/팔로우 상태 조회 (프로필 페이지와 동일한 방식)
-	// ✅ SSA 원칙: 홈 피드와 동일한 사용자 상호작용 데이터 처리
+	// SSA 기반: 사용자별 좋아요/팔로우 상태 조회 (프로필 페이지와 동일한 방식)
+	// SSA 원칙: 홈 피드와 동일한 사용자 상호작용 데이터 처리
 	const itemIds = data.map((item: Item) => item.id)
 	const userLikesMap = new Map<string, boolean>()
 	const userFollowsMap = new Map<string, boolean>()
@@ -184,9 +184,9 @@ const PAGE_SIZE = 12
 		})
 	}
 
-	// ✅ SSA 기반: 홈 피드와 동일한 데이터 변환 로직 적용
+	// SSA 기반: 홈 피드와 동일한 데이터 변환 로직 적용
 	return data.map((item: Item & { profiles?: any }) => {
-		// 🎯 나의 레시피(RPC)는 이미 평면화된 데이터, 모두의 레시피는 profiles 관계 데이터
+		// 나의 레시피(RPC)는 이미 평면화된 데이터, 모두의 레시피는 profiles 관계 데이터
 		const profileData = tab === "my_recipes" 
 			? item  // RPC 함수에서 이미 평면화됨
 			: (Array.isArray(item.profiles) ? item.profiles[0] : item.profiles)
@@ -220,9 +220,9 @@ const PAGE_SIZE = 12
 			cooking_time_minutes: item.cooking_time_minutes,
 			recipe_id: item.recipe_id,
 			cited_recipe_ids: item.cited_recipe_ids,
-			// ✅ SSA 원칙: 모든 곳에서 정확한 좋아요/댓글 수 사용
+			// SSA 원칙: 모든 곳에서 정확한 좋아요/댓글 수 사용
 			likes_count: item.likes_count || 0,
-			comments_count: item.comments_count || 0,  // 🎯 이제 삭제된 댓글 제외된 정확한 값
+			comments_count: item.comments_count || 0,  // 이제 삭제된 댓글 제외된 정확한 값
 			is_liked: tab === "my_recipes" 
 				? (item.is_liked || false)  // RPC 함수에서 이미 계산됨
 				: isLikedValue,             // 별도 계산 필요
@@ -248,7 +248,7 @@ export default function RecipesPage() {
 	const { toast } = useToast()
 	const { mutate } = useSWRConfig()
 
-	// 🧭 Smart Navigation: 레시피북 navigation history 추적
+	// Smart Navigation: 레시피북 navigation history 추적
 	useNavigation({ trackHistory: true })
 
 	const [currentUser, setCurrentUser] = useState<User | null>(null)
@@ -304,7 +304,7 @@ export default function RecipesPage() {
 
 	const { data, size, setSize, isLoading, mutate: mutateRecipes } = useSWRInfinite(getKey, fetcher, { revalidateFirstPage: false })
 
-	// 🚀 업계 표준: 팔로우 스토어에서 자동으로 캐시 무효화 처리하므로 이벤트 리스너 불필요
+	// 업계 표준: 팔로우 스토어에서 자동으로 캐시 무효화 처리하므로 이벤트 리스너 불필요
 
 	const recipes = data ? ([] as Item[]).concat(...data) : []
 	const isLoadingMore = isLoading || (size > 0 && data && typeof data[size - 1] === "undefined")
@@ -330,7 +330,7 @@ export default function RecipesPage() {
 		observer.observe(element)
 		return () => {
 			observer.unobserve(element)
-			// 🔧 메모리 안전: IntersectionObserver 완전 정리
+			// 메모리 안전: IntersectionObserver 완전 정리
 			observer.disconnect()
 		}
 	}, [handleObserver])
@@ -352,7 +352,7 @@ export default function RecipesPage() {
 
 		
 
-		// 🚀 업계 표준: 1. 레시피북 캐시에서 즉시 제거 (Instagram/Twitter 방식)
+		// 업계 표준: 1. 레시피북 캐시에서 즉시 제거 (Instagram/Twitter 방식)
 		mutateRecipes(
 			(cachedData: any[] | any[][] | undefined) => {
 				
@@ -390,7 +390,7 @@ export default function RecipesPage() {
 			{ revalidate: false } // 즉시 UI 업데이트, 서버 재검증 없음
 		)
 
-		// 🚀 업계 표준: 2. 홈화면 캐시에서도 즉시 제거 (동기화)
+		// 업계 표준: 2. 홈화면 캐시에서도 즉시 제거 (동기화)
 		mutate(
 			(key) => {
 				const isMatch = typeof key === "string" && key.startsWith("items|");
@@ -444,7 +444,7 @@ export default function RecipesPage() {
 			
 			
 
-			// 🚀 업계 표준: 4. 성공시 최종 캐시 확정
+			// 업계 표준: 4. 성공시 최종 캐시 확정
 			await mutateRecipes() // 레시피북 캐시 확정
 			await mutate((key: string) => typeof key === "string" && key.startsWith("items|")) // 홈화면 캐시 확정
 			
@@ -457,7 +457,7 @@ export default function RecipesPage() {
 		} catch (error: unknown) {
 			console.error("❌ RecipeBook: Database deletion failed:", error)
 			
-			// 🚀 업계 표준: 5. 실패시 Optimistic Update 롤백
+			// 업계 표준: 5. 실패시 Optimistic Update 롤백
 			
 			await mutateRecipes() // 레시피북 롤백
 			await mutate((key: string) => typeof key === "string" && key.startsWith("items|")) // 홈화면 롤백
@@ -528,9 +528,9 @@ export default function RecipesPage() {
 				</div>
 			</div>
 
-			{/* 🔧 반응형 최적화: 컨테이너 최대 너비 + 패딩 조정 */}
+			{/* 반응형 최적화: 컨테이너 최대 너비 + 패딩 조정 */}
 			<main className="flex-1 overflow-y-auto px-3 py-3 max-w-7xl mx-auto w-full">
-				{/* 🔧 검색/필터 영역 - 모바일 최적화 */}
+				{/* 검색/필터 영역 - 모바일 최적화 */}
 				<div className="flex gap-2 mb-3">
 					<div className="relative flex-grow min-w-0">
 						<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-ink-soft" aria-hidden />
@@ -545,7 +545,7 @@ export default function RecipesPage() {
 							aria-label="레시피 검색" className="h-11 pl-10 bg-paper text-[15px]" 
 						/>
 					</div>
-					{/* 🎯 필터 버튼은 나의 레시피에서만 표시 */}
+					{/* 필터 버튼은 나의 레시피에서만 표시 */}
 					{currentTab === "my_recipes" && (
 						<Button variant="outline" size="icon" onClick={() => setIsFilterModalOpen(true)} aria-label="색상 라벨로 거르기">
 							<SlidersHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -560,7 +560,7 @@ export default function RecipesPage() {
 					<div className="mb-3 sm:mb-4 flex justify-end">
 						<AlertDialog>
 							<AlertDialogTrigger asChild>
-								<Button variant="destructive" size="sm" className="text-xs sm:text-sm">
+								<Button variant="destructive" size="sm" className="text-[13px] sm:text-sm">
 									<Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
 									선택 삭제 ({selectedRecipes.length})
 								</Button>
@@ -579,7 +579,7 @@ export default function RecipesPage() {
 					</div>
 				)}
 
-				{/* 🚀 2열 통일 그리드 시스템 */}
+				{/* 2열 통일 그리드 시스템 */}
 				{isLoading && recipes.length === 0 ? (
 					<div className={
 						viewMode === "card" 
@@ -591,12 +591,12 @@ export default function RecipesPage() {
 						))}
 					</div>
 				) : isEmpty ? (
-					<div className="text-center py-12 sm:py-16 text-ink-soft px-4">
-						<p className="font-semibold mb-2 text-sm sm:text-base">{currentTab === "my_recipes" ? "아직 작성한 레시피가 없어요." : "팔로우한 사용자의 레시피가 없어요."}</p>
-						<p className="text-xs sm:text-sm">{currentTab === "my_recipes" ? "새로운 레시피를 추가해보세요!" : "다른 사용자를 팔로우하고 레시피를 확인해보세요."}</p>
+					<div className="rounded-[3px] bg-paper px-5 py-6 shadow-sheet">
+						<p className="text-[17px] font-semibold text-ink">{currentTab === "my_recipes" ? "아직 쓴 레시피가 없어요" : "팔로우한 사람의 레시피가 아직 없어요"}</p>
+						<p className="mt-1 text-[15px] text-ink-soft">{currentTab === "my_recipes" ? "레시피를 쓰면 여기에 모여서 요리할 때 다시 꺼내 볼 수 있어요." : "검색에서 마음에 드는 사람을 팔로우하면 그 사람의 레시피가 여기에 모여요."}</p>
 						{currentTab === "my_recipes" && (
-							<Button asChild className="mt-3 sm:mt-4 text-sm">
-								<Link href="/recipes/new">새 레시피 작성하기</Link>
+							<Button asChild className="mt-4">
+								<Link href="/recipes/new">레시피 쓰기</Link>
 							</Button>
 						)}
 					</div>
@@ -646,7 +646,7 @@ export default function RecipesPage() {
 
 				<div ref={observerElem} style={{ height: "1px" }} />
 
-				{isReachingEnd && !isEmpty && <p className="text-center text-xs sm:text-sm text-ink-soft py-6 sm:py-8">모든 레시피를 불러왔습니다.</p>}
+				{isReachingEnd && !isEmpty && <p className="py-6 text-center text-[13px] text-ink-soft">여기까지예요</p>}
 			</main>
 
 			<FilterModal isOpen={isFilterModalOpen} onClose={() => setIsFilterModalOpen(false)} />

@@ -64,10 +64,10 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	const supabase = createSupabaseBrowserClient()
 	const { mutate } = useSWRConfig()
 
-	// 🛡️ early return 제거 - hooks 호출 순서 보장
+	// early return 제거 - hooks 호출 순서 보장
 	const isRecipe = item?.item_type === "recipe"
 
-	// 🛡️ Hook 안정성을 위한 값 안정화
+	// Hook 안정성을 위한 값 안정화
 	const stableItemId = useMemo(() => {
 		const id = item?.item_id || item?.id
 		if (!id) {
@@ -79,10 +79,10 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [item?.item_id, item?.id])
 	
-	// 🚀 SSA 표준: items 테이블 데이터에 실시간 상태 기본값 추가
+	// SSA 표준: items 테이블 데이터에 실시간 상태 기본값 추가
 	const stableFallbackData = useMemo(() => {
 		if (!item || !stableItemId) {
-			// 🎯 타입 안전성: 완전한 Item 타입 기본 fallback 데이터 제공
+			// 타입 안전성: 완전한 Item 타입 기본 fallback 데이터 제공
 			return {
 				id: stableItemId || 'unknown',
 				item_id: stableItemId || 'unknown',
@@ -112,7 +112,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		}
 		return {
 			...item,
-			id: stableItemId, // 🎯 타입 안전성: 명시적 id 설정
+			id: stableItemId, // 타입 안전성: 명시적 id 설정
 			likes_count: item?.likes_count || 0,
 			comments_count: item?.comments_count || 0,
 			is_liked: item?.is_liked || false,
@@ -121,10 +121,10 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		}
 	}, [item, stableItemId])
 
-	// 🚀 SSA 발전: 실시간 캐시 업데이트 구독 (홈화면과 동일) - hooks를 조건부 렌더링 전에 호출
+	// SSA 발전: 실시간 캐시 업데이트 구독 (홈화면과 동일) - hooks를 조건부 렌더링 전에 호출
 	const cachedItem = useSSAItemCache(stableItemId || 'null', stableFallbackData)
 	
-	// 🖼️ 썸네일 관리 - 캐시된 아이템의 최신 thumbnail_index 사용
+	// 썸네일 관리 - 캐시된 아이템의 최신 thumbnail_index 사용
 	const { orderedImages } = useThumbnail({
 		itemId: stableItemId || 'null',
 		imageUrls: cachedItem?.image_urls || item?.image_urls || [],
@@ -138,8 +138,8 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	const { citedRecipes, isLoading: citedRecipesLoading } = useCitedRecipes(item?.cited_recipe_ids)
 	const relations = useRecipeRelations(isRecipe ? item?.item_id || item?.id : null)
 
-	// 🚀 SSA 표준: 상태 관리 - 조건부 렌더링 전에 호출
-	// ✅ commentsCount는 캐시에서 직접 사용 (실시간 동기화)
+	// SSA 표준: 상태 관리 - 조건부 렌더링 전에 호출
+	// commentsCount는 캐시에서 직접 사용 (실시간 동기화)
 	const [localLikesCount, setLocalLikesCount] = useState(cachedItem?.likes_count || 0)
 	const [localHasLiked, setLocalHasLiked] = useState(cachedItem?.is_liked || false)
 	const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
@@ -147,17 +147,17 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	const [showDeleteModal, setShowDeleteModal] = useState(false)
 	const [isDeleting, setIsDeleting] = useState(false)
 	
-	// 🎯 더블탭 좋아요 상태 관리
+	// 더블탭 좋아요 상태 관리
 	const [showHeartAnimation, setShowHeartAnimation] = useState(false)
 	const [showLoginPrompt, setShowLoginPrompt] = useState(false)
 	const commentsRef = useRef<HTMLDivElement>(null)
 
 	const comments = useMemo(() => item?.comments_data || [], [item?.comments_data])
 	
-	// 🚀 SSA 표준: 캐시 업데이트 시 로컬 상태 동기화
+	// SSA 표준: 캐시 업데이트 시 로컬 상태 동기화
 	useEffect(() => {
 		if (cachedItem) {
-			// ✅ commentsCount 제거 - 캐시에서 직접 사용
+			// commentsCount 제거 - 캐시에서 직접 사용
 			setLocalLikesCount(cachedItem.likes_count || 0)
 			setLocalHasLiked(cachedItem.is_liked || false)
 		}
@@ -167,7 +167,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	useEffect(() => {
 		setLocalLikesCount(item?.likes_count || 0)
 		setLocalHasLiked(item?.is_liked || false)
-		// ✅ commentsCount 제거 - 캐시에서 직접 사용
+		// commentsCount 제거 - 캐시에서 직접 사용
 	}, [item?.likes_count, item?.is_liked])
 
 	// 현재 사용자 조회 useEffect
@@ -202,8 +202,8 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	// 페이지 언마운트 시 홈화면과 상태 동기화 useEffect
 	useEffect(() => {
 		return () => {
-			// 🔄 페이지 이동 시 현재 아이템의 상태를 홈화면에 동기화
-			// 🚀 강제로 홈화면 피드 새로고침 (확실한 동기화)
+			// 페이지 이동 시 현재 아이템의 상태를 홈화면에 동기화
+			// 강제로 홈화면 피드 새로고침 (확실한 동기화)
 			// 모든 홈 피드 캐시 무효화
 			mutate(
 				(key) => typeof key === "string" && 
@@ -215,9 +215,9 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		}
 	}, [currentUser?.id, mutate])
 	
-	// 🎯 더블탭 좋아요 핸들러 (프로필 그리드와 동일한 SSA 기반 로직)
+	// 더블탭 좋아요 핸들러 (프로필 그리드와 동일한 SSA 기반 로직)
 	const handleDoubleTapLike = async () => {
-		// 🔐 비로그인 사용자 회원가입 유도 (토스 UX 스타일 - 바텀시트)
+		// 비로그인 사용자 회원가입 유도 (토스 UX 스타일 - 바텀시트)
 		if (!currentUser?.id) {
 			setShowLoginPrompt(true)
 			return
@@ -229,7 +229,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 			const newHasLiked = !cachedItem.is_liked
 			await cacheManager.like(stableItemId, currentUser.id, newHasLiked, cachedItem)
 			
-			// 🎉 토스식 마이크로 인터랙션 (React 상태 기반 안전한 애니메이션)
+			// 토스식 마이크로 인터랙션 (React 상태 기반 안전한 애니메이션)
 			if (newHasLiked) {
 				setShowHeartAnimation(true)
 				setTimeout(() => setShowHeartAnimation(false), 600)
@@ -244,7 +244,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		}
 	}
 	
-	// 🛡️ 방어적 렌더링: item이 없을 때의 처리 (hooks 호출 후)
+	// 방어적 렌더링: item이 없을 때의 처리 (hooks 호출 후)
 	if (!item) {
 		return (
 			<div className="flex flex-col h-full items-center justify-center p-8">
@@ -260,7 +260,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		)
 	}
 	
-	// 🛡️ ID가 없으면 에러 상태 표시 - 모든 hooks 호출 후 조건부 렌더링
+	// ID가 없으면 에러 상태 표시 - 모든 hooks 호출 후 조건부 렌더링
 	if (!stableItemId) {
 		return (
 			<div className="flex flex-col h-full items-center justify-center p-8">
@@ -288,7 +288,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		router.push(editPath)
 	}
 	
-	// 🚀 업계 표준: 삭제 확인 핸들러 (PostCard와 완전히 동일한 방식)
+	// 업계 표준: 삭제 확인 핸들러 (PostCard와 완전히 동일한 방식)
 	const handleDeleteConfirm = async () => {
 		if (!currentUser || !isOwnItem) return
 		
@@ -296,7 +296,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		
 		
 		
-		// 🚀 업계 표준: 1. 모든 관련 캐시에서 즉시 제거 (Instagram/Twitter 방식)
+		// 업계 표준: 1. 모든 관련 캐시에서 즉시 제거 (Instagram/Twitter 방식)
 		mutate(
 			(key) => {
 				const isRecipeBook = typeof key === "string" && key.startsWith("recipes||");
@@ -310,7 +310,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 					return cachedData;
 				}
 				
-				// 🚀 더 정확한 구조 감지: useSWRInfinite 페이지 구조 vs 평면 배열
+				// 더 정확한 구조 감지: useSWRInfinite 페이지 구조 vs 평면 배열
 				const hasPageStructure = cachedData.length > 0 && 
 				                         Array.isArray(cachedData[0]) && 
 				                         (cachedData[0].length === 0 || typeof cachedData[0][0] === 'object');
@@ -353,7 +353,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 			
 
 			
-			// 🚀 업계 표준: 3. 성공시 최종 캐시 확정
+			// 업계 표준: 3. 성공시 최종 캐시 확정
 			await mutate((key) => typeof key === "string" && (key.startsWith("items|") || key.startsWith("recipes||")))
 			
 			toast({
@@ -380,7 +380,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 
 	// cited_recipe_ids는 useCitedRecipes 훅에서 자동으로 관리됨
 
-	// 🚀 Optimistic Updates 시스템에서는 복잡한 구독/등록 로직 불필요
+	// Optimistic Updates 시스템에서는 복잡한 구독/등록 로직 불필요
 	// 모든 상태는 optimisticLikeUpdate, optimisticCommentUpdate에서 즉시 처리됨
 
 	const handleShare = () => {
@@ -550,7 +550,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 								/>
 								{showHeartAnimation && (
 									<div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
-										<Heart className="h-16 w-16 animate-ping fill-red-500 text-red-500" aria-hidden />
+										<Heart className="h-16 w-16 animate-ping fill-[#D6453D] text-[#D6453D]" aria-hidden />
 									</div>
 								)}
 							</div>
@@ -660,9 +660,9 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 			<AlertDialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle>삭제 확인</AlertDialogTitle>
+						<AlertDialogTitle>정말 삭제할까요?</AlertDialogTitle>
 						<AlertDialogDescription>
-							이 {isRecipe ? "레시피를" : "레시피드를"} 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+							이 {isRecipe ? "레시피를" : "레시피드를"} 삭제하면 되돌릴 수 없어요.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
@@ -670,7 +670,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 						<AlertDialogAction 
 							onClick={handleDeleteConfirm} 
 							disabled={isDeleting} 
-							className="bg-red-600 hover:bg-red-700"
+							className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
 						>
 							{isDeleting ? "삭제 중..." : "삭제"}
 						</AlertDialogAction>
@@ -678,7 +678,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 				</AlertDialogContent>
 			</AlertDialog>
 			
-			{/* 🎨 토스 스타일 로그인 유도 바텀시트 */}
+			{/* 토스 스타일 로그인 유도 바텀시트 */}
 			<LoginPromptSheet
 				isOpen={showLoginPrompt}
 				onClose={() => setShowLoginPrompt(false)}

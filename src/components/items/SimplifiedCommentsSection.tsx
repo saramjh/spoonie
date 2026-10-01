@@ -1,5 +1,5 @@
 /**
- * 🚀 간단화된 CommentsSection - 업계 표준 방식
+ * 간단화된 CommentsSection - 업계 표준 방식
  * 통합 캐시 매니저 사용으로 복잡한 캐시 로직 제거
  */
 
@@ -24,7 +24,7 @@ interface SimplifiedCommentsSectionProps {
   currentUserId?: string
   itemId: string
   onCommentsCountChange?: (count: number) => void
-  cachedItem?: Item // 🔑 전체 아이템 데이터 추가
+  cachedItem?: Item // 전체 아이템 데이터 추가
 }
 
 export default function SimplifiedCommentsSection({ 
@@ -36,7 +36,7 @@ export default function SimplifiedCommentsSection({
   const [newComment, setNewComment] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   
-  // 🚀 대댓글 시스템 상태
+  // 대댓글 시스템 상태
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const [replyTexts, setReplyTexts] = useState<Record<string, string>>({})
   const [isSubmittingReply, setIsSubmittingReply] = useState<Record<string, boolean>>({})
@@ -68,7 +68,7 @@ export default function SimplifiedCommentsSection({
         throw error
       }
       
-      // 🔄 데이터 변환 (user 배열을 단일 객체로 변환)
+      // 데이터 변환 (user 배열을 단일 객체로 변환)
       return (data || []).map(comment => {
         const userProfile = Array.isArray(comment.user) ? comment.user[0] : comment.user
         return {
@@ -116,12 +116,12 @@ export default function SimplifiedCommentsSection({
     setIsSubmitting(true)
     setNewComment("")
 
-    // 🚀 SSA 표준: 즉시 UI 업데이트 + 모든 캐시 동기화 (0ms)
+    // SSA 표준: 즉시 UI 업데이트 + 모든 캐시 동기화 (0ms)
     const rollback = await cacheManager.comment(itemId, currentUserId, 1, cachedItem)
-    // ✅ onCommentsCountChange 제거 - 캐시가 UI를 직접 업데이트
+    // onCommentsCountChange 제거 - 캐시가 UI를 직접 업데이트
 
     try {
-      // 🚀 STEP 2: 백그라운드 DB 업데이트
+      // STEP 2: 백그라운드 DB 업데이트
       const { error } = await supabase.from('comments').insert({
         item_id: itemId,
         user_id: currentUserId,
@@ -140,7 +140,7 @@ export default function SimplifiedCommentsSection({
       toast({ title: "댓글이 추가되었습니다." })
 
     } catch (error) {
-      // 🚀 STEP 3: 에러 시 자동 롤백
+      // STEP 3: 에러 시 자동 롤백
       console.error(`❌ Comment error for ${itemId}:`, error)
       
       setNewComment(commentContent) // 입력 내용 복원
@@ -156,7 +156,7 @@ export default function SimplifiedCommentsSection({
     }
   }
 
-  // 🚀 대댓글 기능
+  // 대댓글 기능
   const handleReply = (commentId: string) => {
     setReplyingTo(commentId)
   }
@@ -172,12 +172,12 @@ export default function SimplifiedCommentsSection({
 
     setIsSubmittingReply({ ...isSubmittingReply, [parentCommentId]: true })
 
-    // 🚀 STEP 1: 즉시 UI 업데이트 + 모든 캐시 동기화 (0ms)
+    // STEP 1: 즉시 UI 업데이트 + 모든 캐시 동기화 (0ms)
     const rollback = await cacheManager.comment(itemId, currentUserId, 1, cachedItem)
-    // ✅ onCommentsCountChange 제거 - 캐시가 UI를 직접 업데이트
+    // onCommentsCountChange 제거 - 캐시가 UI를 직접 업데이트
 
     try {
-      // 🚀 STEP 2: 백그라운드 DB 업데이트
+      // STEP 2: 백그라운드 DB 업데이트
       const { error } = await supabase.from('comments').insert({
         item_id: itemId,
         user_id: currentUserId,
@@ -217,12 +217,12 @@ export default function SimplifiedCommentsSection({
   const handleDeleteComment = async (commentId: string) => {
     if (!currentUserId) return
 
-    // 🚀 STEP 1: 즉시 UI 업데이트 + 모든 캐시 동기화 (0ms)
+    // STEP 1: 즉시 UI 업데이트 + 모든 캐시 동기화 (0ms)
     const rollback = await cacheManager.comment(itemId, currentUserId, -1, cachedItem)
-    // ✅ onCommentsCountChange 제거 - 캐시가 UI를 직접 업데이트
+    // onCommentsCountChange 제거 - 캐시가 UI를 직접 업데이트
 
     try {
-      // 🚀 STEP 2: 백그라운드 DB 업데이트
+      // STEP 2: 백그라운드 DB 업데이트
       const { error } = await supabase
         .from('comments')
         .update({ is_deleted: true })
@@ -238,7 +238,7 @@ export default function SimplifiedCommentsSection({
       toast({ title: "댓글이 삭제되었습니다." })
 
     } catch (error) {
-      // 🚀 STEP 3: 에러 시 자동 롤백
+      // STEP 3: 에러 시 자동 롤백
       console.error(`❌ Delete comment error for ${itemId}:`, error)
       
       rollback() // 모든 캐시 자동 롤백 (UI 자동 되돌림)
@@ -255,7 +255,7 @@ export default function SimplifiedCommentsSection({
     <div className="space-y-4">
       {/* 댓글 목록 */}
       <div className="space-y-4">
-        {/* 🚀 대댓글 시스템: 부모 댓글과 대댓글 분리 */}
+        {/* 대댓글 시스템: 부모 댓글과 대댓글 분리 */}
         {(() => {
           // 부모 댓글과 대댓글 분리
           const parentComments = (comments || []).filter(comment => !comment.parent_comment_id)
@@ -273,11 +273,11 @@ export default function SimplifiedCommentsSection({
             <div key={comment.id} className="space-y-3">
               {/* 부모 댓글 */}
               <div className="flex items-start gap-3">
-                {/* 🎯 프로필 이미지 + 링크 */}
+                {/* 프로필 이미지 + 링크 */}
                 <Link href={`/profile/${comment.user?.public_id || comment.user?.username || comment.user_id}`}>
                   <Avatar className="h-8 w-8 border hover:opacity-80 transition-opacity">
                     <AvatarImage src={comment.user?.avatar_url || undefined} />
-                    <AvatarFallback className="text-xs">
+                    <AvatarFallback className="text-[13px]">
                       {comment.user?.username?.charAt(0) || "U"}
                     </AvatarFallback>
                   </Avatar>
@@ -285,14 +285,14 @@ export default function SimplifiedCommentsSection({
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline gap-2 flex-wrap">
-                    {/* 🎯 유저네임 + 프로필 링크 */}
+                    {/* 유저네임 + 프로필 링크 */}
                     <Link
                       href={`/profile/${comment.user?.public_id || comment.user?.username || comment.user_id}`}
                       className="font-semibold text-ink text-sm hover:underline transition-colors"
                     >
                       {comment.user?.username || '익명'}
                     </Link>
-                    <span className="text-xs text-ink-soft">
+                    <span className="text-[13px] text-ink-soft">
                       {timeAgo(comment.created_at)}
                     </span>
                   </div>
@@ -308,13 +308,13 @@ export default function SimplifiedCommentsSection({
                         {comment.content}
                       </p>
 
-                      {/* 🚀 답글 버튼 (삭제되지 않은 댓글만) */}
+                      {/* 답글 버튼 (삭제되지 않은 댓글만) */}
                       {currentUserId && (
                         <div className="flex items-center gap-2 mt-2">
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-xs text-ink-soft hover:text-ink p-1 h-auto"
+                            className="text-[13px] text-ink-soft hover:text-ink p-1 h-auto"
                             onClick={() => handleReply(comment.id)}
                           >
                             <CornerUpLeft className="w-3 h-3 mr-1" />
@@ -325,7 +325,7 @@ export default function SimplifiedCommentsSection({
                     </>
                   )}
 
-                  {/* 🚀 대댓글 입력 폼 (삭제되지 않은 댓글만) */}
+                  {/* 대댓글 입력 폼 (삭제되지 않은 댓글만) */}
                   {replyingTo === comment.id && !comment.is_deleted && (
                     <div className="mt-3 space-y-2">
                       <div className="flex gap-2">
@@ -349,7 +349,7 @@ export default function SimplifiedCommentsSection({
                           <Send className="w-4 h-4" />
                         </Button>
                       </div>
-                      <Button variant="ghost" size="sm" onClick={handleCancelReply} className="text-xs">
+                      <Button variant="ghost" size="sm" onClick={handleCancelReply} className="text-[13px]">
                         취소
                       </Button>
                     </div>
@@ -362,14 +362,15 @@ export default function SimplifiedCommentsSection({
                     variant="ghost"
                     size="sm"
                     onClick={() => handleDeleteComment(comment.id)}
-                    className="text-ink-soft hover:text-red-500 w-6 h-6 p-0"
+                    aria-label="내 댓글 지우기"
+                    className="h-11 w-11 p-0 text-ink-soft hover:text-destructive"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-4 h-4" aria-hidden />
                   </Button>
                 )}
               </div>
 
-              {/* 🚀 대댓글들 렌더링 */}
+              {/* 대댓글들 렌더링 */}
               {replyMap[comment.id] && replyMap[comment.id].length > 0 && (
                 <div className="ml-11 space-y-3 border-l-2 border-border pl-4">
                   {replyMap[comment.id]
@@ -380,7 +381,7 @@ export default function SimplifiedCommentsSection({
                         <Link href={`/profile/${reply.user?.public_id || reply.user?.username || reply.user_id}`}>
                           <Avatar className="h-6 w-6 border hover:opacity-80 transition-opacity">
                             <AvatarImage src={reply.user?.avatar_url || undefined} />
-                            <AvatarFallback className="text-xs">
+                            <AvatarFallback className="text-[13px]">
                               {reply.user?.username?.charAt(0) || "U"}
                             </AvatarFallback>
                           </Avatar>
@@ -390,22 +391,22 @@ export default function SimplifiedCommentsSection({
                           <div className="flex items-baseline gap-2 flex-wrap">
                             <Link
                               href={`/profile/${reply.user?.public_id || reply.user?.username || reply.user_id}`}
-                              className="font-semibold text-ink text-xs hover:underline transition-colors"
+                              className="font-semibold text-ink text-[13px] hover:underline transition-colors"
                             >
                               {reply.user?.username || '익명'}
                             </Link>
-                            <span className="text-xs text-ink-soft">
+                            <span className="text-[13px] text-ink-soft">
                               {timeAgo(reply.created_at)}
                             </span>
                           </div>
                           
                           {/* 대댓글 내용 */}
                           {reply.is_deleted ? (
-                            <p className="text-ink-soft text-xs italic whitespace-pre-wrap mt-1">
+                            <p className="text-ink-soft text-[13px] italic whitespace-pre-wrap mt-1">
                               삭제된 댓글입니다.
                             </p>
                           ) : (
-                            <p className="text-ink text-xs whitespace-pre-wrap mt-1 break-words">
+                            <p className="text-ink text-[13px] whitespace-pre-wrap mt-1 break-words">
                               {reply.content}
                             </p>
                           )}
@@ -417,7 +418,7 @@ export default function SimplifiedCommentsSection({
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDeleteComment(reply.id)}
-                            className="text-ink-soft hover:text-red-500 w-5 h-5 p-0"
+                            className="text-ink-soft hover:text-[#D6453D] w-5 h-5 p-0"
                           >
                             <Trash2 className="w-3 h-3" />
                           </Button>

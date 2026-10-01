@@ -27,7 +27,7 @@ import SourceLine from "@/components/items/SourceLine"
 interface PostFormProps {
 	isEditMode?: boolean
 	initialData?: Item
-	onNavigateBack?: (itemId?: string, options?: { replace?: boolean }) => void // 🧭 스마트 네비게이션 콜백
+	onNavigateBack?: (itemId?: string, options?: { replace?: boolean }) => void // 스마트 네비게이션 콜백
 	// 레시피 화면이나 요리 모드에서 "만들었어요"로 들어온 경우: 출처 레시피와 작성 경로
 	sourceRecipeId?: string | null
 	sourceOrigin?: "recipe_detail" | "cook_mode" | null
@@ -60,7 +60,7 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 	const [mainImages, setMainImages] = useState<OptimizedImage[]>([])
 	const [thumbnailIndex, setThumbnailIndex] = useState(0)
 	
-	// 🚀 SSA: 섬네일 변경 시 즉시 캐시 업데이트를 위한 wrapper 함수
+	// SSA: 섬네일 변경 시 즉시 캐시 업데이트를 위한 wrapper 함수
 	const handleThumbnailChange = useCallback(async (newIndex: number) => {
 
 		setThumbnailIndex(newIndex)
@@ -165,7 +165,7 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 					})
 				)
 				setMainImages(fetchedImages)
-				// 🚀 업계 표준: 저장된 썸네일 인덱스 복원 또는 기본값(0) 사용
+				// 업계 표준: 저장된 썸네일 인덱스 복원 또는 기본값(0) 사용
 				const savedThumbnailIndex = (initialData as Item & { thumbnail_index?: number }).thumbnail_index ?? 0
 				setThumbnailIndex(Math.min(savedThumbnailIndex, fetchedImages.length - 1))
 	
@@ -212,10 +212,10 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 				throw new Error("Storage bucket ID가 설정되지 않았습니다.")
 			}
 
-		// 🚀 업계 표준: 원본 순서 유지 + 썸네일 인덱스 정보 저장 (개선된 Instagram/Facebook 방식)
+		// 업계 표준: 원본 순서 유지 + 썸네일 인덱스 정보 저장 (개선된 Instagram/Facebook 방식)
 		
 
-		// 🚀 최적화된 병렬 이미지 업로드 (기존: 순차 → 새로운: 병렬 + 캐싱)
+		// 최적화된 병렬 이미지 업로드 (기존: 순차 → 새로운: 병렬 + 캐싱)
 		const uploadStartTime = Date.now()
 		let uploadedImageUrls: string[] = []
 
@@ -241,7 +241,7 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 					return result.url
 				})
 				
-				// 🚀 기존 이미지와 새 업로드 이미지 병합 (이미 썸네일 순서로 정렬됨)
+				// 기존 이미지와 새 업로드 이미지 병합 (이미 썸네일 순서로 정렬됨)
 				uploadedImageUrls = [...existingImageUrls, ...newUploadedUrls]
 			} else {
 				// 새로 업로드할 이미지가 없는 경우 - 기존 이미지만 재정렬
@@ -299,7 +299,7 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 				tags: values.tags,
 				cited_recipe_ids: values.cited_recipe_ids,
 				is_public: values.is_public, // 사용자가 설정한 공개/비공개 값
-				thumbnail_index: thumbnailIndex, // 🚀 썸네일 인덱스 저장
+				thumbnail_index: thumbnailIndex, // 썸네일 인덱스 저장
 				// 작성 경로: 출처 레시피가 그대로 연결돼 있으면 그 경로, 직접 고른 인용이면 manual (관계 종류를 정한다)
 				...(isEditMode
 					? {}
@@ -313,7 +313,7 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 						}),
 			}
 			
-			// 🚀 SSA 기반: 간단하고 안정적인 제출 프로세스
+			// SSA 기반: 간단하고 안정적인 제출 프로세스
 
 			let itemId: string
 
@@ -333,19 +333,19 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 
 			}
 
-			// 🚀 SSA 기반: 통합 캐시 매니저를 통한 완전 자동 동기화
+			// SSA 기반: 통합 캐시 매니저를 통한 완전 자동 동기화
 
 			
 			const fullItemPayload = {
 				...itemPayload,
 				id: itemId,
 				item_id: itemId,
-				// 🔧 사용자 정보 추가 (optimized_feed_view 호환)
+				// 사용자 정보 추가 (optimized_feed_view 호환)
 				        display_name: user.email?.split('@')[0] || 'Anonymous',
 				username: user.user_metadata?.username || user.email?.split('@')[0] || 'anonymous',
 				avatar_url: user.user_metadata?.avatar_url || null,
 				user_public_id: user.user_metadata?.public_id || null,
-				// 🔧 초기 통계 값
+				// 초기 통계 값
 				likes_count: initialData?.likes_count || 0,
 				comments_count: initialData?.comments_count || 0,
 				is_liked: initialData?.is_liked || false,
@@ -354,11 +354,11 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 			}
 			
 			if (isEditMode) {
-				// 🚀 SSA: 아이템 업데이트 - 모든 캐시 자동 동기화
+				// SSA: 아이템 업데이트 - 모든 캐시 자동 동기화
 
 				await cacheManager.updateItem(itemId, fullItemPayload)
 				
-				// 🔧 Smart Fallback: 필요시에만 부분 무효화 (성능 개선)
+				// Smart Fallback: 필요시에만 부분 무효화 (성능 개선)
 				setTimeout(async () => {
 
 					await cacheManager.revalidateHomeFeed()
@@ -366,7 +366,7 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 				
 
 			} else {
-				// 🚀 SSA: 새로운 아이템 추가 - 홈피드 맨 위에 즉시 표시!
+				// SSA: 새로운 아이템 추가 - 홈피드 맨 위에 즉시 표시!
 				await cacheManager.addNewItem(fullItemPayload as Item)
 			}
 			
@@ -387,7 +387,7 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 			// 레시피 상세의 "만들어 본 기록"이 바로 보이도록 관계 캐시를 비운다
 			values.cited_recipe_ids?.forEach((id) => globalMutate(`recipe-relations:${id}`))
 
-			// 🔔 참고레시피 알림 발송
+			// 참고레시피 알림 발송
 			if (values.cited_recipe_ids && values.cited_recipe_ids.length > 0) {
 				if (!isEditMode) {
 					// 새로 작성하는 경우: 공개 설정 시에만 알림 발송
@@ -410,9 +410,9 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 				return
 			}
 
-			// 🧭 스마트 네비게이션: 사용자가 온 곳으로 적절히 돌아가기
+			// 스마트 네비게이션: 사용자가 온 곳으로 적절히 돌아가기
 			if (onNavigateBack) {
-				// 🚀 업계 표준: 수정 완료 후 History Replace로 수정폼 제거
+				// 업계 표준: 수정 완료 후 History Replace로 수정폼 제거
 				onNavigateBack(itemId, { replace: isEditMode })
 			} else {
 				// 폴백: 홈화면으로 이동 (새로운 아이템이 이미 캐시에 추가됨)

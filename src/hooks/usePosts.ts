@@ -94,7 +94,7 @@ const fetcher = async (key: string): Promise<Item[]> => {
     // profiles 데이터 평면화 - 서버와 동일한 방식
     const profileData = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
     
-    // 🔧 좋아요 상태를 정확히 구분: undefined(불확실) vs false(확실히 안함) vs true(확실히 함)
+    // 좋아요 상태를 정확히 구분: undefined(불확실) vs false(확실히 안함) vs true(확실히 함)
     const userLikeStatus = userLikesMap.get(item.id)
     const isLikedValue = userId && userId !== "guest" 
       ? (userLikeStatus !== undefined ? userLikeStatus : false) // 로그인 시: 정확한 상태 또는 false(임시, LikeButton에서 DB 확인)
@@ -107,7 +107,7 @@ const fetcher = async (key: string): Promise<Item[]> => {
 			item_type: item.item_type as "post" | "recipe", // "recipe": 요리법, "post": 일반 피드
       created_at: item.created_at,
       is_public: item.is_public,
-      // 🔧 안정적인 작성자 정보 처리 - profiles에서 가져온 데이터 우선 사용
+      // 안정적인 작성자 정보 처리 - profiles에서 가져온 데이터 우선 사용
       display_name: profileData?.display_name || item.display_name || null,
       username: profileData?.username || item.username || null,
       avatar_url: profileData?.avatar_url || item.avatar_url || null,
@@ -117,7 +117,7 @@ const fetcher = async (key: string): Promise<Item[]> => {
       content: item.content,
       description: item.description,
       image_urls: item.image_urls,
-      thumbnail_index: item.thumbnail_index ?? 0, // 🖼️ 썸네일 인덱스 (기본값 0)
+      thumbnail_index: item.thumbnail_index ?? 0, // 썸네일 인덱스 (기본값 0)
       tags: item.tags,
       color_label: item.color_label,
       servings: item.servings,
@@ -126,7 +126,7 @@ const fetcher = async (key: string): Promise<Item[]> => {
 			cited_recipe_ids: item.cited_recipe_ids, // 참고 레시피 ID 목록
       likes_count: item.likes_count || 0,
       comments_count: item.comments_count || 0,
-      is_liked: isLikedValue, // 🔧 null 허용으로 불확실한 상태 표현
+      is_liked: isLikedValue, // null 허용으로 불확실한 상태 표현
       is_following: userFollowsMap.get(item.user_id) || false,
     }
   })
@@ -155,9 +155,9 @@ export function usePosts(initialData?: ServerFeedData | null) {
     fetcher, 
     {
       revalidateFirstPage: false,
-      revalidateOnFocus: true, // 🎯 홈화면 포커스 시 최신 데이터 자동 업데이트
+      revalidateOnFocus: true, // 홈화면 포커스 시 최신 데이터 자동 업데이트
       dedupingInterval: 5000, // 5초로 단축 - 더 빠른 실시간 반영
-      // 🚀 서버에서 미리 로딩된 초기 데이터 활용 (SSR 최적화)
+      // 서버에서 미리 로딩된 초기 데이터 활용 (SSR 최적화)
       fallbackData: initialData?.items ? [initialData.items] : undefined,
     }
   )
@@ -171,11 +171,11 @@ export function usePosts(initialData?: ServerFeedData | null) {
     return mutate()
   }, [mutate])
 
-  // 🔍 백그라운드 스마트 동기화 (30초마다 자동)
+  // 백그라운드 스마트 동기화 (30초마다 자동)
   useEffect(() => {
     const interval = setInterval(() => {
 
-      // 🚀 업계 표준: 삭제 직후에는 background sync 건너뛰기 (Instagram/Twitter 방식)
+      // 업계 표준: 삭제 직후에는 background sync 건너뛰기 (Instagram/Twitter 방식)
       // mutate 호출시 revalidate: false로 하여 서버에서 다시 가져오지 않음
       mutate(undefined, { revalidate: false }) // 캐시만 정리, 서버 재검증 없음
     }, 30000) // 30초마다
@@ -183,7 +183,7 @@ export function usePosts(initialData?: ServerFeedData | null) {
     return () => clearInterval(interval)
   }, [mutate])
 
-  // 🎯 페이지 가시성 변화 감지 - 상세페이지에서 돌아올 때 즉시 동기화
+  // 페이지 가시성 변화 감지 - 상세페이지에서 돌아올 때 즉시 동기화
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden) {

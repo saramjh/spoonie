@@ -70,12 +70,12 @@ export default function LoginPage() {
 	}
 
 	const handleGoogleLogin = async () => {
-		// 🎯 환경변수 우선, 없으면 현재 도메인 사용
+		// 환경변수 우선, 없으면 현재 도메인 사용
 		const next = safeNextPath(new URLSearchParams(window.location.search).get("next"))
 		const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth/callback`
 		const redirectUrl = next === "/" ? callbackUrl : `${callbackUrl}?next=${encodeURIComponent(next)}`
 		
-		// 🔍 디버깅용 로그 (개발 환경에서만)
+		// 디버깅용 로그 (개발 환경에서만)
 		if (process.env.NODE_ENV === 'development') {
 			console.log('🔍 OAuth Redirect URL:', redirectUrl)
 			console.log('🔍 Environment NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL)
@@ -103,15 +103,15 @@ export default function LoginPage() {
 
 				return (
 					<div className="min-h-screen flex flex-col items-center justify-start p-4 bg-door">
-			{/* 🎨 토스 스타일 그라디언트 배경 */}
-			{/* 📱 상단 여백 + 카드 컨테이너 */}
+			{/* 토스 스타일 그라디언트 배경 */}
+			{/* 상단 여백 + 카드 컨테이너 */}
 			<main className="w-full max-w-sm mx-auto pt-8">
-				{/* 🏷️ 컴팩트한 브랜드 영역 */}
+				{/* 컴팩트한 브랜드 영역 */}
 				<div className="text-center mb-6">
 					<h1 className="text-[22px] font-bold text-ink">로그인</h1>
 				</div>
 
-				{/* 📋 로그인 카드 */}
+				{/* 로그인 카드 */}
 				<div className="rounded-[3px] bg-paper p-6 shadow-sheet">
 
 					<Form {...form}>
@@ -123,7 +123,7 @@ export default function LoginPage() {
 									<FormItem className="space-y-1.5">
 										<FormLabel className="text-sm font-medium text-ink">이메일</FormLabel>
 										<FormControl>
-											{/* 📝 토스 스타일 입력필드 */}
+											{/* 토스 스타일 입력필드 */}
 											<Input 
 												 
 												{...field} 
@@ -152,7 +152,7 @@ export default function LoginPage() {
 									</FormItem>
 								)}
 							/>
-							{/* 🚀 토스 스타일 로그인 버튼 */}
+							{/* 토스 스타일 로그인 버튼 */}
 							<Button 
 								type="submit" 
 								disabled={form.formState.isSubmitting || isRedirecting}
@@ -168,24 +168,24 @@ export default function LoginPage() {
 						</form>
 					</Form>
 
-						{/* 🔗 비밀번호 찾기 링크 */}
+						{/* 비밀번호 찾기 링크 */}
 						<div className="text-center mt-4 mb-6">
 							<Link href="/forgot-password" className="text-sm text-ink-soft hover:text-orange-ink transition-colors duration-200">
 								비밀번호를 잊으셨나요?
 							</Link>
 						</div>
 
-						{/* 📋 구분선 */}
+						{/* 구분선 */}
 						<div className="relative my-6">
 							<div className="absolute inset-0 flex items-center">
 								<span className="w-full border-t border-border" />
 							</div>
-							<div className="relative flex justify-center text-xs">
+							<div className="relative flex justify-center text-[13px]">
 								<span className="bg-paper px-4 text-ink-soft font-medium">또는</span>
 							</div>
 						</div>
 
-						{/* 🚀 소셜 로그인 */}
+						{/* 소셜 로그인 */}
 						<Button 
 							variant="outline" 
 							className="h-12 w-full text-base" 
@@ -201,7 +201,7 @@ export default function LoginPage() {
 						</Button>
 				</div>
 
-				{/* 📋 회원가입 링크 */}
+				{/* 회원가입 링크 */}
 				<div className="mt-8 text-center">
 					<span className="text-sm text-ink-soft">계정이 없으신가요? </span>
 					<Link href={signupHref} className="text-sm font-semibold text-orange-ink hover:text-orange-ink transition-colors duration-200">
@@ -209,17 +209,17 @@ export default function LoginPage() {
 					</Link>
 				</div>
 
-				{/* ⚖️ 법적 문서 링크 */}
+				{/* 법적 문서 링크 */}
 				<div className="mt-6 text-center space-x-3">
-					<Link href="/legal/privacy" className="text-xs text-ink-soft hover:text-ink transition-colors duration-200">
+					<Link href="/legal/privacy" className="text-[13px] text-ink-soft hover:text-ink transition-colors duration-200">
 						개인정보처리방침
 					</Link>
-					<span className="text-xs text-ink-soft/60">|</span>
-					<Link href="/legal/terms" className="text-xs text-ink-soft hover:text-ink transition-colors duration-200">
+					<span className="text-[13px] text-ink-soft/60">|</span>
+					<Link href="/legal/terms" className="text-[13px] text-ink-soft hover:text-ink transition-colors duration-200">
 						이용약관
 					</Link>
-					<span className="text-xs text-ink-soft/60">|</span>
-					<Link href="/legal/policy" className="text-xs text-ink-soft hover:text-ink transition-colors duration-200">
+					<span className="text-[13px] text-ink-soft/60">|</span>
+					<Link href="/legal/policy" className="text-[13px] text-ink-soft hover:text-ink transition-colors duration-200">
 						운영정책
 					</Link>
 				</div>

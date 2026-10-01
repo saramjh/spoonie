@@ -75,18 +75,18 @@ export default function RootLayout({
 	return (
 		<html lang="ko">
 			<head>
-				{/* 💰 Google AdSense 인증 메타 태그 - 최우선 위치 */}
+				{/* Google AdSense 인증 메타 태그 - 최우선 위치 */}
 				<meta name="google-adsense-account" content="ca-pub-4410729598083068" />
 				{/* 추가 SEO 메타 태그 */}
 				<meta name="author" content="Spoonie Team" />
 				<meta name="format-detection" content="telephone=no" />
 			</head>
 			<body className="min-h-screen bg-background font-sans antialiased" suppressHydrationWarning={true}>
-				{/* 🎯 Google Analytics */}
+				{/* Google Analytics */}
 				<GoogleAnalytics />
-				{/* 💰 Google AdSense */}
+				{/* Google AdSense */}
 				<GoogleAdSense />
-				{/* 🔄 Service Worker 업데이터 */}
+				{/* Service Worker 업데이터 */}
 				<ServiceWorkerUpdater />
 				
 				{/* 화면 전환 진행 막대 */}

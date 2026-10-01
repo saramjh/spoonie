@@ -9,7 +9,7 @@ export default function ServiceWorkerUpdater() {
 
 	useEffect(() => {
 		if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-			// 🔧 메모리 안전: 이벤트 리스너 레퍼런스 저장
+			// 메모리 안전: 이벤트 리스너 레퍼런스 저장
 			const handleControllerChange = () => {
 				// 새로운 서비스 워커가 활성화되면 페이지 새로고침
 				if (!navigator.serviceWorker.controller?.scriptURL.includes('webpack')) {
@@ -33,7 +33,7 @@ export default function ServiceWorkerUpdater() {
 					const stateChangeHandler = handleStateChange(newWorker)
 					newWorker.addEventListener('statechange', stateChangeHandler)
 					
-					// 🔧 메모리 안전: 정리 함수에서 제거할 수 있도록 저장
+					// 메모리 안전: 정리 함수에서 제거할 수 있도록 저장
 					return () => {
 						newWorker.removeEventListener('statechange', stateChangeHandler)
 					}
@@ -53,7 +53,7 @@ export default function ServiceWorkerUpdater() {
 				}
 			})
 
-			// 🔧 메모리 안전: cleanup 함수
+			// 메모리 안전: cleanup 함수
 			return () => {
 				navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange)
 				updateFoundCleanup?.()

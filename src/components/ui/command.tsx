@@ -27,7 +27,7 @@ const CommandDialog = ({ children, ...props }: DialogProps) => {
   return (
     <Dialog {...props}>
       <DialogContent className="overflow-hidden p-0" aria-describedby="command-dialog-description">
-        {/* 🛡️ 접근성을 위한 숭겨진 제목 및 설명 */}
+        {/* 접근성을 위한 숭겨진 제목 및 설명 */}
         <DialogTitle className="sr-only">검색 대화상자</DialogTitle>
         <DialogDescription id="command-dialog-description" className="sr-only">
           키보드를 사용하여 옵션을 검색하고 선택하세요

@@ -28,7 +28,7 @@ import { cacheManager } from "@/lib/unified-cache-manager"
 import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
 
 /**
- * 🎯 검증된 홈 피드 게시물 카드 컴포넌트
+ * 검증된 홈 피드 게시물 카드 컴포넌트
  * 업계 표준 방식으로 단순하고 안정적인 구현
  * 
  * 특징:
@@ -54,12 +54,12 @@ export default function PostCard({
   const { share } = useShare()
   const { createLinkWithOrigin } = useNavigation()
 
-  // 🎯 아이템 기본 정보
+  // 아이템 기본 정보
   const isRecipe = item.item_type === "recipe"
   const detailUrl = isRecipe ? `/recipes/${item.item_id}` : `/posts/${item.item_id}`
   const isOwnItem = currentUser && currentUser.id === item.user_id
 
-  // 🛡️ 안전한 네비게이션 핸들러 (Origin 정보 포함)
+  // 안전한 네비게이션 핸들러 (Origin 정보 포함)
   const handleEditClick = useCallback(async () => {
     try {
       const editPath = createLinkWithOrigin(`${detailUrl}/edit`)
@@ -69,7 +69,7 @@ export default function PostCard({
     }
   }, [router, detailUrl, createLinkWithOrigin])
 
-  // 🛡️ Hook 안정성을 위한 값 안정화
+  // Hook 안정성을 위한 값 안정화
   const stableItemId = useMemo(() => item.item_id || item.id, [item.item_id, item.id])
   const stableFallbackData = useMemo(() => ({
     ...item,
@@ -78,7 +78,7 @@ export default function PostCard({
     is_liked: item.is_liked || false
   }), [item])
 
-  // 🖼️ 썸네일 관리 - SSA 캐시된 데이터 사용 (캐시 데이터를 먼저 가져옴)
+  // 썸네일 관리 - SSA 캐시된 데이터 사용 (캐시 데이터를 먼저 가져옴)
   const cachedItem = useSSAItemCache(stableItemId, stableFallbackData)
   // 표시용 값: 수정 직후 즉시 갱신되는 개별 항목 캐시를 우선하고, 캐시에 없는 값만 목록 데이터를 쓴다.
   // (홈 피드 목록 캐시는 새로고침 전까지 갱신되지 않아 수정한 제목, 본문 등이 이전 값으로 남던 문제 방지)
@@ -98,27 +98,27 @@ export default function PostCard({
 
 
 
-  // 📚 참고 레시피 로딩
+  // 참고 레시피 로딩
   const { citedRecipes, isLoading: citedRecipesLoading } = useCitedRecipes(item.cited_recipe_ids)
 
-  // 👤 작성자 정보 캐시 적용
+  // 작성자 정보 캐시 적용
   const enrichedItem = enrichWithCachedAuthor(item)
 
-  	// 🗑️ 삭제 관련 상태
+  	// 삭제 관련 상태
 	const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 	const [isDeleting, setIsDeleting] = useState(false)
 	
-	// 🎯 더블탭 좋아요 상태 관리
+	// 더블탭 좋아요 상태 관리
 	const [showHeartAnimation, setShowHeartAnimation] = useState(false)
 	const [showLoginPrompt, setShowLoginPrompt] = useState(false)
 
-  // 🚀 SSA: 캐시된 좋아요 데이터 사용
+  // SSA: 캐시된 좋아요 데이터 사용
   const likesCount = cachedItem.likes_count
   const hasLiked = cachedItem.is_liked
   
 
 
-  // 👤 작성자 정보 캐시 저장
+  // 작성자 정보 캐시 저장
   useEffect(() => {
     if (item.user_id && (item.username || item.display_name)) {
       cacheAuthors([{
@@ -131,9 +131,9 @@ export default function PostCard({
     }
   }, [item.user_id, item.username, item.display_name, item.avatar_url, item.user_public_id])
 
-  // 🎯 더블탭 좋아요 핸들러 (프로필 그리드와 동일한 SSA 기반 로직)
+  // 더블탭 좋아요 핸들러 (프로필 그리드와 동일한 SSA 기반 로직)
   const handleDoubleTapLike = async () => {
-    // 🔐 비로그인 사용자 회원가입 유도 (토스 UX 스타일 - 바텀시트)
+    // 비로그인 사용자 회원가입 유도 (토스 UX 스타일 - 바텀시트)
     if (!currentUser?.id) {
       setShowLoginPrompt(true)
       return
@@ -143,7 +143,7 @@ export default function PostCard({
       const newHasLiked = !cachedItem.is_liked
       await cacheManager.like(stableItemId, currentUser.id, newHasLiked, cachedItem)
       
-      // 🎉 토스식 마이크로 인터랙션 (React 상태 기반 안전한 애니메이션)
+      // 토스식 마이크로 인터랙션 (React 상태 기반 안전한 애니메이션)
       if (newHasLiked) {
         setShowHeartAnimation(true)
         setTimeout(() => setShowHeartAnimation(false), 600)
@@ -158,7 +158,7 @@ export default function PostCard({
     }
   }
 
-  // 🗑️ SSA 기반 삭제 처리 (즉시 홈화면에서 사라짐)
+  // SSA 기반 삭제 처리 (즉시 홈화면에서 사라짐)
   const handleDelete = async () => {
     if (!isOwnItem || isDeleting) return
 
@@ -166,11 +166,11 @@ export default function PostCard({
 
 
     try {
-      // 🚀 SSA STEP 1: 즉시 홈화면에서 제거 (0ms 응답)
+      // SSA STEP 1: 즉시 홈화면에서 제거 (0ms 응답)
       const { cacheManager } = await import('@/lib/unified-cache-manager')
       const rollback = await cacheManager.deleteItem(item.item_id || item.id)
       
-      // 🚀 SSA STEP 2: 백그라운드 DB 삭제
+      // SSA STEP 2: 백그라운드 DB 삭제
       try {
         const { error } = await supabase
           .from('items')
@@ -209,12 +209,12 @@ export default function PostCard({
     }
   }
 
-  // 📱 댓글 페이지로 이동
+  // 댓글 페이지로 이동
   const handleCommentClick = () => {
     router.push(detailUrl)
   }
 
-  // 🔗 공유하기
+  // 공유하기
   const handleShare = () => {
     const url = `${window.location.origin}${detailUrl}`
     const text = displayItem.title || displayItem.content?.substring(0, 100) || '맛있는 레시피'
@@ -291,7 +291,7 @@ export default function PostCard({
           />
           {showHeartAnimation && (
             <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
-              <Heart className="h-16 w-16 animate-ping fill-red-500 text-red-500" aria-hidden />
+              <Heart className="h-16 w-16 animate-ping fill-[#D6453D] text-[#D6453D]" aria-hidden />
             </div>
           )}
         </div>

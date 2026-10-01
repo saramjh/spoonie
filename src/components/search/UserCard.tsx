@@ -6,7 +6,7 @@ import { User } from "lucide-react"
 import { useNavigation } from "@/hooks/useNavigation"
 import type { Item } from "@/types/item"
 
-// 👤 유저 검색 결과 타입 (search/page.tsx와 동일)
+// 유저 검색 결과 타입 (search/page.tsx와 동일)
 interface UserResult {
   user_id: string;
   username: string;
@@ -26,9 +26,9 @@ export default function UserCard({ user }: UserCardProps) {
   
   return (
     <Link href={profileUrl} className="block">
-      <div className="bg-paper rounded-lg border border-border p-4 hover:shadow-md transition-shadow">
+      <div className="rounded-[3px] bg-paper p-4 shadow-sheet">
         <div className="flex items-center space-x-3 mb-3">
-          {/* 👤 유저 아바타 */}
+          {/* 유저 아바타 */}
           <Avatar className="w-12 h-12">
             <AvatarImage src={user.avatar_url} alt={user.username} />
             <AvatarFallback>
@@ -36,19 +36,19 @@ export default function UserCard({ user }: UserCardProps) {
             </AvatarFallback>
           </Avatar>
           
-          {/* 👤 유저 정보 */}
+          {/* 유저 정보 */}
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-ink truncate">
               			{user.username}
             </h3>
             <p className="text-sm text-ink-soft truncate">@{user.username}</p>
-            <p className="text-xs text-ink-soft">
+            <p className="text-[13px] text-ink-soft">
               {user.items_count}개의 레시피 & 레시피드
             </p>
           </div>
         </div>
         
-        {/* 📱 최근 아이템 미리보기 */}
+        {/* 최근 아이템 미리보기 */}
         {user.latest_items.length > 0 && (
           <div className="grid grid-cols-3 gap-1">
             {user.latest_items.slice(0, 3).map((item, index) => (

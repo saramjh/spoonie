@@ -3,7 +3,7 @@ import type { Item } from "@/types/item"
 import type { User } from "@supabase/supabase-js"
 
 /**
- * 🚀 서버 사이드 초기 피드 데이터 페칭
+ * 서버 사이드 초기 피드 데이터 페칭
  * SSR 성능 최적화를 위한 서버 전용 함수
  */
 
@@ -69,12 +69,12 @@ async function loadFeed(supabase: SupabaseClient): Promise<ServerFeedData> {
       
       return {
         ...item,
-        // 🔧 호환성을 위한 item_id 별칭 명시적 설정
+        // 호환성을 위한 item_id 별칭 명시적 설정
         item_id: item.id,
         // 사용자 상호작용 정보
         user_has_liked: userLikes.get(item.id) || false,
         is_following_author: userFollows.get(item.user_id) || false,
-        // 🔧 작성자 정보 확실히 포함 - profiles에서 가져온 데이터 우선 사용
+        // 작성자 정보 확실히 포함 - profiles에서 가져온 데이터 우선 사용
         display_name: profileData?.display_name || item.display_name || null,
         username: profileData?.username || item.username || null,
         avatar_url: profileData?.avatar_url || item.avatar_url || null,

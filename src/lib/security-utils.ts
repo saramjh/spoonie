@@ -1,5 +1,5 @@
 /**
- * 🛡️ 보안 유틸리티
+ * 보안 유틸리티
  * XSS, 파일 업로드, 입력 검증 등 보안 관련 기능 통합
  */
 
@@ -102,7 +102,7 @@ export function validateEmail(email: string): boolean {
 /**
  * 안전한 정수 변환
  */
-// ✅ Removed unused export for better tree shaking
+// Removed unused export for better tree shaking
 // export function safeParseInt(value: unknown, defaultValue: number = 0): number {
 //   if (typeof value === 'number' && !isNaN(value)) {
 //     return Math.floor(value)
@@ -117,7 +117,7 @@ export function validateEmail(email: string): boolean {
 // }
 
 /**
- * 🔢 안전한 실수 변환 (소숫점 지원)
+ * 안전한 실수 변환 (소숫점 지원)
  * 재료량 등 소숫점 입력을 위한 안전한 parseFloat 대안
  */
 export function safeParseFloat(value: unknown, defaultValue: number = 0): number {

@@ -13,7 +13,7 @@ interface InstagramGridCardProps {
 }
 
 export default function InstagramGridCard({ item }: InstagramGridCardProps) {
-  // 🚀 SSA 기반 캐시 연동 (React Hook을 먼저 호출)
+  // SSA 기반 캐시 연동 (React Hook을 먼저 호출)
   const itemId = item.item_id || item.id;
   const { createLinkWithOrigin } = useNavigation()
   const fallbackItem = {
@@ -30,7 +30,7 @@ export default function InstagramGridCard({ item }: InstagramGridCardProps) {
     return null;
   }
   
-  // 🚀 SSA 캐시 연동 완료 (통계 정보는 상세페이지에서만)
+  // SSA 캐시 연동 완료 (통계 정보는 상세페이지에서만)
   
   const baseUrl = `${item.item_type === 'recipe' ? '/recipes' : '/posts'}/${itemId}`
   const detailUrl = createLinkWithOrigin(baseUrl)
@@ -38,7 +38,7 @@ export default function InstagramGridCard({ item }: InstagramGridCardProps) {
   return (
     <Link href={detailUrl} className="block group">
       <div className="relative aspect-square overflow-hidden rounded-[2px] bg-muted">
-        {/* 🖼️ 이미지 */}
+        {/* 이미지 */}
         {item.image_urls && item.image_urls.length > 0 ? (
           <Image 
             src={cachedItem.image_urls[cachedItem.thumbnail_index || 0]} 
@@ -56,7 +56,7 @@ export default function InstagramGridCard({ item }: InstagramGridCardProps) {
           </div>
         )}
         
-        {/* 📝 토스식 미니멀 제목 (검색 매칭 확인용만) */}
+        {/* 토스식 미니멀 제목 (검색 매칭 확인용만) */}
         {item.title && (
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-2 pb-1.5 pt-6">
             <h3 className="line-clamp-1 text-[13px] font-medium text-white">

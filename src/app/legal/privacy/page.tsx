@@ -3,24 +3,22 @@ import Link from "next/link"
 export default function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-door">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="px-3 py-4">
         {/* 헤더 */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-block mb-6">
-            <div className="text-orange-ink hover:text-orange-ink transition-colors">
-              ← 홈으로 돌아가기
-            </div>
+        <div className="mb-4 px-1">
+          <Link href="/" className="mb-4 inline-flex h-11 items-center text-[15px] text-ink underline underline-offset-4">
+            홈으로
           </Link>
-          <h1 className="text-3xl font-bold text-ink mb-2">개인정보처리방침</h1>
+          <h1 className="text-[22px] font-bold text-ink">개인정보처리방침</h1>
           <p className="text-ink-soft">최종 업데이트: 2025년 8월 7일</p>
         </div>
 
         {/* 내용 */}
-        <div className="bg-paper rounded-3xl shadow-xl border border-border p-8">
+        <div className="rounded-[3px] bg-paper px-5 py-6 shadow-sheet">
           <div className="prose max-w-none">
             
             <section className="mb-8">
-              <h2 className="text-xl font-bold text-ink mb-4">1. 개인정보 수집 및 이용 목적</h2>
+              <h2 className="text-lg font-bold text-ink mb-3">1. 개인정보 수집 및 이용 목적</h2>
               <p className="text-ink leading-relaxed mb-4">
                 Spoonie는 다음과 같은 목적으로 개인정보를 수집 및 이용합니다:
               </p>
@@ -35,7 +33,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-bold text-ink mb-4">2. 수집하는 개인정보 항목</h2>
+              <h2 className="text-lg font-bold text-ink mb-3">2. 수집하는 개인정보 항목</h2>
               
               <div className="mb-4">
                 <h3 className="text-lg font-semibold text-ink mb-2">필수 수집 항목</h3>
@@ -68,7 +66,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-bold text-ink mb-4">3. 개인정보 처리 및 보유 기간</h2>
+              <h2 className="text-lg font-bold text-ink mb-3">3. 개인정보 처리 및 보유 기간</h2>
               <ul className="list-disc pl-6 text-ink space-y-2">
                 <li><strong>회원 정보:</strong> 회원 탈퇴 시까지</li>
                 <li><strong>사용자 생성 콘텐츠:</strong> 콘텐츠 삭제 요청 시까지</li>
@@ -78,7 +76,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-bold text-ink mb-4">4. 개인정보 제3자 제공</h2>
+              <h2 className="text-lg font-bold text-ink mb-3">4. 개인정보 제3자 제공</h2>
               <p className="text-ink leading-relaxed">
                 Spoonie는 원칙적으로 이용자의 개인정보를 외부에 제공하지 않습니다. 
                 단, 다음의 경우에는 예외로 합니다:
@@ -90,7 +88,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-bold text-ink mb-4">5. 개인정보 처리 위탁</h2>
+              <h2 className="text-lg font-bold text-ink mb-3">5. 개인정보 처리 위탁</h2>
               <p className="text-ink leading-relaxed mb-4">
                 Spoonie는 서비스 제공을 위해 다음과 같이 개인정보 처리를 위탁하고 있습니다:
               </p>
@@ -103,7 +101,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-bold text-ink mb-4">6. 이용자의 권리</h2>
+              <h2 className="text-lg font-bold text-ink mb-3">6. 이용자의 권리</h2>
               <p className="text-ink leading-relaxed mb-4">
                 이용자는 언제든지 다음과 같은 권리를 행사할 수 있습니다:
               </p>
@@ -117,7 +115,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-bold text-ink mb-4">7. 개인정보 보호를 위한 기술적·관리적 조치</h2>
+              <h2 className="text-lg font-bold text-ink mb-3">7. 개인정보 보호를 위한 기술적·관리적 조치</h2>
               <ul className="list-disc pl-6 text-ink space-y-2">
                 <li>개인정보 암호화 저장</li>
                 <li>HTTPS 보안 통신</li>
@@ -128,8 +126,8 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-xl font-bold text-ink mb-4">8. 개인정보 보호책임자</h2>
-              <div className="bg-door p-4 rounded-2xl">
+              <h2 className="text-lg font-bold text-ink mb-3">8. 개인정보 보호책임자</h2>
+              <div className="bg-door p-4 rounded-[3px]">
                 <p className="text-ink">
                   <strong>개인정보 보호책임자:</strong> Spoonie 운영팀<br/>
                   <strong>연락처:</strong> devTestudinidae@gmail.com<br/>
@@ -139,7 +137,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-bold text-ink mb-4">9. 정책 변경</h2>
+              <h2 className="text-lg font-bold text-ink mb-3">9. 정책 변경</h2>
               <p className="text-ink leading-relaxed">
                 이 개인정보처리방침은 법령·정책 또는 보안기술의 변경에 따라 내용의 추가·삭제 및 수정이 있을 시에는 
                 개정 최소 7일 전부터 서비스 내 공지사항을 통해 고지할 것입니다.

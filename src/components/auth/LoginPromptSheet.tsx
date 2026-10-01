@@ -4,7 +4,6 @@ import { useRouter } from "@/lib/navigation"
 import { useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
-import Image from "next/image"
 
 interface LoginPromptSheetProps {
 	isOpen: boolean
@@ -41,7 +40,7 @@ export default function LoginPromptSheet({
 	const loginButtonRef = useRef<HTMLButtonElement>(null)
 	const previousFocusRef = useRef<HTMLElement | null>(null)
 
-	// 🎯 접근성 포커스 관리: aria-hidden 충돌 완전 방지
+	// 접근성 포커스 관리: aria-hidden 충돌 완전 방지
 	useEffect(() => {
 		if (isOpen) {
 			// 현재 포커스된 요소 저장 및 즉시 블러 처리
@@ -60,7 +59,7 @@ export default function LoginPromptSheet({
 			
 			return () => clearTimeout(focusTimer)
 		} else {
-			// 🚨 바텀시트 닫힐 때: aria-hidden 해제 완료 후 포커스 복원
+			// 바텀시트 닫힐 때: aria-hidden 해제 완료 후 포커스 복원
 			const restoreTimer = setTimeout(() => {
 				// aria-hidden 상태 확인 및 안전한 포커스 복원
 				const restoreFocus = () => {
@@ -91,15 +90,15 @@ export default function LoginPromptSheet({
 	}, [isOpen])
 
 	const handleLogin = () => {
-		// 🎯 컨텍스트 유지: 현재 페이지를 기억해두고 로그인 후 돌아오기
+		// 컨텍스트 유지: 현재 페이지를 기억해두고 로그인 후 돌아오기
 		const currentPath = window.location.pathname + window.location.search
-		router.push(`/login?returnTo=${encodeURIComponent(currentPath)}`)
+		router.push(`/login?next=${encodeURIComponent(currentPath)}`)
 		onClose()
 	}
 
 	const handleSignup = () => {
 		const currentPath = window.location.pathname + window.location.search
-		router.push(`/signup?returnTo=${encodeURIComponent(currentPath)}`)
+		router.push(`/signup?next=${encodeURIComponent(currentPath)}`)
 		onClose()
 	}
 
@@ -110,49 +109,19 @@ export default function LoginPromptSheet({
 			shouldScaleBackground={false} // aria-hidden 충돌 방지
 		>
 			<DrawerContent 
-				className="bg-paper focus:outline-none sm:max-w-md sm:mx-auto"
+				className="focus:outline-none sm:mx-auto sm:max-w-md"
 			>
-				{/* 🎯 올바른 접근성 구조: DrawerHeader 사용 */}
-				<DrawerHeader className="p-6 pb-4">
-					<div className="flex items-center gap-3 mb-2">
-						<div className="bg-muted p-2 rounded-xl">
-							<Image src="/icon-only.svg" alt="Spoonie" width={24} height={24} />
-						</div>
-						<div>
-							<DrawerTitle className="text-lg font-bold text-ink text-left">
-								{actionInfo.title}
-							</DrawerTitle>
-							<DrawerDescription className="text-sm text-ink-soft text-left">
-								회원만 이용할 수 있는 기능이에요
-							</DrawerDescription>
-						</div>
-					</div>
+				<DrawerHeader className="px-5 pb-2 pt-5 text-left">
+					<DrawerTitle className="text-xl font-bold text-ink">{actionInfo.title}</DrawerTitle>
+					<DrawerDescription className="text-[15px] text-ink-soft">로그인하면 지금 보던 화면으로 바로 돌아와요.</DrawerDescription>
 				</DrawerHeader>
-
-				{/* 컨텐츠 영역 */}
-				<div className="px-6 pb-6">{/* space-y-3 대신 px-6 pb-6 사용 */}
-
-					{/* 토스 스타일 CTA 버튼들 */}
-					<div className="space-y-3">
-						<Button 
-							ref={loginButtonRef}
-							onClick={handleLogin}
-							className="w-full h-14 text-base font-semibold bg-primary hover:brightness-95 rounded-2xl"
-						>
-							로그인
-						</Button>
-						
-						<Button 
-							onClick={handleSignup}
-							variant="outline"
-							className="w-full h-14 text-base font-medium border-2 border-border text-ink hover:bg-door rounded-2xl"
-						>
-							회원가입
-						</Button>
-					</div>
-
-					{/* 하단 Safe Area */}
-					<div className="h-8" />
+				<div className="space-y-2 px-5 pb-6 pt-3">
+					<Button ref={loginButtonRef} onClick={handleLogin} className="h-12 w-full text-base">
+						로그인
+					</Button>
+					<Button onClick={handleSignup} variant="outline" className="h-12 w-full text-base">
+						처음이에요, 가입할게요
+					</Button>
 				</div>
 			</DrawerContent>
 		</Drawer>

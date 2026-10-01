@@ -18,7 +18,7 @@ import FollowersModal from "@/components/profile/FollowersModal"
 import FollowingModal from "@/components/profile/FollowingModal"
 
 import { useSessionStore } from "@/store/sessionStore"
-import { useFollowStore } from "@/store/followStore" // 🚀 업계 표준: 글로벌 팔로우 상태
+import { useFollowStore } from "@/store/followStore" // 업계 표준: 글로벌 팔로우 상태
 import { useNavigation } from "@/hooks/useNavigation"
 import useSWR from "swr"
 import { fetchProfile, fetchUserItems, fetchFollowCounts, fetchFollowStatus, fetchLineageCounts, type UserProfile } from "@/lib/profile-data"
@@ -36,7 +36,7 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 	const userId = params.id
 	const supabase = createSupabaseBrowserClient()
 
-	// 🧭 Smart Navigation: 이 페이지를 거쳐간 navigation history 추적
+	// Smart Navigation: 이 페이지를 거쳐간 navigation history 추적
 	useNavigation({ trackHistory: true })
 
 	const [sessionUser, setSessionUser] = useState<User | null>(null)
@@ -45,10 +45,10 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 
 	// Zustand store에서 프로필 정보 가져오기
 	const { profile: sessionProfile } = useSessionStore()
-	const { setFollowing, isFollowing: getIsFollowing } = useFollowStore() // 🚀 업계 표준: 글로벌 팔로우 상태
+	const { setFollowing, isFollowing: getIsFollowing } = useFollowStore() // 업계 표준: 글로벌 팔로우 상태
 
 	const [profile, setProfile] = useState<UserProfile | null>(initialProfile ?? null)
-	// 🚀 업계 표준: SWR로 사용자 아이템 관리 (DataManager 연동)
+	// 업계 표준: SWR로 사용자 아이템 관리 (DataManager 연동)
 	const { data: userItems } = useSWR(
 		// 보는 사람이 바뀌면(로그인 확인 후 본인으로 판명) 비공개 글까지 다시 가져온다
 		profile ? `user_items_${profile.id}_${sessionUser?.id ?? "guest"}` : null,
@@ -60,7 +60,7 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 			revalidateOnMount: true, // 본인 프로필이면 비공개 글과 좋아요 상태를 다시 채운다
 		}
 	)
-	// 🚀 SSA 표준: 팔로우 수도 SWR로 관리하여 실시간 캐시 무효화 지원
+	// SSA 표준: 팔로우 수도 SWR로 관리하여 실시간 캐시 무효화 지원
 	const { data: followCounts } = useSWR(
 		profile ? `follow_counts_${profile.id}` : null,
 		() => fetchFollowCounts(profile!.id),
@@ -77,7 +77,7 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 	})
 	const [isLoading, setIsLoading] = useState(!initialProfile)
 	const [profileError, setProfileError] = useState<Error | null>(null)
-	// 🚀 업계 표준: 지역 상태 제거, 글로벌 상태만 사용
+	// 업계 표준: 지역 상태 제거, 글로벌 상태만 사용
 	
 	// 모달 상태들
 	const [showFollowersModal, setShowFollowersModal] = useState(false)
@@ -104,7 +104,7 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 
 				const followStatusData = await fetchFollowStatus(user?.id || "", profileData.id) // 글로벌 팔로우 스토어 동기화용
 				
-				// 🚀 업계 표준: 글로벌 팔로우 스토어와 동기화
+				// 업계 표준: 글로벌 팔로우 스토어와 동기화
 				if (user?.id && user.id !== profileData.id) {
 					setFollowing(profileData.id, followStatusData)
 				}
@@ -128,7 +128,7 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 		getSessionUser()
 	}, [supabase.auth])
 
-	// 🚀 Optimistic Updates 시스템에서는 복잡한 새로고침 등록 로직 불필요
+	// Optimistic Updates 시스템에서는 복잡한 새로고침 등록 로직 불필요
 	// 데이터는 SWR과 실시간 동기화를 통해 자동으로 최신 상태 유지
 
 	const isOwner = sessionUser?.id === profile?.id

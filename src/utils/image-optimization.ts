@@ -2,7 +2,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import { OptimizedImage } from "@/lib/image-utils"
 
 /**
- * 🚀 이미지 업로드 최적화 유틸리티
+ * 이미지 업로드 최적화 유틸리티
  * 병렬 처리, 캐싱, 중복 제거로 서버 부담 최소화
  */
 
@@ -121,7 +121,7 @@ async function performUpload(
 }
 
 /**
- * 🚀 병렬 이미지 업로드 (최대 3개 동시 처리)
+ * 병렬 이미지 업로드 (최대 3개 동시 처리)
  */
 export async function uploadImagesOptimized(
 	images: OptimizedImage[],

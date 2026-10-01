@@ -1,11 +1,11 @@
 /**
- * 🍳 레시피 상세 페이지 - 하이브리드 래퍼 패턴
+ * 레시피 상세 페이지 - 하이브리드 래퍼 패턴
  * 
- * 🎯 구조:
+ * 구조:
  * - 서버 컴포넌트: SEO 최적화된 메타데이터 생성
  * - 클라이언트 컴포넌트: 기존 SSA 아키텍처 완전 보존
  * 
- * 🛡️ 기존 기능 보호:
+ * 기존 기능 보호:
  * - SWR 캐싱, UnifiedCacheManager, 실시간 동기화 모두 유지
  */
 
@@ -21,13 +21,13 @@ interface Props {
   params: Promise<{ id: string }>
 }
 
-// 🎯 동적 메타데이터 생성 (기존 기능에 영향 없음)
+// 동적 메타데이터 생성 (기존 기능에 영향 없음)
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
   try {
     const supabase = await createSupabaseServerClient()
     
-    // 🔥 최소한의 데이터만 가져와서 메타데이터 생성 (성능 최적화)
+    // 최소한의 데이터만 가져와서 메타데이터 생성 (성능 최적화)
     const { data: recipe, error } = await supabase
       .from('items')
       .select(`
@@ -46,7 +46,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       .single()
 
     if (error || !recipe) {
-      // 🛡️ 에러 시 기본 메타데이터 (기존 기능에 영향 없음)
+      // 에러 시 기본 메타데이터 (기존 기능에 영향 없음)
       return { 
         title: '레시피 - 스푸니',
         description: '맛있는 레시피를 공유하는 스푸니입니다.',
@@ -58,10 +58,10 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     const imageUrl = recipe.image_urls?.[0] || '/default-recipe.jpg'
     const cleanDescription = recipe.description?.replace(/\n/g, ' ').slice(0, 160) || '맛있는 레시피입니다.'
     
-    // 🎯 SEO 최적화된 제목 생성
+    // SEO 최적화된 제목 생성
     const seoTitle = `${recipe.title} - ${authorName}님의 레시피 | 스푸니`
     
-    // 🎯 추가 키워드 생성
+    // 추가 키워드 생성
     const keywords = [
       recipe.title,
       ...(recipe.tags || []),
@@ -76,7 +76,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       description: cleanDescription,
       keywords,
       
-      // 🎯 Open Graph 최적화 (소셜 공유)
+      // Open Graph 최적화 (소셜 공유)
       openGraph: {
         title: `${recipe.title} - 스푸니`,
         description: cleanDescription,
@@ -93,7 +93,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         siteName: '스푸니',
       },
       
-      // 🎯 Twitter Cards 최적화
+      // Twitter Cards 최적화
       twitter: {
         card: 'summary_large_image',
         title: seoTitle,
@@ -102,7 +102,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         creator: `@${profileData?.username || 'spoonie'}`,
       },
       
-      // 🎯 검색 엔진 최적화
+      // 검색 엔진 최적화
       robots: {
         index: true,
         follow: true,
@@ -113,19 +113,19 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         },
       },
       
-      // 🎯 정규 URL 설정
+      // 정규 URL 설정
       alternates: {
         canonical: `${process.env.NEXT_PUBLIC_APP_URL}/recipes/${params.id}`,
       },
       
-      // 🎯 구조화 데이터 힌트
+      // 구조화 데이터 힌트
       other: {
         ...(recipe.cooking_time_minutes && { 'recipe:cooking_time': `${recipe.cooking_time_minutes}분` }),
         ...(recipe.servings && { 'recipe:servings': `${recipe.servings}인분` }),
       },
     }
   } catch (error) {
-    // 🛡️ 에러 로깅 및 안전한 fallback
+    // 에러 로깅 및 안전한 fallback
     console.error('❌ Recipe metadata generation failed:', error)
     return { 
       title: '레시피 - 스푸니',

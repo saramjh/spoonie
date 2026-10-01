@@ -21,7 +21,7 @@ export const useFollowStore = create<FollowStore>((set, get) => ({
   followingUsers: new Set(),
   isLoading: false,
   
-  // 🚀 SSA 표준: 초기 팔로우 상태 한 번만 로드
+  // SSA 표준: 초기 팔로우 상태 한 번만 로드
   initializeFollowState: async (currentUserId: string) => {
     const supabase = createSupabaseBrowserClient()
     set({ isLoading: true })
@@ -45,7 +45,7 @@ export const useFollowStore = create<FollowStore>((set, get) => ({
     }
   },
   
-  // 🚀 SSA 표준: 모든 로직을 cacheManager에 위임
+  // SSA 표준: 모든 로직을 cacheManager에 위임
   follow: async (targetUserId: string) => {
     
     const supabase = createSupabaseBrowserClient()
@@ -80,7 +80,7 @@ export const useFollowStore = create<FollowStore>((set, get) => ({
     }
   },
   
-  // 🚀 SSA 표준: 모든 로직을 cacheManager에 위임
+  // SSA 표준: 모든 로직을 cacheManager에 위임
   unfollow: async (targetUserId: string) => {
     
     const supabase = createSupabaseBrowserClient()
@@ -115,7 +115,7 @@ export const useFollowStore = create<FollowStore>((set, get) => ({
     }
   },
   
-  // 🚀 빠른 상태 확인 (메모리에서)
+  // 빠른 상태 확인 (메모리에서)
   isFollowing: (userId: string) => {
     return get().followingUsers.has(userId)
   },

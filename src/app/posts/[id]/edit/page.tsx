@@ -12,13 +12,13 @@ export default function PostEditPage() {
 	const params = useParams()
 	const itemId = params.id as string
 
-	// 🧭 스마트 네비게이션 (이전 경로 추적)
+	// 스마트 네비게이션 (이전 경로 추적)
 	const { navigateBack } = useNavigation({ trackHistory: true })
 
-	// 🚀 SSA: 기본 데이터 로딩 (완전한 상세 정보 포함)
+	// SSA: 기본 데이터 로딩 (완전한 상세 정보 포함)
 	const { item: baseItem, isLoading, error } = useItemDetail(itemId)
 
-	// 🚀 SSA: 캐시된 최신 데이터 구독 (실시간 업데이트용) - Hook 안정성 보장
+	// SSA: 캐시된 최신 데이터 구독 (실시간 업데이트용) - Hook 안정성 보장
 	const fallbackData = baseItem || {
 		id: itemId,
 		item_id: itemId,
@@ -44,7 +44,7 @@ export default function PostEditPage() {
 	}
 	const cachedItem = useSSAItemCache(itemId, fallbackData)
 
-	// 🚀 SSA: 업계표준 Selective Merge - 폼 데이터는 서버에서, 실시간 필드만 캐시에서
+	// SSA: 업계표준 Selective Merge - 폼 데이터는 서버에서, 실시간 필드만 캐시에서
 	const [initialData, setInitialData] = useState<any>(null)
 
 	useEffect(() => {
@@ -82,7 +82,7 @@ export default function PostEditPage() {
 		)
 	}
 
-	// 🚀 개선된 에러 조건: 실제 에러가 있고 baseItem도 없는 경우에만 에러 처리
+	// 개선된 에러 조건: 실제 에러가 있고 baseItem도 없는 경우에만 에러 처리
 	if (error && !baseItem) {
 		console.error("PostEditPage: Error loading item", itemId, error)
 		return (
@@ -99,7 +99,7 @@ export default function PostEditPage() {
 		)
 	}
 
-	// 🎯 로딩 중이거나 initialData가 준비되지 않은 경우 스켈레톤 표시
+	// 로딩 중이거나 initialData가 준비되지 않은 경우 스켈레톤 표시
 	if (!initialData) {
 		return (
 			<div className="p-4">

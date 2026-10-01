@@ -20,8 +20,8 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<Item[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [showSearch, setShowSearch] = useState(false); // 🚀 검색 표시 상태 추가
-  const inputRef = useRef<HTMLInputElement>(null); // 🎯 input 참조
+  const [showSearch, setShowSearch] = useState(false); // 검색 표시 상태 추가
+  const inputRef = useRef<HTMLInputElement>(null); // input 참조
 
   const handleSearch = useCallback(async (query: string) => {
 
@@ -134,7 +134,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
     onSelectedRecipesChange(selectedRecipes.filter(r => r.item_id !== recipeId));
   };
 
-  // 🎯 검색창 표시될 때 자동 포커스
+  // 검색창 표시될 때 자동 포커스
   useEffect(() => {
     if (showSearch && inputRef.current) {
       setTimeout(() => {
@@ -157,7 +157,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
         </button>
       )}
 
-      {/* 🎯 검색 영역 - 필요할 때만 표시 */}
+      {/* 검색 영역 - 필요할 때만 표시 */}
       {(searchTerm || selectedRecipes.length > 0 || showSearch) && (
         <div className="relative">
           <Command shouldFilter={false} className="rounded-md border border-ink/40">
@@ -180,7 +180,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
                   {searchResults.map((recipe) => (
                     <CommandItem key={recipe.item_id} onSelect={() => handleSelectRecipe(recipe)} className="cursor-pointer hover:bg-muted">
                       <div className="flex items-center gap-3 w-full">
-                        {/* 🖼️ 썸네일 추가 */}
+                        {/* 썸네일 추가 */}
                         <div className="h-9 w-9 flex-shrink-0 overflow-hidden rounded-[2px] bg-muted">
                           {recipe.image_urls && recipe.image_urls.length > 0 ? (
                             <Image src={recipe.image_urls[0]} alt="" width={36} height={36} className="h-full w-full object-cover" />
@@ -192,7 +192,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-medium truncate">{recipe.title}</div>
-                          <div className="text-xs text-ink-soft truncate">
+                          <div className="text-[13px] text-ink-soft truncate">
                             {recipe.username || "익명"} • {recipe.created_at && format(new Date(recipe.created_at), 'MM.dd')}
                           </div>
                         </div>
@@ -206,7 +206,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
         </div>
       )}
 
-      {/* 🏷️ 선택된 레시피들 - 토스 스타일 카드 */}
+      {/* 선택된 레시피들 - 토스 스타일 카드 */}
       {selectedRecipes.length > 0 && (
         <div className="space-y-2">
           <ul className="divide-y divide-border">

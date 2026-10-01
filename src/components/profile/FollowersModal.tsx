@@ -121,7 +121,6 @@ export default function FollowersModal({ isOpen, onClose, userId, currentUserId 
 			<DialogContent className="max-w-md max-h-[80vh] flex flex-col">
 				<DialogHeader>
 					<DialogTitle className="flex items-center gap-2">
-						<Users className="w-5 h-5 text-blue-600" />
 						팔로워
 					</DialogTitle>
 					<DialogDescription>
@@ -146,7 +145,7 @@ export default function FollowersModal({ isOpen, onClose, userId, currentUserId 
 					) : error ? (
 						<div className="text-center py-8">
 							<Users className="w-12 h-12 text-ink-soft/60 mx-auto mb-4" />
-							<p className="text-red-500 text-sm">{error}</p>
+							<p className="text-destructive text-sm">{error}</p>
 							<Button
 								variant="outline"
 								size="sm"
@@ -182,7 +181,7 @@ export default function FollowersModal({ isOpen, onClose, userId, currentUserId 
 												</p>
 											</div>
 
-											<div className="flex items-center gap-1 text-xs text-ink-soft">
+											<div className="flex items-center gap-1 text-[13px] text-ink-soft">
 												<Clock className="w-3 h-3" />
 												<span>
 													{formatDistanceToNow(new Date(follower.followed_at), {

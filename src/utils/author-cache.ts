@@ -1,5 +1,5 @@
 /**
- * 🎭 작성자 정보 캐싱 유틸리티
+ * 작성자 정보 캐싱 유틸리티
  * 작성자 정보를 클라이언트 사이드에서 캐싱하여 깜빡임 현상 방지
  */
 
@@ -134,7 +134,7 @@ export const cacheAuthors = (items: Parameters<typeof authorCache.setAuthors>[0]
 export const enrichWithCachedAuthor = <T extends Parameters<typeof authorCache.enrichItemWithCachedAuthor>[0]>(item: T) => 
   authorCache.enrichItemWithCachedAuthor(item)
 
-// 🔧 메모리 안전: React Hook 기반 캐시 정리로 변경
+// 메모리 안전: React Hook 기반 캐시 정리로 변경
 // 전역 setInterval 대신 useEffect에서 관리하도록 수정
 // 사용처: components/layout/ClientLayoutWrapper.tsx에서 useAuthorCacheCleanup() 호출
 

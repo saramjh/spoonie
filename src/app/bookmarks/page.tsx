@@ -11,11 +11,11 @@ import { useSessionStore } from "@/store/sessionStore"
 import type { Item } from "@/types/item"
 import useSWR from "swr"
 
-// 🔖 북마크 데이터 fetcher (SWR용)
+// 북마크 데이터 fetcher (SWR용)
 const fetchBookmarks = async (userId: string): Promise<Item[]> => {
   const supabase = createSupabaseBrowserClient()
   
-  // 🔖 북마크된 아이템들을 가져오기 (items + profiles 조인)
+  // 북마크된 아이템들을 가져오기 (items + profiles 조인)
   const { data: bookmarksData, error: bookmarksError } = await supabase
     .from('bookmarks')
     .select(`
@@ -36,7 +36,7 @@ const fetchBookmarks = async (userId: string): Promise<Item[]> => {
   if (bookmarksError) throw bookmarksError
   if (!bookmarksData || bookmarksData.length === 0) return []
 
-  // 🔄 북마크된 아이템들의 현재 좋아요/팔로우 상태 확인
+  // 북마크된 아이템들의 현재 좋아요/팔로우 상태 확인
   const itemIds = bookmarksData.map(bookmark => (bookmark.items as any).id)
   const userLikesMap = new Map<string, boolean>()
   const userFollowsMap = new Map<string, boolean>()
@@ -71,7 +71,7 @@ const fetchBookmarks = async (userId: string): Promise<Item[]> => {
     }
   }
 
-  // 🔄 데이터 변환 (기존 피드와 동일한 형식)
+  // 데이터 변환 (기존 피드와 동일한 형식)
   const transformedItems: Item[] = bookmarksData.map(bookmark => {
     const item = bookmark.items as any
     const profileData = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
@@ -115,7 +115,7 @@ export default function BookmarksPage() {
   const router = useRouter()
   const { session } = useSessionStore()
 
-  // 🚀 SWR로 실시간 북마크 데이터 관리
+  // SWR로 실시간 북마크 데이터 관리
   const { data: bookmarkedItems, error, isLoading, mutate } = useSWR(
     session ? `bookmarks_${session.id}` : null,
     () => fetchBookmarks(session!.id),
@@ -142,18 +142,16 @@ export default function BookmarksPage() {
   return (
     <div className="min-h-screen bg-door">
       {/* 헤더 */}
-      <div className="bg-paper border-b border-border sticky top-0 z-10">
-        <div className="max-w-md mx-auto flex items-center justify-between p-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <ArrowLeft className="h-6 w-6" />
-          </Button>
-          <h1 className="text-lg font-semibold">북마크</h1>
-          <div className="w-10" /> {/* 균형을 위한 공간 */}
-        </div>
-      </div>
+      <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-border bg-paper px-1">
+        <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="뒤로 가기">
+          <ArrowLeft className="h-6 w-6" aria-hidden />
+        </Button>
+        <h1 className="text-[17px] font-semibold text-ink">저장한 글</h1>
+        <span className="w-11" aria-hidden />
+      </header>
 
       {/* 콘텐츠 */}
-      <div className="max-w-md mx-auto p-4">
+      <div className="px-3 py-3">
         {isLoading ? (
           <div className="space-y-4">
             {Array.from({ length: 3 }).map((_, i) => (
@@ -161,18 +159,16 @@ export default function BookmarksPage() {
             ))}
           </div>
         ) : error ? (
-          <div className="text-center py-16">
-            <Bookmark className="w-16 h-16 text-ink-soft/60 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-ink mb-2">오류가 발생했습니다</h3>
-            <p className="text-ink-soft mb-4">{error instanceof Error ? error.message : '북마크를 불러오는 중 오류가 발생했습니다.'}</p>
-            <Button onClick={() => mutate()}>다시 시도</Button>
+          <div className="rounded-[3px] bg-paper px-5 py-6 shadow-sheet">
+            <p className="text-[17px] font-semibold text-ink">저장한 글을 불러오지 못했어요</p>
+            <p className="mt-1 text-[15px] text-ink-soft">연결 상태를 확인하고 다시 시도해 주세요.</p>
+            <Button className="mt-4" onClick={() => mutate()}>다시 시도</Button>
           </div>
         ) : !bookmarkedItems || bookmarkedItems.length === 0 ? (
-          <div className="text-center py-16">
-            <Bookmark className="w-16 h-16 text-ink-soft/60 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-ink mb-2">북마크한 게시물이 없습니다</h3>
-            <p className="text-ink-soft mb-4">마음에 드는 레시피나 레시피드를 북마크해보세요!</p>
-            <Button onClick={() => router.push("/")}>홈으로 가기</Button>
+          <div className="rounded-[3px] bg-paper px-5 py-6 shadow-sheet">
+            <p className="text-[17px] font-semibold text-ink">아직 저장한 글이 없어요</p>
+            <p className="mt-1 text-[15px] text-ink-soft">레시피나 레시피드의 저장 버튼을 누르면 여기에 모여요.</p>
+            <Button className="mt-4" onClick={() => router.push("/")}>홈으로</Button>
           </div>
         ) : (
           <div className="space-y-4">

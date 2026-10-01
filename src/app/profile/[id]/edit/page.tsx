@@ -63,79 +63,48 @@ export default function ProfileEditPage() {
 	}
 
 	return (
-		<div className="min-h-screen bg-door">
-			{/* 🎨 토스식 헤더 */}
-			<header className="bg-paper border-b border-border sticky top-0 z-50">
-				<div className="p-4 max-w-md mx-auto">
-					<div className="flex items-center justify-between">
-						<Button variant="ghost" size="icon" onClick={() => router.back()}>
-							<ArrowLeft className="w-5 h-5" />
-						</Button>
-						<h1 className="text-lg font-bold text-ink">프로필 수정</h1>
-						<div className="w-10" /> {/* 스페이서 */}
-					</div>
-				</div>
+		<div className="min-h-screen bg-door pb-10">
+			<header className="sticky top-0 z-50 flex h-14 items-center justify-between border-b border-border bg-paper px-1">
+				<Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="뒤로 가기">
+					<ArrowLeft className="h-6 w-6" aria-hidden />
+				</Button>
+				<h1 className="text-[17px] font-semibold text-ink">프로필 수정</h1>
+				<span className="w-11" aria-hidden />
 			</header>
 
-			{/* 🚀 메인 컨텐츠 영역 */}
-			<main className="p-4 max-w-md mx-auto">
-				{/* 토스식 프로필 에디터 */}
-				<div className="bg-paper rounded-xl shadow-sm border border-border p-6 mb-6">
-					<TossSeamlessProfileEditor mode="inline" />
-				</div>
+			<main className="space-y-3 px-3 pt-3">
+				<TossSeamlessProfileEditor mode="inline" />
 
-				{/* 🔧 계정 관리 섹션 */}
-				<div className="bg-paper rounded-xl shadow-sm border border-border p-6">
-					<h2 className="text-lg font-semibold text-ink mb-4">계정 관리</h2>
-					
-					<div className="space-y-3">
-						<Button 
-							variant="ghost" 
-							className="w-full justify-start text-ink-soft hover:bg-door py-3 px-4 rounded-lg" 
-							onClick={handleLogout}
-						>
-							<LogOut className="w-5 h-5 mr-3" />
-							로그아웃
-						</Button>
-						
+				<section className="rounded-[3px] bg-paper px-4 py-5 shadow-sheet">
+					<h2 className="text-lg font-bold text-ink">계정</h2>
+					<Button variant="outline" className="mt-3 w-full justify-start" onClick={handleLogout}>
+						<LogOut className="h-4 w-4" aria-hidden />
+						로그아웃
+					</Button>
+
+					{/* 되돌릴 수 없는 동작은 다른 버튼과 떨어뜨려 둔다 */}
+					<div className="mt-8 border-t border-border pt-4">
 						<AlertDialog>
 							<AlertDialogTrigger asChild>
-								<Button 
-									variant="ghost" 
-									className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 py-3 px-4 rounded-lg"
-								>
-									<Trash2 className="w-5 h-5 mr-3" />
+								<button type="button" className="inline-flex h-11 items-center gap-2 text-[15px] text-destructive underline underline-offset-4">
+									<Trash2 className="h-4 w-4" aria-hidden />
 									회원 탈퇴
-								</Button>
+								</button>
 							</AlertDialogTrigger>
-							<AlertDialogContent className="mx-4">
+							<AlertDialogContent>
 								<AlertDialogHeader>
-									<AlertDialogTitle className="text-center">정말로 탈퇴하시겠어요?</AlertDialogTitle>
-									<AlertDialogDescription className="text-center text-sm text-ink-soft leading-relaxed">
-										회원 탈퇴 시 모든 레시피와 활동 내역이 영구적으로 삭제되며, 복구할 수 없습니다. 
-										<br /><br />
-										계속하시려면 아래에 <strong>&apos;탈퇴&apos;</strong>라고 입력해주세요.
+									<AlertDialogTitle>정말 탈퇴할까요?</AlertDialogTitle>
+									<AlertDialogDescription className="text-[15px] leading-relaxed text-ink-soft">
+										내 레시피, 레시피드, 댓글과 사진이 모두 지워지고 되돌릴 수 없어요. 계속하려면 아래에 &lsquo;탈퇴&rsquo;라고 입력해 주세요.
 									</AlertDialogDescription>
 								</AlertDialogHeader>
-								<div className="my-4">
-									<Input 
-										value={deleteConfirmText} 
-										onChange={(e) => setDeleteConfirmText(e.target.value)} 
-										placeholder="'탈퇴'라고 입력하세요" 
-										className="focus:ring-red-500 focus:border-red-500"
-									/>
-								</div>
-								<AlertDialogFooter className="flex space-x-3">
-									<AlertDialogCancel 
-										onClick={() => setDeleteConfirmText("")}
-										className="flex-1"
-									>
-										취소
-									</AlertDialogCancel>
-									<AlertDialogAction 
-										onClick={handleDeleteAccount} 
-										disabled={deleteConfirmText !== "탈퇴"} 
-										className="flex-1 bg-red-500 hover:bg-red-600 disabled:bg-border"
+								<Input value={deleteConfirmText} onChange={(e) => setDeleteConfirmText(e.target.value)} placeholder="탈퇴" aria-label="확인 문구 입력" />
+								<AlertDialogFooter className="gap-2">
+									<AlertDialogCancel onClick={() => setDeleteConfirmText("")}>취소</AlertDialogCancel>
+									<AlertDialogAction
+										onClick={handleDeleteAccount}
+										disabled={deleteConfirmText !== "탈퇴"}
+										className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
 									>
 										탈퇴하기
 									</AlertDialogAction>
@@ -143,7 +112,7 @@ export default function ProfileEditPage() {
 							</AlertDialogContent>
 						</AlertDialog>
 					</div>
-				</div>
+				</section>
 			</main>
 		</div>
 	)

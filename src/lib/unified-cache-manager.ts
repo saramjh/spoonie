@@ -1,5 +1,5 @@
 /**
- * 🚀 업계 표준 통합 캐시 관리 시스템
+ * 업계 표준 통합 캐시 관리 시스템
  * Instagram/Twitter/Facebook 방식의 심리스한 사용자 경험
  * 
  * 핵심 원칙:
@@ -29,14 +29,14 @@ interface RollbackData {
 }
 
 /**
- * 🎯 통합 캐시 관리자 - 모든 캐시 연산의 단일 진입점
+ * 통합 캐시 관리자 - 모든 캐시 연산의 단일 진입점
  */
 class UnifiedCacheManager {
   private supabase = createSupabaseBrowserClient()
   private rollbackStack: Map<string, RollbackData> = new Map()
   private batchTimer: NodeJS.Timeout | null = null
   
-  // 🚀 SSA 아키텍처에 업계 표준 Request Deduplication 추가
+  // SSA 아키텍처에 업계 표준 Request Deduplication 추가
   private pendingOperations = new Map<string, {
     operation: CacheOperation
     resolve: (rollback: (() => void) | null) => void
@@ -45,7 +45,7 @@ class UnifiedCacheManager {
   }>()
 
   /**
-   * 🚀 즉시 옵티미스틱 업데이트 (0ms 응답)
+   * 즉시 옵티미스틱 업데이트 (0ms 응답)
    */
   async optimisticUpdate(operation: CacheOperation): Promise<() => void> {
     const operationId = `${operation.type}_${operation.itemId}_${Date.now()}`
@@ -64,7 +64,7 @@ class UnifiedCacheManager {
 
 
   /**
-   * 🚀 SSA 기반 스마트 업데이트 (Request Deduplication + Batch Processing)
+   * SSA 기반 스마트 업데이트 (Request Deduplication + Batch Processing)
    * 기존 SSA 패턴 유지하면서 서버 효율성 극대화
    */
   async smartUpdate(operation: CacheOperation): Promise<() => void> {
@@ -73,15 +73,15 @@ class UnifiedCacheManager {
     
 
     
-    // 🎯 업계 표준: Idempotent Operations (중복 실행 방지)
+    // 업계 표준: Idempotent Operations (중복 실행 방지)
     if (this.pendingOperations.has(operationKey)) {
       return () => {} // 중복 연산은 즉시 반환
     }
     
-    // 🎯 STEP 1: 즉시 옵티미스틱 업데이트 (한 번만 실행)
+    // STEP 1: 즉시 옵티미스틱 업데이트 (한 번만 실행)
     const rollback = await this.optimisticUpdate(operation)
     
-    // 🎯 STEP 2: 백그라운드 DB 처리 스케줄링 (즉시 rollback 반환)
+    // STEP 2: 백그라운드 DB 처리 스케줄링 (즉시 rollback 반환)
     this.pendingOperations.set(operationKey, {
       operation: { ...operation, timestamp: Date.now() },
       resolve: () => {}, // 더미 함수
@@ -113,7 +113,7 @@ class UnifiedCacheManager {
   }
 
   /**
-   * 🚀 대기 중인 연산들을 배치로 처리
+   * 대기 중인 연산들을 배치로 처리
    */
   private async processPendingOperations(): Promise<void> {
     if (this.pendingOperations.size === 0) return
@@ -123,7 +123,7 @@ class UnifiedCacheManager {
     
     // Removed excessive log
     
-    // 🚀 배치 처리를 위한 중복 제거
+    // 배치 처리를 위한 중복 제거
     const uniqueOperations = new Map<string, CacheOperation>()
     
     for (const operation of operations) {
@@ -135,7 +135,7 @@ class UnifiedCacheManager {
       uniqueOperations.set(itemKey, operation)
     }
     
-    // 🚀 병렬 DB 연산 실행
+    // 병렬 DB 연산 실행
     const dbPromises = Array.from(uniqueOperations.values()).map(op => 
       this.executeDbOperation(op).catch(error => {
         console.error(`❌ SSA: DB operation failed for ${op.type}_${op.itemId}:`, error)
@@ -145,7 +145,7 @@ class UnifiedCacheManager {
     
     await Promise.all(dbPromises)
     
-    // 🔍 최종 상태 검증 (3초 후)
+    // 최종 상태 검증 (3초 후)
     setTimeout(() => {
       uniqueOperations.forEach(op => this.verifyFinalState(op))
     }, 3000)
@@ -154,7 +154,7 @@ class UnifiedCacheManager {
   }
 
   /**
-   * 🎯 실제 DB 연산 실행
+   * 실제 DB 연산 실행
    */
   private async executeDbOperation(operation: CacheOperation): Promise<void> {
     const { type, itemId, userId, delta } = operation
@@ -236,7 +236,7 @@ class UnifiedCacheManager {
   }
 
   /**
-   * 🔍 최종 상태 검증 (Instagram 방식)
+   * 최종 상태 검증 (Instagram 방식)
    */
   private async verifyFinalState(operation: CacheOperation): Promise<void> {
     const { type, itemId, userId } = operation
@@ -274,18 +274,18 @@ class UnifiedCacheManager {
   }
 
   /**
-   * 📦 모든 관련 캐시 업데이트 (홈피드, 상세페이지, 검색, 프로필)
+   * 모든 관련 캐시 업데이트 (홈피드, 상세페이지, 검색, 프로필)
    */
   private async updateAllCaches(operation: CacheOperation): Promise<void> {
     const { userId } = operation
     
 
-    // 🚀 팔로우/언팔로우 시 팔로우 수 캐시 즉시 무효화 (비용 최적화)
+    // 팔로우/언팔로우 시 팔로우 수 캐시 즉시 무효화 (비용 최적화)
     if (operation.type === 'follow') {
       const { itemId: targetUserId, userId: currentUserId, delta } = operation
       
       try {
-        // 💰 비용 최적화: DB 요청 대신 로컬 계산으로 캐시 업데이트
+        // 비용 최적화: DB 요청 대신 로컬 계산으로 캐시 업데이트
         const isFollow = delta && delta > 0
         
         // 팔로우한 사용자의 팔로워 수 캐시 업데이트 (DB 요청 없이)
@@ -378,14 +378,14 @@ class UnifiedCacheManager {
   }
 
   /**
-   * 🏠 홈피드 캐시 업데이트 (useSWRInfinite 구조)
+   * 홈피드 캐시 업데이트 (useSWRInfinite 구조)
    */
   private async updateHomeFeedCache(operation: CacheOperation): Promise<void> {
     const { type, itemId, delta, data } = operation
 
 
 
-    // 🚀 팔로우/언팔로우 시 홈피드 캐시 즉시 무효화 (새로고침 없이 즉시 반영)
+    // 팔로우/언팔로우 시 홈피드 캐시 즉시 무효화 (새로고침 없이 즉시 반영)
     if (type === 'follow') {
 
       
@@ -431,7 +431,7 @@ class UnifiedCacheManager {
           return cacheData
         }
 
-        // 🚨 CRITICAL FIX: 홈피드 캐시 구조 정상화
+        // CRITICAL FIX: 홈피드 캐시 구조 정상화
         let normalizedCacheData = cacheData;
         const hasCorruptedPages = cacheData.some(page => !Array.isArray(page));
         
@@ -451,12 +451,12 @@ class UnifiedCacheManager {
           // Debug: Cache structure normalized
         }
         
-        // 🚀 새로운 아이템 추가 (홈피드 맨 위에 즉시 표시)
+        // 새로운 아이템 추가 (홈피드 맨 위에 즉시 표시)
         if (type === 'add_new' && data) {
           const newCacheData = [...normalizedCacheData]
           
           if (newCacheData.length > 0) {
-            // 🔧 타입 안전성: 첫 번째 페이지가 배열인지 확인
+            // 타입 안전성: 첫 번째 페이지가 배열인지 확인
             const firstPageData = newCacheData[0]
             const firstPage = Array.isArray(firstPageData) ? [...firstPageData] : []
             
@@ -470,7 +470,7 @@ class UnifiedCacheManager {
           return newCacheData
         }
         
-                // 🔧 기존 아이템 업데이트 로직
+                // 기존 아이템 업데이트 로직
         let itemFound = false
 
         // Debug: Searching for item
@@ -478,13 +478,13 @@ class UnifiedCacheManager {
         const result = normalizedCacheData.map((page) => {
           if (!Array.isArray(page)) {
             // Debug: Page is not an array
-            return page // 🔧 page가 배열인지 안전하게 확인
+            return page // page가 배열인지 안전하게 확인
           }
           
           // Debug: Checking page
           
           return page.map((item) => {
-            // 🔍 더 관대한 ID 매칭 (다양한 ID 필드 확인)
+            // 더 관대한 ID 매칭 (다양한 ID 필드 확인)
             const itemMatches = item.id === itemId || 
                               item.item_id === itemId ||
                               (item.id && item.id.toString() === itemId) ||
@@ -497,16 +497,16 @@ class UnifiedCacheManager {
               const calculateUpdates = this.calculateUpdates(type, delta, operation.data)
               const updates = calculateUpdates(item)
               
-              // 🔍 CRITICAL DEBUG: 업데이트 과정 추적
+              // CRITICAL DEBUG: 업데이트 과정 추적
                               // Debug: Updating item in cache
               
-              // 🛡️ 핵심 수정: 이미지 데이터 완전 보존
+              // 핵심 수정: 이미지 데이터 완전 보존
               const updatedItem = { 
-                ...item,  // 🔒 모든 기존 데이터 보존 (이미지, 메타데이터 등)
-                ...updates  // 🎯 좋아요/북마크 상태만 업데이트
+                ...item,  // 모든 기존 데이터 보존 (이미지, 메타데이터 등)
+                ...updates  // 좋아요/북마크 상태만 업데이트
               }
               
-              // 🔍 CRITICAL DEBUG: 업데이트 결과 확인
+              // CRITICAL DEBUG: 업데이트 결과 확인
                               // Debug: Item updated successfully
               
               return updatedItem
@@ -519,7 +519,7 @@ class UnifiedCacheManager {
         
         if (!itemFound) {
           // Debug: Item not found in cache
-          // 🚀 SSA 업계표준: 홈피드에 없어도 정상 (다른 페이지에 있을 수 있음)
+          // SSA 업계표준: 홈피드에 없어도 정상 (다른 페이지에 있을 수 있음)
           return normalizedCacheData // 정상화된 캐시 반환
         }
         
@@ -531,19 +531,19 @@ class UnifiedCacheManager {
   }
 
   /**
-   * 📄 상세페이지 캐시 업데이트
+   * 상세페이지 캐시 업데이트
    */
   private async updateItemDetailCache(operation: CacheOperation): Promise<void> {
     const { itemId, type, delta, data } = operation
     
 
-    // 🔍 CRITICAL DEBUG: ItemDetailCache 시작 상태 확인
+    // CRITICAL DEBUG: ItemDetailCache 시작 상태 확인
     // Debug: ItemDetailCache update started
 
     await mutate(
       `itemDetail|${itemId}`,
       (currentItem: Item | undefined) => {
-        // 🚀 SSA 업계표준: 개별 캐시 없으면 홈피드에서 데이터 가져오기
+        // SSA 업계표준: 개별 캐시 없으면 홈피드에서 데이터 가져오기
         if (!currentItem) {
           // Debug: No cached item, searching home feed
           
@@ -568,7 +568,7 @@ class UnifiedCacheManager {
             currentItem = { ...foundItem }
           } else {
             // Debug: Item not found, creating fallback
-            // 🎯 최소한의 fallback (좋아요/북마크만 업데이트, 이미지는 없음)
+            // 최소한의 fallback (좋아요/북마크만 업데이트, 이미지는 없음)
             currentItem = {
               id: itemId,
               item_id: itemId,
@@ -578,7 +578,7 @@ class UnifiedCacheManager {
               title: null,
               content: null,
               description: null,
-              image_urls: null, // ⚠️ 홈피드에서도 찾지 못한 경우에만 null
+              image_urls: null, // 홈피드에서도 찾지 못한 경우에만 null
               thumbnail_index: null,
               tags: null,
               is_public: true,
@@ -620,12 +620,12 @@ class UnifiedCacheManager {
   }
 
   /**
-   * 🔍 검색 캐시 업데이트 (모든 검색 뷰와 필터 포함)
+   * 검색 캐시 업데이트 (모든 검색 뷰와 필터 포함)
    */
   private async updateSearchCache(operation: CacheOperation): Promise<void> {
     const { type, itemId, delta } = operation
     
-    // 🚀 SSA 표준: 검색 결과의 개별 아이템 실시간 업데이트
+    // SSA 표준: 검색 결과의 개별 아이템 실시간 업데이트
     await mutate(
       (key) => typeof key === 'string' && (
         key.startsWith('search_page|') ||                 // 무한스크롤 검색 결과
@@ -638,7 +638,7 @@ class UnifiedCacheManager {
       (cacheData: Item[] | Item[][] | undefined) => {
         if (!cacheData) return cacheData
         
-        // 🔧 배열 구조 정규화 (무한스크롤 vs 단일 배열)
+        // 배열 구조 정규화 (무한스크롤 vs 단일 배열)
         const isInfiniteScroll = Array.isArray(cacheData) && Array.isArray(cacheData[0])
         
         if (isInfiniteScroll) {
@@ -671,7 +671,7 @@ class UnifiedCacheManager {
       { revalidate: false, populateCache: true }
     )
     
-    // 🔧 사용자 검색 결과는 개별 처리 (다른 구조)
+    // 사용자 검색 결과는 개별 처리 (다른 구조)
     await mutate(
       (key) => typeof key === 'string' && key.startsWith('search_users|'),
       undefined,  // 사용자 검색은 무효화만 (구조가 다름)
@@ -680,12 +680,12 @@ class UnifiedCacheManager {
   }
 
   /**
-   * 👤 프로필 캐시 업데이트 (모든 사용자 뷰 포함)
+   * 프로필 캐시 업데이트 (모든 사용자 뷰 포함)
    */
   private async updateProfileCache(operation: CacheOperation): Promise<void> {
     const { userId, itemId } = operation
     
-    // 🔧 모든 프로필 관련 캐시 업데이트 (그리드, 목록, 탭별 뷰 등)
+    // 모든 프로필 관련 캐시 업데이트 (그리드, 목록, 탭별 뷰 등)
     await mutate(
       (key) => typeof key === 'string' && (
         key.includes(`user_items_${userId}`) ||           // 기본 프로필 뷰
@@ -697,7 +697,7 @@ class UnifiedCacheManager {
         if (!data || !Array.isArray(data)) return data
         
         return data.map(page => {
-          if (!Array.isArray(page)) return page // 🔧 page가 배열인지 안전하게 확인
+          if (!Array.isArray(page)) return page // page가 배열인지 안전하게 확인
           
           return page.map(item => {
             if (item.id === itemId || item.item_id === itemId) {
@@ -717,12 +717,12 @@ class UnifiedCacheManager {
   }
 
   /**
-   * 🔖 북마크 캐시 업데이트 (모든 사용자별 북마크 뷰 포함)
+   * 북마크 캐시 업데이트 (모든 사용자별 북마크 뷰 포함)
    */
   private async updateBookmarkCache(operation: CacheOperation): Promise<void> {
     const { itemId } = operation
     
-    // 🔧 모든 북마크 관련 캐시 업데이트
+    // 모든 북마크 관련 캐시 업데이트
     await mutate(
       (key) => typeof key === 'string' && (
         key.startsWith('bookmarks_') ||              // 사용자별 북마크 목록
@@ -748,14 +748,14 @@ class UnifiedCacheManager {
   }
 
   /**
-   * 📚 레시피북 캐시 업데이트 (모든 탭과 뷰 모드 포함)
+   * 레시피북 캐시 업데이트 (모든 탭과 뷰 모드 포함)
    */
   private async updateRecipeBookCache(operation: CacheOperation): Promise<void> {
     const { type, itemId, delta, data } = operation
     
 
     
-    // 🚀 팔로우/언팔로우 시 "모두의 레시피" 캐시 즉시 무효화 (새로고침 없이 즉시 반영)
+    // 팔로우/언팔로우 시 "모두의 레시피" 캐시 즉시 무효화 (새로고침 없이 즉시 반영)
     if (type === 'follow') {
 
       
@@ -797,7 +797,7 @@ class UnifiedCacheManager {
     
 
     
-    // 🔧 다른 액션들 (like, comment 등)에 대한 기존 캐시 업데이트 로직
+    // 다른 액션들 (like, comment 등)에 대한 기존 캐시 업데이트 로직
     await mutate(
       (key) => typeof key === 'string' && (
         key.startsWith('recipes|') ||                     // 기존 패턴
@@ -810,7 +810,7 @@ class UnifiedCacheManager {
       (cacheData: Item[][] | undefined) => {
         if (!cacheData || !Array.isArray(cacheData)) return cacheData
         
-        // 🚀 새로운 레시피 추가
+        // 새로운 레시피 추가
         if (type === 'add_new' && data) {
           // Removed excessive log
           const newCacheData = [...cacheData]
@@ -850,7 +850,7 @@ class UnifiedCacheManager {
   }
 
   /**
-   * 🧮 업데이트 값 계산 (현재 아이템 기준)
+   * 업데이트 값 계산 (현재 아이템 기준)
    */
   private calculateUpdates(type: string, delta?: number, data?: any): (item: Item) => Partial<Item> {
     return (currentItem: Item) => {
@@ -861,7 +861,7 @@ class UnifiedCacheManager {
       switch (type) {
         case 'like':
           if (delta !== undefined) {
-            // 🚨 업계 표준: 절대 상태 기반 (한 유저당 1개 좋아요 원칙)
+            // 업계 표준: 절대 상태 기반 (한 유저당 1개 좋아요 원칙)
             const newIsLiked = delta > 0
             const currentIsLiked = currentItem.is_liked || false
             
@@ -878,7 +878,7 @@ class UnifiedCacheManager {
           
         case 'bookmark':
           if (delta !== undefined) {
-            // 🔖 북마크: 절대 상태 기반 (한 유저당 1개 북마크 원칙)
+            // 북마크: 절대 상태 기반 (한 유저당 1개 북마크 원칙)
             const newIsBookmarked = delta > 0
             const currentIsBookmarked = (currentItem as any).is_bookmarked || false
             
@@ -912,7 +912,7 @@ class UnifiedCacheManager {
         case 'update':
           if (data) {
             // Debug: Applying SSA update
-            // 🔧 이미지 보존: 기존 이미지가 있고 새 데이터에 이미지가 없으면 기존 이미지 유지
+            // 이미지 보존: 기존 이미지가 있고 새 데이터에 이미지가 없으면 기존 이미지 유지
             if (currentItem.image_urls && currentItem.image_urls.length > 0 && 
                 (!data.image_urls || data.image_urls.length === 0)) {
               Object.assign(updates, { ...data, image_urls: currentItem.image_urls })
@@ -930,7 +930,7 @@ class UnifiedCacheManager {
   }
 
   /**
-   * 💾 현재 상태 백업 (롤백용)
+   * 현재 상태 백업 (롤백용)
    */
   private async captureCurrentState(operation: CacheOperation): Promise<RollbackData> {
     // 실제 구현에서는 현재 캐시 상태를 캡처
@@ -958,7 +958,7 @@ class UnifiedCacheManager {
   }
 
   /**
-   * 🔄 이전 상태 복원
+   * 이전 상태 복원
    */
   private async restorePreviousState(rollbackData: RollbackData): Promise<void> {
     const { operation } = rollbackData
@@ -973,7 +973,7 @@ class UnifiedCacheManager {
   }
 
   /**
-   * 🧹 정리
+   * 정리
    */
   cleanup(): void {
     if (this.batchTimer) {
@@ -983,7 +983,7 @@ class UnifiedCacheManager {
   }
 
   /**
-   * 🔄 전체 캐시 동기화 (긴급 상황용)
+   * 전체 캐시 동기화 (긴급 상황용)
    */
   async invalidateAllCaches(): Promise<void> {
 
@@ -999,7 +999,7 @@ class UnifiedCacheManager {
 }
 
 /**
- * 🎯 싱글톤 인스턴스
+ * 싱글톤 인스턴스
  */
 let globalCacheManager: UnifiedCacheManager | null = null
 
@@ -1011,10 +1011,10 @@ export const getCacheManager = (): UnifiedCacheManager => {
 }
 
 /**
- * 🚀 편의 함수들 - 컴포넌트에서 쉽게 사용
+ * 편의 함수들 - 컴포넌트에서 쉽게 사용
  */
 export const cacheManager = {
-  // 🚀 SSA 기반 스마트 좋아요 토글 (Request Deduplication + Batch Processing)
+  // SSA 기반 스마트 좋아요 토글 (Request Deduplication + Batch Processing)
   like: async (itemId: string, userId: string, liked: boolean, data?: any) => {
     const manager = getCacheManager()
     const rollback = await manager.smartUpdate({
@@ -1022,12 +1022,12 @@ export const cacheManager = {
       itemId,
       userId,
       delta: liked ? 1 : -1,
-      data // 🔑 이미지 데이터 보존하면서 SSA 패턴 유지
+      data // 이미지 데이터 보존하면서 SSA 패턴 유지
     })
     return rollback
   },
   
-  // 🔖 SSA 기반 스마트 북마크 토글 (Request Deduplication + Batch Processing)
+  // SSA 기반 스마트 북마크 토글 (Request Deduplication + Batch Processing)
   bookmark: async (itemId: string, userId: string, bookmarked: boolean, data?: any) => {
     const manager = getCacheManager()
     const rollback = await manager.smartUpdate({
@@ -1035,12 +1035,12 @@ export const cacheManager = {
       itemId,
       userId,
       delta: bookmarked ? 1 : -1,
-      data // 🔑 이미지 데이터 보존하면서 SSA 패턴 유지
+      data // 이미지 데이터 보존하면서 SSA 패턴 유지
     })
     return rollback
   },
   
-  // 🚀 SSA 기반 스마트 댓글 토글 (Request Deduplication + Batch Processing)
+  // SSA 기반 스마트 댓글 토글 (Request Deduplication + Batch Processing)
   comment: async (itemId: string, userId: string, delta: number, data?: any) => {
     const manager = getCacheManager()
     const rollback = await manager.smartUpdate({
@@ -1048,7 +1048,7 @@ export const cacheManager = {
       itemId,
       userId,
       delta,
-      data // 🔑 전체 아이템 데이터 보존하면서 SSA 패턴 유지
+      data // 전체 아이템 데이터 보존하면서 SSA 패턴 유지
     })
     return rollback
   },
@@ -1066,19 +1066,19 @@ export const cacheManager = {
     return rollback
   },
 
-  // 🚀 새로운 아이템 추가 (홈 피드 맨 위에 즉시 표시)
+  // 새로운 아이템 추가 (홈 피드 맨 위에 즉시 표시)
   addNewItem: async (newItem: Item) => {
     const manager = getCacheManager()
     const itemId = newItem.id || newItem.item_id
     
-    // 🔧 홈피드 캐시 업데이트
+    // 홈피드 캐시 업데이트
     const rollback = await manager.optimisticUpdate({
       type: 'add_new',
       itemId,
       data: newItem
     })
     
-          // 🔧 개별 아이템 캐시도 함께 업데이트 (useSSAItemCache가 찾을 수 있도록)
+          // 개별 아이템 캐시도 함께 업데이트 (useSSAItemCache가 찾을 수 있도록)
       await mutate(`itemDetail|${itemId}`, newItem, { revalidate: false })
     
     return rollback
@@ -1110,7 +1110,7 @@ export const cacheManager = {
     )
   },
   
-  // 🖼️ SSA 기반 썸네일 업데이트 (모든 캐시 동기화)
+  // SSA 기반 썸네일 업데이트 (모든 캐시 동기화)
   updateThumbnail: async (itemId: string, thumbnailIndex: number, imageUrls: string[]) => {
 
     
@@ -1127,7 +1127,7 @@ export const cacheManager = {
     return rollback
   },
 
-  // 🚀 팔로우/언팔로우 처리 (SSA 기반) - DB 저장 포함
+  // 팔로우/언팔로우 처리 (SSA 기반) - DB 저장 포함
   follow: async (currentUserId: string, targetUserId: string, isFollow: boolean) => {
     const manager = getCacheManager()
     const rollback = await manager.smartUpdate({

@@ -1,5 +1,5 @@
 /**
- * 🎯 업계 표준 썸네일 관리 훅 - 완전한 관심사 분리
+ * 업계 표준 썸네일 관리 훅 - 완전한 관심사 분리
  * Instagram/Pinterest 방식의 robust한 썸네일 시스템
  * 
  * 책임:
@@ -38,7 +38,7 @@ interface UseThumbnailReturn {
 }
 
 /**
- * 🎯 썸네일 관리 훅 - 업계 표준 구현
+ * 썸네일 관리 훅 - 업계 표준 구현
  */
 export function useThumbnail({
   itemId,
@@ -47,14 +47,14 @@ export function useThumbnail({
   onThumbnailChange
 }: UseThumbnailOptions): UseThumbnailReturn {
   
-  // 🎯 상태 관리 - 단순하고 명확
+  // 상태 관리 - 단순하고 명확
   const [currentIndex, setCurrentIndex] = useState(() => {
     // 초기값 검증 및 설정
     const validIndex = thumbnailIndex ?? 0
     return isValidThumbnailIndex(validIndex, imageUrls) ? validIndex : 0
   })
 
-  // 🔧 thumbnailIndex prop 변화 감지 및 동기화
+  // thumbnailIndex prop 변화 감지 및 동기화
   useEffect(() => {
     const validIndex = thumbnailIndex ?? 0
     const newIndex = isValidThumbnailIndex(validIndex, imageUrls) ? validIndex : 0
@@ -66,33 +66,33 @@ export function useThumbnail({
   }, [thumbnailIndex, imageUrls, currentIndex])
 
   /**
-   * 🔧 썸네일 인덱스 유효성 검증
+   * 썸네일 인덱스 유효성 검증
    */
   const isValidIndex = useCallback((index: number): boolean => {
     return isValidThumbnailIndex(index, imageUrls)
   }, [imageUrls])
 
   /**
-   * 🖼️ 특정 인덱스의 썸네일 URL 가져오기
+   * 특정 인덱스의 썸네일 URL 가져오기
    */
   const getThumbnailUrl = useCallback((index: number): string | null => {
     return isValidIndex(index) ? imageUrls[index] : null
   }, [imageUrls, isValidIndex])
 
   /**
-   * 🎯 현재 썸네일 정보 계산
+   * 현재 썸네일 정보 계산
    */
   const currentThumbnailUrl = useMemo(() => {
     return getThumbnailUrl(currentIndex)
   }, [currentIndex, getThumbnailUrl])
 
   /**
-   * 📱 표시용 이미지 순서 계산 (썸네일이 첫 번째로)
+   * 표시용 이미지 순서 계산 (썸네일이 첫 번째로)
    */
   const orderedImages = useMemo(() => {
     const ordered = reorderImagesForDisplay(imageUrls, currentIndex)
     
-    // 🔍 새로운 아이템 디버깅 (이미지 URL이 있지만 orderedImages가 비어있는 경우)
+    // 새로운 아이템 디버깅 (이미지 URL이 있지만 orderedImages가 비어있는 경우)
     if (process.env.NODE_ENV === 'development' && itemId && imageUrls.length > 0 && ordered.length === 0) {
       console.warn(`⚠️ [THUMBNAIL DEBUG] ${itemId}: Images lost during reorder!`, {
         input_urls: imageUrls,
@@ -105,7 +105,7 @@ export function useThumbnail({
   }, [imageUrls, currentIndex, itemId])
 
   /**
-   * 🚀 썸네일 인덱스 변경
+   * 썸네일 인덱스 변경
    */
   const setThumbnailIndex = useCallback(async (newIndex: number) => {
     // 유효성 검증
@@ -124,7 +124,7 @@ export function useThumbnail({
     // 부모 컴포넌트에 알림
     onThumbnailChange?.(newIndex)
 
-    // 🚀 SSA 기반 전역 캐시 업데이트 (itemId가 있는 경우만)
+    // SSA 기반 전역 캐시 업데이트 (itemId가 있는 경우만)
     if (itemId) {
       await cacheManager.updateThumbnail(itemId, newIndex, imageUrls)
     }
@@ -141,14 +141,14 @@ export function useThumbnail({
 }
 
 /**
- * 🔧 썸네일 인덱스 유효성 검증 (순수 함수)
+ * 썸네일 인덱스 유효성 검증 (순수 함수)
  */
 function isValidThumbnailIndex(index: number, imageUrls: string[]): boolean {
   return Number.isInteger(index) && index >= 0 && index < imageUrls.length
 }
 
 /**
- * 📱 표시용 이미지 순서 조정 (순수 함수)
+ * 표시용 이미지 순서 조정 (순수 함수)
  * 썸네일을 첫 번째 위치로 이동
  */
 function reorderImagesForDisplay(imageUrls: string[], thumbnailIndex: number): string[] {
@@ -169,7 +169,7 @@ function reorderImagesForDisplay(imageUrls: string[], thumbnailIndex: number): s
 }
 
 /**
- * 🌐 전역 캐시의 썸네일 정보 업데이트 (레거시 - 이제 UnifiedCacheManager 사용)
+ * 전역 캐시의 썸네일 정보 업데이트 (레거시 - 이제 UnifiedCacheManager 사용)
  * @deprecated 이제 cacheManager.updateThumbnail을 사용합니다
  */
 // Legacy function - now using UnifiedCacheManager for SSA consistency 

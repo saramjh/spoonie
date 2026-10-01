@@ -14,7 +14,7 @@ export default function BottomNavBar() {
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
 	const handleCreateButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-		// 🔧 접근성 문제 해결: 모달이 열릴 때 포커스 제거하여 aria-hidden 충돌 방지
+		// 접근성 문제 해결: 모달이 열릴 때 포커스 제거하여 aria-hidden 충돌 방지
 		event.currentTarget.blur()
 		setIsCreateModalOpen(true)
 	}
@@ -37,7 +37,7 @@ export default function BottomNavBar() {
 			return (
 				<Link href="/login" className={getLinkClass("/login")}>
 					<User className="w-6 h-6" aria-hidden />
-					<span className="text-xs font-medium">로그인</span>
+					<span className="text-[13px] font-medium">로그인</span>
 				</Link>
 			)
 		}
@@ -65,7 +65,7 @@ export default function BottomNavBar() {
 				<div className="w-7 h-7 flex items-center justify-center">
 					<Loader2 className="w-6 h-6 animate-spin" />
 				</div>
-				<span className="text-xs font-medium">로딩중</span>
+				<span className="text-[13px] font-medium">로딩중</span>
 			</div>
 		)
 	}
@@ -78,13 +78,13 @@ export default function BottomNavBar() {
 					{/* 1. 홈 */}
 					<Link href="/" className={getLinkClass("/")}>
 						<Home className="w-6 h-6" aria-hidden />
-						<span className="text-xs font-medium">홈</span>
+						<span className="text-[13px] font-medium">홈</span>
 					</Link>
 
 					{/* 2. 레시피북 */}
 					<Link href="/recipes" className={getLinkClass("/recipes")}>
 						<Book className="w-6 h-6" aria-hidden />
-						<span className="text-xs font-medium">레시피북</span>
+						<span className="text-[13px] font-medium">레시피북</span>
 					</Link>
 
 					{/* 3. 중앙 생성 버튼 (+) */}
@@ -97,7 +97,7 @@ export default function BottomNavBar() {
 					{/* 4. 검색 */}
 					<Link href="/search" className={getLinkClass("/search")}>
 						<Search className="w-6 h-6" aria-hidden />
-						<span className="text-xs font-medium">검색</span>
+						<span className="text-[13px] font-medium">검색</span>
 					</Link>
 
 					{/* 5. 로그인/마이페이지 */}

@@ -4,9 +4,9 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, Dr
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Check } from "lucide-react"
+
 import { useRecipeStore } from "@/store/recipeStore"
-import { RECIPE_COLOR_OPTIONS } from "@/lib/color-options"
+import { RECIPE_COLOR_OPTIONS, getMagnet } from "@/lib/color-options"
 
 interface FilterModalProps {
 	isOpen: boolean
@@ -61,20 +61,21 @@ export default function FilterModal({ isOpen, onClose }: FilterModalProps) {
 
 						{/* 색상 라벨 필터 */}
 						<div>
-							<label className="block text-sm font-medium text-ink mb-2">색상 라벨 필터</label>
-							<div className="flex flex-wrap gap-3">
+							<p className="mb-1 block text-sm font-medium text-ink">색상 라벨</p>
+							<div className="flex flex-wrap gap-1">
 								{RECIPE_COLOR_OPTIONS.map((colorOption) => (
 									<button
 										key={colorOption.value}
 										type="button"
+										aria-pressed={filterColorLabel === colorOption.value}
+										aria-label={colorOption.label}
 										onClick={() => setFilterColorLabel(filterColorLabel === colorOption.value ? "" : colorOption.value)}
-										className={`
-											w-10 h-10 rounded-xl ${colorOption.color} 
-											flex items-center justify-center ring-2 ring-offset-2 
-											transition-all duration-200 shadow-bauhaus hover:shadow-bauhaus-lg
-											${filterColorLabel === colorOption.value ? "ring-ring scale-110" : "ring-transparent hover:scale-105"}
-										`}>
-										{filterColorLabel === colorOption.value && <Check className="h-5 w-5 text-white drop-shadow-lg" />}
+										className="flex h-11 w-11 items-center justify-center"
+									>
+										<span
+											className={`h-7 w-7 rounded-full shadow-[0_1px_3px_rgba(35,40,43,0.35)] ${filterColorLabel === colorOption.value ? "ring-2 ring-ink ring-offset-2 ring-offset-paper" : ""}`}
+											style={{ backgroundColor: getMagnet(colorOption.value)?.hex }}
+										/>
 									</button>
 								))}
 							</div>

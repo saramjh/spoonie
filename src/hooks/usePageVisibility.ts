@@ -4,7 +4,7 @@ import { useEffect, useCallback } from 'react'
 import { mutate } from 'swr'
 
 /**
- * 🚀 업계 표준: Page Visibility API 기반 심리스 동기화
+ * 업계 표준: Page Visibility API 기반 심리스 동기화
  * Instagram/Facebook/Twitter와 동일한 방식으로 히스토리 뒤로가기 보장
  * 
  * 작동 원리:
@@ -27,7 +27,7 @@ export function usePageVisibility(options: {
     if (typeof document === 'undefined') return
 
     if (!document.hidden) {
-      // 🚀 페이지가 다시 보여질 때 (히스토리 뒤로가기 포함)
+      // 페이지가 다시 보여질 때 (히스토리 뒤로가기 포함)
       if (debug) {
   
       }
@@ -40,7 +40,7 @@ export function usePageVisibility(options: {
           { 
             revalidate: true,
             populateCache: true,
-            // 🚀 조건부 갱신: stale 데이터만 갱신 (성능 최적화)
+            // 조건부 갱신: stale 데이터만 갱신 (성능 최적화)
             optimisticData: (currentData) => currentData
           }
         )
@@ -50,7 +50,7 @@ export function usePageVisibility(options: {
   
       }
     } else {
-      // 📱 페이지가 숨겨질 때 (상세페이지로 이동 등)
+      // 페이지가 숨겨질 때 (상세페이지로 이동 등)
       if (debug) {
   
       }
@@ -60,10 +60,10 @@ export function usePageVisibility(options: {
   useEffect(() => {
     if (typeof document === 'undefined') return
 
-    // 🎯 Page Visibility API 리스너 등록
+    // Page Visibility API 리스너 등록
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
-    // 🎯 추가 보장: focus/blur 이벤트도 함께 처리
+    // 추가 보장: focus/blur 이벤트도 함께 처리
     const handleFocus = () => {
       if (!document.hidden) {
         handleVisibilityChange()

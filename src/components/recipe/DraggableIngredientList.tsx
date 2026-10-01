@@ -31,7 +31,7 @@ import { Trash2 } from "lucide-react"
 import { UseFormRegister, FieldErrors } from "react-hook-form"
 import { Ingredient } from "@/types/item"
 
-// 🎯 드래그앤드롭용 확장 타입 (id 필드 추가)
+// 드래그앤드롭용 확장 타입 (id 필드 추가)
 export interface DraggableIngredient extends Ingredient {
   id: string
 }
@@ -52,7 +52,7 @@ interface SortableIngredientItemProps {
   onRemove: (index: number) => void
 }
 
-// 🎯 미니멀 드래그 핸들 - 기능 중심
+// 미니멀 드래그 핸들 - 기능 중심
 function DragHandle() {
   return (
     <div 

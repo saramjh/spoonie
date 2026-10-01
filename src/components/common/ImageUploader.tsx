@@ -27,10 +27,10 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 	const { toast } = useToast()
 	const [isProcessing, setIsProcessing] = useState(false)
 	
-	// 🚀 SSA: 썸네일 인덱스 동기화를 위한 내부 상태
+	// SSA: 썸네일 인덱스 동기화를 위한 내부 상태
 	const [currentThumbnailIndex, setCurrentThumbnailIndex] = useState(thumbnailIndex)
 	
-	// 🚀 SSA: thumbnailIndex prop 변경 감지 및 동기화
+	// SSA: thumbnailIndex prop 변경 감지 및 동기화
 	useEffect(() => {
 		if (thumbnailIndex !== currentThumbnailIndex) {
 	

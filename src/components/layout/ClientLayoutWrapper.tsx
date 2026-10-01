@@ -7,7 +7,7 @@ import SplashScreen from "./SplashScreen"
 import AppWrapper from "./AppWrapper"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import { useSessionStore } from "@/store/sessionStore"
-import { useFollowStore } from "@/store/followStore" // 🚀 업계 표준: 팔로우 상태 관리
+import { useFollowStore } from "@/store/followStore" // 업계 표준: 팔로우 상태 관리
 import { RefreshProvider } from "@/contexts/RefreshContext"
 import { startAuthorCacheCleanup } from "@/utils/author-cache"
 import { startMonitoring } from "@/lib/monitoring"
@@ -21,7 +21,7 @@ interface ClientLayoutWrapperProps {
 
 export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperProps) {
   const { isInitialLoad, setSession, setProfile, setInitialLoad: setStoreInitialLoad } = useSessionStore()
-  const { initializeFollowState } = useFollowStore() // 🚀 업계 표준: 팔로우 상태 초기화
+  const { initializeFollowState } = useFollowStore() // 업계 표준: 팔로우 상태 초기화
 
   const { mutate } = useSWRConfig()
   const pathname = usePathname()
@@ -30,7 +30,7 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
 
 
 
-  // 🔧 메모리 안전: 전역 서비스 관리
+  // 메모리 안전: 전역 서비스 관리
   useEffect(() => {
     const cleanupAuthorCache = startAuthorCacheCleanup()
     const cleanupMonitoring = startMonitoring()
@@ -41,7 +41,7 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
     }
   }, [])
 
-  // 🚀 세션과 프로필 초기 로드
+  // 세션과 프로필 초기 로드
   useEffect(() => {
     const initializeAuth = async () => {
       if (isInitialLoad) {
@@ -78,7 +78,7 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
 
             setSession(user)
             
-            // 🚀 업계 표준: 팔로우 상태 초기화 (Instagram/Twitter 방식)
+            // 업계 표준: 팔로우 상태 초기화 (Instagram/Twitter 방식)
             try {
               await initializeFollowState(user.id)
 
@@ -128,7 +128,7 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
     initializeAuth()
   }, [isInitialLoad, setSession, setProfile, setStoreInitialLoad, initializeFollowState])
 
-  // 🚀 뒤로가기 감지 시 홈화면 피드 새로고침
+  // 뒤로가기 감지 시 홈화면 피드 새로고침
   useEffect(() => {
     const handlePopState = () => {
 

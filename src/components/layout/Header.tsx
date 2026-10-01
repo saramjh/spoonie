@@ -66,7 +66,7 @@ export default function Header() {
   useEffect(() => {
     if (!user) return;
 
-    // 🎯 폴링 기반 알림 배지 (실시간 연결 제거)
+    // 폴링 기반 알림 배지 (실시간 연결 제거)
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         mutate(); // 탭이 다시 활성화될 때 즉시 데이터 갱신
@@ -139,7 +139,7 @@ export default function Header() {
         </Button>
       </div>
 
-      {/* 🎨 토스 스타일 로그인 유도 바텀시트들 */}
+      {/* 토스 스타일 로그인 유도 바텀시트들 */}
       <LoginPromptSheet
         isOpen={showBookmarkPrompt}
         onClose={() => setShowBookmarkPrompt(false)}
