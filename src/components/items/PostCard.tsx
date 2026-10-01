@@ -295,6 +295,14 @@ export default function PostCard({
               {[displayItem.servings ? `${displayItem.servings}인분` : null, cookingTime ? `조리 ${cookingTime}` : null].filter(Boolean).join(" · ")}
             </p>
           )}
+          {/* 핵심 재료: 사진 없이도 무엇을 만드는 글인지 읽힌다 */}
+          {!!displayItem.key_ingredients?.length && (
+            <p className="mt-0.5 truncate text-[15px] text-ink">
+              <span className="text-ink-soft">재료 {displayItem.ingredient_count}가지 · </span>
+              {displayItem.key_ingredients.join(", ")}
+              {(displayItem.ingredient_count || 0) > displayItem.key_ingredients.length && <span className="text-ink-soft"> 외</span>}
+            </p>
+          )}
         </div>
       )}
 

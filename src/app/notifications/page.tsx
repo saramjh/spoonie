@@ -27,6 +27,7 @@ interface Notification {
   } | null;
   related_item: {
     item_type: 'recipe' | 'post';
+    creation_origin?: string | null;
   } | null;
 }
 
@@ -80,7 +81,7 @@ export default function NotificationsPage() {
         is_read,
         item_id,
         from_profile:profiles!notifications_from_user_id_fkey ( public_id, username, avatar_url ),
-        related_item:items!notifications_item_id_fkey ( item_type )
+        related_item:items!notifications_item_id_fkey ( item_type, creation_origin )
       `)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
@@ -343,8 +344,13 @@ export default function NotificationsPage() {
         return `님이 회원님의 ${itemNameWithParticle} 댓글을 남겼습니다.`;
       case 'follow':
         return `님이 팔로우하기 시작했습니다.`;
-      case 'recipe_cited':
-        return `님이 회원님의 레시피를 참고하여 새로운 ${itemName} 작성했습니다.`;
+      case 'recipe_cited': {
+        // 관계 종류에 따라 다르게 알린다: 만들어 봄 / 참고한 레시피드 / 이어 쓴 레시피
+        const origin = notification.related_item?.creation_origin;
+        if (itemType === 'recipe') return `님이 회원님의 레시피를 참고해 새 레시피를 썼어요.`;
+        if (origin === 'recipe_detail' || origin === 'cook_mode') return `님이 회원님의 레시피로 만들어 봤어요.`;
+        return `님이 회원님의 레시피를 참고해 레시피드를 남겼어요.`;
+      }
      case 'admin':
         return '관리자로부터 새로운 공지가 있습니다.';
       default:

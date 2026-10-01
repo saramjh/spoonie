@@ -446,7 +446,20 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 		form.setValue("cited_recipe_ids", recipeIds)
 	}
 
-	// 레시피드는 사진이 먼저, 그다음 글. 출처가 있으면 맨 위 첫 줄에 둔다 (DESIGN.md Interface Grammar 1)
+	// 출처를 기억과 양심에 맡기지 않는다: 레시피 화면에서 오지 않았다면 먼저 어떤 레시피로 만들었는지 묻는다
+	const citedSection = (
+		<section aria-labelledby="post-cited" className={sourceRecipeId ? "border-t border-border px-4 pb-5 pt-5" : "border-b border-border px-4 pb-4 pt-4"}>
+			<SectionHeading id="post-cited">
+				{sourceRecipeId ? "함께 참고한 레시피" : "어떤 레시피로 만들었나요?"} <span className="text-sm font-normal text-ink-soft">(선택)</span>
+			</SectionHeading>
+			{!sourceRecipeId && <p className="mt-1 text-[13px] text-ink-soft">고르면 그 레시피 화면의 만들어 본 기록에 이어져요.</p>}
+			<div className="mt-2">
+				<CitedRecipeSearch selectedRecipes={selectedCitedRecipes} onSelectedRecipesChange={handleCitedChange} />
+			</div>
+		</section>
+	)
+
+	// 레시피드는 출처가 맨 위 첫 줄, 그다음 사진과 글 (DESIGN.md Interface Grammar 1)
 	return (
 		<div className="min-h-screen pb-28">
 			<PageHeader leading="cancel" title={isEditMode ? "레시피드 수정" : sourceRecipeId ? "만들어 본 기록" : "레시피드 쓰기"} />
@@ -456,6 +469,7 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 					{sourceRecipes.length > 0 && (
 						<SourceLine recipes={sourceRecipes} creationOrigin={sourceOrigin} className="border-b border-border px-4 py-3" />
 					)}
+					{!sourceRecipeId && citedSection}
 
 					<section className="space-y-5 px-4 pb-5 pt-5">
 						<ImageUploader
@@ -511,19 +525,7 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 						</div>
 					</section>
 
-					<section aria-labelledby="post-cited" className="border-t border-border px-4 pb-5 pt-5">
-						<SectionHeading id="post-cited">
-							참고한 레시피 <span className="text-sm font-normal text-ink-soft">(선택)</span>
-						</SectionHeading>
-						{!sourceRecipeId && (
-							<p className="mt-1 text-[13px] text-ink-soft">
-								다른 사람의 레시피로 만들었다면 그 레시피 화면의 &lsquo;이 레시피로 만들었어요&rsquo;로 쓰면 자동으로 이어져요.
-							</p>
-						)}
-						<div className="mt-2">
-							<CitedRecipeSearch selectedRecipes={selectedCitedRecipes} onSelectedRecipesChange={handleCitedChange} />
-						</div>
-					</section>
+					{sourceRecipeId && citedSection}
 
 					<Controller
 						control={form.control}

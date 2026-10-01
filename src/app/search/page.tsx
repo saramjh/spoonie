@@ -2,25 +2,26 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
-import { Search as SearchIcon, User, Grid3X3, X } from 'lucide-react';
+import { Search as SearchIcon, X } from 'lucide-react';
 import useSWR from 'swr';
 import useSWRInfinite from 'swr/infinite';
 
 import PopularKeywords from '@/components/search/PopularKeywords';
-import InstagramGridCard from '@/components/search/InstagramGridCard';
+import MadeRecordTile from '@/components/search/MadeRecordTile';
+import RecipeListCard from '@/components/recipe/RecipeListCard';
+import { useExplore } from '@/hooks/useExplore';
 import UserCard from '@/components/search/UserCard';
 import type { Item } from '@/types/item';
-import { getPopularKeywordsCached, getPopularPostsCached, optimizedSearch, searchUsers, SearchMetrics, type UserSearchResult } from '@/utils/search-optimization';
+import { getPopularKeywordsCached, optimizedSearch, searchUsers, SearchMetrics, type UserSearchResult } from '@/utils/search-optimization';
 import { useFollowStore } from '@/store/followStore';
 import { useNavigation } from '@/hooks/useNavigation';
-import { SectionHeading, UnderlineTabs } from "@/components/kit"
-// 업계 표준: 사용하지 않는 import 제거 // �� 업계 표준: 글로벌 팔로우 상태
+import { SectionHeading, StateSheet, UnderlineTabs } from "@/components/kit"
 
 // 서버 부담 최소화를 위한 페이지 크기
 const PAGE_SIZE = 12;
 
-// 검색 결과 타입
-type SearchTab = 'content' | 'users';
+// 검색 결과 종류: 레시피(자산)가 먼저, 레시피드(활동)와 사람이 뒤 (DESIGN.md Interface Grammar 1)
+type SearchTab = 'recipe' | 'post' | 'users';
 
 // 유저 검색 결과 타입
 interface UserResult {
@@ -47,16 +48,6 @@ const fetcher = async (key: string): Promise<unknown> => {
       } catch (error) {
         SearchMetrics.recordError();
         console.error('❌ Popular keywords fetch failed:', error);
-        return [];
-      }
-
-    case 'popular_posts':
-      // 최적화된 캐시 기반 인기 게시물 조회
-      try {
-        const posts = await getPopularPostsCached();
-        return posts;
-      } catch (error) {
-        console.error('❌ Popular posts fetch failed:', error);
         return [];
       }
 
@@ -190,7 +181,7 @@ export default function SearchPage() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState<SearchTab>('content'); // 탭 상태
+  const [tab, setTab] = useState<SearchTab | null>(null); // 고르기 전에는 결과가 있는 첫 종류
   const { setFollowing } = useFollowStore() // 업계 표준: 글로벌 팔로우 상태 동기화
   const observerRef = useRef<HTMLDivElement>(null);
 
@@ -199,60 +190,8 @@ export default function SearchPage() {
     revalidateOnReconnect: false,
     dedupingInterval: 60000, // 1분간 중복 요청 방지
   });
-  const { data: popularPosts, isLoading: postsLoading } = useSWR('popular_posts', fetcher, {
-    revalidateOnFocus: false,    // 페이지 포커스 시 재검증 방지
-    revalidateOnReconnect: false, // 네트워크 재연결 시 재검증 방지
-    dedupingInterval: 60000,     // 1분간 중복 요청 방지
-  });
-  
-  // 이전 데이터 유지 로직 (SWR v2 호환) - 영구 저장소 활용
-  const [stablePopularPosts, setStablePopularPosts] = useState<Item[] | null>(() => {
-    // 초기 로드 시 sessionStorage에서 복원
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = sessionStorage.getItem('spoonie_popular_posts');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          
-          return parsed;
-        }
-      } catch (error) {
-        console.warn('⚠️ Failed to restore from sessionStorage:', error);
-      }
-    }
-    return null;
-  });
-  const [hasInitialized, setHasInitialized] = useState(false);
-  
-  useEffect(() => {
+  const { data: explore, isLoading: exploreLoading } = useExplore();
 
-
-    if (popularPosts && Array.isArray(popularPosts) && popularPosts.length > 0) {
-
-      setStablePopularPosts(popularPosts);
-      setHasInitialized(true);
-      
-      // sessionStorage에 저장 (페이지 새로고침 시에도 유지)
-      try {
-        sessionStorage.setItem('spoonie_popular_posts', JSON.stringify(popularPosts));
-        
-      } catch (error) {
-        console.warn('⚠️ Failed to save to sessionStorage:', error);
-      }
-    }
-  }, [popularPosts, hasInitialized, stablePopularPosts]);
-  
-  // 실제로 사용할 데이터 (더 안전한 fallback)
-  const displayPopularPosts = useMemo(() => {
-    const result = popularPosts || stablePopularPosts || [];
-
-    return result;
-  }, [popularPosts, stablePopularPosts]);
-  
-
-  
-
-  
   // 무한스크롤 검색 결과
   const {
     data: searchPages,
@@ -273,6 +212,7 @@ export default function SearchPage() {
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm.trim());
+      setTab(null);
     }, 300);
     return () => clearTimeout(handler);
   }, [searchTerm]);
@@ -365,6 +305,13 @@ export default function SearchPage() {
 
 
 
+  const recipeResults = searchResults.filter((item) => item.item_type === 'recipe');
+  const postResults = searchResults.filter((item) => item.item_type !== 'recipe');
+  const activeTab: SearchTab = tab ?? (recipeResults.length > 0 || (postResults.length === 0 && userResults.length === 0) ? 'recipe' : postResults.length > 0 ? 'post' : 'users');
+  const searchEmpty = (
+    <StateSheet title={`'${debouncedSearchTerm}'에 맞는 결과가 없어요`} body="재료 이름이나 요리 이름으로 찾아 보세요." />
+  );
+
   return (
     <div className="min-h-screen">
       <div className="px-2 py-4 pb-20">
@@ -391,150 +338,101 @@ export default function SearchPage() {
       </div>
 
       {debouncedSearchTerm ? (
-        /* 검색 결과 - 탭 기반 */
         <div>
-          {/* 검색 결과 탭 */}
           <UnderlineTabs
             label="검색 결과 종류"
-            className="mb-4 bg-transparent"
+            className="mb-3 bg-transparent"
             stretch={false}
             value={activeTab}
-            onChange={setActiveTab}
+            onChange={setTab}
             items={[
-              { key: 'content', label: '레시피·레시피드', count: searchResults.length },
+              { key: 'recipe', label: '레시피', count: recipeResults.length },
+              { key: 'post', label: '레시피드', count: postResults.length },
               { key: 'users', label: '사람', count: userResults.length },
             ]}
           />
 
-          {/* 검색 결과 내용 */}
-          {activeTab === 'content' ? (
-            /* 콘텐츠 탭 - Instagram 그리드 */
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Grid3X3 className="w-5 h-5 text-ink-soft" />
-                <h2 className="text-lg font-semibold text-ink">레시피 & 레시피드</h2>
+          {activeTab === 'recipe' &&
+            (recipeResults.length === 0 && !searchLoading ? (
+              searchEmpty
+            ) : (
+              <div className="space-y-2">
+                {recipeResults.map((item, index) => (
+                  <RecipeListCard key={`search-${item.item_id || item.id}`} item={item} showAuthor priority={index < 3} />
+                ))}
               </div>
-              
-              {searchResults.length === 0 && !searchLoading ? (
-                <div className="text-center py-12">
-                  <div className="text-ink-soft text-lg mb-2">콘텐츠 검색 결과가 없습니다</div>
-                  <div className="text-ink-soft text-sm">다른 키워드로 검색해 보세요</div>
-                </div>
-              ) : (
-                <>
-                  {/* Instagram 3열 그리드 */}
-                  <div className="grid grid-cols-3 gap-1 sm:gap-2">
-                    {Array.isArray(searchResults) ? 
-                      searchResults.filter(item => {
-                        const hasId = item?.item_id || item?.id;
-                        if (!hasId) {
-                          console.warn('🚨 Search result missing ID:', item);
-                        }
-                        return hasId;
-                      }).map((item, index) => (
-                        <InstagramGridCard key={`search-${item.item_id || item.id}-${index}`} item={item} />
-                      )) : []
-                    }
-                    
-                    {/* 로딩 스켈레톤 */}
-                    {isLoadingMore && Array.from({ length: 6 }).map((_, index) => (
-                      <div key={`skeleton-${index}`} className="aspect-square bg-border rounded-sm animate-pulse" />
-                    ))}
-                  </div>
-                    
-                  {/* 무한스크롤 트리거 */}
-                  {!isReachingEnd && (
-                    <div ref={observerRef} className="h-10 flex items-center justify-center mt-4">
-                      {isLoadingMore && <div className="text-sm text-ink-soft">로딩 중...</div>}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          ) : (
-            /* 사용자 탭 - 유저 카드 */
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <User className="w-5 h-5 text-ink-soft" />
-                <h2 className="text-lg font-semibold text-ink">사용자</h2>
+            ))}
+
+          {activeTab === 'post' &&
+            (postResults.length === 0 && !searchLoading ? (
+              searchEmpty
+            ) : (
+              <div className="grid grid-cols-3 gap-x-1 gap-y-3">
+                {postResults.map((item, index) => (
+                  <MadeRecordTile key={`search-${item.item_id || item.id}`} item={item} priority={index < 3} />
+                ))}
               </div>
-              
-              {userSearchLoading ? (
-                <div className="text-center py-12">
-                  <div className="text-ink-soft text-lg mb-2">사용자 검색 중...</div>
-                </div>
-              ) : userResults.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="text-ink-soft text-lg mb-2">사용자 검색 결과가 없습니다</div>
-                  <div className="text-ink-soft text-sm">다른 키워드로 검색해 보세요</div>
-                </div>
-              ) : (
-                <div className="space-y-5">
-                  {userResults.map((user: UserResult) => (
-                    <UserCard key={user.user_id} user={user} />
-                  ))}
-                </div>
-              )}
-            </div>
+            ))}
+
+          {activeTab !== 'users' && (
+            <>
+              {isLoadingMore && <p className="py-4 text-center text-sm text-ink-soft">찾는 중...</p>}
+              {!isReachingEnd && <div ref={observerRef} className="h-10" />}
+            </>
           )}
+
+          {activeTab === 'users' &&
+            (userSearchLoading ? (
+              <p className="py-12 text-center text-ink-soft">사람을 찾는 중...</p>
+            ) : userResults.length === 0 ? (
+              searchEmpty
+            ) : (
+              <div className="space-y-5">
+                {userResults.map((user: UserResult) => (
+                  <UserCard key={user.user_id} user={user} />
+                ))}
+              </div>
+            ))}
         </div>
       ) : (
-        /* 홈 화면 - 인기 콘텐츠 */
-        <div className="space-y-5">
-          <PopularKeywords 
-            keywords={popularKeywords as { keyword: string }[]} 
-            isLoading={keywordsLoading} 
-            onKeywordClick={handleKeywordClick} 
+        /* 탐색: 레시피가 중심, 만들어 본 기록이 그 레시피로 돌려보낸다 */
+        <div className="space-y-6">
+          <PopularKeywords
+            keywords={popularKeywords as { keyword: string }[]}
+            isLoading={keywordsLoading}
+            onKeywordClick={handleKeywordClick}
           />
-          
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <SectionHeading>반응이 많은 레시피와 레시피드</SectionHeading>
-            </div>
-            
-            <div className="grid grid-cols-3 gap-1 sm:gap-2">
-              {/* 단순화된 렌더링 로직 */}
-              {(() => {
 
+          <section aria-labelledby="explore-recipes">
+            <SectionHeading id="explore-recipes" className="mb-2 px-1">레시피</SectionHeading>
+            {exploreLoading && !explore ? (
+              <div className="space-y-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="h-[88px] animate-pulse rounded-[3px] bg-paper/70" />
+                ))}
+              </div>
+            ) : explore && explore.recipes.length > 0 ? (
+              <div className="space-y-2">
+                {explore.recipes.map((item, index) => (
+                  <RecipeListCard key={item.id} item={item} showAuthor priority={index < 3} />
+                ))}
+              </div>
+            ) : (
+              <StateSheet title="아직 공개된 레시피가 없어요" />
+            )}
+          </section>
 
-                // 1. 표시할 데이터가 있는 경우
-                if (Array.isArray(displayPopularPosts) && displayPopularPosts.length > 0) {
-                  return displayPopularPosts.filter(item => {
-                    const hasId = item?.item_id || item?.id;
-                    if (!hasId) {
-                      console.warn('🚨 Popular post missing ID:', item);
-                    }
-                    return hasId;
-                  }).map((item, index) => (
-                    <InstagramGridCard key={`popular-${item.item_id || item.id}-${index}`} item={item} />
-                  ));
-                }
-
-                // 2. 처음 로딩 중인 경우 (안정화된 데이터가 없는 경우)
-                if (postsLoading && (!stablePopularPosts || stablePopularPosts.length === 0)) {
-                  return Array.from({ length: 12 }).map((_, index) => (
-                    <div key={`skeleton-${index}`} className="aspect-square bg-border rounded-sm animate-pulse" />
-                  ));
-                }
-
-                // 3. 로딩도 끝났고 데이터도 없는 경우만 메시지 표시
-                if (!postsLoading && hasInitialized) {
-
-                  return (
-                    <div className="col-span-3 text-center py-8 text-ink-soft">
-                      인기 게시물을 불러올 수 없습니다.
-                    </div>
-                  );
-                }
-
-                // 4. 그 외의 모든 경우 - 빈 상태로 대기 (데이터 로딩 중이거나 초기화 중)
-
-                return Array.from({ length: 6 }).map((_, index) => (
-                  <div key={`waiting-${index}`} className="aspect-square bg-muted rounded-sm animate-pulse" />
-                ));
-              })()}
-            </div>
-          </div>
+          {explore && explore.made.length > 0 && (
+            <section aria-labelledby="explore-made">
+              <SectionHeading id="explore-made" className="px-1">요즘 만들어 본 기록</SectionHeading>
+              <p className="mb-2 mt-0.5 px-1 text-[13px] text-ink-soft">사진 아래가 만든 레시피예요.</p>
+              <div className="grid grid-cols-3 gap-x-1 gap-y-3">
+                {explore.made.map(({ item, sourceTitle }) => (
+                  <MadeRecordTile key={item.id} item={item} sourceTitle={sourceTitle} />
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       )}
       </div>

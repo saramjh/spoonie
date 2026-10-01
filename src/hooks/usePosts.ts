@@ -128,6 +128,8 @@ const fetcher = async (key: string): Promise<Item[]> => {
       made_count: Number(item.made_count) || 0, // 다른 사람이 만든 기록 수
       continued_count: Number(item.continued_count) || 0,
       made_thumbs: item.made_thumbs || [],
+      ingredient_count: item.ingredient_count || 0,
+      key_ingredients: item.key_ingredients || [],
       likes_count: item.likes_count || 0,
       comments_count: item.comments_count || 0,
       is_liked: isLikedValue, // null 허용으로 불확실한 상태 표현

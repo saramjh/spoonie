@@ -66,6 +66,8 @@ export interface Item {
 	made_count?: number // 다른 사람이 이 레시피로 만든 공개 기록 수 (사람 수, optimized_feed_view)
 	continued_count?: number // 이 레시피에서 이어진 공개 레시피 수
 	made_thumbs?: string[] // 만든 기록의 사진 최대 3장
+	ingredient_count?: number // 레시피 재료 수 (optimized_feed_view)
+	key_ingredients?: string[] // 재료 목록의 앞 3개: 피드 카드에서 레시피를 레시피답게 보이게 한다
 
 	// User/Author information (joined from profiles)
 	author?: Profile

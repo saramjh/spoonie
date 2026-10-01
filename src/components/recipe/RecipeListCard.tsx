@@ -56,13 +56,15 @@ export default function RecipeListCard({
 	// 색상 라벨은 주인의 정리 도구: "나의 레시피"에서만 보인다 (DESIGN.md Interface Grammar 3)
 	const showColor = !showAuthor
   const cookingTime = formatCookingTime(displayItem.cooking_time_minutes)
-  const ingredientCount = item.ingredients?.length || 0
+  const ingredientCount = item.ingredients?.length || item.ingredient_count || 0
   const thumbnail = cachedItem.image_urls?.[cachedItem.thumbnail_index || 0]
   const meta = [
     displayItem.servings ? `${displayItem.servings}인분` : null,
     cookingTime ? `조리 ${cookingTime}` : null,
     ingredientCount ? `재료 ${ingredientCount}가지` : null,
   ].filter(Boolean)
+  // 다른 사람이 만들어 본 수: 레시피의 신뢰 증거 (0이면 숨김)
+  const madeCount = displayItem.made_count || 0
 
   // 레시피북의 한 줄: 문 판에 접어 붙인 종이처럼 머리(사진, 제목, 한 줄 메타)만 보인다
   return (
@@ -95,6 +97,7 @@ export default function RecipeListCard({
           <h3 className="truncate text-[17px] font-semibold text-ink">{displayItem.title}</h3>
           {meta.length > 0 && <p className="mt-0.5 truncate text-sm text-ink-soft">{meta.join(" · ")}</p>}
           <p className="mt-0.5 truncate text-[13px] text-ink-soft">
+            {madeCount > 0 && <span className="font-semibold text-ink">{madeCount}명이 만들어 봤어요 · </span>}
             {showAuthor && item.username ? `${item.username} · ` : ""}
             <RelativeTime iso={item.created_at} compact />
             {!displayItem.is_public && " · 비공개"}

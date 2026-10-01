@@ -60,7 +60,14 @@ function buildMessage(notification) {
     case 'follow':
       return { title: `${name}님이 회원님을 팔로우합니다`, body: '', url: actor.public_id ? `/profile/${actor.public_id}` : '/notifications' };
     case 'recipe_cited':
-      return { title: `${name}님이 회원님의 레시피를 참고했습니다`, body: item.title || '', url: `/${itemPath}/${notification.item_id}` };
+      {
+        // 관계 종류에 따라 다르게 알린다: 만들어 봄 / 참고한 레시피드 / 이어 쓴 레시피
+        const made = item.item_type === 'post' && (item.creation_origin === 'recipe_detail' || item.creation_origin === 'cook_mode');
+        const title = item.item_type === 'recipe'
+          ? `${name}님이 회원님의 레시피를 참고해 새 레시피를 썼어요`
+          : made ? `${name}님이 회원님의 레시피로 만들어 봤어요` : `${name}님이 회원님의 레시피를 참고했어요`;
+        return { title, body: item.title || '', url: `/${itemPath}/${notification.item_id}` };
+      }
     default:
       return { title: '새 알림이 있습니다', body: '', url: '/notifications' };
   }
@@ -85,7 +92,7 @@ exports.handler = async (event) => {
     const [notification] = await rest(
       `notifications?id=eq.${notificationId}&select=id,user_id,type,item_id,` +
         `from_user:profiles!notifications_from_user_id_fkey(username,display_name,public_id),` +
-        `item:items!notifications_item_id_fkey(item_type,title)`
+        `item:items!notifications_item_id_fkey(item_type,title,creation_origin)`
     );
     if (!notification) return reply(404, { error: 'Notification not found' });
 
