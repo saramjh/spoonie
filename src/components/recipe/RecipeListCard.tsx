@@ -1,8 +1,7 @@
 "use client"
 
-import Image from "next/image"
 import { ChefHat } from "lucide-react"
-import { CheckBox, IntentLink, Magnet, RelativeTime } from "@/components/kit"
+import { CheckBox, IntentLink, Magnet, Photo, RelativeTime } from "@/components/kit"
 import { formatCookingTime } from "@/lib/recipe-amount"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import { useNavigation } from "@/hooks/useNavigation"
@@ -85,7 +84,7 @@ export default function RecipeListCard({
         {showColor && <Magnet color={displayItem.color_label} size="sm" className="absolute -left-1.5 top-1/2 z-20 -translate-y-1/2" />}
         <div className="relative h-[72px] w-[72px] flex-shrink-0 overflow-hidden rounded-[2px] bg-muted">
           {thumbnail ? (
-            <Image src={thumbnail} alt="" fill sizes="72px" className="object-cover" priority={priority} />
+            <Photo src={thumbnail} sizes="72px" priority={priority} />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
               <ChefHat className="h-6 w-6 text-ink-soft" aria-hidden />

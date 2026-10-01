@@ -7,7 +7,7 @@ import { X, ChefHat, Search } from "lucide-react";
 import { createSupabaseBrowserClient } from '@/lib/supabase-client';
 import type { Item } from '@/types/item';
 import { format } from 'date-fns'; // 날짜 포맷팅을 위해 date-fns 임포트
-import Image from 'next/image';
+import { Photo } from "@/components/kit"
 
 interface CitedRecipeSearchProps {
   selectedRecipes: Item[];
@@ -181,9 +181,9 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
                     <CommandItem key={recipe.item_id} onSelect={() => handleSelectRecipe(recipe)} className="cursor-pointer hover:bg-muted">
                       <div className="flex items-center gap-3 w-full">
                         {/* 썸네일 추가 */}
-                        <div className="h-9 w-9 flex-shrink-0 overflow-hidden rounded-[2px] bg-muted">
+                        <div className="relative h-9 w-9 flex-shrink-0 overflow-hidden rounded-[2px] bg-muted">
                           {recipe.image_urls && recipe.image_urls.length > 0 ? (
-                            <Image src={recipe.image_urls[0]} alt="" width={36} height={36} className="h-full w-full object-cover" />
+                            <Photo src={recipe.image_urls[0]} sizes="36px" />
                           ) : (
                             <div className="w-full h-full bg-muted flex items-center justify-center">
                               <ChefHat className="h-4 w-4 text-ink-soft" aria-hidden="true" />
@@ -213,9 +213,9 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
             {selectedRecipes.map(recipe => (
               <li key={recipe.item_id} className="flex items-center gap-3 py-2">
                 {/* 썸네일 */}
-                <div className="h-11 w-11 flex-shrink-0 overflow-hidden rounded-[2px] bg-muted">
+                <div className="relative h-11 w-11 flex-shrink-0 overflow-hidden rounded-[2px] bg-muted">
                   {recipe.image_urls && recipe.image_urls.length > 0 ? (
-                    <Image src={recipe.image_urls[0]} alt="" width={44} height={44} className="h-full w-full object-cover" />
+                    <Photo src={recipe.image_urls[0]} sizes="44px" />
                   ) : (
                     <div className="w-full h-full bg-muted flex items-center justify-center">
                       <ChefHat className="h-4 w-4 text-ink-soft" aria-hidden="true" />

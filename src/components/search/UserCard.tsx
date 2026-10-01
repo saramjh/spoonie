@@ -1,6 +1,5 @@
 "use client"
-import { IntentLink } from "@/components/kit"
-import Image from "next/image"
+import { IntentLink, Photo } from "@/components/kit"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { User } from "lucide-react"
 import { useNavigation } from "@/hooks/useNavigation"
@@ -55,12 +54,7 @@ export default function UserCard({ user }: UserCardProps) {
             {user.latest_items.slice(0, 3).map((item, index) => (
               <div key={`${user.user_id}-${index}`} className="aspect-square relative rounded overflow-hidden bg-muted">
                 {item.image_urls && item.image_urls.length > 0 ? (
-                  <Image 
-                    src={item.image_urls[item.thumbnail_index || 0]} 
-                    alt={item.title || "Preview"} 
-                    fill 
-                    className="object-cover" 
-                  />
+                  <Photo src={item.image_urls[item.thumbnail_index || 0]} alt="" sizes="100px" />
                 ) : (
                   <div className="w-full h-full bg-muted flex items-center justify-center">
                     <User className="w-4 h-4 text-ink-soft" />

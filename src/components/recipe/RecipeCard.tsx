@@ -1,8 +1,7 @@
 "use client"
 
-import Image from "next/image"
 import { ChefHat } from "lucide-react"
-import { CheckBox, IntentLink, Magnet } from "@/components/kit"
+import { CheckBox, IntentLink, Magnet, Photo, PhotoCount } from "@/components/kit"
 import { formatCookingTime } from "@/lib/recipe-amount"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import { useNavigation } from "@/hooks/useNavigation"
@@ -66,8 +65,9 @@ export default function RecipeCard({ item, isSelectable, isSelected, onSelectCha
 			<IntentLink href={detailUrl} className="relative block rounded-[3px] bg-paper shadow-sheet">
 				{showColor && <Magnet color={displayItem.color_label} size="md" className="absolute -top-2 left-3 z-20" />}
 				<div className="relative aspect-[4/3] w-full overflow-hidden rounded-t-[3px] bg-muted">
+					<PhotoCount count={cachedItem.image_urls?.length || 0} />
 					{thumbnail ? (
-						<Image src={thumbnail} alt="" fill sizes="(max-width: 448px) 50vw, 220px" className="object-cover" priority={priority} />
+						<Photo src={thumbnail} sizes="(max-width: 448px) 50vw, 220px" priority={priority} />
 					) : (
 						<div className="flex h-full w-full items-center justify-center">
 							<ChefHat className="h-6 w-6 text-ink-soft" aria-hidden />

@@ -22,7 +22,7 @@ import { useToast } from "@/hooks/use-toast"
 
 
 import type { Item, ItemDetail } from "@/types/item"
-import { uploadImagesOptimized, ImageUploadMetrics } from "@/utils/image-optimization"
+import { uploadImagesOptimized, uploadVariants, ImageUploadMetrics } from "@/utils/image-optimization"
 import { cacheManager } from "@/lib/unified-cache-manager"
 import { notificationService } from "@/lib/notification-service"
 import { logEvent } from "@/lib/events"
@@ -386,9 +386,10 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 			const uploadedInstructionImageUrls = await Promise.all(
 				instructionImages.map(async (image, index) => {
 					if (image && image.file.size > 0) {
-						const fileName = `${user.id}/${Date.now()}-instruction-${index}-${Math.random()}`
-						const { error: uploadError } = await supabase.storage.from(bucketId).upload(fileName, image.file)
+						const fileName = `${user.id}/${Date.now()}-instruction-${index}-${Math.random().toString(36).slice(2, 10)}.jpg`
+						const { error: uploadError } = await supabase.storage.from(bucketId).upload(fileName, image.file, { cacheControl: "31536000", contentType: "image/jpeg" })
 						if (uploadError) throw new Error(`조리법 이미지 업로드 실패: ${uploadError.message}`)
+						await uploadVariants(bucketId, fileName, image.file)
 						const { data: publicUrlData } = supabase.storage.from(bucketId).getPublicUrl(fileName)
 						return publicUrlData.publicUrl
 					} else if (image) {

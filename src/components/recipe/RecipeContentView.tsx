@@ -1,13 +1,12 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import Image from "next/image"
 import { Check, Minus, Plus } from "lucide-react"
 import { Ingredient, RecipeStep } from "@/types/item"
 import { formatAmount } from "@/lib/recipe-amount"
 import { cn } from "@/lib/utils"
 import StepMode from "@/components/recipe/StepMode"
-import { CheckBox, SectionHeading } from "@/components/kit"
+import { CheckBox, Photo, SectionHeading } from "@/components/kit"
 
 interface RecipeContentViewProps {
 	initialServings: number
@@ -235,7 +234,7 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 											<p className="whitespace-pre-wrap break-words text-[17px] leading-[1.65]">{step.description}</p>
 											{step.image_url && (
 												<div className="relative mt-3 aspect-[4/3] w-full overflow-hidden rounded-[3px] bg-muted">
-													<Image src={step.image_url} alt={`${index + 1}단계 사진`} fill sizes="(max-width: 768px) 90vw, 600px" className="object-contain" />
+													<Photo src={step.image_url} alt={`${index + 1}단계 사진`} sizes="(max-width: 448px) 85vw, 380px" fit="contain" />
 												</div>
 											)}
 										</div>

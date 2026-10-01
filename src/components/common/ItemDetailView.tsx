@@ -24,14 +24,13 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import useSWR, { useSWRConfig } from "swr"
 import { Item, ItemDetail } from "@/types/item"
 import Link from "next/link"
-import Image from "next/image"
 
 import { useCitedRecipes, useRecipeRelations } from "@/hooks/useCitedRecipes"
 import SourceLine from "@/components/items/SourceLine"
 import { useThumbnail } from "@/hooks/useThumbnail"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import { cacheManager } from "@/lib/unified-cache-manager"
-import { IntentLink, RelativeTime, SectionHeading, Sheet } from "@/components/kit"
+import { IntentLink, Photo, RelativeTime, SectionHeading, Sheet } from "@/components/kit"
 import { revalidateItemPage } from "@/lib/revalidate-item"
 
 interface ItemDetailViewProps {
@@ -472,7 +471,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 							<li key={made.id} className="w-28 flex-shrink-0">
 								<IntentLink href={`/posts/${made.id}`} className="block">
 									<div className="relative aspect-square overflow-hidden rounded-[2px] bg-muted">
-										{made.image_url && <Image src={made.image_url} alt="" fill sizes="112px" className="object-cover" />}
+										{made.image_url && <Photo src={made.image_url} sizes="112px" />}
 									</div>
 									<p className="mt-1 truncate text-[13px] text-ink-soft">{made.username}</p>
 								</IntentLink>

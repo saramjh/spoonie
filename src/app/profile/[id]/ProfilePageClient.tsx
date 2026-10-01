@@ -22,7 +22,7 @@ import { useFollowStore } from "@/store/followStore" // 업계 표준: 글로벌
 import { useNavigation } from "@/hooks/useNavigation"
 import useSWR from "swr"
 import { fetchProfile, fetchUserItems, fetchFollowCounts, fetchFollowStatus, fetchLineageCounts, type UserProfile } from "@/lib/profile-data"
-import { IntentLink, StateSheet, UnderlineTabs } from "@/components/kit"
+import { IntentLink, Photo, PhotoCount, StateSheet, UnderlineTabs } from "@/components/kit"
 
 interface ProfilePageClientProps {
 	params: { id: string }
@@ -58,7 +58,8 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 			revalidateOnFocus: false,
 			dedupingInterval: 30000, // 30초 중복 방지
 			fallbackData: initialItems ?? undefined,
-			revalidateOnMount: true, // 본인 프로필이면 비공개 글과 좋아요 상태를 다시 채운다
+			// 미리 만든 공개 페이지의 목록은 비로그인 방문자에게 그대로 쓴다. 로그인 사용자는 본인 비공개 글·내 좋아요 상태를 위해 다시 받는다
+			revalidateOnMount: !initialItems || !!sessionUser,
 		}
 	)
 	// SSA 표준: 팔로우 수도 SWR로 관리하여 실시간 캐시 무효화 지원
@@ -275,10 +276,11 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 								<li key={item.id}>
 									<IntentLink href={`/posts/${item.id}`} className="relative block aspect-square overflow-hidden rounded-[2px] bg-muted" aria-label={item.title || item.content?.slice(0, 30) || "레시피드"}>
 										{thumb ? (
-											<Image src={thumb} alt="" fill sizes="33vw" priority={index < 3} className="object-cover" />
+											<Photo src={thumb} sizes="(max-width: 448px) 33vw, 150px" priority={index < 3} />
 										) : (
 											<span className="flex h-full items-center p-2 text-[13px] leading-snug text-ink line-clamp-4">{item.content}</span>
 										)}
+										<PhotoCount count={item.image_urls?.length || 0} />
 										{!item.is_public && <span className="absolute left-1 top-1 rounded-[2px] bg-ink/80 px-1.5 text-[11px] text-paper">비공개</span>}
 									</IntentLink>
 								</li>

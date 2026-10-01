@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import useEmblaCarousel from "embla-carousel-react"
-import Image from "next/image"
+import { Photo } from "@/components/kit"
 
 import { cn } from "@/lib/utils"
 
@@ -97,14 +97,7 @@ export default function ImageCarousel({
       <div className="flex">
         {images.map((src, index) => (
           <div className={cn("relative w-full flex-none bg-muted", frame === "recipe" ? "aspect-[4/3]" : "aspect-square")} key={index}>
-            <Image
-              src={src}
-              alt={`${alt} ${index + 1}`}
-              fill
-              sizes="(max-width: 480px) 100vw, 480px"
-              className="object-cover"
-              priority={priority && index === 0}
-            />
+            <Photo src={src} alt={`${alt} ${index + 1}`} sizes="(max-width: 448px) 100vw, 448px" priority={priority && index === 0} />
             
             {/* 더블탭 좋아요 오버레이 (선택적) */}
             {(onDoubleClick || onSingleClick) && (
@@ -139,6 +132,13 @@ export default function ImageCarousel({
           </div>
         ))}
       </div>
+      {/* 여러 장이면 몇 번째 사진인지와 전체 장수를 오른쪽 위에 둔다 */}
+      {images.length > 1 && (
+        <span aria-live="polite" className="absolute right-2.5 top-2.5 z-30 rounded-full bg-ink/70 px-2 py-0.5 text-[13px] font-semibold tabular-nums text-paper">
+          {selectedIndex + 1}/{images.length}
+          <span className="sr-only">번째 사진</span>
+        </span>
+      )}
       {images.length > 1 && <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
         {images.map((_, index) => (
           <button
@@ -146,7 +146,7 @@ export default function ImageCarousel({
             onClick={() => emblaApi?.scrollTo(index)}
             className={cn(
               'w-2 h-2 rounded-full transition-all duration-300',
-              selectedIndex === index ? 'bg-paper scale-125' : 'bg-paper/50'
+              selectedIndex === index ? 'bg-paper scale-125 shadow-[0_0_0_1px_rgba(35,40,43,0.25)]' : 'bg-paper/60 shadow-[0_0_0_1px_rgba(35,40,43,0.2)]'
             )}
             aria-label={`${index + 1}번째 사진 보기`}
           />

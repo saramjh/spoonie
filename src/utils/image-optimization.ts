@@ -1,5 +1,6 @@
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
-import { OptimizedImage } from "@/lib/image-utils"
+import { OptimizedImage, optimizeImages } from "@/lib/image-utils"
+import { VARIANT_WIDTHS, variantPath } from "@/lib/image-variants"
 
 /**
  * 이미지 업로드 최적화 유틸리티
@@ -112,6 +113,7 @@ async function performUpload(
 	if (uploadError) {
 		throw new Error(`이미지 업로드 실패: ${uploadError.message}`)
 	}
+	await uploadVariants(bucketId, fileName, image.file)
 
 	const { data: publicUrlData } = supabase.storage
 		.from(bucketId)
@@ -245,3 +247,24 @@ export class ImageUploadMetrics {
 		}
 	}
 } 
+/**
+ * 크기별 버전(400px, 800px)을 원본 옆에 올린다. 화면은 srcset으로 필요한 크기만 받는다 (lib/image-variants).
+ * 실패해도 원본 저장은 막지 않는다 (화면은 버전이 없으면 원본으로 되돌아간다).
+ */
+export async function uploadVariants(bucketId: string, path: string, file: File): Promise<void> {
+	const supabase = createSupabaseBrowserClient()
+	await Promise.all(
+		VARIANT_WIDTHS.map(async (width) => {
+			try {
+				const [variant] = await optimizeImages([file], width, 0.78)
+				await supabase.storage.from(bucketId).upload(variantPath(path, width), variant.file, {
+					cacheControl: "31536000",
+					contentType: "image/jpeg",
+					upsert: true,
+				})
+			} catch (error) {
+				console.warn("variant upload failed", width, error)
+			}
+		})
+	)
+}

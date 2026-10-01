@@ -76,13 +76,14 @@ const config: Config = {
 					DEFAULT: "#FF6900",
 					foreground: "#23282B",
 				},
-				door: "var(--door)",
-				paper: "var(--paper)",
+				// 팔레트(DESIGN.md). 투명도 변형(bg-ink/70 등)이 만들어지도록 <alpha-value> 형식으로 둔다 (globals.css의 --door 등과 같은 값)
+				door: "rgb(221 231 225 / <alpha-value>)",
+				paper: "rgb(255 255 255 / <alpha-value>)",
 				ink: {
-					DEFAULT: "var(--ink)",
-					soft: "var(--ink-soft)",
+					DEFAULT: "rgb(35 40 43 / <alpha-value>)",
+					soft: "rgb(91 100 105 / <alpha-value>)",
 				},
-				"orange-ink": "var(--orange-ink)",
+				"orange-ink": "rgb(179 71 0 / <alpha-value>)",
 				secondary: {
 					DEFAULT: "#FFFFFF",
 					foreground: "#f97316",

@@ -16,6 +16,7 @@ import { useSessionStore } from "@/store/sessionStore"
 import { getCacheManager } from "@/lib/unified-cache-manager"
 import { optimizeImages } from "@/lib/image-utils"
 import { PageHeader, PageLoading, Sheet } from "@/components/kit"
+import { revalidateMyProfilePage } from "@/lib/revalidate-item"
 
 interface Profile {
   username: string | null
@@ -204,6 +205,7 @@ export default function TossSeamlessProfileEditor({
 
       // STEP 3: 백그라운드에서 실제 DB 업데이트
       await performActualProfileUpdate()
+      revalidateMyProfilePage() // 미리 만든 프로필 페이지를 바뀐 내용으로 바로 갱신
 
       // 성공 시 optimistic update 확정
       setOptimisticUpdates(prev => {

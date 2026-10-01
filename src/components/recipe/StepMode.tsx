@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import Image from "next/image"
 import { X } from "lucide-react"
 import { Ingredient, RecipeStep } from "@/types/item"
 import { formatAmount } from "@/lib/recipe-amount"
@@ -10,7 +9,7 @@ import { cn } from "@/lib/utils"
 import { logEvent } from "@/lib/events"
 import { useRouter } from "@/lib/navigation"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
-import { Sheet } from "@/components/kit"
+import { Photo, Sheet } from "@/components/kit"
 
 interface StepModeProps {
 	steps: RecipeStep[]
@@ -154,7 +153,7 @@ export default function StepMode({ steps, ingredients, servingsLabel, startAt, r
 					{step.image_url && (
 						<div className="relative -mx-5 -mt-6 mb-5 h-[min(40dvh,75vw)] overflow-hidden rounded-t-[3px] bg-muted">
 							{/* 요리 중에는 사진 전체가 정보다: 자르지 않고 프레임 안에 맞춘다 */}
-							<Image src={step.image_url} alt={`${index + 1}단계 사진`} fill sizes="100vw" className="object-contain" />
+							<Photo src={step.image_url} alt={`${index + 1}단계 사진`} sizes="(max-width: 448px) 100vw, 448px" fit="contain" />
 						</div>
 					)}
 					<p className="whitespace-pre-wrap break-words text-[26px] font-medium leading-[1.55]">{step.description}</p>

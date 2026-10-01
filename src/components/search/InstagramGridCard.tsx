@@ -1,12 +1,11 @@
 "use client"
 
-import Image from "next/image"
 import { ChefHat, Camera } from "lucide-react"
 
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import { useNavigation } from "@/hooks/useNavigation"
 import type { Item } from "@/types/item"
-import { IntentLink } from "@/components/kit"
+import { IntentLink, Photo, PhotoCount } from "@/components/kit"
 
 interface InstagramGridCardProps {
   item: Item
@@ -38,14 +37,9 @@ export default function InstagramGridCard({ item }: InstagramGridCardProps) {
   return (
     <IntentLink href={detailUrl} className="block group">
       <div className="relative aspect-square overflow-hidden rounded-[2px] bg-muted">
-        {/* 이미지 */}
+        <PhotoCount count={cachedItem.image_urls?.length || 0} />
         {item.image_urls && item.image_urls.length > 0 ? (
-          <Image 
-            src={cachedItem.image_urls[cachedItem.thumbnail_index || 0]} 
-            alt={item.title || "Post Image"} 
-            fill 
-            className="object-cover" 
-          />
+          <Photo src={cachedItem.image_urls[cachedItem.thumbnail_index || 0]} alt={item.title || ""} sizes="(max-width: 448px) 33vw, 150px" />
         ) : (
           <div className="w-full h-full bg-muted flex items-center justify-center">
             {item.item_type === 'recipe' ? (
