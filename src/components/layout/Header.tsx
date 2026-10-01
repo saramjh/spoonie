@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Bell, Bookmark } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import useSWR from 'swr';
+import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
+import { NOTIFICATION_RECEIVED_EVENT } from '@/lib/realtime-events';
 import { useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { default as NextImage } from 'next/image';
@@ -46,10 +48,20 @@ export default function Header() {
   const { data: unreadCount, mutate } = useSWR(
     user ? `unread_notifications_count_${user.id}` : null,
     () => fetchUnreadNotificationsCount(user!.id),
-    { refreshInterval: 30000 } // 30초마다 폴링
+    // 새 알림은 아래 실시간 구독으로 즉시 반영한다. 폴링은 연결이 끊겼을 때를 위한 안전장치다.
+    { refreshInterval: 300000 }
   );
 
-  // 🔔 폴링 기반으로 전환되어 실시간 알림 핸들러 불필요
+  // 내게 온 새 알림만 구독해 배지와 알림 목록을 즉시 갱신한다
+  useRealtimeRefresh({
+    channel: `notifications:${user?.id}`,
+    table: 'notifications',
+    filter: user ? `user_id=eq.${user.id}` : null,
+    onChange: () => {
+      mutate();
+      window.dispatchEvent(new Event(NOTIFICATION_RECEIVED_EVENT));
+    },
+  });
 
   useEffect(() => {
     if (!user) return;

@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import type { User } from "@supabase/supabase-js"
 import type { ServerFeedData } from "@/lib/server-data"
-import { useRealtimeSync } from "@/hooks/useRealtimeSync"
 import { usePageVisibility } from "@/hooks/usePageVisibility"
 import { useHistorySync } from "@/hooks/useHistorySync"
 import { useNavigation } from "@/hooks/useNavigation"
@@ -43,9 +42,8 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
   // 🧭 Smart Navigation: 홈피드 navigation history 추적
   useNavigation({ trackHistory: true })
 
-  // 실시간 동기화 훅
-  // const { applyOptimisticUpdate } = useRealtimeSync() // Handled by unified cache manager
-  useRealtimeSync()
+  // 피드는 화면 복귀 시 갱신한다 (usePageVisibility). 테이블 전체를 구독하는 실시간 채널은
+  // 모든 방문자에게 사이트 전체 변경을 보내 부담이 커지므로 사용하지 않는다.
 
   // 🚀 업계 표준: 히스토리 뒤로가기 완벽 보장
   usePageVisibility({

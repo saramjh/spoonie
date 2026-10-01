@@ -16,7 +16,8 @@ import { Send, Trash2, CornerUpLeft } from "lucide-react"
 import { Comment } from "@/types/item"
 import { timeAgo } from "@/lib/utils"
 import Link from "next/link"
-import useSWR from "swr"
+import useSWR, { mutate } from "swr"
+import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh"
 import type { Item } from "@/types/item"
 
 interface SimplifiedCommentsSectionProps {
@@ -88,6 +89,25 @@ export default function SimplifiedCommentsSection({
       }) as Comment[]
     }
   )
+
+  // 이 게시물의 댓글 추가/삭제(소프트 삭제는 UPDATE)를 구독해 다른 사용자의 댓글을 즉시 반영한다.
+  // 댓글 수는 증감 계산 대신 새 목록에서 다시 세어, 내 댓글이 두 번 반영되지 않게 한다.
+  useRealtimeRefresh({
+    channel: `comments:${itemId}`,
+    table: "comments",
+    filter: itemId ? `item_id=eq.${itemId}` : null,
+    events: ["INSERT", "UPDATE"],
+    onChange: async () => {
+      const fresh = await mutateComments()
+      if (!fresh) return
+      const visibleCount = fresh.filter((comment) => !comment.is_deleted).length
+      await mutate(
+        `itemDetail|${itemId}`,
+        (current: Item | undefined) => (current ? { ...current, comments_count: visibleCount } : current),
+        { revalidate: false }
+      )
+    },
+  })
 
   const handleAddComment = async () => {
     if (!currentUserId || !newComment.trim() || isSubmitting) return

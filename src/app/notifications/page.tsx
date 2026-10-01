@@ -10,6 +10,7 @@ import { ko } from 'date-fns/locale'
 import { BellOff, UserCircle2, X, Trash2, Heart, MessageCircle, UserPlus, ChefHat, Bell } from 'lucide-react'
 import { useRouter } from '@/lib/navigation'
 import PushNotificationSettings from '@/components/notifications/PushNotificationSettings'
+import { NOTIFICATION_RECEIVED_EVENT } from '@/lib/realtime-events';
 
 interface Notification {
   id: string;
@@ -125,11 +126,11 @@ export default function NotificationsPage() {
       let interval;
       
       if (timeSinceActivity < 30000) { // 30초 이내 활동
-        interval = 10000; // 10초마다
+        interval = 60000; // 실시간 구독의 안전장치: 1분
       } else if (timeSinceActivity < 120000) { // 2분 이내 활동
-        interval = 20000; // 20초마다  
+        interval = 120000; // 2분  
       } else { // 비활성 상태
-        interval = 60000; // 60초마다
+        interval = 300000; // 5분
       }
       
       pollInterval = setInterval(() => {
@@ -170,6 +171,10 @@ export default function NotificationsPage() {
       navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
     }
 
+    // 4️⃣ 헤더의 실시간 구독이 새 알림을 받으면 목록을 다시 불러온다
+    const handleRealtimeNotification = () => setRefreshTrigger(prev => prev + 1);
+    window.addEventListener(NOTIFICATION_RECEIVED_EVENT, handleRealtimeNotification);
+
     return () => {
       clearInterval(pollInterval);
       ['click', 'scroll', 'keydown', 'touchstart'].forEach(event => {
@@ -179,6 +184,7 @@ export default function NotificationsPage() {
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
       }
+      window.removeEventListener(NOTIFICATION_RECEIVED_EVENT, handleRealtimeNotification);
     };
   }, [currentUser?.id, fetchUserAndNotifications]);
 
