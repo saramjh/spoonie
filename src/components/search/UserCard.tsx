@@ -1,5 +1,5 @@
 "use client"
-import Link from "next/link"
+import { IntentLink } from "@/components/kit"
 import Image from "next/image"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { User } from "lucide-react"
@@ -26,7 +26,7 @@ export default function UserCard({ user }: UserCardProps) {
   const profileUrl = createLinkWithOrigin(`/profile/${user.user_id}`)
   
   return (
-    <Link href={profileUrl} className="block">
+    <IntentLink href={profileUrl} className="block">
       <Sheet className="p-4">
         <div className="flex items-center space-x-3 mb-3">
           {/* 유저 아바타 */}
@@ -71,6 +71,6 @@ export default function UserCard({ user }: UserCardProps) {
           </div>
         )}
       </Sheet>
-    </Link>
+    </IntentLink>
   )
 } 

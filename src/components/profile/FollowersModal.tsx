@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Users, Clock } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { ko } from "date-fns/locale"
-import Link from "next/link"
 import FollowButton from "@/components/items/FollowButton"
+import { IntentLink } from "@/components/kit"
 
 interface FollowerProfile {
 	id: string
@@ -164,7 +164,7 @@ export default function FollowersModal({ isOpen, onClose, userId, currentUserId 
 						<div className="space-y-3">
 							{followers.map((follower) => (
 								<div key={follower.id} className="flex items-center justify-between py-2">
-									<Link 
+									<IntentLink 
 										href={`/profile/${follower.public_id || follower.id}`}
 										className="flex items-center space-x-3 flex-1 hover:bg-door rounded-lg p-2 transition-colors"
 									>
@@ -191,7 +191,7 @@ export default function FollowersModal({ isOpen, onClose, userId, currentUserId 
 												</span>
 											</div>
 										</div>
-									</Link>
+									</IntentLink>
 									
 									{/* 자기 자신이 아닌 경우에만 팔로우 버튼 표시 */}
 									{currentUserId && follower.id !== currentUserId && (

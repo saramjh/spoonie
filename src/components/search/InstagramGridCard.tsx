@@ -1,12 +1,12 @@
 "use client"
 
-import Link from "next/link"
 import Image from "next/image"
 import { ChefHat, Camera } from "lucide-react"
 
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import { useNavigation } from "@/hooks/useNavigation"
 import type { Item } from "@/types/item"
+import { IntentLink } from "@/components/kit"
 
 interface InstagramGridCardProps {
   item: Item
@@ -36,7 +36,7 @@ export default function InstagramGridCard({ item }: InstagramGridCardProps) {
   const detailUrl = createLinkWithOrigin(baseUrl)
   
   return (
-    <Link href={detailUrl} className="block group">
+    <IntentLink href={detailUrl} className="block group">
       <div className="relative aspect-square overflow-hidden rounded-[2px] bg-muted">
         {/* 이미지 */}
         {item.image_urls && item.image_urls.length > 0 ? (
@@ -65,6 +65,6 @@ export default function InstagramGridCard({ item }: InstagramGridCardProps) {
           </div>
         )}
       </div>
-    </Link>
+    </IntentLink>
   )
 } 

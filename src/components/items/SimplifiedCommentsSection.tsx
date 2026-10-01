@@ -15,10 +15,10 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import { Send, Trash2, CornerUpLeft } from "lucide-react"
 import { Comment } from "@/types/item"
 import { timeAgo } from "@/lib/utils"
-import Link from "next/link"
 import useSWR, { mutate } from "swr"
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh"
 import type { Item } from "@/types/item"
+import { IntentLink } from "@/components/kit"
 
 interface SimplifiedCommentsSectionProps {
   currentUserId?: string
@@ -274,24 +274,24 @@ export default function SimplifiedCommentsSection({
               {/* 부모 댓글 */}
               <div className="flex items-start gap-3">
                 {/* 프로필 이미지 + 링크 */}
-                <Link href={`/profile/${comment.user?.public_id || comment.user?.username || comment.user_id}`}>
+                <IntentLink href={`/profile/${comment.user?.public_id || comment.user?.username || comment.user_id}`}>
                   <Avatar className="h-8 w-8 border hover:opacity-80 transition-opacity">
                     <AvatarImage src={comment.user?.avatar_url || undefined} />
                     <AvatarFallback className="text-[13px]">
                       {comment.user?.username?.charAt(0) || "U"}
                     </AvatarFallback>
                   </Avatar>
-                </Link>
+                </IntentLink>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline gap-2 flex-wrap">
                     {/* 유저네임 + 프로필 링크 */}
-                    <Link
+                    <IntentLink
                       href={`/profile/${comment.user?.public_id || comment.user?.username || comment.user_id}`}
                       className="font-semibold text-ink text-sm hover:underline transition-colors"
                     >
                       {comment.user?.username || '익명'}
-                    </Link>
+                    </IntentLink>
                     <span className="text-[13px] text-ink-soft">
                       {timeAgo(comment.created_at)}
                     </span>
@@ -378,23 +378,23 @@ export default function SimplifiedCommentsSection({
                     .map((reply) => (
                       <div key={reply.id} className="flex items-start gap-3">
                         {/* 대댓글 프로필 이미지 */}
-                        <Link href={`/profile/${reply.user?.public_id || reply.user?.username || reply.user_id}`}>
+                        <IntentLink href={`/profile/${reply.user?.public_id || reply.user?.username || reply.user_id}`}>
                           <Avatar className="h-6 w-6 border hover:opacity-80 transition-opacity">
                             <AvatarImage src={reply.user?.avatar_url || undefined} />
                             <AvatarFallback className="text-[13px]">
                               {reply.user?.username?.charAt(0) || "U"}
                             </AvatarFallback>
                           </Avatar>
-                        </Link>
+                        </IntentLink>
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-baseline gap-2 flex-wrap">
-                            <Link
+                            <IntentLink
                               href={`/profile/${reply.user?.public_id || reply.user?.username || reply.user_id}`}
                               className="font-semibold text-ink text-[13px] hover:underline transition-colors"
                             >
                               {reply.user?.username || '익명'}
-                            </Link>
+                            </IntentLink>
                             <span className="text-[13px] text-ink-soft">
                               {timeAgo(reply.created_at)}
                             </span>

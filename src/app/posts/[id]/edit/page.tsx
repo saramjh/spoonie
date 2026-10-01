@@ -3,10 +3,11 @@
 import { useParams } from "next/navigation"
 import { useState, useEffect } from "react"
 import PostForm from "@/components/items/PostForm"
-import PostCardSkeleton from "@/components/items/PostCardSkeleton"
 import { useItemDetail } from "@/hooks/useItemDetail"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import { useNavigation } from "@/hooks/useNavigation"
+import { PageLoading } from "@/components/kit"
+import DetailStateMessage from "@/components/common/DetailStateMessage"
 
 export default function PostEditPage() {
 	const params = useParams()
@@ -75,48 +76,22 @@ export default function PostEditPage() {
 	}, [baseItem, cachedItem, initialData, isLoading, error])
 
 	if (isLoading) {
-		return (
-			<div className="p-4">
-				<PostCardSkeleton />
-			</div>
-		)
+		return (<PageLoading />)
 	}
 
 	// 개선된 에러 조건: 실제 에러가 있고 baseItem도 없는 경우에만 에러 처리
 	if (error && !baseItem) {
 		console.error("PostEditPage: Error loading item", itemId, error)
-		return (
-			<div className="p-4">
-				<div className="text-center">
-					<h1 className="text-2xl font-bold text-ink mb-2">
-						레시피드를 찾을 수 없습니다
-					</h1>
-					<p className="text-ink-soft">
-						요청하신 레시피드가 존재하지 않거나 삭제되었습니다.
-					</p>
-				</div>
-			</div>
-		)
+		return <DetailStateMessage title="레시피드를 찾을 수 없어요" body="이미 삭제되었거나 고칠 수 없는 글이에요." link={{ href: "/", label: "홈으로" }} />
 	}
 
 	// 로딩 중이거나 initialData가 준비되지 않은 경우 스켈레톤 표시
 	if (!initialData) {
-		return (
-			<div className="p-4">
-				<PostCardSkeleton />
-			</div>
-		)
+		return (<PageLoading />)
 	}
 
 	if (initialData.item_type !== "post") {
-		return (
-			<div className="p-4">
-				<div className="text-center">
-					<h1 className="text-2xl font-bold text-ink mb-2">잘못된 요청입니다</h1>
-					<p className="text-ink-soft">이 항목은 레시피드가 아닙니다.</p>
-				</div>
-			</div>
-		)
+		return <DetailStateMessage title="다른 종류의 글이에요" body="이 화면에서는 레시피드만 고칠 수 있어요." link={{ href: "/", label: "홈으로" }} />
 	}
 
 

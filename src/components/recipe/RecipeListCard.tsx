@@ -1,9 +1,8 @@
 "use client"
 
-import Link from "next/link"
 import Image from "next/image"
 import { ChefHat } from "lucide-react"
-import { CheckBox, Magnet } from "@/components/kit"
+import { CheckBox, IntentLink, Magnet } from "@/components/kit"
 import { formatCompactTime } from "@/lib/utils"
 import { formatCookingTime } from "@/lib/recipe-amount"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
@@ -83,7 +82,7 @@ export default function RecipeListCard({
         </button>
       )}
 
-      <Link href={detailUrl} className="relative flex items-center gap-3 rounded-[3px] bg-paper p-2 pr-4 shadow-sheet">
+      <IntentLink href={detailUrl} className="relative flex items-center gap-3 rounded-[3px] bg-paper p-2 pr-4 shadow-sheet">
         {showColor && <Magnet color={displayItem.color_label} size="sm" className="absolute -left-1.5 top-1/2 z-20 -translate-y-1/2" />}
         <div className="relative h-[72px] w-[72px] flex-shrink-0 overflow-hidden rounded-[2px] bg-muted">
           {thumbnail ? (
@@ -103,7 +102,7 @@ export default function RecipeListCard({
             {!displayItem.is_public && " · 비공개"}
           </p>
         </div>
-      </Link>
+      </IntentLink>
     </div>
   )
 }

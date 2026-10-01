@@ -125,3 +125,8 @@ svg[data-motion="stir"] .logo-spoon {
 		animation: none;
 	}
 }
+
+/* 스플래시는 세션당 한 번: 두 번째 홈 진입부터는 그리지 않는다 (layout.tsx 인라인 스크립트) */
+.splash-seen [data-splash] {
+	display: none;
+}

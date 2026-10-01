@@ -73,13 +73,19 @@ export default function RootLayout({
 	children: React.ReactNode
 }>) {
 	return (
-		<html lang="ko">
+		<html lang="ko" suppressHydrationWarning>
 			<head>
 				{/* Google AdSense 인증 메타 태그 - 최우선 위치 */}
 				<meta name="google-adsense-account" content="ca-pub-4410729598083068" />
 				{/* 추가 SEO 메타 태그 */}
 				<meta name="author" content="Spoonie Team" />
 				<meta name="format-detection" content="telephone=no" />
+				{/* 스플래시는 브라우저 세션당 한 번만 (첫 페인트 전에 판단해 깜빡임이 없다) */}
+				<script
+					dangerouslySetInnerHTML={{
+						__html: "try{if(sessionStorage.getItem('spoonie-splash')){document.documentElement.classList.add('splash-seen')}else{sessionStorage.setItem('spoonie-splash','1')}}catch(e){}",
+					}}
+				/>
 			</head>
 			<body className="min-h-screen bg-background font-sans antialiased" suppressHydrationWarning={true}>
 				{/* Google Analytics */}

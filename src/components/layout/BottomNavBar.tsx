@@ -7,6 +7,7 @@ import { Home, Book, Search, Plus, User, Loader2 } from "lucide-react"
 import { useSessionStore } from "@/store/sessionStore"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import CreateOptionsModal from "@/components/layout/CreateOptionsModal"
+import { IntentLink } from "@/components/kit"
 
 export default function BottomNavBar() {
 	const pathname = usePathname()
@@ -49,12 +50,12 @@ export default function BottomNavBar() {
 
 
 			return (
-				<Link href={profileHref} aria-label="내 프로필" className="flex min-w-14 flex-col items-center gap-1 py-1">
+				<IntentLink href={profileHref} aria-label="내 프로필" className="flex min-w-14 flex-col items-center gap-1 py-1">
 					<Avatar className="w-7 h-7 ring-2 ring-transparent">
 						<AvatarImage src={profile.avatar_url || ""} alt={profile.username || "User"} />
 						<AvatarFallback className="text-ink">{profile.username?.charAt(0) || "S"}</AvatarFallback>
 					</Avatar>
-				</Link>
+				</IntentLink>
 			)
 		}
 

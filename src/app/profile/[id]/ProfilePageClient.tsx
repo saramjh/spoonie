@@ -22,7 +22,7 @@ import { useFollowStore } from "@/store/followStore" // 업계 표준: 글로벌
 import { useNavigation } from "@/hooks/useNavigation"
 import useSWR from "swr"
 import { fetchProfile, fetchUserItems, fetchFollowCounts, fetchFollowStatus, fetchLineageCounts, type UserProfile } from "@/lib/profile-data"
-import { StateSheet, UnderlineTabs } from "@/components/kit"
+import { IntentLink, StateSheet, UnderlineTabs } from "@/components/kit"
 
 interface ProfilePageClientProps {
 	params: { id: string }
@@ -273,14 +273,14 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 							const thumb = item.image_urls?.[item.thumbnail_index || 0]
 							return (
 								<li key={item.id}>
-									<Link href={`/posts/${item.id}`} className="relative block aspect-square overflow-hidden rounded-[2px] bg-muted" aria-label={item.title || item.content?.slice(0, 30) || "레시피드"}>
+									<IntentLink href={`/posts/${item.id}`} className="relative block aspect-square overflow-hidden rounded-[2px] bg-muted" aria-label={item.title || item.content?.slice(0, 30) || "레시피드"}>
 										{thumb ? (
 											<Image src={thumb} alt="" fill sizes="33vw" priority={index < 3} className="object-cover" />
 										) : (
 											<span className="flex h-full items-center p-2 text-[13px] leading-snug text-ink line-clamp-4">{item.content}</span>
 										)}
 										{!item.is_public && <span className="absolute left-1 top-1 rounded-[2px] bg-ink/80 px-1.5 text-[11px] text-paper">비공개</span>}
-									</Link>
+									</IntentLink>
 								</li>
 							)
 						})}

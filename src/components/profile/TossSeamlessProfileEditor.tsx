@@ -15,7 +15,7 @@ import { validateUsername, checkUsernameAvailability, generateUniqueUsername } f
 import { useSessionStore } from "@/store/sessionStore"
 import { getCacheManager } from "@/lib/unified-cache-manager"
 import { optimizeImages } from "@/lib/image-utils"
-import { PageHeader, Sheet } from "@/components/kit"
+import { PageHeader, PageLoading, Sheet } from "@/components/kit"
 
 interface Profile {
   username: string | null
@@ -437,9 +437,7 @@ export default function TossSeamlessProfileEditor({
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-orange-ink" />
-      </div>
+      <PageLoading />
     )
   }
 

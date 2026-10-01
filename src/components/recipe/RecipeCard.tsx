@@ -1,9 +1,8 @@
 "use client"
 
-import Link from "next/link"
 import Image from "next/image"
 import { ChefHat } from "lucide-react"
-import { CheckBox, Magnet } from "@/components/kit"
+import { CheckBox, IntentLink, Magnet } from "@/components/kit"
 import { formatCookingTime } from "@/lib/recipe-amount"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import { useNavigation } from "@/hooks/useNavigation"
@@ -64,7 +63,7 @@ export default function RecipeCard({ item, isSelectable, isSelected, onSelectCha
 				</button>
 			)}
 
-			<Link href={detailUrl} className="relative block rounded-[3px] bg-paper shadow-sheet">
+			<IntentLink href={detailUrl} className="relative block rounded-[3px] bg-paper shadow-sheet">
 				{showColor && <Magnet color={displayItem.color_label} size="md" className="absolute -top-2 left-3 z-20" />}
 				<div className="relative aspect-[4/3] w-full overflow-hidden rounded-t-[3px] bg-muted">
 					{thumbnail ? (
@@ -81,7 +80,7 @@ export default function RecipeCard({ item, isSelectable, isSelected, onSelectCha
 						{[showAuthor ? item.username : null, ...meta, !displayItem.is_public ? "비공개" : null].filter(Boolean).join(" · ")}
 					</p>
 				</div>
-			</Link>
+			</IntentLink>
 		</div>
 	)
 }

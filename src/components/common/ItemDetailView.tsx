@@ -31,7 +31,7 @@ import SourceLine from "@/components/items/SourceLine"
 import { useThumbnail } from "@/hooks/useThumbnail"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import { cacheManager } from "@/lib/unified-cache-manager"
-import { SectionHeading, Sheet } from "@/components/kit"
+import { IntentLink, SectionHeading, Sheet } from "@/components/kit"
 
 interface ItemDetailViewProps {
 	item: ItemDetail | null | undefined
@@ -411,7 +411,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 				{shown.map((cited, i) => {
 					const authorProfile = Array.isArray(cited.author) ? cited.author[0] : cited.author
 					return (
-						<Link
+						<IntentLink
 							key={cited.id}
 							href={`/recipes/${cited.id}`}
 							className={cn(
@@ -424,7 +424,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 							{i === shown.length - 1 && citedRecipes.length > shown.length && (
 								<span className="text-ink-soft"> 외 {citedRecipes.length - shown.length}개</span>
 							)}
-						</Link>
+						</IntentLink>
 					)
 				})}
 			</nav>
@@ -446,18 +446,18 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 					<ul className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1">
 						{relations.made.map((made) => (
 							<li key={made.id} className="w-28 flex-shrink-0">
-								<Link href={`/posts/${made.id}`} className="block">
+								<IntentLink href={`/posts/${made.id}`} className="block">
 									<div className="relative aspect-square overflow-hidden rounded-[2px] bg-muted">
 										{made.image_url && <Image src={made.image_url} alt="" fill sizes="112px" className="object-cover" />}
 									</div>
 									<p className="mt-1 truncate text-[13px] text-ink-soft">{made.username}</p>
-								</Link>
+								</IntentLink>
 							</li>
 						))}
 					</ul>
 				)}
 				<Button asChild variant="outline" className="mt-3 w-full">
-					<Link href={requireLogin(`/posts/new?source=${stableItemId}&origin=recipe_detail`)}>이 레시피로 만들었어요</Link>
+					<IntentLink href={requireLogin(`/posts/new?source=${stableItemId}&origin=recipe_detail`)}>이 레시피로 만들었어요</IntentLink>
 				</Button>
 
 				{relations.continued.length > 0 && (
@@ -468,12 +468,12 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 						<ul className="mt-2 divide-y divide-border">
 							{relations.continued.map((next) => (
 								<li key={next.id}>
-									<Link href={`/recipes/${next.id}`} className="flex min-h-12 items-center gap-2 py-2.5 text-[15px] text-ink">
+									<IntentLink href={`/recipes/${next.id}`} className="flex min-h-12 items-center gap-2 py-2.5 text-[15px] text-ink">
 										<span className="min-w-0 truncate">
 											{next.username}의 <span className="font-semibold">{next.title}</span>
 										</span>
 										{next.relation_type === "adapted" && <span className="flex-shrink-0 text-sm text-ink-soft">고친 버전</span>}
-									</Link>
+									</IntentLink>
 								</li>
 							))}
 						</ul>
@@ -497,14 +497,14 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 						<ArrowLeft className="h-6 w-6" aria-hidden />
 					</Button>
 
-					<Link href={`/profile/${item.user_public_id || item.user_id}`} className="flex min-w-0 flex-1 items-center gap-2.5">
+					<IntentLink href={`/profile/${item.user_public_id || item.user_id}`} className="flex min-w-0 flex-1 items-center gap-2.5">
 						<Avatar className="h-8 w-8">
 							<AvatarImage src={item.avatar_url || undefined} alt="" />
 							<AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
 						</Avatar>
 						<span className="truncate font-semibold text-ink">{authorName}</span>
 						<span className="flex-shrink-0 text-sm text-ink-soft">{isRecipe ? "레시피" : "레시피드"}</span>
-					</Link>
+					</IntentLink>
 
 					<div className="flex items-center pr-1">
 						{isOwnItem ? (
@@ -590,10 +590,10 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 
 							{/* 기존 recipe_id 기반 참고 레시피 (하위호환) */}
 							{!isRecipe && item.recipe_id && citedRecipe && (
-								<Link href={`/recipes/${citedRecipe.id}`} className="mt-4 block text-[15px] text-ink underline underline-offset-4">
+								<IntentLink href={`/recipes/${citedRecipe.id}`} className="mt-4 block text-[15px] text-ink underline underline-offset-4">
 									{/* @ts-expect-error - profiles relation can be array or object */}
 									참고한 레시피: {citedRecipe.profiles?.username || "익명"}의 {citedRecipe.title}
-								</Link>
+								</IntentLink>
 							)}
 
 							{!isRecipe && (

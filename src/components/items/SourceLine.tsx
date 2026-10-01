@@ -1,6 +1,6 @@
-import Link from "next/link"
 import type { Item } from "@/types/item"
 import { withRo } from "@/lib/josa"
+import { IntentLink } from "@/components/kit"
 
 interface SourceLineProps {
 	recipes: Item[]
@@ -18,7 +18,7 @@ export default function SourceLine({ recipes, creationOrigin, className }: Sourc
 	const name = `${author?.username || "익명"}의 ${first.title || "레시피"}`
 	return (
 		<p className={className}>
-			<Link href={`/recipes/${first.id}`} className="text-[15px] text-ink" onClick={(e) => e.stopPropagation()}>
+			<IntentLink href={`/recipes/${first.id}`} className="text-[15px] text-ink" onClick={(e) => e.stopPropagation()}>
 				{cooked ? (
 					<>
 						<span className="font-semibold underline decoration-ink/30 underline-offset-4">{withRo(name)}</span>
@@ -30,7 +30,7 @@ export default function SourceLine({ recipes, creationOrigin, className }: Sourc
 						<span className="font-semibold underline decoration-ink/30 underline-offset-4">{name}</span>
 					</>
 				)}
-			</Link>
+			</IntentLink>
 			{rest.length > 0 && <span className="text-sm text-ink-soft"> 외 {rest.length}개</span>}
 		</p>
 	)

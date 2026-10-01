@@ -1,4 +1,3 @@
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
@@ -26,7 +25,7 @@ import ExpandableText from "@/components/common/ExpandableText"
 import SourceLine from "@/components/items/SourceLine"
 import { cacheManager } from "@/lib/unified-cache-manager"
 import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
-import { Sheet } from "@/components/kit"
+import { IntentLink, Sheet } from "@/components/kit"
 
 /**
  * 검증된 홈 피드 게시물 카드 컴포넌트
@@ -230,22 +229,22 @@ export default function PostCard({
 
       <header className="flex items-center justify-between gap-2 py-2 pl-4 pr-1.5">
         <div className="flex min-w-0 items-center gap-2.5">
-          <Link href={profileHref} aria-hidden tabIndex={-1}>
+          <IntentLink href={profileHref} aria-hidden tabIndex={-1}>
             <Avatar className="h-9 w-9">
               <AvatarImage src={enrichedItem.avatar_url || undefined} alt="" />
               <AvatarFallback>{(enrichedItem.username || "?").charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
-          </Link>
+          </IntentLink>
           <div className="min-w-0">
-            <Link href={profileHref} className="block truncate text-[15px] font-semibold text-ink">
+            <IntentLink href={profileHref} className="block truncate text-[15px] font-semibold text-ink">
               {enrichedItem.username || "알 수 없는 사용자"}
-            </Link>
+            </IntentLink>
             <p className="text-[13px] text-ink-soft">
               <span>{isRecipe ? "레시피" : "레시피드"}</span>
               {" · "}
-              <Link href={detailUrl}>
+              <IntentLink href={detailUrl}>
                 <time dateTime={item.created_at}>{timeAgo(item.created_at)}</time>
-              </Link>
+              </IntentLink>
               {!displayItem.is_public && <span> · 비공개</span>}
             </p>
           </div>
@@ -309,7 +308,7 @@ export default function PostCard({
         {isRecipe ? (
           <>
             <h2 className="text-[20px] font-bold leading-snug text-ink [text-wrap:balance]">
-              <Link href={detailUrl}>{displayItem.title}</Link>
+              <IntentLink href={detailUrl}>{displayItem.title}</IntentLink>
             </h2>
             {(displayItem.servings || cookingTime) && (
               <p className="mt-1 text-[15px] text-ink-soft">

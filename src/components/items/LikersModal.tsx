@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Heart, Clock } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { ko } from "date-fns/locale"
-import Link from "next/link"
 import type { Profile } from "@/types/item"
+import { IntentLink } from "@/components/kit"
 
 interface LikerProfile {
 	id: string
@@ -139,7 +139,7 @@ export default function LikersModal({ isOpen, onClose, itemId, itemType, current
 					{!loading && !error && likers.length > 0 && (
 						<div className="space-y-1">
 							{likers.map((liker) => (
-								<Link key={liker.id} href={`/profile/${liker.public_id || liker.id}`} onClick={() => onClose()} className="block">
+								<IntentLink key={liker.id} href={`/profile/${liker.public_id || liker.id}`} onClick={() => onClose()} className="block">
 									<div className="flex items-center gap-3 p-3 rounded-lg hover:bg-door transition-colors cursor-pointer">
 										<Avatar className="w-10 h-10">
 											<AvatarImage src={liker.avatar_url || undefined} />
@@ -162,7 +162,7 @@ export default function LikersModal({ isOpen, onClose, itemId, itemType, current
 											</div>
 										</div>
 									</div>
-								</Link>
+								</IntentLink>
 							))}
 						</div>
 					)}
