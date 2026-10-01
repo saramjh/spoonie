@@ -2,6 +2,7 @@
 
 import { useEffect, useState, ReactNode } from "react"
 import { usePathname } from "next/navigation"
+import { rememberPath } from "@/lib/surface"
 import { useSWRConfig } from "swr"
 import SplashScreen from "./SplashScreen"
 import AppWrapper from "./AppWrapper"
@@ -27,6 +28,11 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
   const pathname = usePathname()
   // 스플래시는 홈으로 들어올 때만 보여 준다. 공유 링크로 상세에 들어오면 이미 그려진 본문을 가리지 않는다.
   const [splashRoute] = useState(() => pathname === "/")
+
+  // 행동 기록이 "어디서 왔는지"를 알 수 있게 화면 이동을 기억한다
+  useEffect(() => {
+    rememberPath(pathname)
+  }, [pathname])
 
 
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "@/lib/navigation"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
@@ -20,6 +20,8 @@ import FollowingModal from "@/components/profile/FollowingModal"
 import { useSessionStore } from "@/store/sessionStore"
 import { useFollowStore } from "@/store/followStore" // 업계 표준: 글로벌 팔로우 상태
 import { useNavigation } from "@/hooks/useNavigation"
+import { logEvent } from "@/lib/events"
+import { cameFrom } from "@/lib/surface"
 import useSWR from "swr"
 import { fetchProfile, fetchUserItems, fetchFollowCounts, fetchFollowStatus, fetchLineageCounts, type UserProfile } from "@/lib/profile-data"
 import { IntentLink, Photo, PhotoCount, StateSheet, UnderlineTabs } from "@/components/kit"
@@ -129,6 +131,16 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 		}
 		getSessionUser()
 	}, [supabase.auth])
+
+	// 프로필 방문 기록: 글에서 왔으면 그 글을 함께 남겨 "글 → 작성자 발견"을 잰다. 본인 프로필은 남기지 않는다
+	const loggedVisitRef = useRef<string | null>(null)
+	useEffect(() => {
+		if (!sessionUser?.id || !profile?.id || loggedVisitRef.current === profile.id) return
+		loggedVisitRef.current = profile.id
+		if (sessionUser.id === profile.id) return
+		const from = cameFrom(window.location.pathname)
+		logEvent("profile_open", from.itemId, `${from.surface}|${profile.id}`)
+	}, [sessionUser?.id, profile?.id])
 
 	// Optimistic Updates 시스템에서는 복잡한 새로고침 등록 로직 불필요
 	// 데이터는 SWR과 실시간 동기화를 통해 자동으로 최신 상태 유지

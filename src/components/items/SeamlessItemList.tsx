@@ -9,7 +9,6 @@ import PostCardSkeleton from "./PostCardSkeleton"
 
 
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import type { User } from "@supabase/supabase-js"
@@ -60,11 +59,8 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
     debug: process.env.NODE_ENV === 'development'
   })
 
-  // 사용자 상태 및 가입 유도 모달 관련 상태
+  // 사용자 상태. 가입은 스크롤 도중이 아니라 좋아요·기록처럼 행동하는 순간에만 권한다 (PRODUCT.md 비회원 정책)
   const [currentUser, setCurrentUser] = useState<User | null>(initialData?.currentUser || null)
-  const scrollCountRef = useRef(0)
-  const [showSignupModal, setShowSignupModal] = useState(false)
-  const [isAuthLoading, setIsAuthLoading] = useState(!initialData?.currentUser)
   const visibleItemsRef = useRef<Set<string>>(new Set())
 
   // 사용자 상태 확인: 홈 HTML은 공개 피드로 정적 생성되므로 로그인 여부는 항상 브라우저에서 확인한다
@@ -73,7 +69,6 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       setCurrentUser(user)
-      setIsAuthLoading(false)
     }
     checkUser()
   }, [supabase, initialData])
@@ -199,18 +194,9 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
 
         // 새 페이지 로딩 후 스마트 동기화
         setTimeout(() => performSmartSync('normal'), 1000)
-
-        // 비회원인 경우 스크롤 카운트 증가
-        if (!currentUser && !isAuthLoading) {
-          scrollCountRef.current += 1
-          // 10의 배수마다 모달 표시
-          if (scrollCountRef.current % 10 === 0) {
-            setShowSignupModal(true)
-          }
-        }
       }
     },
-    [setSize, isReachingEnd, isLoading, size, currentUser, isAuthLoading, performSmartSync]
+    [setSize, isReachingEnd, isLoading, size, performSmartSync]
   )
 
   useEffect(() => {
@@ -319,26 +305,6 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
           </div>
         </div>
       )}
-
-      {/* 회원가입 유도 모달 */}
-      <Dialog open={showSignupModal} onOpenChange={setShowSignupModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>더 많은 레시피를 만나보세요</DialogTitle>
-            <DialogDescription>
-              회원가입하고 나만의 레시피를 저장하고 공유해보세요.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex gap-2 mt-4">
-            <Link href="/signup" className="flex-1">
-              <Button className="w-full">회원가입</Button>
-            </Link>
-            <Link href="/login" className="flex-1">
-              <Button variant="outline" className="w-full">로그인</Button>
-            </Link>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 } 

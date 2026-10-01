@@ -32,6 +32,8 @@ import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import { cacheManager } from "@/lib/unified-cache-manager"
 import { IntentLink, MadeProof, Photo, RelativeTime, SectionHeading, Sheet, SourceRow } from "@/components/kit"
 import { revalidateItemPage } from "@/lib/revalidate-item"
+import { logEvent } from "@/lib/events"
+import { cameFrom } from "@/lib/surface"
 import { collectItemImageUrls, removeItemImages } from "@/lib/item-images"
 
 interface ItemDetailViewProps {
@@ -217,6 +219,15 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		}
 		fetchCurrentUser()
 	}, [supabase])
+
+	// 상세 열람 기록: 어느 화면에서 왔는지와 함께. 본인 글은 남기지 않는다 (한 화면에 한 번)
+	const loggedOpenRef = useRef<string | null>(null)
+	useEffect(() => {
+		if (!currentUser?.id || !item?.user_id || !stableItemId || loggedOpenRef.current === stableItemId) return
+		loggedOpenRef.current = stableItemId
+		if (currentUser.id === item.user_id) return
+		logEvent("detail_open", stableItemId, cameFrom(window.location.pathname).surface)
+	}, [currentUser?.id, item?.user_id, stableItemId])
 
 	// 댓글 스크롤 useEffect
 	useEffect(() => {
