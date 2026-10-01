@@ -190,16 +190,19 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
         size={size}
         onClick={handleBookmark}
         disabled={isLoading || isAuthLoading}
+        aria-label={isBookmarked ? "저장 취소" : "저장하기"}
+        aria-pressed={isBookmarked}
         className={`transition-colors ${className} ${
           isBookmarked 
-            ? 'text-orange-500 hover:text-orange-600' 
-            : 'text-gray-600 hover:text-orange-500'
+            ? 'text-orange-ink'
+            : 'text-ink-soft hover:text-ink'
         }`}
       >
         <Bookmark 
+          aria-hidden
           className={`h-5 w-5 transition-all duration-200 ${
             isBookmarked 
-              ? 'fill-orange-500 text-orange-500 scale-110' 
+              ? 'fill-primary text-orange-ink scale-110' 
               : 'hover:scale-105'
           }`} 
         />

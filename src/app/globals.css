@@ -4,26 +4,34 @@
 
 @layer base {
 	:root {
-		--background: 204 10% 98%; /* gray-50 */
-		--foreground: 224 71% 4%; /* gray-900 */
-		--card: 204 10% 98%; /* gray-50 */
-		--card-foreground: 224 71% 4%; /* gray-900 */
-		--popover: 204 10% 98%; /* gray-50 */
-		--popover-foreground: 224 71% 4%; /* gray-900 */
-		--primary: 25 95% 53%; /* orange-500 */
-		--primary-foreground: 30 80% 98%; /* orange-50 */
-		--secondary: 210 40% 96.1%;
-		--secondary-foreground: 222.2 47.4% 11.2%;
-		--muted: 210 40% 96.1%;
-		--muted-foreground: 215.4 16.3% 46.9%;
-		--accent: 210 40% 96.1%;
-		--accent-foreground: 222.2 47.4% 11.2%;
-		--destructive: 0 84.2% 60.2%;
-		--destructive-foreground: 210 40% 98%;
-		--border: 214.3 31.8% 91.4%;
-		--input: 214.3 31.8% 91.4%;
-		--ring: 25 95% 53%; /* orange-500 */
+		/* 냉장고 문: 법랑 문 판 위에 흰 종이, 흑연 잉크. 주황은 로고와 주요 동작 면에만 */
+		--background: 144 17% 89%; /* 문 판 #DDE7E1 */
+		--foreground: 202 10% 15%; /* 흑연 #23282B */
+		--card: 0 0% 100%; /* 종이 */
+		--card-foreground: 202 10% 15%;
+		--popover: 0 0% 100%;
+		--popover-foreground: 202 10% 15%;
+		--primary: 25 100% 50%; /* 브랜드 주황 #FF6900 (글자는 흑연으로 얹는다) */
+		--primary-foreground: 202 10% 15%;
+		--secondary: 135 13% 94%;
+		--secondary-foreground: 202 10% 15%;
+		--muted: 135 13% 94%;
+		--muted-foreground: 201 7% 38%; /* #5B6469, 종이 위 6:1 */
+		--accent: 135 13% 94%;
+		--accent-foreground: 202 10% 15%;
+		--destructive: 4 63% 48%;
+		--destructive-foreground: 0 0% 100%;
+		--border: 142 11% 85%;
+		--input: 142 11% 85%;
+		--ring: 24 100% 35%; /* 주황 잉크 #B34700, 종이 위 5.5:1 */
 		--radius: 0.5rem;
+
+		--door: #dde7e1;
+		--paper: #ffffff;
+		--ink: #23282b;
+		--ink-soft: #5b6469;
+		--orange-ink: #b34700;
+		--sheet-shadow: 0 1px 1px rgba(35, 40, 43, 0.06), 0 6px 14px -8px rgba(35, 40, 43, 0.22);
 	}
 
 	.dark {
@@ -56,10 +64,17 @@
 	body {
 		@apply bg-background text-foreground;
 		min-height: 100vh;
-		font-feature-settings: "cv11", "ss01";
+		font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+		word-break: keep-all;
+		overflow-wrap: anywhere;
 		text-rendering: optimizeLegibility;
 		-webkit-font-smoothing: antialiased;
 		-moz-osx-font-smoothing: grayscale;
+	}
+
+	::selection {
+		background: #ffd2b0;
+		color: var(--ink);
 	}
 
 	/* 바우하우스 디자인 원칙 적용 */

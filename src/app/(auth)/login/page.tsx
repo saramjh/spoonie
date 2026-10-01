@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
 import { createSupabaseBrowserClient } from "@/lib/supabase"
 import { useToast } from "@/hooks/use-toast"
+import { safeNextPath } from "@/lib/safe-next-path"
 
 const formSchema = z.object({
 	email: z.string().email({ message: "올바른 이메일을 입력해주세요." }),
@@ -58,16 +59,16 @@ export default function LoginPage() {
 			})
 		} else {
 			setIsRedirecting(true)
-			router.push("/")
+			router.push(safeNextPath(new URLSearchParams(window.location.search).get("next")))
 			router.refresh()
 		}
 	}
 
 	const handleGoogleLogin = async () => {
 		// 🎯 환경변수 우선, 없으면 현재 도메인 사용
-		const redirectUrl = process.env.NEXT_PUBLIC_APP_URL 
-			? `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
-			: `${window.location.origin}/auth/callback`
+		const next = safeNextPath(new URLSearchParams(window.location.search).get("next"))
+		const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth/callback`
+		const redirectUrl = next === "/" ? callbackUrl : `${callbackUrl}?next=${encodeURIComponent(next)}`
 		
 		// 🔍 디버깅용 로그 (개발 환경에서만)
 		if (process.env.NODE_ENV === 'development') {

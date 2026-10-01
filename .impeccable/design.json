@@ -1,0 +1,506 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-01T03:02:14Z",
+  "title": "Design System: Spoonie",
+  "extensions": {
+    "colorMeta": {
+      "door": {
+        "role": "neutral",
+        "displayName": "법랑 문 판",
+        "canonical": "#dde7e1",
+        "oklch": "oklch(91.9% 0.013 160)",
+        "tonalRamp": [
+          "#070d09",
+          "#202723",
+          "#3c443f",
+          "#5b645f",
+          "#7c857f",
+          "#9ea8a2",
+          "#c2ccc6",
+          "#e7f1eb"
+        ],
+        "source": "--door (globals.css), --background 144 17% 89%"
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "종이",
+        "canonical": "#ffffff",
+        "oklch": "oklch(100.0% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ],
+        "source": "--paper, --card"
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "흑연",
+        "canonical": "#23282b",
+        "oklch": "oklch(27.3% 0.009 234)",
+        "tonalRamp": [
+          "#080c0e",
+          "#212629",
+          "#3d4346",
+          "#5c6266",
+          "#7d8387",
+          "#a0a6aa",
+          "#c4cace",
+          "#e9f0f4"
+        ],
+        "source": "--ink, --foreground 202 10% 15%"
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "옅은 흑연",
+        "canonical": "#5b6469",
+        "oklch": "oklch(49.7% 0.014 232)",
+        "tonalRamp": [
+          "#060c10",
+          "#1f262b",
+          "#3b4348",
+          "#5a6368",
+          "#7b8489",
+          "#9da7ac",
+          "#c1cbd1",
+          "#e6f0f6"
+        ],
+        "source": "--ink-soft, --muted-foreground"
+      },
+      "brand-orange": {
+        "role": "primary",
+        "displayName": "브랜드 주황",
+        "canonical": "#ff6900",
+        "oklch": "oklch(70.0% 0.202 44)",
+        "tonalRamp": [
+          "#1f0000",
+          "#431400",
+          "#6f2900",
+          "#9f3f02",
+          "#d25706",
+          "#ff7833",
+          "#fdb697",
+          "#ffeae1"
+        ],
+        "source": "tailwind primary.DEFAULT, --primary 25 100% 50%"
+      },
+      "orange-ink": {
+        "role": "primary",
+        "displayName": "주황 잉크",
+        "canonical": "#b34700",
+        "oklch": "oklch(53.6% 0.155 44)",
+        "tonalRamp": [
+          "#1f0000",
+          "#431400",
+          "#6f2901",
+          "#9f4005",
+          "#cb5d25",
+          "#f3814c",
+          "#fdb698",
+          "#feeae1"
+        ],
+        "source": "--orange-ink, --ring 24 100% 35%"
+      },
+      "rule-line": {
+        "role": "neutral",
+        "displayName": "구분선",
+        "canonical": "#d5ddd8",
+        "oklch": "oklch(89.0% 0.011 159)",
+        "tonalRamp": [
+          "#070d09",
+          "#212723",
+          "#3d4440",
+          "#5c635f",
+          "#7d8480",
+          "#a0a7a2",
+          "#c3cbc6",
+          "#e9f1ec"
+        ],
+        "source": "--border / --input hsl(142 11% 85%)"
+      },
+      "paper-tint": {
+        "role": "neutral",
+        "displayName": "종이 그늘",
+        "canonical": "#eef2ef",
+        "oklch": "oklch(95.7% 0.006 154)",
+        "tonalRamp": [
+          "#090c0a",
+          "#232624",
+          "#404341",
+          "#5f6260",
+          "#808381",
+          "#a2a6a3",
+          "#c6cac7",
+          "#ecf0ed"
+        ],
+        "source": "--muted hsl(135 13% 94%)"
+      },
+      "changed-mark": {
+        "role": "tertiary",
+        "displayName": "바뀐 분량 표시",
+        "canonical": "#c9dfd2",
+        "oklch": "oklch(88.4% 0.029 160)",
+        "tonalRamp": [
+          "#010f07",
+          "#182a20",
+          "#35473d",
+          "#53675b",
+          "#74887c",
+          "#96ab9f",
+          "#bacfc3",
+          "#dff5e8"
+        ],
+        "source": "RecipeContentView.tsx inline literal bg-[#C9DFD2]"
+      },
+      "selection": {
+        "role": "neutral",
+        "displayName": "선택 영역",
+        "canonical": "#ffd2b0",
+        "oklch": "oklch(89.4% 0.068 59)",
+        "tonalRamp": [
+          "#1a0400",
+          "#3b1c00",
+          "#5c381a",
+          "#7e5839",
+          "#a17959",
+          "#c69b7b",
+          "#ebbf9e",
+          "#ffeadb"
+        ],
+        "source": "globals.css ::selection"
+      },
+      "magnet-red": {
+        "role": "tertiary",
+        "displayName": "자석 빨강",
+        "canonical": "#d6453d",
+        "oklch": "oklch(59.5% 0.183 27)",
+        "tonalRamp": [
+          "#220000",
+          "#4e0002",
+          "#810006",
+          "#b21e1d",
+          "#da4941",
+          "#fb766a",
+          "#feb3aa",
+          "#ffe9e6"
+        ],
+        "source": "src/lib/color-options.ts MAGNET_HEX"
+      },
+      "magnet-orange": {
+        "role": "tertiary",
+        "displayName": "자석 주황",
+        "canonical": "#ff6900",
+        "oklch": "oklch(70.0% 0.202 44)",
+        "tonalRamp": [
+          "#1f0000",
+          "#431400",
+          "#6f2900",
+          "#9f3f02",
+          "#d25706",
+          "#ff7833",
+          "#fdb697",
+          "#ffeae1"
+        ],
+        "source": "src/lib/color-options.ts MAGNET_HEX"
+      },
+      "magnet-yellow": {
+        "role": "tertiary",
+        "displayName": "자석 노랑",
+        "canonical": "#f2c230",
+        "oklch": "oklch(83.4% 0.158 89)",
+        "tonalRamp": [
+          "#130900",
+          "#302300",
+          "#533f00",
+          "#785d02",
+          "#a07d06",
+          "#c99f16",
+          "#f3c331",
+          "#ffedc1"
+        ],
+        "source": "src/lib/color-options.ts MAGNET_HEX"
+      },
+      "magnet-green": {
+        "role": "tertiary",
+        "displayName": "자석 초록",
+        "canonical": "#3e9b5f",
+        "oklch": "oklch(61.8% 0.127 152)",
+        "tonalRamp": [
+          "#001102",
+          "#002e12",
+          "#015027",
+          "#05753b",
+          "#3a985c",
+          "#60bc7e",
+          "#85e1a1",
+          "#c7ffd5"
+        ],
+        "source": "src/lib/color-options.ts MAGNET_HEX"
+      },
+      "magnet-blue": {
+        "role": "tertiary",
+        "displayName": "자석 파랑",
+        "canonical": "#2e6fba",
+        "oklch": "oklch(53.8% 0.135 254)",
+        "tonalRamp": [
+          "#000927",
+          "#00244f",
+          "#004180",
+          "#1f61ab",
+          "#4384d1",
+          "#66a8f7",
+          "#a5ccfd",
+          "#e4f0ff"
+        ],
+        "source": "src/lib/color-options.ts MAGNET_HEX"
+      },
+      "magnet-purple": {
+        "role": "tertiary",
+        "displayName": "자석 보라",
+        "canonical": "#7a5cc2",
+        "oklch": "oklch(55.4% 0.154 294)",
+        "tonalRamp": [
+          "#11002e",
+          "#2e0062",
+          "#4a2789",
+          "#694aae",
+          "#896cd4",
+          "#ac90fb",
+          "#ccbffd",
+          "#efecfe"
+        ],
+        "source": "src/lib/color-options.ts MAGNET_HEX"
+      },
+      "magnet-gray": {
+        "role": "tertiary",
+        "displayName": "자석 회색",
+        "canonical": "#8a9296",
+        "oklch": "oklch(65.5% 0.011 229)",
+        "tonalRamp": [
+          "#070c0f",
+          "#202629",
+          "#3c4347",
+          "#5b6366",
+          "#7c8488",
+          "#9ea6ab",
+          "#c2cbcf",
+          "#e7f0f4"
+        ],
+        "source": "src/lib/color-options.ts MAGNET_HEX"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "레시피 제목. 종이 한 장에 하나."
+      },
+      "step-display": {
+        "displayName": "Step Display",
+        "purpose": "요리 모드의 지금 단계 설명."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "재료, 만드는 법 등 섹션 머리."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "재료 이름, 단계 설명 등 요리 중에 읽는 줄."
+      },
+      "amount": {
+        "displayName": "Amount",
+        "purpose": "분량 숫자, tabular."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "레시피 소개와 레시피드 본문."
+      },
+      "meta": {
+        "displayName": "Meta",
+        "purpose": "제목 아래 메타 줄, 태그, 주요 버튼 글자."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "개수, 보조 안내, 다음 단계 머리."
+      }
+    },
+    "shadows": [
+      {
+        "name": "sheet",
+        "value": "0 1px 1px rgba(35, 40, 43, 0.06), 0 6px 14px -8px rgba(35, 40, 43, 0.22)",
+        "purpose": "모든 종이(--sheet-shadow, tailwind boxShadow.sheet)."
+      },
+      {
+        "name": "magnet",
+        "value": "0 2px 4px rgba(35, 40, 43, 0.35)",
+        "purpose": "색상 라벨 자석에만."
+      }
+    ],
+    "motion": [
+      {
+        "name": "changed-hold",
+        "value": "2500ms",
+        "purpose": "바뀐 분량 표시를 유지하는 시간."
+      },
+      {
+        "name": "changed-fade",
+        "value": "500ms",
+        "purpose": "바뀐 분량 표시가 사라지는 전환. prefers-reduced-motion에서 끈다."
+      },
+      {
+        "name": "step-enter",
+        "value": "200ms fade-in + slide-in-from-bottom 0.5rem",
+        "purpose": "요리 모드 단계 종이 등장. motion-safe에서만."
+      }
+    ],
+    "scope": {
+      "onWorld": [
+        "/recipes/[id]",
+        "/posts/[id]",
+        "요리 모드(StepMode)"
+      ],
+      "notYetMigrated": [
+        "피드(/)",
+        "레시피북",
+        "프로필",
+        "인증(login 등)",
+        "작성·수정 폼",
+        "전역 헤더와 하단 탭바",
+        "다크 모드 팔레트",
+        "bauhaus-* 유틸리티"
+      ]
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "화면당 하나의 주요 동작 면. 주황 위 흑연 글자.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">요리 시작</button>",
+      "css": ".ds-btn-primary{font-family:\"Pretendard Variable\",Pretendard,-apple-system,system-ui,\"Apple SD Gothic Neo\",\"Noto Sans KR\",sans-serif;display:inline-flex;align-items:center;height:44px;padding:0 16px;border:none;border-radius:8px;background:#ff6900;color:var(--ink,#23282b);font-size:15px;font-weight:600;cursor:pointer;}.ds-btn-primary:active{filter:brightness(.95);}.ds-btn-primary:focus-visible{outline:none;box-shadow:0 0 0 2px var(--orange-ink,#b34700);}"
+    },
+    {
+      "name": "Step Mode Prev / Next",
+      "kind": "button",
+      "refersTo": "button-step-next",
+      "description": "요리 모드 엄지 자리의 1:2 이전/다음 버튼.",
+      "html": "<div class=\"ds-step-nav\"><button class=\"ds-step-prev\" type=\"button\">이전</button><button class=\"ds-step-next\" type=\"button\">다음 단계</button></div>",
+      "css": ".ds-step-nav{font-family:\"Pretendard Variable\",Pretendard,-apple-system,system-ui,\"Apple SD Gothic Neo\",\"Noto Sans KR\",sans-serif;display:grid;grid-template-columns:1fr 2fr;gap:8px;padding:8px 12px 12px;background:var(--door,#dde7e1);}.ds-step-prev,.ds-step-next{height:56px;border-radius:8px;font-size:17px;color:var(--ink,#23282b);cursor:pointer;}.ds-step-prev{background:var(--paper,#fff);border:1px solid rgba(35,40,43,.2);font-weight:600;}.ds-step-prev:disabled{color:rgba(91,100,105,.4);}.ds-step-next{background:#ff6900;border:none;font-weight:700;}.ds-step-next:active{filter:brightness(.95);}.ds-step-prev:focus-visible,.ds-step-next:focus-visible{outline:none;box-shadow:0 0 0 2px var(--orange-ink,#b34700);}"
+    },
+    {
+      "name": "Servings Stepper",
+      "kind": "custom",
+      "refersTo": "servings-stepper",
+      "description": "재료 머리 오른쪽 끝의 인분 조절기.",
+      "html": "<div class=\"ds-stepper\" role=\"group\" aria-label=\"인분 조절\"><button type=\"button\" aria-label=\"1인분 줄이기\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/></svg></button><output>3인분</output><button type=\"button\" aria-label=\"1인분 늘리기\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"M12 5v14\"/></svg></button></div>",
+      "css": ".ds-stepper{font-family:\"Pretendard Variable\",Pretendard,-apple-system,system-ui,\"Apple SD Gothic Neo\",\"Noto Sans KR\",sans-serif;display:inline-flex;align-items:center;border:1px solid #d5ddd8;border-radius:8px;background:var(--paper,#fff);color:var(--ink,#23282b);}.ds-stepper button{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:none;background:none;color:inherit;cursor:pointer;}.ds-stepper button:disabled{color:rgba(91,100,105,.4);}.ds-stepper button:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--orange-ink,#b34700);border-radius:8px;}.ds-stepper output{min-width:4.5rem;text-align:center;font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;}"
+    },
+    {
+      "name": "Ingredient Checklist Row",
+      "kind": "custom",
+      "refersTo": "ingredient-row",
+      "description": "줄 전체가 체크 버튼. 바뀐 분량은 changed-mark로 잠시 표시.",
+      "html": "<ul class=\"ds-ingredients\"><li><button type=\"button\" role=\"checkbox\" aria-checked=\"false\" class=\"ds-ing\"><span class=\"ds-ing-box\"></span><span class=\"ds-ing-name\">대패삼겹살</span><span><span class=\"ds-ing-amt ds-ing-changed\">450</span><span class=\"ds-ing-unit\">g</span></span></button></li><li><button type=\"button\" role=\"checkbox\" aria-checked=\"true\" class=\"ds-ing ds-ing-checked\"><span class=\"ds-ing-box\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M20 6 9 17l-5-5\"/></svg></span><span class=\"ds-ing-name\">진간장</span><span><span class=\"ds-ing-amt\">2 1/4</span><span class=\"ds-ing-unit\">스푼</span></span></button></li></ul>",
+      "css": ".ds-ingredients{font-family:\"Pretendard Variable\",Pretendard,-apple-system,system-ui,\"Apple SD Gothic Neo\",\"Noto Sans KR\",sans-serif;list-style:none;margin:0;padding:0 16px;background:var(--paper,#fff);}.ds-ingredients li+li{border-top:1px solid #d5ddd8;}.ds-ing{display:flex;align-items:center;gap:12px;width:100%;min-height:48px;padding:10px 0;border:none;background:none;text-align:left;cursor:pointer;color:var(--ink,#23282b);}.ds-ing:focus-visible{outline:none;box-shadow:0 0 0 2px var(--orange-ink,#b34700);}.ds-ing-box{display:flex;align-items:center;justify-content:center;width:20px;height:20px;flex-shrink:0;border:1.5px solid var(--ink-soft,#5b6469);border-radius:4px;}.ds-ing-checked .ds-ing-box{border-color:var(--ink,#23282b);background:var(--ink,#23282b);color:var(--paper,#fff);}.ds-ing-name{flex:1;font-size:17px;}.ds-ing-checked .ds-ing-name{color:var(--ink-soft,#5b6469);text-decoration:line-through;}.ds-ing-amt{padding:0 4px;border-radius:2px;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;transition:background-color .5s;}.ds-ing-checked .ds-ing-amt{color:var(--ink-soft,#5b6469);}.ds-ing-changed{background:#c9dfd2;}.ds-ing-unit{font-size:15px;color:var(--ink-soft,#5b6469);}@media (prefers-reduced-motion:reduce){.ds-ing-amt{transition:none;}}"
+    },
+    {
+      "name": "Sheet with Magnet",
+      "kind": "card",
+      "refersTo": "sheet",
+      "description": "문 판 위 종이 한 장. 색상 라벨이 있을 때만 자석이 머리를 누른다.",
+      "html": "<div class=\"ds-door\"><div class=\"ds-sheet\"><span class=\"ds-magnet\" role=\"img\" aria-label=\"색상 라벨 초록\"></span><h1 class=\"ds-sheet-title\">콩나물 대패삼겹살찜</h1><p class=\"ds-sheet-meta\">2인분 · 조리 20분 · 재료 4가지</p></div></div>",
+      "css": ".ds-door{font-family:\"Pretendard Variable\",Pretendard,-apple-system,system-ui,\"Apple SD Gothic Neo\",\"Noto Sans KR\",sans-serif;background:var(--door,#dde7e1);padding:24px 12px;}.ds-sheet{position:relative;background:var(--paper,#fff);border-radius:3px;box-shadow:var(--sheet-shadow,0 1px 1px rgba(35,40,43,.06),0 6px 14px -8px rgba(35,40,43,.22));padding:24px 16px 20px;color:var(--ink,#23282b);}.ds-magnet{position:absolute;top:-12px;left:16px;width:32px;height:32px;border-radius:9999px;background:#3e9b5f;box-shadow:0 2px 4px rgba(35,40,43,.35);}.ds-sheet-title{margin:0;font-size:26px;font-weight:700;line-height:1.25;letter-spacing:-.01em;text-wrap:balance;}.ds-sheet-meta{margin:8px 0 0;font-size:15px;color:var(--ink-soft,#5b6469);}"
+    },
+    {
+      "name": "Cited Peek",
+      "kind": "custom",
+      "refersTo": "sheet",
+      "description": "본문 종이 뒤로 겹친 참고 레시피 가장자리.",
+      "html": "<div class=\"ds-door\"><nav class=\"ds-peek\" aria-label=\"참고한 레시피\"><a href=\"#\">참고한 레시피 <b>민지의 콩나물불고기</b></a></nav><div class=\"ds-peek-main\"></div></div>",
+      "css": ".ds-door{font-family:\"Pretendard Variable\",Pretendard,-apple-system,system-ui,\"Apple SD Gothic Neo\",\"Noto Sans KR\",sans-serif;background:var(--door,#dde7e1);padding:24px 12px;}.ds-peek{position:relative;z-index:0;margin:0 8px -6px;}.ds-peek a{display:block;padding:8px 12px 12px;border-radius:3px 3px 0 0;background:var(--paper,#fff);box-shadow:var(--sheet-shadow,0 1px 1px rgba(35,40,43,.06),0 6px 14px -8px rgba(35,40,43,.22));transform:rotate(-.6deg);font-size:14px;color:var(--ink-soft,#5b6469);text-decoration:none;}.ds-peek b{font-weight:600;color:var(--ink,#23282b);}.ds-peek a:focus-visible{outline:none;box-shadow:0 0 0 2px var(--orange-ink,#b34700);}.ds-peek-main{position:relative;z-index:1;height:64px;border-radius:3px;background:var(--paper,#fff);box-shadow:var(--sheet-shadow,0 1px 1px rgba(35,40,43,.06),0 6px 14px -8px rgba(35,40,43,.22));}"
+    },
+    {
+      "name": "Amount Field",
+      "kind": "input",
+      "refersTo": "amount-field",
+      "description": "가진 재료 양에 맞추기 분량 입력.",
+      "html": "<label class=\"ds-amount\"><span>대패삼겹살</span><input inputmode=\"decimal\" value=\"300\"><span class=\"ds-amount-unit\">g</span></label>",
+      "css": ".ds-amount{font-family:\"Pretendard Variable\",Pretendard,-apple-system,system-ui,\"Apple SD Gothic Neo\",\"Noto Sans KR\",sans-serif;display:flex;align-items:center;gap:8px;min-height:48px;padding:0 16px;background:var(--paper,#fff);color:var(--ink,#23282b);font-size:17px;}.ds-amount>span:first-child{flex:1;}.ds-amount input{width:80px;height:44px;padding:0 8px;border:1px solid #d5ddd8;border-radius:6px;background:var(--paper,#fff);text-align:right;font:inherit;font-weight:600;font-variant-numeric:tabular-nums;color:inherit;}.ds-amount input:focus-visible{outline:none;box-shadow:0 0 0 2px var(--orange-ink,#b34700);}.ds-amount-unit{width:40px;font-size:14px;color:var(--ink-soft,#5b6469);}"
+    },
+    {
+      "name": "Detail Top Bar",
+      "kind": "nav",
+      "refersTo": "",
+      "description": "상세 화면 상단 막대: 뒤로, 작성자, 글 종류.",
+      "html": "<header class=\"ds-topbar\"><button type=\"button\" aria-label=\"뒤로 가기\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m12 19-7-7 7-7\"/><path d=\"M19 12H5\"/></svg></button><a href=\"#\" class=\"ds-topbar-author\"><span class=\"ds-avatar\">민</span><span class=\"ds-topbar-name\">민지</span><span class=\"ds-topbar-kind\">레시피</span></a></header>",
+      "css": ".ds-topbar{font-family:\"Pretendard Variable\",Pretendard,-apple-system,system-ui,\"Apple SD Gothic Neo\",\"Noto Sans KR\",sans-serif;display:flex;align-items:center;gap:4px;height:56px;padding:0 4px;background:var(--paper,#fff);border-bottom:1px solid #d5ddd8;color:var(--ink,#23282b);}.ds-topbar button{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:none;background:none;color:inherit;border-radius:8px;cursor:pointer;}.ds-topbar button:hover{background:#eef2ef;}.ds-topbar button:focus-visible{outline:none;box-shadow:0 0 0 2px var(--orange-ink,#b34700);}.ds-topbar-author{display:flex;flex:1;min-width:0;align-items:center;gap:10px;color:inherit;text-decoration:none;}.ds-avatar{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9999px;background:#eef2ef;font-size:14px;}.ds-topbar-name{font-weight:600;}.ds-topbar-kind{font-size:14px;color:var(--ink-soft,#5b6469);}"
+    }
+  ],
+  "narrative": {
+    "northStar": "냉장고 문",
+    "overview": "**Creative North Star: \"냉장고 문\"**\n\n레시피는 냉장고 문에 자석으로 붙여 둔 흰 종이 한 장이다. 옅은 민트 회색 법랑 문 판이 화면의 바닥이 되고, 그 위에 모서리가 거의 각진 흰 종이가 짧고 부드러운 그림자로 살짝 떠 있다. 글자는 흑연 잉크 한 가지 농도와 그보다 옅은 보조 잉크 두 단계로만 쓴다. 인용한 레시피는 그 종이 뒤로 겹쳐 붙은 다른 종이의 가장자리로 보이고, 색상 라벨은 종이 머리를 누르는 둥근 자석이 된다.\n\n밀도는 부엌에서 휴대폰을 세워 두고 한 손으로 읽는 거리에 맞춘다. 본문과 재료·단계 줄은 17px, 누르는 곳은 모두 44px 이상, 재료 한 줄은 48px 이상이다. 장식은 종이·자석·구분선 세 가지 물성에서만 나온다. 카드 안의 카드, 회색 탭, 슬라이더, 주황 원 번호는 이 세계에서 쓰지 않는다(방향 계약에서 거부한 기본값이며 빌드에서도 쓰이지 않는다).\n\n**적용 범위(정직한 현재 상태).** 이 세계는 지금 레시피·레시피드 상세 화면(`/recipes/[id]`, `/posts/[id]`)과 그 안의 요리 모드에만 적용되어 있다. 피드, 레시피북, 프로필, 인증, 작성 폼, 상단 전역 헤더, 하단 탭바는 아직 이전의 shadcn/Tailwind 회색 + orange-500 강조 모습 그대로다. 이것은 이 문서의 규칙이 아니라 아직 옮기지 않은 화면이다. 새 화면은 이 문서를 따르고, 옛 화면을 근거로 삼지 않는다.",
+    "keyCharacteristics": [
+      "법랑 문 판(door) 위에 흰 종이(paper) 한 장, 종이 그림자는 하나뿐",
+      "흑연 잉크 단색 계층: ink 와 ink-soft",
+      "주황은 로고와 주요 동작 면에만, 그 위 글자는 흑연",
+      "1px 구분선 하나로 영역을 나눈다",
+      "Pretendard 한 가족, 숫자는 tabular, 세는 분량은 1/2·1/3 같은 부엌 분수",
+      "바뀐 분량은 연한 문 판 빛 표시를 잠시 유지한다"
+    ],
+    "rules": [
+      {
+        "name": "The 흑연 위 주황 Rule",
+        "body": "주황 면 위의 글자는 언제나 ink다. 주황 면에 흰 글자를 올리지 않는다.",
+        "section": "colors"
+      },
+      {
+        "name": "The 주황 한 점 Rule",
+        "body": "한 화면에서 brand-orange로 칠한 면은 지금 해야 할 주요 동작 하나뿐이다. 나머지 강조는 ink의 굵기와 ink-soft의 대비로 만든다.",
+        "section": "colors"
+      },
+      {
+        "name": "The 라벨 있을 때만 Rule",
+        "body": "자석은 색상 라벨이 지정된 레시피에만 나타난다. 라벨이 없으면 자석 자리를 비워 둔다.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Rule",
+        "body": "개수·분량·단계 번호·좋아요 수 같은 숫자는 모두 tabular 숫자로 쓴다.",
+        "section": "typography"
+      },
+      {
+        "name": "The 부엌 분수 Rule",
+        "body": "컵·큰술·개처럼 세는 단위의 분량은 1/4, 1/3, 1/2, 2/3, 3/4 분수로 쓰고, g·ml 같은 무게·부피는 정수로 반올림한다(10 미만은 소수 한 자리). \"1.0 개\" 같은 소수 꼬리를 남기지 않는다.",
+        "section": "typography"
+      },
+      {
+        "name": "The 한 겹 Rule",
+        "body": "종이 위에 다시 그림자 진 카드를 올리지 않는다. 종이 안의 구획은 1px 구분선으로만 나눈다.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** 상세·요리 화면의 바닥을 door로 칠하고, 내용은 그 위에 놓인 paper 종이에만 올린다.",
+      "**Do** 모든 종이에 같은 종이 그림자(`--sheet-shadow`)와 3px 모서리를 쓴다.",
+      "**Do** 주황 면 위 글자는 ink로, 종이 위 주황 글자·아이콘은 orange-ink로 쓴다.",
+      "**Do** 숫자는 tabular로, 세는 분량은 부엌 분수로 쓴다(`src/lib/recipe-amount.ts`의 formatAmount).",
+      "**Do** 누르는 곳은 44px, 재료·목록 줄은 48px 이상으로 만들고 아이콘 버튼마다 aria-label을 단다.",
+      "**Do** 바뀐 값은 changed-mark로 잠시 표시를 유지하고, 감속 동작 설정에서는 전환을 끈다.",
+      "**Do** 아직 옮기지 않은 화면(피드, 레시피북, 프로필, 인증, 폼)을 새로 손볼 때 이 문서를 따르고, 그 화면의 gray/orange-500 모습을 근거로 삼지 않는다."
+    ],
+    "donts": [
+      "**Don't** 종이 안에 다시 그림자 진 카드를 넣지 않는다. 구획은 1px 구분선 하나로 나눈다.",
+      "**Don't** 주황(brand-orange) 면에 흰 글자를 올리지 않는다.",
+      "**Don't** 단계 번호를 주황 원에 넣지 않는다. 번호는 ink 맨 숫자다.",
+      "**Don't** 인분 조절에 슬라이더를 쓰지 않는다. −/+ 조절기와 직접 맞춤 입력을 쓴다.",
+      "**Don't** 섹션을 회색 탭으로 전환하지 않는다. 재료와 만드는 법은 한 종이 위에 차례로 놓는다.",
+      "**Don't** 색상 라벨이 없는 레시피에 자석을 그리거나, 자석 색을 다른 장식에 쓰지 않는다.",
+      "**Don't** 기울기를 참고 레시피 가장자리 밖의 요소에 쓰지 않는다."
+    ]
+  }
+}

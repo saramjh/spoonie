@@ -6,9 +6,8 @@ import { ArrowLeft, MessageCircle, Share2, MoreVertical, Edit, Trash2, Heart } f
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
-import TossStyleBreadcrumb from "@/components/common/TossStyleBreadcrumb"
 import { SimplifiedLikeButton } from "@/components/items/SimplifiedLikeButton"
 import { BookmarkButton } from "@/components/items/BookmarkButton"
 import FollowButton from "@/components/items/FollowButton"
@@ -16,7 +15,9 @@ import SimplifiedCommentsSection from "@/components/items/SimplifiedCommentsSect
 import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
 import ImageCarousel from "@/components/common/ImageCarousel"
 import RecipeContentView from "@/components/recipe/RecipeContentView"
-import { timeAgo } from "@/lib/utils"
+import { cn, timeAgo } from "@/lib/utils"
+import { formatCookingTime } from "@/lib/recipe-amount"
+import { getMagnet } from "@/lib/color-options"
 import { useShare } from "@/hooks/useShare"
 import { useNavigation } from "@/hooks/useNavigation"
 import { useToast } from "@/hooks/use-toast"
@@ -25,10 +26,9 @@ import useSWR, { useSWRConfig } from "swr"
 import { Item, ItemDetail } from "@/types/item"
 import Link from "next/link"
 
-import { useCitedRecipes } from "@/hooks/useCitedRecipes"
+import { useCitedRecipes, useCitingItems } from "@/hooks/useCitedRecipes"
 import { useThumbnail } from "@/hooks/useThumbnail"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
-import { useIsCrawler } from "@/hooks/useIsCrawler"
 import { cacheManager } from "@/lib/unified-cache-manager"
 
 interface ItemDetailViewProps {
@@ -135,6 +135,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 
 	// cited_recipe_ids 처리 - 캐싱된 훅 사용
 	const { citedRecipes, isLoading: citedRecipesLoading } = useCitedRecipes(item?.cited_recipe_ids)
+	const citingItems = useCitingItems(isRecipe ? item?.item_id || item?.id : null)
 
 	// 🚀 SSA 표준: 상태 관리 - 조건부 렌더링 전에 호출
 	// ✅ commentsCount는 캐시에서 직접 사용 (실시간 동기화)
@@ -272,9 +273,6 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		)
 	}
 
-	const isCrawler = useIsCrawler()
-	// 비회원 여부 확인 (크롤러는 제외)
-	const isGuest = !currentUser && !isAuthLoading && !isCrawler
 	
 	// 작성자 여부 확인
 	const isOwnItem = currentUser && currentUser.id === item?.user_id
@@ -398,40 +396,65 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 
 
 
-	// 참고 레시피 목록 (레시피와 레시피드 상세에서 공통 사용)
-	const renderCitedRecipes = () => {
-		if (citedRecipesLoading) {
-			return (
-				<div className="mt-4 rounded-lg border border-gray-200 p-3" aria-busy="true">
-					<p className="text-sm font-medium text-gray-800">참고 레시피</p>
-					<div className="mt-2 h-4 w-3/4 rounded bg-gray-200 animate-pulse" />
-				</div>
-			)
-		}
-		if (citedRecipes.length === 0) return null
+	const authorName = item.username || "사용자"
+	const magnet = isRecipe ? getMagnet(cachedItem?.color_label ?? item.color_label) : null
+	const cookingTime = formatCookingTime(item.cooking_time_minutes)
+	const ingredientCount = item.ingredients?.length || 0
+	// 비로그인 방문자에게는 서버가 조리 단계를 보내지 않는다 (instructions RLS).
+	// 로그인 확인 전(서버 렌더링 포함)에도 단계가 비어 있으면 로그인 안내를 보여 준다.
+	const stepsLocked = !currentUser && (item.steps?.length || 0) === 0
+
+	// 이 글이 참고한 레시피: 종이 뒤로 겹쳐 붙은 다른 종이의 가장자리로 보여 준다
+	const renderCitedPeek = () => {
+		if (citedRecipesLoading || citedRecipes.length === 0) return null
+		const shown = citedRecipes.slice(0, 2)
 		return (
-			<section className="mt-4 rounded-lg border border-gray-200 p-3" aria-label="참고 레시피">
-				<h2 className="text-sm font-medium text-gray-800">참고 레시피 {citedRecipes.length}개</h2>
-				<ul className="mt-1 divide-y divide-gray-100">
-					{citedRecipes.map((citedRecipeItem) => {
-						const authorProfile = Array.isArray(citedRecipeItem.author) ? citedRecipeItem.author[0] : citedRecipeItem.author
-						const authorName = authorProfile?.username || "익명"
-						const recipeDate = citedRecipeItem.created_at
-							? new Date(citedRecipeItem.created_at).toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\s/g, "")
-							: ""
-						return (
-							<li key={citedRecipeItem.id}>
-								<Link href={`/recipes/${citedRecipeItem.id}`} className="flex items-center justify-between gap-3 py-2 text-sm text-gray-800 hover:underline">
-									<span>{authorName}의 {citedRecipeItem.title}</span>
-									{recipeDate && (
-										<time dateTime={citedRecipeItem.created_at} className="flex-shrink-0 text-xs text-gray-500">
-											{recipeDate}
-										</time>
-									)}
-								</Link>
-							</li>
-						)
-					})}
+			<nav aria-label="참고한 레시피" className="relative z-0 mx-2 -mb-1.5">
+				{shown.map((cited, i) => {
+					const authorProfile = Array.isArray(cited.author) ? cited.author[0] : cited.author
+					return (
+						<Link
+							key={cited.id}
+							href={`/recipes/${cited.id}`}
+							className={cn(
+								"block rounded-t-[3px] bg-paper px-3 pb-3 pt-2 text-sm shadow-sheet",
+								i === 0 ? "-rotate-[0.6deg]" : "-mt-1 mx-1 rotate-[0.4deg]"
+							)}
+						>
+							<span className="text-ink-soft">참고한 레시피 </span>
+							<span className="font-semibold text-ink">{authorProfile?.username || "익명"}의 {cited.title}</span>
+							{i === shown.length - 1 && citedRecipes.length > shown.length && (
+								<span className="text-ink-soft"> 외 {citedRecipes.length - shown.length}개</span>
+							)}
+						</Link>
+					)
+				})}
+			</nav>
+		)
+	}
+
+	// 이 레시피를 참고해 만든 글: 인용 관계의 아래쪽
+	const renderCitingItems = () => {
+		if (!isRecipe || citingItems.length === 0) return null
+		return (
+			<section aria-labelledby="citing-heading" className="border-t border-border px-4 py-5">
+				<h2 id="citing-heading" className="text-lg font-bold text-ink">
+					이 레시피를 참고한 글 <span className="font-medium tabular-nums text-ink-soft">{citingItems.length}</span>
+				</h2>
+				<ul className="mt-2 divide-y divide-border">
+					{citingItems.map((citing) => (
+						<li key={citing.id}>
+							<Link
+								href={citing.item_type === "recipe" ? `/recipes/${citing.id}` : `/posts/${citing.id}`}
+								className="flex min-h-12 items-center justify-between gap-3 py-2.5 text-[15px] text-ink"
+							>
+								<span className="min-w-0 truncate">
+									{citing.username}의 {citing.title || "레시피드"}
+								</span>
+								<span className="flex-shrink-0 text-sm text-ink-soft">{citing.item_type === "recipe" ? "레시피" : "레시피드"}</span>
+							</Link>
+						</li>
+					))}
 				</ul>
 			</section>
 		)
@@ -439,231 +462,173 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 
 	return (
 		<div className="flex flex-col h-full relative">
-			{/* 🎨 토스 스타일 브레드크럼 네비게이션 */}
-			<TossStyleBreadcrumb />
-			{/* 비회원 블러 오버레이 - Toss-style 상단 정렬 (약한 블러) */}
-			{isGuest && (
-				<div className="absolute inset-0 z-50 bg-black/15 flex items-start justify-center p-6 pt-8 sm:pt-12">
-					<div className="bg-white rounded-3xl p-8 max-w-sm mx-auto text-center shadow-2xl border border-gray-100">
-						<div className="mb-6">
-							<h2 className="text-xl font-bold text-gray-900 mb-2">회원만 볼 수 있습니다</h2>
-							<p className="text-sm text-gray-600 leading-relaxed">
-								{isRecipe ? "레시피의 전체 내용을" : "레시피드의 전체 내용을"} 보시려면 로그인이 필요해요. Spoonie에서 더 많은 {isRecipe ? "레시피" : "레시피드"}를 만나보세요!
-							</p>
-						</div>
-						<div className="space-y-3">
-							<Button asChild className="w-full h-14 text-base font-semibold bg-orange-500 hover:bg-orange-600 rounded-2xl">
-								<Link href="/login">로그인 / 회원가입</Link>
-							</Button>
-							<Button variant="outline" className="w-full h-14 text-base font-medium border-2 border-gray-200 text-gray-700 hover:bg-gray-50 rounded-2xl" onClick={() => router.back()}>
-								뒤로 가기
-							</Button>
-						</div>
-					</div>
-				</div>
-			)}
-
-			{/* 기존 콘텐츠 (비회원일 때 블러 처리 - 아주 약함) */}
-			<article className={isGuest ? "filter blur-[1px] pointer-events-none" : ""}>
-				{/* 인스타그램 스타일 헤더 */}
-				<header className="sticky top-0 z-10 flex items-center p-4 bg-white border-b">
-					{/* 뒤로가기 버튼 */}
-					<Button variant="ghost" size="icon" onClick={() => router.back()}>
-						<ArrowLeft className="h-6 w-6" />
+			<article>
+				<header className="sticky top-0 z-20 flex h-14 items-center gap-1 border-b border-border bg-paper px-1">
+					<Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => router.back()} aria-label="뒤로 가기">
+						<ArrowLeft className="h-6 w-6" aria-hidden />
 					</Button>
-					
-					{/* 작성자 정보 (중앙 정렬) - 토스 디자인 시스템 기반 일관성 */}
-					     <Link href={`/profile/${item.user_public_id || item.user_id}`} className="flex items-center gap-3 flex-1 ml-3">
+
+					<Link href={`/profile/${item.user_public_id || item.user_id}`} className="flex min-w-0 flex-1 items-center gap-2.5">
 						<Avatar className="h-8 w-8">
-							<AvatarImage src={item.avatar_url || undefined} />
-							<AvatarFallback>{item.username?.charAt(0) || "U"}</AvatarFallback>
+							<AvatarImage src={item.avatar_url || undefined} alt="" />
+							<AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
 						</Avatar>
-						<div className="flex items-center gap-2">
-							<span className="font-semibold text-gray-900">
-								{item.username || "사용자"}
-							</span>
-							{/* 🎨 홈화면과 완전히 동일한 타입 배지 시스템 (토스 일관성 원칙) */}
-							<span className={item.item_type === 'recipe' ? "text-xs font-medium text-orange-700" : "text-xs text-gray-500"}>
-									{item.item_type === 'recipe' ? "레시피" : "레시피드"}
-								</span>
-						</div>
+						<span className="truncate font-semibold text-ink">{authorName}</span>
+						<span className="flex-shrink-0 text-sm text-ink-soft">{isRecipe ? "레시피" : "레시피드"}</span>
 					</Link>
-					
-					{/* 우측 액션 버튼 */}
-					<div className="flex items-center">
+
+					<div className="flex items-center pr-1">
 						{isOwnItem ? (
-							/* 작성자인 경우: 점3버튼 (드롭다운) */
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
-									<Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-										<MoreVertical className="h-4 w-4" />
+									<Button variant="ghost" size="icon" className="h-11 w-11" aria-label="더보기">
+										<MoreVertical className="h-5 w-5" aria-hidden />
 									</Button>
 								</DropdownMenuTrigger>
-								<DropdownMenuContent align="end" className="w-auto min-w-[80px]">
-									<DropdownMenuItem onClick={handleEdit} className="cursor-pointer relative flex items-center justify-start px-3 py-2">
-										<Edit className="h-4 w-4 flex-shrink-0" />
-										<span className="flex-1 text-center">수정</span>
+								<DropdownMenuContent align="end" className="min-w-[8rem]">
+									<DropdownMenuItem onClick={handleEdit} className="min-h-11 cursor-pointer gap-2">
+										<Edit className="h-4 w-4" aria-hidden />
+										수정
 									</DropdownMenuItem>
-									<DropdownMenuItem 
-										onClick={() => setShowDeleteModal(true)} 
-										className="text-red-600 cursor-pointer relative flex items-center justify-start px-3 py-2"
-									>
-										<Trash2 className="h-4 w-4 flex-shrink-0" />
-										<span className="flex-1 text-center">삭제</span>
+									<DropdownMenuSeparator />
+									<DropdownMenuItem onClick={() => setShowDeleteModal(true)} className="min-h-11 cursor-pointer gap-2 text-destructive focus:text-destructive">
+										<Trash2 className="h-4 w-4" aria-hidden />
+										삭제
 									</DropdownMenuItem>
 								</DropdownMenuContent>
 							</DropdownMenu>
 						) : (
-							/* 작성자가 아닌 경우: 팔로우 버튼 */
-							currentUser && <FollowButton 
-								userId={item.user_id} 
-								initialIsFollowing={item.is_following} 
-								className="w-[80px]"
-							/>
+							currentUser && <FollowButton userId={item.user_id} initialIsFollowing={item.is_following} className="w-[80px]" />
 						)}
 					</div>
 				</header>
 
-				<div className="flex-1 overflow-y-auto">
-					{orderedImages.length > 0 && (
-						<div className="relative">
-							<ImageCarousel 
-								images={orderedImages} 
-								alt={isRecipe ? item.title || "Recipe image" : `Post by ${item.username || "작성자"}`} 
-								priority 
-								onDoubleClick={handleDoubleTapLike}
+				<div className="flex-1 px-3 pb-8 pt-3">
+					{renderCitedPeek()}
+
+					<div className="relative z-10 rounded-[3px] bg-paper shadow-sheet">
+						{magnet && (
+							<span
+								role="img"
+								aria-label={`색상 라벨 ${magnet.label}`}
+								className="absolute -top-3 left-4 z-30 h-8 w-8 rounded-full shadow-[0_2px_4px_rgba(35,40,43,0.35)]"
+								style={{ backgroundColor: magnet.hex }}
 							/>
-							
-							{/* 🎉 토스식 더블탭 좋아요 애니메이션 */}
-							{showHeartAnimation && (
-								<div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
-									<Heart className="w-16 h-16 fill-red-500 text-red-500 animate-ping" />
-								</div>
+						)}
+
+						{orderedImages.length > 0 && (
+							<div className="relative overflow-hidden rounded-t-[3px]">
+								<ImageCarousel
+									images={orderedImages}
+									alt={isRecipe ? item.title || "레시피 사진" : `${authorName}님의 레시피드 사진`}
+									priority
+									onDoubleClick={handleDoubleTapLike}
+								/>
+								{showHeartAnimation && (
+									<div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
+										<Heart className="h-16 w-16 animate-ping fill-red-500 text-red-500" aria-hidden />
+									</div>
+								)}
+							</div>
+						)}
+
+						<div className="px-4 pb-1 pt-6">
+							{isRecipe ? (
+								<>
+									{item.title && <h1 className="text-[26px] font-bold leading-tight tracking-[-0.01em] text-ink [text-wrap:balance]">{item.title}</h1>}
+									<p className="mt-2 text-[15px] text-ink-soft">
+										{[item.servings ? `${item.servings}인분` : null, cookingTime ? `조리 ${cookingTime}` : null, ingredientCount ? `재료 ${ingredientCount}가지` : null]
+											.filter(Boolean)
+											.join(" · ")}
+										{" · "}
+										<time dateTime={item.created_at}>{timeAgo(item.created_at)}</time>
+									</p>
+									{item.description && <p className="mt-4 whitespace-pre-wrap break-words text-[16px] leading-[1.65] text-ink">{item.description}</p>}
+								</>
+							) : (
+								<>
+									{item.title && <h1 className="mb-2 text-xl font-bold text-ink">{item.title}</h1>}
+									<p className="whitespace-pre-wrap break-words text-[16px] leading-[1.7] text-ink">{item.content}</p>
+								</>
+							)}
+
+							{item.tags && item.tags.length > 0 && (
+								<ul className="mt-4 flex flex-wrap gap-x-3 gap-y-1" aria-label="태그">
+									{item.tags.map((tag, idx) => (
+										<li key={idx} className="text-[15px] text-ink-soft">
+											#{tag}
+										</li>
+									))}
+								</ul>
+							)}
+
+							{/* 기존 recipe_id 기반 참고 레시피 (하위호환) */}
+							{!isRecipe && item.recipe_id && citedRecipe && (
+								<Link href={`/recipes/${citedRecipe.id}`} className="mt-4 block text-[15px] text-ink underline underline-offset-4">
+									{/* @ts-expect-error - profiles relation can be array or object */}
+									참고한 레시피: {citedRecipe.profiles?.username || "익명"}의 {citedRecipe.title}
+								</Link>
+							)}
+
+							{!isRecipe && (
+								<p className="mt-3 text-sm text-ink-soft">
+									<time dateTime={item.created_at}>{timeAgo(item.created_at)}</time>
+								</p>
 							)}
 						</div>
-					)}
-					<div className="p-4">
-						{isRecipe ? (
-							<>
-								<div className="flex justify-between items-center mb-2">
-									{item.title && <h1 className="text-2xl font-bold text-gray-900">{item.title}</h1>}
-									<div className="flex items-center gap-1">
-										<BookmarkButton
-											itemId={stableItemId}
-											itemType={isRecipe ? 'recipe' : 'post'}
-											currentUserId={currentUser?.id}
-											initialBookmarksCount={(cachedItem as Item & { bookmarks_count?: number }).bookmarks_count || 0}
-											initialIsBookmarked={(cachedItem as Item & { is_bookmarked?: boolean }).is_bookmarked || false}
-											size="icon"
-											cachedItem={cachedItem}
-										/>
-										<Button variant="ghost" size="icon" onClick={handleShare}>
-											<Share2 className="h-6 w-6 text-gray-600" />
-										</Button>
-									</div>
-								</div>
-								{item.description && <p className="text-sm text-gray-500 mb-2 whitespace-pre-wrap break-words leading-relaxed">{item.description}</p>}
 
-								{renderCitedRecipes()}
-
-								{item.tags && item.tags.length > 0 && (
-									<div className="flex flex-wrap gap-x-2 gap-y-1 mb-4 mt-3">
-										{item.tags.map((tag, idx) => (
-											<span key={idx} className="text-sm text-gray-500">
-												#{tag}
-											</span>
-										))}
-									</div>
-								)}
-								<p className="text-sm text-gray-500 mb-4 text-right"><time dateTime={item.created_at}>{timeAgo(item.created_at)}</time></p>
-								<RecipeContentView initialServings={item.servings || 1} ingredients={item.ingredients || []} steps={item.steps || []} />
-							</>
-						) : (
-							<>
-								<div className="flex justify-between items-start mb-2">
-									<div className="flex-1">
-										{item.title && <h1 className="text-xl font-bold text-gray-900 mb-2">{item.title}</h1>}
-										<p className="text-base text-gray-800 whitespace-pre-wrap break-words leading-relaxed">{item.content}</p>
-									</div>
-									<div className="flex items-center gap-1 ml-4">
-										<BookmarkButton
-											itemId={stableItemId}
-											itemType="post"
-											currentUserId={currentUser?.id}
-											initialBookmarksCount={(cachedItem as Item & { bookmarks_count?: number }).bookmarks_count || 0}
-											initialIsBookmarked={(cachedItem as Item & { is_bookmarked?: boolean }).is_bookmarked || false}
-											size="icon"
-											cachedItem={cachedItem}
-										/>
-										<Button variant="ghost" size="icon" onClick={handleShare}>
-											<Share2 className="h-6 w-6 text-gray-600" />
-										</Button>
-									</div>
-								</div>
-
-								{/* 포스트에서 태그 표시 */}
-								{item.tags && item.tags.length > 0 && (
-									<div className="flex flex-wrap gap-2 mt-3">
-										{item.tags.map((tag, idx) => (
-											<span key={idx} className="text-sm text-gray-500">
-												#{tag}
-											</span>
-										))}
-									</div>
-								)}
-
-								{renderCitedRecipes()}
-
-								{/* 기존 recipe_id 기반 참고 레시피 (하위호환) */}
-								{item.recipe_id && citedRecipe && (
-									<div className="mt-3">
-										<Link href={`/recipes/${citedRecipe.id}`}>
-											<div className="bg-gray-100 p-3 rounded-xl text-sm border border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer">
-												<span className="font-semibold text-gray-600">참고 레시피:</span>
-												<span className="text-gray-800 ml-2">
-													{/* @ts-expect-error - profiles relation can be array or object */}
-													        {citedRecipe.profiles?.username || "익명"}의 {citedRecipe.title}
-												</span>
-											</div>
-										</Link>
-									</div>
-								)}
-							</>
-						)}
-					</div>
-					<div className="flex justify-between items-center p-4 border-t">
-						<div className="flex items-center gap-2 text-gray-600">
-							{/* 🎯 기존 검증된 좋아요 버튼 사용 */}
-							<SimplifiedLikeButton 
-								itemId={stableItemId} 
-								itemType={item.item_type}
-								authorId={item.user_id}
-								currentUserId={currentUser?.id}
-								initialLikesCount={cachedItem?.likes_count || localLikesCount}
-								initialHasLiked={cachedItem?.is_liked || localHasLiked}
-								cachedItem={cachedItem}
-							/>
-							<div className="flex items-center gap-1">
-								<MessageCircle className="h-6 w-6" />
-								<span className="text-base font-medium">{cachedItem?.comments_count || 0}</span>
+						<div className="flex items-center justify-between px-2 py-1">
+							<div className="flex items-center gap-1 text-ink-soft">
+								<SimplifiedLikeButton
+									itemId={stableItemId}
+									itemType={item.item_type}
+									authorId={item.user_id}
+									currentUserId={currentUser?.id}
+									initialLikesCount={cachedItem?.likes_count || localLikesCount}
+									initialHasLiked={cachedItem?.is_liked || localHasLiked}
+									cachedItem={cachedItem}
+								/>
+								<a href="#comments" className="flex h-11 items-center gap-1.5 px-2" aria-label={`댓글 ${cachedItem?.comments_count || 0}개`}>
+									<MessageCircle className="h-5 w-5" aria-hidden />
+									<span className="text-sm font-medium tabular-nums">{cachedItem?.comments_count || 0}</span>
+								</a>
+							</div>
+							<div className="flex items-center">
+								<BookmarkButton
+									itemId={stableItemId}
+									itemType={isRecipe ? "recipe" : "post"}
+									currentUserId={currentUser?.id}
+									initialBookmarksCount={(cachedItem as Item & { bookmarks_count?: number }).bookmarks_count || 0}
+									initialIsBookmarked={(cachedItem as Item & { is_bookmarked?: boolean }).is_bookmarked || false}
+									size="icon"
+									className="h-11 w-11"
+									cachedItem={cachedItem}
+								/>
+								<Button variant="ghost" size="icon" className="h-11 w-11 text-ink-soft" onClick={handleShare} aria-label="공유하기">
+									<Share2 className="h-5 w-5" aria-hidden />
+								</Button>
 							</div>
 						</div>
+
+						{isRecipe && (
+							<RecipeContentView
+								initialServings={item.servings || 1}
+								ingredients={item.ingredients || []}
+								steps={item.steps || []}
+								stepsLocked={stepsLocked}
+								loginHref={`/login?next=${encodeURIComponent(`/recipes/${stableItemId}`)}`}
+							/>
+						)}
+
+						{renderCitingItems()}
 					</div>
 
-
-					<div ref={commentsRef} className="p-4">
-						<SimplifiedCommentsSection 
-							currentUserId={currentUser?.id} 
-							itemId={stableItemId} 
-							onCommentsCountChange={undefined}
-							cachedItem={cachedItem || item}
-						/>
+					<div id="comments" ref={commentsRef} className="mt-3 scroll-mt-16 rounded-[3px] bg-paper p-4 shadow-sheet">
+						<SimplifiedCommentsSection currentUserId={currentUser?.id} itemId={stableItemId} onCommentsCountChange={undefined} cachedItem={cachedItem || item} />
 					</div>
 				</div>
-
-				{/* 댓글 입력은 SimplifiedCommentsSection 내부에서 처리됨 */}
 			</article>
-			
+
 			{/* 삭제 확인 다이얼로그 */}
 			<AlertDialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
 				<AlertDialogContent>

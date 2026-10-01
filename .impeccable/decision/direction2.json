@@ -1,0 +1,130 @@
+{
+  "title": "스푸니 레시피 화면의 시각 세계 고르기 (다시 굴림 1)",
+  "question": "새 패에서 주사위가 '냉장고 문'을 배정했습니다. 이대로 갈지, 다른 안을 고를지, 다시 굴릴지 정해 주세요.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "냉장고 문",
+      "kicker": "THE ROLL",
+      "lineage": "집집마다 자석으로 레시피와 장보기 메모를 붙여 두는 냉장고 문",
+      "thesis": "레시피는 냉장고 문에 자석으로 붙여 둔 종이 한 장이고, 이어 만든 레시피는 그 위에 겹쳐 붙는다.",
+      "palette": ["#DDE7E1", "#FFFFFF", "#23282B", "#FF6900", "#2E6FBA", "#D9A400"],
+      "materials": ["법랑 냉장고 문 판(옅은 민트 회색)", "흰 메모지", "레시피 색상 라벨이 그대로 자석 색이 됨"],
+      "viewport": "옅은 문 판 위에 흰 레시피 종이 한 장이 화면 폭 가득 붙고, 머리 모서리에 색상 라벨 자석이 종이를 누른다. 사진, 제목, 한 줄 메타(인분·시간·재료 수), 재료 줄이 이어지고 인분 조절기는 재료 머리 끝에 붙는다.",
+      "risk": "자석과 종이를 장식으로만 쓰면 스큐어모피즘 흉내가 된다. 자석은 실제 색상 라벨일 때만, 겹침은 실제 인용일 때만 쓴다.",
+      "raised": [
+        {"from": "operate-b-exposure-record-zone-sheets", "raise": "분량을 0.5 대신 1/2, 1/3처럼 부엌에서 쓰는 분수로 보여 준다."},
+        {"from": "pop-culture-shelf-streaming-title-card-wall", "raise": "단계 모드에서 지금 단계만 떠오르고 나머지는 물러난다."},
+        {"from": "vernacular-ephemera-cassette-j-card", "raise": "분량은 오른쪽 끝에 붙은 한 열로 정렬하고, 목록에서는 종이가 접혀 머리 한 줄만 남는다."},
+        {"from": "rw-centre-rail-reference-setting", "raise": "상태는 표시로 말한다. 챙긴 재료는 줄이 그어지고, 끝낸 단계는 표시가 찍힌다."},
+        {"from": "design-annual-s-plate-section", "raise": "음식 사진은 필터 없이 그대로 두고 구분선은 1px 하나로 통일한다."}
+      ]
+    },
+    {
+      "id": "model-pick",
+      "label": "손글씨 부엌 노트",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "부엌 서랍 속 손으로 적은 레시피 공책",
+      "thesis": "사용자가 고른 '따뜻한 부엌 노트'를 그대로, 줄 공책에 적은 레시피로.",
+      "palette": ["#F6F1E7", "#2B2B2B", "#3B5BA5", "#FF6900"],
+      "materials": ["줄 공책", "볼펜 잉크", "기름 얼룩 없는 깨끗한 종이"],
+      "viewport": "공책 한 면에 제목과 재료가 줄 위에, 단계가 번호 붙은 줄로.",
+      "risk": "따뜻함을 표현할 때 거의 모든 AI 화면이 가는 크림 종이와 손글씨 조합이라 가장 익숙하고 흔하다."
+    },
+    {
+      "id": "challenger-wayfinding-cartography-signage-terminal-yellow-wayfinding",
+      "label": "공항 노란 안내판",
+      "verdict": "competitive",
+      "lineage": "국제공항 머리 위 노란 안내 띠",
+      "thesis": "요리 중에는 다음 할 일 하나만 크게, 노란 띠 한 줄로 보여 준다.",
+      "palette": ["#FFD100", "#111111", "#FFFFFF"],
+      "materials": ["노란 안내 띠", "검은 휴머니스트 산세리프", "흰 그림 기호"],
+      "viewport": "단계 번호가 아주 크게, 그 옆에 지금 할 일 한 문장, 다음 단계까지는 띠가 바뀌며 넘어간다.",
+      "case": "젖은 손으로 요리할 때의 명확성은 냉장고 문보다 낫지만, 집밥 기록가가 자기 부엌으로 느끼지 못하고 인용 관계를 담기 어렵다.",
+      "risk": "노랑이 모든 화면을 차지하면 피드와 프로필까지 공항처럼 보인다.",
+      "hero": "https://impeccable.style/worlds/cards/wayfinding-cartography-signage-terminal-yellow-wayfinding-hero.webp"
+    },
+    {
+      "id": "challenger-vernacular-ephemera-cassette-j-card",
+      "label": "카세트 테이프 속지",
+      "verdict": "declined",
+      "lineage": "손글씨 믹스테이프 속지",
+      "thesis": "레시피를 곡 목록처럼, 단계마다 시간을 오른쪽에.",
+      "palette": ["#FFFFFF", "#1F3FA6", "#9A9A9A", "#C8102E"],
+      "materials": ["줄 친 속지", "볼펜"],
+      "viewport": "A면 재료, B면 단계.",
+      "risk": "단계별 시간 데이터가 없고 부엌과 연결이 약하다.",
+      "case": "두 축 모두에서 진다.",
+      "kept": "분량을 오른쪽 끝 한 열에 붙이는 정렬, 목록에서 접혀 한 줄만 남는 규칙.",
+      "hero": "https://impeccable.style/worlds/cards/vernacular-ephemera-cassette-j-card-hero.webp"
+    },
+    {
+      "id": "challenger-operate-b-exposure-record-zone-sheets",
+      "label": "암실 노출 기록지",
+      "verdict": "declined",
+      "lineage": "사진 인화 노출 기록 카드",
+      "thesis": "겹친 반투명 기록지와 분수로 적은 값.",
+      "palette": ["#E9E9E6", "#3A3A3A", "#C2187A"],
+      "materials": ["트레이싱지", "해칭"],
+      "viewport": "겹친 기록지 위 분수 수치.",
+      "risk": "부엌이 아니라 암실로 읽힌다.",
+      "case": "두 축 모두에서 진다.",
+      "kept": "분량을 1/2, 1/3 같은 분수로 쓰는 규칙.",
+      "hero": "https://impeccable.style/worlds/cards/operate-b-exposure-record-zone-sheets-hero.webp"
+    },
+    {
+      "id": "challenger-pop-culture-shelf-streaming-title-card-wall",
+      "label": "스트리밍 포스터 벽",
+      "verdict": "declined",
+      "lineage": "OTT 가로 스크롤 줄",
+      "thesis": "레시피북을 포스터 줄로.",
+      "palette": ["#141414", "#FFFFFF", "#E50914"],
+      "materials": ["포스터 타일", "어두운 바탕"],
+      "viewport": "가로로 흐르는 레시피 사진 줄.",
+      "risk": "기록하고 다시 꺼내는 흐름보다 구경이 앞선다.",
+      "case": "두 축 모두에서 진다.",
+      "kept": "지금 보는 것만 떠오르고 나머지는 물러나는 초점 규칙.",
+      "hero": "https://impeccable.style/worlds/cards/pop-culture-shelf-streaming-title-card-wall-hero.webp"
+    },
+    {
+      "id": "challenger-rw-centre-rail-reference-setting",
+      "label": "주석판 조판",
+      "verdict": "declined",
+      "lineage": "넓은 여백의 주석 판본",
+      "thesis": "두 단 본문과 가운데 열쇠 레일.",
+      "palette": ["#EFE8DA", "#1A1A1A", "#C2341C"],
+      "materials": ["뼈색 종이", "가는 괘선"],
+      "viewport": "좁은 두 단 사이 레일.",
+      "risk": "휴대폰에서 두 단은 읽기 어렵다.",
+      "case": "두 축 모두에서 진다.",
+      "kept": "상태를 표시로 말하는 규칙(줄 긋기, 찍힌 표시).",
+      "hero": "https://impeccable.style/worlds/cards/rw-centre-rail-reference-setting-hero.webp"
+    },
+    {
+      "id": "challenger-design-annual-s-plate-section",
+      "label": "디자인 연감 도판",
+      "verdict": "declined",
+      "lineage": "디자인 연감 도판면",
+      "thesis": "거의 흰 종이와 등록 십자, 도장 하나.",
+      "palette": ["#F5F4F6", "#16181A", "#DCDDF3"],
+      "materials": ["비코팅지", "1px 괘선"],
+      "viewport": "큰 도판과 십자 표시.",
+      "risk": "집밥이 아니라 전시처럼 보인다.",
+      "case": "두 축 모두에서 진다.",
+      "kept": "사진은 필터 없이, 구분선은 1px 하나로.",
+      "hero": "https://impeccable.style/worlds/cards/design-annual-s-plate-section-hero.webp"
+    }
+  ],
+  "reroll": {"registers": ["safer", "bolder"]},
+  "canon": true,
+  "canonCard": {
+    "label": "레시피 앱 표준",
+    "thesis": "흰 바탕, 큰 음식 사진, 주황 강조로 된 일반적인 레시피 앱을 완성도 높게.",
+    "palette": ["#FFFFFF", "#191919", "#FF6900"],
+    "materials": ["흰 카드", "음식 사진"],
+    "viewport": "사진, 제목, 재료 목록, 번호 단계의 익숙한 순서.",
+    "risk": "다른 레시피 앱과 구별되지 않는다."
+  },
+  "steer": true,
+  "buildPath": {"value": "code", "toggle": false}
+}

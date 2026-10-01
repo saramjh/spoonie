@@ -1,255 +1,292 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Ingredient, RecipeStep } from "@/types/item"
-import { Slider } from "@/components/ui/slider"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useEffect, useMemo, useRef, useState } from "react"
 import Image from "next/image"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { formatQuantity } from "@/lib/utils"
-import { Button } from "@/components/ui/button" // Import Button
-import { Minus, Plus } from "lucide-react" // Import icons
+import Link from "next/link"
+import { Check, Minus, Plus } from "lucide-react"
+import { Ingredient, RecipeStep } from "@/types/item"
+import { formatAmount } from "@/lib/recipe-amount"
+import { cn } from "@/lib/utils"
+import StepMode from "@/components/recipe/StepMode"
 
 interface RecipeContentViewProps {
 	initialServings: number
 	ingredients: Ingredient[]
 	steps: RecipeStep[]
+	// 비로그인 방문자: 서버가 조리 단계를 보내지 않으므로 로그인 안내를 보여 준다
+	stepsLocked?: boolean
+	// 로그인 후 이 레시피로 돌아오는 링크
+	loginHref?: string
 }
 
-export default function RecipeContentView({ initialServings, ingredients, steps }: RecipeContentViewProps) {
-	// Debug logging
-	// RecipeContentView Debug: { initialServings, ingredientsLength, ingredients, stepsLength, steps }
+const MIN_MAX_SERVINGS = 20
+const CHANGED_HOLD_MS = 2500
 
-	const [currentServings, setCurrentServings] = useState(initialServings)
-	const [scaledIngredients, setScaledIngredients] = useState<Ingredient[]>([])
-	const [referenceIngredientName, setReferenceIngredientName] = useState<string | undefined>(undefined)
-	const [referenceIngredientTargetQuantity, setReferenceIngredientTargetQuantity] = useState<number | undefined>(undefined)
+interface Reference {
+	index: number
+	target: number
+}
 
-	// 탭 상태를 관리하는 state 추가
-	const [activeTab, setActiveTab] = useState("servings")
+export default function RecipeContentView({ initialServings, ingredients, steps, stepsLocked = false, loginHref = "/login" }: RecipeContentViewProps) {
+	const baseServings = initialServings > 0 ? initialServings : 1
+	const maxServings = Math.max(MIN_MAX_SERVINGS, baseServings * 2)
+	const [servings, setServings] = useState(baseServings)
+	const [reference, setReference] = useState<Reference | null>(null)
+	const [adjusting, setAdjusting] = useState(false)
+	const [checked, setChecked] = useState<Set<number>>(() => new Set())
+	const [doneSteps, setDoneSteps] = useState<Set<number>>(() => new Set())
+	const [changed, setChanged] = useState<Set<number>>(() => new Set())
+	const [stepModeAt, setStepModeAt] = useState<number | null>(null)
+	const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+	const previousAmounts = useRef<number[] | null>(null)
 
+	const scale = useMemo(() => {
+		if (reference) {
+			const base = ingredients[reference.index]?.amount
+			return base && base > 0 ? reference.target / base : 1
+		}
+		return servings / baseServings
+	}, [reference, ingredients, servings, baseServings])
+
+	const scaled = useMemo(() => ingredients.map((ing) => ({ ...ing, amount: ing.amount * scale })), [ingredients, scale])
+
+	// 양이 바뀐 재료는 잠시 표시를 유지해 무엇이 달라졌는지 놓치지 않게 한다
 	useEffect(() => {
-		if (!ingredients || ingredients.length === 0) {
-			setScaledIngredients([])
-			return
-		}
+		const amounts = scaled.map((ing) => ing.amount)
+		const previous = previousAmounts.current
+		previousAmounts.current = amounts
+		if (!previous) return
+		const next = new Set<number>()
+		amounts.forEach((amount, i) => {
+			if (formatAmount(amount, scaled[i].unit) !== formatAmount(previous[i] ?? 0, scaled[i].unit)) next.add(i)
+		})
+		if (next.size === 0) return
+		setChanged(next)
+		if (holdTimer.current) clearTimeout(holdTimer.current)
+		holdTimer.current = setTimeout(() => setChanged(new Set()), CHANGED_HOLD_MS)
+	}, [scaled])
 
-		let scaleFactor = 1
+	useEffect(() => () => {
+		if (holdTimer.current) clearTimeout(holdTimer.current)
+	}, [])
 
-		if (activeTab === "ingredients" && referenceIngredientName && referenceIngredientTargetQuantity !== undefined) {
-			const referenceIng = ingredients.find((ing) => ing.name === referenceIngredientName)
-			if (referenceIng && referenceIng.amount > 0) {
-				scaleFactor = referenceIngredientTargetQuantity / referenceIng.amount
-			}
-		} else {
-			// activeTab === "servings" 또는 재료 기준 선택 안됨
-			if (initialServings > 0) {
-				scaleFactor = currentServings / initialServings
-			}
-		}
-
-		const newScaledIngredients = ingredients.map((ing) => ({
-			...ing,
-			amount: ing.amount * scaleFactor,
-		}))
-		setScaledIngredients(newScaledIngredients)
-	}, [currentServings, ingredients, initialServings, referenceIngredientName, referenceIngredientTargetQuantity, activeTab])
-
-	const handleReferenceIngredientChange = (value: string) => {
-		if (value === "servings_based") {
-			setReferenceIngredientName(undefined)
-			setReferenceIngredientTargetQuantity(undefined)
-		} else {
-			const selectedIng = ingredients.find((ing) => ing.name === value)
-			setReferenceIngredientName(value)
-			setReferenceIngredientTargetQuantity(selectedIng ? selectedIng.amount : undefined) // 선택된 재료의 기본량으로 설정
-		}
+	const changeServings = (next: number) => {
+		setReference(null)
+		setServings(Math.min(maxServings, Math.max(1, next)))
 	}
 
-	const handleTabChange = (value: string) => {
-		setActiveTab(value)
-		// 탭 전환 시 스케일링 관련 상태 초기화
-		if (value === "servings") {
-			setCurrentServings(initialServings)
-			setReferenceIngredientName(undefined)
-			setReferenceIngredientTargetQuantity(undefined)
-		} else if (value === "ingredients") {
-			setCurrentServings(initialServings) // 인분 기준 탭으로 돌아갈 때를 대비하여 초기화
-			// 재료 기준 탭으로 전환 시, 첫 번째 재료를 기본으로 선택하거나 초기화하지 않음
-			// 사용자가 직접 재료를 선택하도록 유도
-		}
+	const resetScale = () => {
+		setReference(null)
+		setServings(baseServings)
 	}
 
-	const handleTargetQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const value = parseFloat(e.target.value)
-		setReferenceIngredientTargetQuantity(isNaN(value) ? undefined : value)
+	const toggle = (set: Set<number>, index: number) => {
+		const next = new Set(set)
+		if (next.has(index)) next.delete(index)
+		else next.add(index)
+		return next
 	}
+
+	const isScaled = reference !== null || servings !== baseServings
+	const referenceIngredient = reference ? ingredients[reference.index] : null
 
 	return (
-		<div className="space-y-6">
-			<Tabs defaultValue="servings" className="w-full" onValueChange={handleTabChange}>
-				<TabsList className="grid w-full grid-cols-2 p-1 bg-gray-100 rounded-xl">
-					<TabsTrigger value="servings" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-orange-500 transition-all duration-200">
-						인분 기준
-					</TabsTrigger>
-					<TabsTrigger value="ingredients" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-orange-500 transition-all duration-200" disabled={!ingredients || ingredients.length === 0}>
-						재료 기준
-					</TabsTrigger>
-				</TabsList>
-				<TabsContent value="servings" className="mt-4 transition-all duration-300 data-[state=inactive]:opacity-0 data-[state=inactive]:translate-y-2">
-					{/* Servings Slider */}
-					<Card className="bg-white shadow-sm">
-						<CardHeader>
-							<CardTitle as="p" className="text-lg">인분 조절</CardTitle>
-						</CardHeader>
-						<CardContent className="p-6">
-							<div className="flex flex-col items-center gap-4 mb-4">
-								<span className="text-lg font-semibold">{currentServings}인분</span>
-								<div className="flex items-center gap-4 w-full">
-									<Button variant="outline" size="icon" onClick={() => setCurrentServings((prev) => Math.max(1, prev - 1))} disabled={currentServings <= 1} className="rounded-full">
-										<Minus className="h-4 w-4" />
-									</Button>
-									<div className="relative flex-1">
-										{activeTab === "ingredients" && <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center rounded-md z-10 text-sm text-gray-600 font-medium">재료 기준 스케일링 사용 중</div>}
-										<Slider
-											min={1}
-											max={10}
-											step={1}
-											value={[currentServings]}
-											onValueChange={(value) => {
-												setCurrentServings(value[0])
-												// 인분 조절 시 재료 기준 스케일링 초기화
-												setReferenceIngredientName(undefined)
-												setReferenceIngredientTargetQuantity(undefined)
-											}}
-											className="flex-1"
-											disabled={activeTab === "ingredients"} // Disable slider if ingredient-based scaling is selected
-										/>
-									</div>
-									<Button variant="outline" size="icon" onClick={() => setCurrentServings((prev) => Math.min(10, prev + 1))} disabled={currentServings >= 10} className="rounded-full">
-										<Plus className="h-4 w-4" />
-									</Button>
-								</div>
-							</div>
-							<p className="text-xs text-gray-500">슬라이더를 움직여 인분 수를 조절해보세요.</p>
-						</CardContent>
-					</Card>
-				</TabsContent>
-				<TabsContent value="ingredients" className="mt-4 transition-all duration-300 data-[state=inactive]:opacity-0 data-[state=inactive]:translate-y-2">
-					{/* Reference Ingredient Scaling */}
-					<Card className="bg-white shadow-sm">
-						<CardHeader>
-							<CardTitle as="p" className="text-lg">특정 재료 기준 스케일링</CardTitle>
-						</CardHeader>
-						<CardContent className="p-6 space-y-4">
-							{ingredients.length > 0 ? (
-								<div className="grid w-full items-center gap-1.5">
-									<Label htmlFor="reference-ingredient">기준 재료 선택</Label>
-									<Select onValueChange={handleReferenceIngredientChange} value={referenceIngredientName || "servings_based"} disabled={activeTab === "servings"}>
-										<SelectTrigger id="reference-ingredient">
-											<SelectValue placeholder="기준 재료를 선택하세요" />
-										</SelectTrigger>
-										<SelectContent>
-											<SelectItem value="servings_based">기준 재료 선택</SelectItem>
-											{ingredients
-												.filter((ing) => ing.name !== "")
-												.map((ing, index) => (
-													<SelectItem key={index} value={ing.name}>
-														{ing.name} ({ing.amount} {ing.unit})
-													</SelectItem>
-												))}
-										</SelectContent>
-									</Select>
-									<p className="text-xs text-gray-500">특정 재료를 기준으로 재료들의 양을 조절합니다.</p>
-								</div>
-							) : (
-								<p className="text-gray-500">등록된 재료가 없어 스케일링할 수 없습니다.</p>
-							)}
-
-							{referenceIngredientName && ingredients.length > 0 && (
-								<div className="grid w-full items-center gap-1.5">
-									<Label htmlFor="target-quantity">목표량 ({ingredients.find((ing) => ing.name === referenceIngredientName)?.unit})</Label>
-									<Input type="number" id="target-quantity" placeholder="목표량을 입력하세요" value={referenceIngredientTargetQuantity || ""} onChange={handleTargetQuantityChange} step="0.1" disabled={activeTab === "servings"} />
-									<p className="text-xs text-gray-500 mt-1">입력하신 양을 기준으로 모든 재료가 조절됩니다.</p>
-								</div>
-							)}
-						</CardContent>
-					</Card>
-				</TabsContent>
-			</Tabs>
-
-			{/* Ingredients */}
-			<Card className="bg-white shadow-sm">
-				<CardHeader>
-					<CardTitle as="h2" className="text-lg">재료</CardTitle>
-				</CardHeader>
-				<CardContent className="p-6">
-					<div className="space-y-3">
-						{scaledIngredients.length > 0 ? (
-							scaledIngredients.map((ing, index) => (
-								<div key={index} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 bg-white">
-									<div className="flex items-center gap-3">
-										<span className="text-base font-medium text-gray-900">
-											{ing.name}
-										</span>
-									</div>
-									<div className="flex items-center gap-1 text-gray-700 font-medium">
-										<span className="text-lg">{formatQuantity(ing.amount)}</span>
-										<span className="text-sm text-gray-500">{ing.unit}</span>
-									</div>
-								</div>
-							))
-						) : (
-							<p className="text-gray-500 text-center py-4">등록된 재료가 없습니다.</p>
-						)}
+		<>
+			<section aria-labelledby="ingredients-heading" className="border-t border-border px-4 pb-5 pt-5">
+				<div className="flex items-center justify-between gap-3">
+					<h2 id="ingredients-heading" className="text-lg font-bold text-ink">
+						재료 <span className="font-medium tabular-nums text-ink-soft">{ingredients.length}</span>
+					</h2>
+					<div className="flex items-center rounded-lg border border-border" role="group" aria-label="인분 조절">
+						<button
+							type="button"
+							onClick={() => changeServings((reference ? Math.round(baseServings * scale) : servings) - 1)}
+							disabled={!reference && servings <= 1}
+							aria-label="1인분 줄이기"
+							className="flex h-11 w-11 items-center justify-center text-ink disabled:text-ink-soft/40"
+						>
+							<Minus className="h-4 w-4" aria-hidden />
+						</button>
+						<output aria-live="polite" className="min-w-[4.5rem] text-center text-base font-semibold tabular-nums text-ink">
+							{reference ? "직접 맞춤" : `${servings}인분`}
+						</output>
+						<button
+							type="button"
+							onClick={() => changeServings((reference ? Math.round(baseServings * scale) : servings) + 1)}
+							disabled={!reference && servings >= maxServings}
+							aria-label="1인분 늘리기"
+							className="flex h-11 w-11 items-center justify-center text-ink disabled:text-ink-soft/40"
+						>
+							<Plus className="h-4 w-4" aria-hidden />
+						</button>
 					</div>
-				</CardContent>
-			</Card>
+				</div>
 
-			{/* Steps */}
-			<Card className="bg-white shadow-sm">
-				<CardHeader>
-					<CardTitle as="h2" className="text-lg">조리법</CardTitle>
-				</CardHeader>
-				<CardContent className="p-6">
-					<ol className="space-y-6">
-						{steps && steps.length > 0 ? (
-							steps.map((step, index) => (
-								<li key={index} className="w-full">
-									<div className="flex flex-col space-y-3">
-										{/* 단계 번호 */}
-										<div className="flex items-center gap-3">
-											<div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-orange-500 text-white font-bold text-sm">{index + 1}</div>
-											<div className="h-px bg-gray-200 flex-1"></div>
-										</div>
+				{isScaled && (
+					<p className="mt-2 text-sm text-ink-soft">
+						{referenceIngredient
+							? `${referenceIngredient.name} ${formatAmount(reference!.target, referenceIngredient.unit)}${referenceIngredient.unit}에 맞춘 양이에요.`
+							: `원래 ${baseServings}인분 기준에서 바꾼 양이에요.`}{" "}
+						<button type="button" onClick={resetScale} className="font-medium text-ink underline underline-offset-4">
+							원래대로
+						</button>
+					</p>
+				)}
 
-										{/* 이미지와 설명 */}
-										<div className="w-full space-y-3">
+				{scaled.length > 0 ? (
+					<ul className="mt-3 divide-y divide-border">
+						{scaled.map((ing, index) => {
+							const isChecked = checked.has(index)
+							const amountText = formatAmount(ing.amount, ing.unit)
+							const amountClass = cn(
+								"rounded-sm px-1 text-[17px] font-semibold tabular-nums transition-colors duration-500 motion-reduce:transition-none",
+								changed.has(index) ? "bg-[#C9DFD2] text-ink" : "bg-transparent",
+								isChecked && "text-ink-soft"
+							)
+							if (adjusting) {
+								return (
+									<li key={index} className="flex min-h-12 items-center gap-3 py-2">
+										<label htmlFor={`amount-${index}`} className="flex-1 text-[17px] text-ink">
+											{ing.name}
+										</label>
+										<span className="flex items-center gap-1">
+											<input
+												id={`amount-${index}`}
+												inputMode="decimal"
+												defaultValue={amountText.includes("/") ? String(Number(ing.amount.toFixed(2))) : amountText}
+												onChange={(e) => {
+													const value = parseFloat(e.target.value)
+													if (Number.isFinite(value) && value > 0) setReference({ index, target: value })
+												}}
+												className="h-11 w-20 rounded-md border border-border bg-paper px-2 text-right text-[17px] font-semibold tabular-nums text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+											/>
+											<span className="w-10 text-sm text-ink-soft">{ing.unit}</span>
+										</span>
+									</li>
+								)
+							}
+							return (
+								<li key={index}>
+									<button
+										type="button"
+										role="checkbox"
+										aria-checked={isChecked}
+										onClick={() => setChecked((set) => toggle(set, index))}
+										className="flex min-h-12 w-full items-center gap-3 py-2.5 text-left"
+									>
+										<span
+											aria-hidden
+											className={cn(
+												"flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-[4px] border-[1.5px]",
+												isChecked ? "border-ink bg-ink text-paper" : "border-ink-soft"
+											)}
+										>
+											{isChecked && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
+										</span>
+										<span className={cn("flex-1 text-[17px] text-ink", isChecked && "text-ink-soft line-through decoration-ink-soft/70")}>{ing.name}</span>
+										<span className="flex-shrink-0 text-right">
+											<span className={amountClass}>{amountText}</span>
+											{ing.unit && <span className={cn("text-[15px] text-ink-soft", !amountText && "pl-1")}>{ing.unit}</span>}
+										</span>
+									</button>
+								</li>
+							)
+						})}
+					</ul>
+				) : (
+					<p className="mt-3 text-ink-soft">등록된 재료가 없어요.</p>
+				)}
+
+				{scaled.length > 1 && (
+					<button
+						type="button"
+						onClick={() => setAdjusting((value) => !value)}
+						className="mt-3 inline-flex min-h-11 items-center text-sm font-medium text-ink underline underline-offset-4"
+					>
+						{adjusting ? "맞추기 끝내기" : "가진 재료 양에 맞추기"}
+					</button>
+				)}
+			</section>
+
+			<section aria-labelledby="steps-heading" className="border-t border-border px-4 pb-6 pt-5">
+				<div className="flex items-center justify-between gap-3">
+					<h2 id="steps-heading" className="text-lg font-bold text-ink">
+						만드는 법 {!stepsLocked && steps.length > 0 && <span className="font-medium tabular-nums text-ink-soft">{steps.length}단계</span>}
+					</h2>
+					{!stepsLocked && steps.length > 0 && (
+						<button
+							type="button"
+							onClick={() => setStepModeAt(firstUndone(steps.length, doneSteps))}
+							className="inline-flex h-11 items-center rounded-lg bg-primary px-4 text-[15px] font-semibold text-primary-foreground active:brightness-95"
+						>
+							요리 시작
+						</button>
+					)}
+				</div>
+
+				{stepsLocked ? (
+					<div className="mt-2">
+						<p className="text-[17px] font-semibold text-ink">로그인하면 단계별로 볼 수 있어요</p>
+						<p className="mt-1 text-[15px] text-ink-soft">재료는 위에서 모두 볼 수 있어요. 단계별 설명과 사진, 요리 모드는 회원에게 보여요.</p>
+						<Link
+							href={loginHref}
+							className="mt-4 inline-flex h-11 items-center rounded-lg bg-primary px-4 text-[15px] font-semibold text-primary-foreground"
+						>
+							로그인하고 만드는 법 보기
+						</Link>
+					</div>
+				) : steps.length > 0 ? (
+					<ol className="mt-2">
+						{steps.map((step, index) => {
+							const isDone = doneSteps.has(index)
+							return (
+								<li key={index} className="border-b border-border last:border-b-0">
+									<div className="flex gap-3 py-4">
+										<button
+											type="button"
+											aria-pressed={isDone}
+											aria-label={isDone ? `${index + 1}단계 끝냄 표시 지우기` : `${index + 1}단계 끝냄으로 표시`}
+											onClick={() => setDoneSteps((set) => toggle(set, index))}
+											className={cn(
+												"-ml-1.5 flex h-11 w-11 flex-shrink-0 items-start justify-center pt-1 text-lg font-bold tabular-nums",
+												isDone ? "text-ink-soft" : "text-ink"
+											)}
+										>
+											{isDone ? <Check className="mt-0.5 h-5 w-5" strokeWidth={2.5} aria-hidden /> : index + 1}
+										</button>
+										<div className={cn("min-w-0 flex-1 pt-1", isDone && "text-ink-soft")}>
+											<p className="whitespace-pre-wrap break-words text-[17px] leading-[1.65]">{step.description}</p>
 											{step.image_url && (
-												<div className="relative w-full h-48 rounded-xl overflow-hidden">
-													              <Image 
-                src={step.image_url} 
-                alt={`Step ${step.order} image`} 
-                fill 
-                className="object-cover" 
-                priority={step.order === 1}
-              />
+												<div className="relative mt-3 aspect-[4/3] w-full overflow-hidden rounded-[3px] bg-muted">
+													<Image src={step.image_url} alt={`${index + 1}단계 사진`} fill sizes="(max-width: 768px) 90vw, 600px" className="object-cover" />
 												</div>
 											)}
-											<p className="text-gray-800 whitespace-pre-wrap break-words leading-relaxed">{step.description}</p>
 										</div>
 									</div>
 								</li>
-							))
-						) : (
-							<p className="text-gray-500">등록된 조리법이 없습니다.</p>
-						)}
+							)
+						})}
 					</ol>
-				</CardContent>
-			</Card>
-		</div>
+				) : (
+					<p className="mt-3 text-ink-soft">등록된 만드는 법이 없어요.</p>
+				)}
+			</section>
+
+			{stepModeAt !== null && (
+				<StepMode
+					steps={steps}
+					ingredients={scaled}
+					servingsLabel={reference ? "직접 맞춘 양" : `${servings}인분`}
+					startAt={stepModeAt}
+					onStepDone={(index) => setDoneSteps((set) => new Set(set).add(index))}
+					onClose={() => setStepModeAt(null)}
+				/>
+			)}
+		</>
 	)
+}
+
+function firstUndone(count: number, done: Set<number>) {
+	for (let i = 0; i < count; i++) if (!done.has(i)) return i
+	return 0
 }

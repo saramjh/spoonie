@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
-import localFont from "next/font/local"
+import "./pretendard.css"
 import "./globals.css"
-import { cn } from "@/lib/utils"
 import { Toaster } from "@/components/ui/toaster"
 import ClientLayoutWrapper from "@/components/layout/ClientLayoutWrapper"
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics"
@@ -10,16 +9,6 @@ import ServiceWorkerUpdater from "@/components/layout/ServiceWorkerUpdater"
 import NavigationProgress from "@/components/layout/NavigationProgress"
 import { Suspense } from "react"
 
-const fontSans = localFont({
-	src: "./fonts/GeistVF.woff",
-	variable: "--font-sans",
-	weight: "300 700",
-	display: "swap",
-	preload: false, // 프리로드 경고 방지 - 필요할 때 로드
-	fallback: ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
-	adjustFontFallback: false,
-	style: "normal",
-})
 
 export const metadata: Metadata = {
 	title: "스푸니 - 레시피 공유 플랫폼 | 요리법 검색, 나만의 레시피북",
@@ -91,10 +80,8 @@ export default function RootLayout({
 				{/* 추가 SEO 메타 태그 */}
 				<meta name="author" content="Spoonie Team" />
 				<meta name="format-detection" content="telephone=no" />
-				{/* 🎯 폰트 최적화 메타 태그 */}
-				<meta name="font-display" content="swap" />
 			</head>
-			<body className={cn("min-h-screen bg-background font-sans antialiased", fontSans.variable)} suppressHydrationWarning={true}>
+			<body className="min-h-screen bg-background font-sans antialiased" suppressHydrationWarning={true}>
 				{/* 🎯 Google Analytics */}
 				<GoogleAnalytics />
 				{/* 💰 Google AdSense */}

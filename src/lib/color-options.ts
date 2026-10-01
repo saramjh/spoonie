@@ -68,3 +68,21 @@ export function getColorClass(value: string | null, type: "color" | "lightColor"
 	const option = getColorOption(value)
 	return option?.[type] || "bg-gray-200"
 }
+
+// 레시피 상세에서 종이를 누르는 자석 색 (색상 라벨이 있을 때만)
+const MAGNET_HEX: Record<string, string> = {
+	red: "#D6453D",
+	orange: "#FF6900",
+	yellow: "#F2C230",
+	green: "#3E9B5F",
+	blue: "#2E6FBA",
+	purple: "#7A5CC2",
+	gray: "#8A9296",
+}
+
+export function getMagnet(value: string | null | undefined) {
+	if (!value) return null
+	const option = getColorOption(value)
+	const hex = MAGNET_HEX[value]
+	return option && hex ? { label: option.label, hex } : null
+}

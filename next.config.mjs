@@ -8,6 +8,8 @@ const pwaConfig = withPWA({
 	skipWaiting: true,
 	disable: false,      // ✅ PWA 기능 복원!
 	reloadOnOnline: true,
+	// 글꼴 조각(92개)은 설치 시 미리 받지 않고, 실제로 쓰는 글자 범위만 받아 캐시한다
+	publicExcludes: ["!noprecache/**/*", "!fonts/**/*"],
 	cacheOnFrontEndNav: true,
 	fallbacks: {
 		document: "/offline",
@@ -41,6 +43,15 @@ const pwaConfig = withPWA({
 						return `${url.pathname}?v=${url.searchParams.get('v') || 'latest'}`
 					}
 				}]
+			},
+		},
+		{
+			// 자체 호스팅 글꼴: 파일명이 고정이므로 캐시 우선
+			urlPattern: /\/fonts\/pretendard\/.*\.woff2$/,
+			handler: 'CacheFirst',
+			options: {
+				cacheName: 'spoonie-fonts',
+				expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 365 },
 			},
 		},
 		{

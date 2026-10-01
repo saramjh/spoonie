@@ -101,7 +101,7 @@ const fetchCitedRecipes = async (citedRecipeIds: string[]): Promise<Item[]> => {
 // 🚀 최적화된 참고 레시피 캐싱 훅 (스마트 캐시 전략)
 export function useCitedRecipes(citedRecipeIds: string[] | null | undefined) {
 	// citedRecipeIds가 없거나 빈 배열이면 null을 key로 사용하여 fetch 안함
-	const cacheKey = citedRecipeIds && citedRecipeIds.length > 0 ? `cited-recipes:${citedRecipeIds.sort().join(",")}` : null
+	const cacheKey = citedRecipeIds && citedRecipeIds.length > 0 ? `cited-recipes:${[...citedRecipeIds].sort().join(",")}` : null
 
 	const { data, error, isLoading, mutate } = useSWR(cacheKey, () => fetchCitedRecipes(citedRecipeIds!), {
 		// 🚀 스마트 캐싱 최적화 설정
@@ -130,3 +130,40 @@ export function useCitedRecipes(citedRecipeIds: string[] | null | undefined) {
 	}
 }
  
+export interface CitingItem {
+	id: string
+	title: string | null
+	item_type: "recipe" | "post"
+	username: string
+}
+
+// 이 레시피를 참고 레시피로 인용한 공개 글 (레시피와 레시피드)
+const fetchCitingItems = async (recipeId: string): Promise<CitingItem[]> => {
+	const supabase = createSupabaseBrowserClient()
+	const { data, error } = await supabase
+		.from("items")
+		.select("id, title, item_type, author:profiles!user_id(username)")
+		.contains("cited_recipe_ids", [recipeId])
+		.eq("is_public", true)
+		.order("created_at", { ascending: false })
+		.limit(20)
+	if (error) throw error
+	return (data || []).map((row) => {
+		const author = Array.isArray(row.author) ? row.author[0] : row.author
+		return {
+			id: String(row.id),
+			title: row.title as string | null,
+			item_type: row.item_type === "recipe" ? "recipe" : "post",
+			username: (author as { username?: string } | null)?.username || "익명",
+		}
+	})
+}
+
+export function useCitingItems(recipeId: string | null | undefined) {
+	const { data } = useSWR(recipeId ? `citing-items:${recipeId}` : null, () => fetchCitingItems(recipeId!), {
+		revalidateOnFocus: false,
+		dedupingInterval: 5 * 60 * 1000,
+		errorRetryCount: 1,
+	})
+	return data || []
+}

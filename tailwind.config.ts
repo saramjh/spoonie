@@ -45,7 +45,7 @@ const config: Config = {
 		},
 		extend: {
 			fontFamily: {
-				sans: ["var(--font-sans)", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
+				sans: ['"Pretendard Variable"', "Pretendard", "-apple-system", "BlinkMacSystemFont", "system-ui", '"Apple SD Gothic Neo"', '"Noto Sans KR"', "sans-serif"],
 			},
 			colors: {
 				"orange-50": "#fff7ed",
@@ -73,9 +73,16 @@ const config: Config = {
 				background: "hsl(var(--background))",
 				foreground: "hsl(var(--foreground))",
 				primary: {
-					DEFAULT: "#f97316",
-					foreground: "#FFFFFF",
+					DEFAULT: "#FF6900",
+					foreground: "#23282B",
 				},
+				door: "var(--door)",
+				paper: "var(--paper)",
+				ink: {
+					DEFAULT: "var(--ink)",
+					soft: "var(--ink-soft)",
+				},
+				"orange-ink": "var(--orange-ink)",
 				secondary: {
 					DEFAULT: "#FFFFFF",
 					foreground: "#f97316",
@@ -110,6 +117,7 @@ const config: Config = {
 				"3xl": "24px",
 			},
 			boxShadow: {
+				sheet: "var(--sheet-shadow)",
 				bauhaus: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
 				"bauhaus-lg": "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
 			},

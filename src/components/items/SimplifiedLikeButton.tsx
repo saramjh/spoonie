@@ -159,7 +159,7 @@ export const SimplifiedLikeButton = forwardRef<HTMLButtonElement, SimplifiedLike
   return (
     <>
       {/* 📱 Instagram 방식: 하트 + 숫자 분리 */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center">
         {/* 🚀 하트 아이콘 버튼 - 좋아요 토글 */}
         <Button
           ref={ref}
@@ -167,9 +167,12 @@ export const SimplifiedLikeButton = forwardRef<HTMLButtonElement, SimplifiedLike
           size="sm"
           onClick={handleLike}
           disabled={isLoading || isAuthLoading}
-          className="p-1 text-gray-600 hover:text-red-500 transition-colors"
+          aria-label={hasLiked ? "좋아요 취소" : "좋아요"}
+          aria-pressed={hasLiked}
+          className="h-11 pl-2.5 pr-1 text-ink-soft hover:text-red-500 transition-colors"
         >
           <Heart 
+            aria-hidden
             className={`w-5 h-5 transition-all duration-200 ${
               hasLiked 
                 ? 'fill-red-500 text-red-500 scale-110' 
@@ -188,9 +191,10 @@ export const SimplifiedLikeButton = forwardRef<HTMLButtonElement, SimplifiedLike
             setShowLikersModal(true)
           }}
           disabled={isAuthLoading}
-          className="p-1 text-gray-600 hover:text-gray-800 transition-colors"
+          aria-label={`좋아요 ${likesCount}개, 좋아요한 사람 보기`}
+          className="h-11 min-w-0 pl-0.5 pr-2 text-ink-soft hover:text-ink transition-colors"
         >
-          <span className="text-sm font-medium">{likesCount}</span>
+          <span className="text-sm font-medium tabular-nums">{likesCount}</span>
         </Button>
       </div>
 
