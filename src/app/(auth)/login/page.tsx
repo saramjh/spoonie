@@ -96,13 +96,13 @@ export default function LoginPage() {
 	}
 
 				return (
-					<div className="min-h-screen flex flex-col items-center justify-start p-4 bg-gradient-to-br from-orange-50 via-white to-orange-50">
+					<div className="min-h-screen flex flex-col items-center justify-start p-4 bg-gray-50">
 			{/* 🎨 토스 스타일 그라디언트 배경 */}
 			{/* 📱 상단 여백 + 카드 컨테이너 */}
 			<main className="w-full max-w-sm mx-auto pt-16 sm:pt-20">
 				{/* 🏷️ 컴팩트한 브랜드 영역 */}
 				<div className="text-center mb-6">
-					<div className="inline-block bg-white border-2 border-orange-500 p-3 rounded-xl mb-4 shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+					<div className="inline-block mb-4">
 						<Image src="/icon-only.svg" alt="Spoonie Logo" width={32} height={32} />
 					</div>
 					<h1 className="text-2xl font-bold text-gray-900 mb-1">Spoonie</h1>
@@ -110,7 +110,7 @@ export default function LoginPage() {
 				</div>
 
 				{/* 📋 로그인 카드 */}
-				<div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 backdrop-blur-sm">
+				<div className="bg-white rounded-2xl border border-gray-200 p-8">
 
 					<Form {...form}>
 						<form onSubmit={form.handleSubmit(handleLogin)} className="space-y-5">
@@ -152,7 +152,7 @@ export default function LoginPage() {
 							<Button 
 								type="submit" 
 								disabled={form.formState.isSubmitting || isRedirecting}
-								className="w-full h-14 text-base font-bold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]"
+								className="w-full h-14 text-base font-bold bg-orange-500 hover:bg-orange-600 text-white rounded-2xl"
 							>
 								{form.formState.isSubmitting || isRedirecting ? (
 									<>

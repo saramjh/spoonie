@@ -141,7 +141,7 @@ export const usePullToRefresh = () => {
         return (
             <div style={indicatorStyle} className="overflow-hidden text-center flex items-center justify-center bg-orange-50">
                 <div style={textStyle} className="text-orange-500 font-bold">
-                    {pullDistance >= PULL_THRESHOLD ? "🔄 놓으면 새로고침" : PULL_TO_REFRESH_TEXT}
+                    {pullDistance >= PULL_THRESHOLD ? "놓으면 새로고침" : PULL_TO_REFRESH_TEXT}
                 </div>
             </div>
         );

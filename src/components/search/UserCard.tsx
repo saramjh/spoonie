@@ -61,7 +61,7 @@ export default function UserCard({ user }: UserCardProps) {
                     className="object-cover" 
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                  <div className="w-full h-full bg-gray-100 flex items-center justify-center">
                     <User className="w-4 h-4 text-gray-400" />
                   </div>
                 )}

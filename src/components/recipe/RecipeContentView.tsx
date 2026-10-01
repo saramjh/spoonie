@@ -190,9 +190,9 @@ export default function RecipeContentView({ initialServings, ingredients, steps 
 					<div className="space-y-3">
 						{scaledIngredients.length > 0 ? (
 							scaledIngredients.map((ing, index) => (
-								<div key={index} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:border-orange-200 transition-colors bg-gradient-to-r from-gray-50/80 to-white">
+								<div key={index} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 bg-white">
 									<div className="flex items-center gap-3">
-										<span className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-3 py-1.5 rounded-full text-sm font-medium shadow-sm">
+										<span className="text-base font-medium text-gray-900">
 											{ing.name}
 										</span>
 									</div>

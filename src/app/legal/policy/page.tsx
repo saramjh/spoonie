@@ -2,7 +2,7 @@ import Link from "next/link"
 
 export default function OperationPolicyPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* 헤더 */}
         <div className="text-center mb-8">
@@ -26,7 +26,7 @@ export default function OperationPolicyPage() {
               </p>
               
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">🍳 레시피 게시 가이드라인</h3>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">레시피 게시 가이드라인</h3>
                 <ul className="list-disc pl-6 text-gray-700 space-y-2">
                   <li>직접 만든 요리나 신뢰할 수 있는 출처의 레시피를 공유해주세요</li>
                   <li>재료와 조리법을 구체적이고 명확하게 작성해주세요</li>
@@ -37,7 +37,7 @@ export default function OperationPolicyPage() {
               </div>
 
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">💬 소통 가이드라인</h3>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">소통 가이드라인</h3>
                 <ul className="list-disc pl-6 text-gray-700 space-y-2">
                   <li>서로를 존중하고 배려하는 마음으로 소통해주세요</li>
                   <li>건설적인 피드백과 조언을 나눠주세요</li>
@@ -64,7 +64,7 @@ export default function OperationPolicyPage() {
               <h2 className="text-xl font-bold text-gray-900 mb-4">3. 금지 행위</h2>
               
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">⚠️ 콘텐츠 관련 금지사항</h3>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">콘텐츠 관련 금지사항</h3>
                 <ul className="list-disc pl-6 text-gray-700 space-y-2">
                   <li>타인의 레시피나 이미지를 무단으로 복사하여 게시하는 행위</li>
                   <li>음식과 관련 없는 콘텐츠 게시</li>
@@ -76,7 +76,7 @@ export default function OperationPolicyPage() {
               </div>
 
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">🚫 행동 관련 금지사항</h3>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">행동 관련 금지사항</h3>
                 <ul className="list-disc pl-6 text-gray-700 space-y-2">
                   <li>다른 이용자에 대한 인신공격, 욕설, 차별적 발언</li>
                   <li>개인정보 무단 수집 및 공개</li>
@@ -92,7 +92,7 @@ export default function OperationPolicyPage() {
               <h2 className="text-xl font-bold text-gray-900 mb-4">4. 신고 및 제재</h2>
               
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">📢 신고 절차</h3>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">신고 절차</h3>
                 <ol className="list-decimal pl-6 text-gray-700 space-y-2">
                   <li>부적절한 콘텐츠나 행위를 발견하신 경우 신고 기능을 이용해주세요</li>
                   <li>신고 시 구체적인 사유와 증거를 제공해주세요</li>
@@ -102,7 +102,7 @@ export default function OperationPolicyPage() {
               </div>
 
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">⚖️ 제재 조치</h3>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">제재 조치</h3>
                 <p className="text-gray-700 leading-relaxed mb-4">
                   가이드라인 위반 시 다음과 같은 제재 조치가 적용될 수 있습니다:
                 </p>
@@ -122,7 +122,7 @@ export default function OperationPolicyPage() {
               <h2 className="text-xl font-bold text-gray-900 mb-4">5. 지적재산권 보호</h2>
               
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">📝 저작권 정책</h3>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">저작권 정책</h3>
                 <ul className="list-disc pl-6 text-gray-700 space-y-2">
                   <li>본인이 저작권을 가진 콘텐츠만 게시해주세요</li>
                   <li>타인의 레시피를 참고한 경우 반드시 출처를 명시해주세요</li>
@@ -132,7 +132,7 @@ export default function OperationPolicyPage() {
               </div>
 
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">🛡️ DMCA 정책</h3>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">DMCA 정책</h3>
                 <p className="text-gray-700 leading-relaxed">
                   저작권 침해를 발견하신 경우 devTestudinidae@gmail.com으로 다음 정보와 함께 신고해주세요:
                 </p>
@@ -185,7 +185,7 @@ export default function OperationPolicyPage() {
               <h2 className="text-xl font-bold text-gray-900 mb-4">9. 운영 유연성</h2>
               <div className="bg-blue-50 p-4 rounded-2xl border border-blue-200 mb-6">
                 <p className="text-gray-700 leading-relaxed">
-                  <strong>📝 운영 방침:</strong> 본 서비스는 개인이 취미로 운영하는 커뮤니티 서비스입니다.
+                  <strong>운영 방침:</strong> 본 서비스는 개인이 취미로 운영하는 커뮤니티 서비스입니다.
                 </p>
                 <ul className="list-disc pl-6 text-gray-700 space-y-1 mt-3">
                   <li>운영자의 개인 사정(학업, 직업, 건강 등)으로 인해 서비스 응답이 지연될 수 있습니다</li>

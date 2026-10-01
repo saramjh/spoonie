@@ -294,14 +294,13 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
       {/* 끝 표시 */}
       {isReachingEnd && feedItems.length > 0 && (
         <div className="text-center py-8 text-gray-500">
-          모든 게시물을 확인했습니다 ✨
+          모든 게시물을 확인했습니다
         </div>
       )}
 
       {/* 빈 상태 */}
       {feedItems.length === 0 && !isLoading && (
         <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-          <div className="text-6xl">🍽️</div>
           <h3 className="text-xl font-semibold text-gray-700">아직 게시물이 없어요</h3>
           <p className="text-gray-500 text-center">
             첫 번째 레시피나 레시피드를 작성해보세요!
@@ -321,7 +320,7 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
       <Dialog open={showSignupModal} onOpenChange={setShowSignupModal}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>더 많은 레시피를 만나보세요! 🍳</DialogTitle>
+            <DialogTitle>더 많은 레시피를 만나보세요</DialogTitle>
             <DialogDescription>
               회원가입하고 나만의 레시피를 저장하고 공유해보세요.
             </DialogDescription>

@@ -410,7 +410,7 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 					<div className="flex flex-col md:flex-row items-center md:items-start gap-8">
 						{/* Profile Image - LCP 최적화를 위해 Next.js Image 사용 */}
 						<div className="flex-shrink-0">
-							<div className="relative w-32 h-32 md:w-40 md:h-40 border-4 border-gray-200 rounded-full overflow-hidden bg-gradient-to-br from-orange-400 to-orange-600">
+							<div className="relative w-32 h-32 md:w-40 md:h-40 border-4 border-gray-200 rounded-full overflow-hidden bg-gray-100">
 								{currentAvatarUrl && currentAvatarUrl !== "/icon-only.svg" ? (
 									<Image
 										src={currentAvatarUrl}
@@ -421,7 +421,7 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 									/>
 								) : (
 									<div className="w-full h-full flex items-center justify-center">
-										<span className="text-4xl font-bold text-white">
+										<span className="text-4xl font-bold text-gray-500">
 											{profile?.username?.charAt(0) || "U"}
 										</span>
 									</div>
@@ -536,11 +536,7 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 									
 									return (
 										<div key={item.id} className="break-inside-avoid mb-3 sm:mb-4">
-											<div className={`rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group relative select-none ${
-												isRecipe 
-													? "bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 hover:border-orange-300" 
-													: "bg-white border border-gray-200 hover:border-gray-300"
-											}`}>
+											<div className="rounded-lg overflow-hidden group relative select-none bg-white border border-gray-200">
 																							{/* 🔗 메인 클릭 영역 (오버레이에서 처리) */}
 											<div className="block">
 													<div className="relative aspect-square cursor-pointer overflow-hidden">
@@ -550,23 +546,19 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 																alt={item.title || ''} 
 																fill 
 																priority={isPriorityImage}
-																className="object-cover group-hover:scale-105 transition-transform duration-300" 
+																className="object-cover" 
 															/>
 														) : (
-															<div className={`w-full h-full flex items-center justify-center transition-all duration-300 ${
-																isRecipe 
-																	? "bg-gradient-to-br from-orange-100 to-orange-200 group-hover:from-orange-200 group-hover:to-orange-300" 
-																	: "bg-gradient-to-br from-gray-100 to-gray-200 group-hover:from-gray-200 group-hover:to-gray-300"
-															}`}>
+															<div className="w-full h-full flex items-center justify-center bg-gray-100">
 																<div className="text-center">
 																	{isRecipe ? (
 																		<>
-																			<BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-orange-500 mx-auto mb-1 sm:mb-2 group-hover:scale-110 transition-transform duration-300" />
-																			<span className="text-orange-600 font-medium text-xs sm:text-sm">레시피</span>
+																			<BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mx-auto mb-1 sm:mb-2" />
+																			<span className="text-gray-600 font-medium text-xs sm:text-sm">레시피</span>
 																		</>
 																	) : (
 																		<>
-																			<Users className="w-6 h-6 sm:w-8 sm:h-8 text-gray-500 mx-auto mb-1 sm:mb-2 group-hover:scale-110 transition-transform duration-300" />
+																			<Users className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mx-auto mb-1 sm:mb-2" />
 																			<span className="text-gray-600 font-medium text-xs sm:text-sm">레시피드</span>
 																		</>
 																	)}
@@ -579,7 +571,7 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 														
 														{/* 비공개 표시 */}
 														{!item.is_public && (
-															<div className="absolute top-2 left-2 bg-black/70 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full">
+															<div className="absolute top-2 left-2 bg-black/75 text-white text-xs px-2 py-0.5 rounded">
 																비공개
 															</div>
 														)}

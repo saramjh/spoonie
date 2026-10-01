@@ -175,7 +175,7 @@ export default function FollowingModal({ isOpen, onClose, userId, currentUserId 
 									>
 										<Avatar className="w-12 h-12 border">
 											<AvatarImage src={followingUser.avatar_url || undefined} />
-											<AvatarFallback className="bg-gradient-to-br from-green-400 to-green-600 text-white">
+											<AvatarFallback className="bg-gray-200 text-gray-600">
 												                {followingUser.username?.charAt(0) || "U"}
 											</AvatarFallback>
 										</Avatar>

@@ -20,7 +20,7 @@ export default function ServiceWorkerUpdater() {
 			const handleStateChange = (newWorker: ServiceWorker) => () => {
 				if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
 					toast({
-						title: "🔄 새 버전 사용 가능",
+						title: "새 버전 사용 가능",
 						description: "새로고침하여 최신 버전을 이용하세요.",
 						duration: 5000,
 					})

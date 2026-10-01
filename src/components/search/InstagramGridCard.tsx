@@ -37,7 +37,7 @@ export default function InstagramGridCard({ item }: InstagramGridCardProps) {
   
   return (
     <Link href={detailUrl} className="block group">
-      <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 rounded-sm">
+      <div className="relative aspect-square overflow-hidden bg-gray-100 rounded-sm">
         {/* 🖼️ 이미지 */}
         {item.image_urls && item.image_urls.length > 0 ? (
           <Image 
@@ -47,7 +47,7 @@ export default function InstagramGridCard({ item }: InstagramGridCardProps) {
             className="object-cover group-hover:scale-105 transition-transform duration-300" 
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center">
+          <div className="w-full h-full bg-gray-100 flex items-center justify-center">
             {item.item_type === 'recipe' ? (
               <ChefHat className="w-8 h-8 text-orange-500" />
             ) : (

@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
-import { Clock, MessageCircle, Users, ChefHat, Flame, TrendingUp } from "lucide-react"
+import { Clock, MessageCircle, Users, ChefHat } from "lucide-react"
 import { getColorClass } from "@/lib/color-options"
 import { formatCount, formatCompactTime } from "@/lib/utils"
 import { SimplifiedLikeButton } from "@/components/items/SimplifiedLikeButton"
@@ -64,17 +64,6 @@ export default function RecipeListCard({
     }
   };
 
-  // 토스 스타일: 퀄리티 스코어 계산 (캐시된 데이터 사용)
-  const getQualityScore = () => {
-    const likes = cachedItem.likes_count || 0;
-    const comments = cachedItem.comments_count || 0;
-    return likes + (comments * 2); // 댓글을 더 높게 평가
-  };
-
-  const qualityScore = getQualityScore();
-  const isHighQuality = qualityScore > 20;
-  const isTrending = qualityScore > 10;
-
   const baseUrl = `${item.item_type === 'recipe' ? '/recipes' : '/posts'}/${item.item_id}`;
   const detailUrl = createLinkWithOrigin(baseUrl);
 
@@ -97,51 +86,34 @@ export default function RecipeListCard({
       
       {/* 링크 영역 - 체크박스 완전 분리 */}
       <Link href={detailUrl} className="block">
-        <Card className="group bg-white border-0 rounded-xl sm:rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 transform hover:scale-[1.01] overflow-hidden">
+        <Card className="group bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
       <CardContent className="p-0">
         <div className="flex">
           {/* 🖼️ 토스 스타일: 좌측 이미지 영역 - 브랜드 일관성 */}
-          <div className="relative w-20 h-20 sm:w-28 sm:h-28 flex-shrink-0 bg-gradient-to-br from-orange-50 to-orange-100 overflow-hidden">
+          <div className="relative w-20 h-20 sm:w-28 sm:h-28 flex-shrink-0 bg-gray-100 overflow-hidden">
             {cachedItem.image_urls && cachedItem.image_urls.length > 0 ? (
               <Image 
                 src={cachedItem.image_urls[cachedItem.thumbnail_index || 0]} 
                 alt={displayItem.title || "Recipe Image"} 
                 fill
-                className="object-cover group-hover:scale-110 transition-transform duration-500"
+                className="object-cover"
                 priority={priority}
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center">
-                <ChefHat className="w-4 h-4 sm:w-6 sm:h-6 text-orange-500" />
+              <div className="w-full h-full flex items-center justify-center">
+                <ChefHat className="w-6 h-6 text-gray-400" aria-hidden="true" />
               </div>
             )}
             
             {/* 비공개 표시 - 업계표준 Privacy UX */}
             {!displayItem.is_public && (
               <div className="absolute top-1 right-1 sm:top-2 sm:right-2 z-20">
-                <div className="bg-black/80 text-white text-[8px] sm:text-[10px] px-1 py-0.5 sm:px-1.5 sm:py-0.5 rounded-full font-medium backdrop-blur-sm shadow-lg">
+                <div className="bg-black/75 text-white text-[11px] sm:text-xs px-1.5 py-0.5 rounded">
                   비공개
                 </div>
               </div>
             )}
             
-            {/* 퀄리티 배지 - 토스 스타일 브랜딩 */}
-            {isHighQuality && (
-              <div className="absolute top-1 left-1 sm:top-2 sm:left-2">
-                <div className="w-4 h-4 sm:w-6 sm:h-6 bg-gradient-to-r from-orange-400 to-red-500 rounded-full flex items-center justify-center shadow-lg">
-                  <Flame className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
-                </div>
-              </div>
-            )}
-            
-            {/* 트렌딩 표시 */}
-            {isTrending && !isHighQuality && (
-              <div className="absolute top-1 left-1 sm:top-2 sm:left-2">
-                <div className="w-4 h-4 sm:w-6 sm:h-6 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full flex items-center justify-center shadow-lg">
-                  <TrendingUp className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
-                </div>
-              </div>
-            )}
           </div>
 
           {/* 📝 Instagram 스타일: 메인 콘텐츠 영역 (2행 구조) */}
@@ -150,18 +122,13 @@ export default function RecipeListCard({
             <div className="flex items-start justify-between mb-2 sm:mb-3">
               {/* 제목 + 작성자 그룹 */}
               <div className="flex-1 min-w-0 mr-2">
-                <h3 className="font-bold text-sm sm:text-base text-gray-900 leading-tight truncate group-hover:text-orange-600 transition-colors">
+                <h3 className="font-bold text-sm sm:text-base text-gray-900 leading-tight truncate">
                   {displayItem.title}
                 </h3>
                 
                 {/* 작성자 정보 - 모두의 레시피 전용 */}
                 {showAuthor && item.username && (
-                  <div className="flex items-center gap-1 sm:gap-1.5 mt-0.5 sm:mt-1">
-                    <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-gradient-to-r from-orange-400 to-orange-600" />
-                    <span className="text-xs sm:text-sm font-medium text-orange-600 truncate">
-                      {item.username}
-                    </span>
-                  </div>
+                  <p className="mt-0.5 text-xs sm:text-sm text-gray-600 truncate">{item.username}</p>
                 )}
               </div>
               
@@ -169,7 +136,7 @@ export default function RecipeListCard({
               <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                 {/* 색상 라벨 - 나의 레시피 전용 (그리드와 일관성) */}
                 {!showAuthor && displayItem.color_label && (
-                  <div className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full shadow-sm ${getColorClass(displayItem.color_label, "color")}`} />
+                  <div className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full ${getColorClass(displayItem.color_label, "color")}`} />
                 )}
               </div>
             </div>

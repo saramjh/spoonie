@@ -249,7 +249,7 @@ export default function TossSeamlessProfileEditor({
 
       // 🎉 토스식 성공 피드백
       toast({
-        title: "프로필 저장 완료! 🎉",
+        title: "프로필을 저장했습니다",
         description: "변경사항이 즉시 반영되었어요",
       })
 
@@ -606,7 +606,7 @@ export default function TossSeamlessProfileEditor({
                 <div>
                   <p className="text-sm font-medium text-amber-800">이미 변경을 완료했어요</p>
                   <p className="text-xs text-amber-600 mt-1">
-                    유저명은 1회만 변경 가능해서, 다음 기회에 신중히 선택해주세요! 😊
+                    유저명은 1회만 변경 가능해서, 다음 기회에 신중히 선택해주세요.
                   </p>
                 </div>
               </div>
@@ -623,14 +623,14 @@ export default function TossSeamlessProfileEditor({
                 <div>
                   <p className="text-sm font-medium text-blue-800">신중하게 선택해주세요</p>
                   <p className="text-xs text-blue-600 mt-1">
-                    유저명은 1회만 변경할 수 있어요. ⚠️
+                    유저명은 1회만 변경할 수 있어요.
                   </p>
                 </div>
               </div>
             </div>
           ) : (
             <p className="text-xs text-gray-500">
-              사용자 이름은 1회만 변경할 수 있어요. 생성 버튼을 활용해보세요! 🎲
+              사용자 이름은 1회만 변경할 수 있어요. 생성 버튼을 활용해보세요.
             </p>
           )}
         </div>
@@ -651,16 +651,16 @@ export default function TossSeamlessProfileEditor({
             id="profileMessage" 
             value={formData.profileMessage} 
             onChange={(e) => setFormData(prev => ({ ...prev, profileMessage: e.target.value }))}
-            placeholder="자신을 소개해보세요. 줄바꿈을 이용해 읽기 쉽게 작성하면 더 좋아요! ✨" 
+            placeholder="자신을 소개해보세요. 줄바꿈을 이용해 읽기 쉽게 작성하면 더 좋아요." 
             maxLength={150} 
             className="h-24 resize-none leading-relaxed" 
           />
           <div className="flex items-start justify-between gap-2">
             <p className="text-xs text-gray-500 leading-relaxed">
-              💡 <span className="font-medium">토스 팁:</span> 긴 단어나 링크는 자동으로 줄바꿈됩니다. 
+              긴 단어나 링크는 자동으로 줄바꿈됩니다. 
               {formData.profileMessage.length === 0 && "문단을 나누면 더 읽기 쉬워요!"}
               {formData.profileMessage.length > 0 && formData.profileMessage.length <= 50 && "조금 더 자세히 소개해보세요."}
-              {formData.profileMessage.length > 50 && formData.profileMessage.length <= 130 && "적당한 길이예요! 👍"}
+              {formData.profileMessage.length > 50 && formData.profileMessage.length <= 130 && "적당한 길이예요"}
               {formData.profileMessage.length > 130 && "거의 다 찼어요!"}
             </p>
           </div>
@@ -668,7 +668,7 @@ export default function TossSeamlessProfileEditor({
 
         {/* 🎨 실시간 미리보기 */}
         {preview.visible && hasChanges && (
-          <div className="bg-gradient-to-br from-orange-50 to-yellow-50 rounded-xl p-4 border border-orange-100">
+          <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-gray-800 flex items-center">
                 <Sparkles className="w-4 h-4 mr-1 text-orange-500" />
@@ -708,7 +708,7 @@ export default function TossSeamlessProfileEditor({
           <Button 
             onClick={handleOptimisticSave}
             disabled={!canSave || optimisticUpdates.size > 0}
-            className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-medium py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
           >
             {optimisticUpdates.size > 0 ? (
               <>

@@ -87,7 +87,7 @@ export default function PushNotificationSettings() {
           subscription: subscription,
           notification: {
             title: '테스트 알림',
-            body: '푸시 알림이 정상적으로 작동합니다! 🎉',
+            body: '푸시 알림이 정상적으로 작동합니다.',
             type: 'test',
             url: '/notifications'
           }
@@ -231,7 +231,7 @@ export default function PushNotificationSettings() {
               className="w-full"
               size="sm"
             >
-              🧪 테스트 알림 보내기
+              테스트 알림 보내기
             </Button>
           )}
         </div>

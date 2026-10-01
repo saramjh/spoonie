@@ -222,19 +222,11 @@ export default function PostCard({
 
   return (
     <article>
-    <Card className={`w-full max-w-md mx-auto transition-all duration-200 ${
-      isRecipe 
-        ? 'bg-gradient-to-br from-orange-50 via-white to-yellow-50 shadow-md border-2 border-orange-200 hover:shadow-lg hover:border-orange-300 ring-1 ring-orange-100' 
-        : 'bg-white shadow-sm border border-gray-200 hover:shadow-md'
-    }`}>
+    <Card className="w-full max-w-md mx-auto bg-white border border-gray-200 shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="flex items-center space-x-3">
           <Link href={`/profile/${enrichedItem.user_public_id || enrichedItem.user_id}`}>
-            <Avatar className={`w-10 h-10 cursor-pointer transition-all ${
-              isRecipe 
-                ? 'hover:ring-2 hover:ring-orange-300' 
-                : 'hover:ring-2 hover:ring-orange-200'
-            }`}>
+            <Avatar className="w-10 h-10 cursor-pointer">
               <AvatarImage 
                 src={enrichedItem.avatar_url || undefined} 
                 alt={enrichedItem.username || "사용자"} 
@@ -246,31 +238,17 @@ export default function PostCard({
           </Link>
           <div className="flex flex-col">
             <Link href={`/profile/${enrichedItem.user_public_id || enrichedItem.user_id}`}>
-              <p className={`text-sm font-semibold transition-colors cursor-pointer ${
-                isRecipe 
-                  ? 'hover:text-orange-700 text-gray-800' 
-                  : 'hover:text-orange-600'
-              }`}>
+              <p className="text-sm font-semibold text-gray-900 cursor-pointer hover:underline">
                 {enrichedItem.username || "알 수 없는 사용자"}
               </p>
             </Link>
-            <div className="flex items-center gap-1">
-              <p className="text-xs text-gray-500">
-                <Link href={detailUrl} className="hover:underline">
-                  <time dateTime={item.created_at}>{timeAgo(item.created_at)}</time>
-                </Link> • 
-              </p>
-              {isRecipe ? (
-                <div className="flex items-center gap-1">
-                  <div className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white text-xs px-2 py-0.5 rounded-full font-medium flex items-center gap-1 shadow-sm">
-                    <span className="text-[10px]">👨‍🍳</span>
-                    <span>레시피</span>
-                  </div>
-                </div>
-              ) : (
-                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">레시피드</span>
-              )}
-            </div>
+            <p className="text-xs text-gray-500">
+              <Link href={detailUrl} className="hover:underline">
+                <time dateTime={item.created_at}>{timeAgo(item.created_at)}</time>
+              </Link>
+              {" · "}
+              <span className={isRecipe ? "font-medium text-orange-700" : undefined}>{isRecipe ? "레시피" : "레시피드"}</span>
+            </p>
           </div>
         </div>
 
@@ -328,7 +306,7 @@ export default function PostCard({
           {/* 비공개 표시 - 업계표준 Privacy UX */}
           {!displayItem.is_public && (
             <div className="absolute top-3 right-3 z-20">
-              <div className="bg-black/80 text-white text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm shadow-lg">
+              <div className="bg-black/75 text-white text-xs px-2 py-1 rounded">
                 비공개
               </div>
             </div>
@@ -338,7 +316,7 @@ export default function PostCard({
 
         {/* 🎯 텍스트 영역: 기존처럼 클릭으로 상세페이지 이동 */}
         <CardContent 
-          className={`p-4 ${isRecipe ? 'bg-gradient-to-b from-transparent to-orange-25' : ''} cursor-pointer`}
+          className="p-4 cursor-pointer"
           onClick={(e) => {
             // 제목 링크처럼 카드 안의 링크를 누른 경우는 링크가 이동을 처리한다
             if ((e.target as Element).closest("a")) return
@@ -347,29 +325,18 @@ export default function PostCard({
         >
           {isRecipe ? (
             <>
-              <div className="flex items-start gap-2 mb-2">
-                <div className="flex-shrink-0 w-6 h-6 bg-gradient-to-br from-orange-400 to-red-400 rounded-full flex items-center justify-center shadow-sm">
-                  <span className="text-white text-xs font-bold">R</span>
-                </div>
-                <h2 className="text-lg font-bold text-gray-900 leading-tight">
-                  <Link href={detailUrl}>{displayItem.title}</Link>
-                </h2>
-              </div>
+              <h2 className="text-lg font-bold text-gray-900 leading-tight mb-1">
+                <Link href={detailUrl}>{displayItem.title}</Link>
+              </h2>
 
-              {/* 🍳 토스 스타일: 레시피 정보 칩(Chip) 형태 */}
+              {/* 조리 시간과 분량 */}
               {(displayItem.cooking_time_minutes || displayItem.servings) && (
-                <div className="flex items-center gap-2 mb-3">
-                  {displayItem.cooking_time_minutes && (
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                      {displayItem.cooking_time_minutes}분
-                    </span>
-                  )}
-                  {displayItem.servings && (
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                      {displayItem.servings}인분
-                    </span>
-                  )}
-                </div>
+                <p className="text-sm text-gray-600 mb-2">
+                  {[
+                    displayItem.cooking_time_minutes ? `${displayItem.cooking_time_minutes}분` : null,
+                    displayItem.servings ? `${displayItem.servings}인분` : null,
+                  ].filter(Boolean).join(" · ")}
+                </p>
               )}
 
               <ExpandableText 
@@ -389,13 +356,8 @@ export default function PostCard({
 
           {/* 참고 레시피 표시 */}
           {!citedRecipesLoading && citedRecipes && citedRecipes.length > 0 && (
-            <div className="mt-3 p-3 bg-orange-50 rounded-lg border border-orange-100">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm font-medium text-orange-800">📚 참고 레시피</span>
-                <span className="text-xs text-orange-600 bg-orange-200 px-2 py-1 rounded-full font-medium">
-                  {citedRecipes.length}개
-                </span>
-              </div>
+            <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+              <p className="text-sm font-medium text-gray-800 mb-2">참고 레시피 {citedRecipes.length}개</p>
               <div className="space-y-1">
                 {citedRecipes.slice(0, 2).map((recipe) => {
                   // author 정보 안전하게 추출
@@ -438,13 +400,9 @@ export default function PostCard({
 
           {/* 태그 표시 */}
           {displayItem.tags && displayItem.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-3">
+            <div className="flex flex-wrap gap-x-2 gap-y-1 mt-3">
               {displayItem.tags.map((tag, idx) => (
-                <span key={idx} className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                  isRecipe 
-                    ? 'bg-gradient-to-r from-orange-200 to-yellow-200 text-orange-800 shadow-sm' 
-                    : 'bg-gray-200 text-gray-700'
-                }`}>
+                <span key={idx} className="text-sm text-gray-500">
                   #{tag}
                 </span>
               ))}
@@ -452,9 +410,7 @@ export default function PostCard({
           )}
         </CardContent>
 
-      <CardFooter className={`flex justify-between items-center p-4 pt-2 ${
-        isRecipe ? 'bg-gradient-to-r from-orange-50/50 to-yellow-50/50 border-t border-orange-100' : ''
-      }`}>
+      <CardFooter className="flex justify-between items-center p-4 pt-2">
         <div className="flex items-center gap-1 text-gray-600">
 
           {/* 🎯 기존 검증된 좋아요 버튼 사용 */}

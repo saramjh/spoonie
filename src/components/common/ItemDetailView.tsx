@@ -263,9 +263,6 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		return (
 			<div className="flex flex-col h-full items-center justify-center p-8">
 				<div className="text-center space-y-4">
-					<div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
-						<span className="text-red-500 text-2xl">⚠️</span>
-					</div>
 					<div className="space-y-2">
 						<h3 className="text-lg font-semibold text-gray-900">콘텐츠를 불러올 수 없습니다</h3>
 						<p className="text-gray-500 text-sm">잘못된 링크이거나 삭제된 콘텐츠일 수 있습니다.</p>
@@ -401,6 +398,45 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 
 
 
+	// 참고 레시피 목록 (레시피와 레시피드 상세에서 공통 사용)
+	const renderCitedRecipes = () => {
+		if (citedRecipesLoading) {
+			return (
+				<div className="mt-4 rounded-lg border border-gray-200 p-3" aria-busy="true">
+					<p className="text-sm font-medium text-gray-800">참고 레시피</p>
+					<div className="mt-2 h-4 w-3/4 rounded bg-gray-200 animate-pulse" />
+				</div>
+			)
+		}
+		if (citedRecipes.length === 0) return null
+		return (
+			<section className="mt-4 rounded-lg border border-gray-200 p-3" aria-label="참고 레시피">
+				<h2 className="text-sm font-medium text-gray-800">참고 레시피 {citedRecipes.length}개</h2>
+				<ul className="mt-1 divide-y divide-gray-100">
+					{citedRecipes.map((citedRecipeItem) => {
+						const authorProfile = Array.isArray(citedRecipeItem.author) ? citedRecipeItem.author[0] : citedRecipeItem.author
+						const authorName = authorProfile?.username || "익명"
+						const recipeDate = citedRecipeItem.created_at
+							? new Date(citedRecipeItem.created_at).toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\s/g, "")
+							: ""
+						return (
+							<li key={citedRecipeItem.id}>
+								<Link href={`/recipes/${citedRecipeItem.id}`} className="flex items-center justify-between gap-3 py-2 text-sm text-gray-800 hover:underline">
+									<span>{authorName}의 {citedRecipeItem.title}</span>
+									{recipeDate && (
+										<time dateTime={citedRecipeItem.created_at} className="flex-shrink-0 text-xs text-gray-500">
+											{recipeDate}
+										</time>
+									)}
+								</Link>
+							</li>
+						)
+					})}
+				</ul>
+			</section>
+		)
+	}
+
 	return (
 		<div className="flex flex-col h-full relative">
 			{/* 🎨 토스 스타일 브레드크럼 네비게이션 */}
@@ -447,14 +483,9 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 								{item.username || "사용자"}
 							</span>
 							{/* 🎨 홈화면과 완전히 동일한 타입 배지 시스템 (토스 일관성 원칙) */}
-							{item.item_type === 'recipe' ? (
-								<div className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white text-xs px-2 py-0.5 rounded-full font-medium flex items-center gap-1 shadow-sm">
-									<span className="text-[10px]">👨‍🍳</span>
-									<span>레시피</span>
-								</div>
-							) : (
-								<span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">레시피드</span>
-							)}
+							<span className={item.item_type === 'recipe' ? "text-xs font-medium text-orange-700" : "text-xs text-gray-500"}>
+									{item.item_type === 'recipe' ? "레시피" : "레시피드"}
+								</span>
 						</div>
 					</Link>
 					
@@ -533,64 +564,12 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 								</div>
 								{item.description && <p className="text-sm text-gray-500 mb-2 whitespace-pre-wrap break-words leading-relaxed">{item.description}</p>}
 
-								{/* 참고 레시피 표시 - 개선된 디자인 */}
-								{citedRecipesLoading && (
-									<div className="mt-4 p-4 bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl border-l-4 border-orange-300">
-										<div className="flex items-center gap-2 mb-3">
-											<div className="w-4 h-4 bg-orange-300 rounded animate-pulse"></div>
-											<span className="font-semibold text-orange-800">참고 레시피</span>
-										</div>
-										<div className="bg-white/70 p-3 rounded-lg border border-orange-200 animate-pulse">
-											<div className="h-4 bg-orange-200 rounded w-3/4"></div>
-										</div>
-									</div>
-								)}
-								{!citedRecipesLoading && citedRecipes.length > 0 && (
-									<div className="mt-4 p-4 bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl border-l-4 border-orange-300">
-										<div className="flex items-center gap-2 mb-3">
-											<svg className="w-4 h-4 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
-												<path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z" />
-												<path d="M17.5 10.5c.88 0 1.73.09 2.5.26V9.24c-.79-.15-1.64-.24-2.5-.24-1.7 0-3.24.29-4.5.83v1.66c1.13-.64 2.7-.99 4.5-.99zM13 12.49v1.66c1.13-.64 2.7-.99 4.5-.99.88 0 1.73.09 2.5.26V11.9c-.79-.15-1.64-.24-2.5-.24-1.7 0-3.24.29-4.5.83zM17.5 14.33c-1.7 0-3.24.29-4.5.83v1.66c1.13-.64 2.7-.99 4.5-.99.88 0 1.73.09 2.5.26v-1.52c-.79-.15-1.64-.24-2.5-.24z" />
-											</svg>
-											<span className="font-semibold text-orange-800">참고 레시피</span>
-											<span className="text-xs text-orange-600 bg-orange-200 px-2 py-1 rounded-full">{citedRecipes.length}개</span>
-										</div>
-										<div className="space-y-2">
-											{citedRecipes.map((citedRecipeItem) => {
-												const authorProfile = Array.isArray(citedRecipeItem.author) ? citedRecipeItem.author[0] : citedRecipeItem.author
-												    const authorName = authorProfile?.username || "익명"
-												const recipeDate = citedRecipeItem.created_at 
-													? new Date(citedRecipeItem.created_at).toLocaleDateString('ko-KR', { 
-															year: 'numeric', 
-															month: '2-digit', 
-															day: '2-digit' 
-														}).replace(/\./g, '.').replace(/\s/g, '') 
-													: ""
-
-												return (
-													<Link key={citedRecipeItem.id} href={`/recipes/${citedRecipeItem.id}`} className="block group">
-														<div className="bg-white p-3 rounded-lg border border-orange-200 hover:border-orange-300 hover:shadow-sm transition-all duration-200 group-hover:scale-[1.02]">
-															<div className="flex justify-between items-center">
-																<div className="flex items-center gap-2 flex-1">
-																	<div className="w-2 h-2 bg-orange-400 rounded-full group-hover:bg-orange-500 transition-colors"></div>
-																	<span className="text-gray-800 text-sm font-medium group-hover:text-orange-800 transition-colors">
-																		{authorName}의 {citedRecipeItem.title}
-																	</span>
-																</div>
-																{recipeDate && <span className="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded-full ml-3 flex-shrink-0">{recipeDate}</span>}
-															</div>
-														</div>
-													</Link>
-												)
-											})}
-										</div>
-									</div>
-								)}
+								{renderCitedRecipes()}
 
 								{item.tags && item.tags.length > 0 && (
-									<div className="flex flex-wrap gap-2 mb-4 mt-3">
+									<div className="flex flex-wrap gap-x-2 gap-y-1 mb-4 mt-3">
 										{item.tags.map((tag, idx) => (
-											<span key={idx} className="bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 px-3 py-1 rounded-full text-sm font-medium border border-orange-300/50 hover:from-orange-200 hover:to-orange-300 hover:border-orange-400 transition-all duration-200">
+											<span key={idx} className="text-sm text-gray-500">
 												#{tag}
 											</span>
 										))}
@@ -626,66 +605,14 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 								{item.tags && item.tags.length > 0 && (
 									<div className="flex flex-wrap gap-2 mt-3">
 										{item.tags.map((tag, idx) => (
-											<span key={idx} className="bg-gray-200 text-gray-700 px-2.5 py-1 rounded-full text-xs font-medium">
+											<span key={idx} className="text-sm text-gray-500">
 												#{tag}
 											</span>
 										))}
 									</div>
 								)}
 
-								{/* 포스트에서 cited_recipe_ids 참고 레시피 표시 - 개선된 디자인 */}
-								{citedRecipesLoading && (
-									<div className="mt-4 p-4 bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl border-l-4 border-orange-300">
-										<div className="flex items-center gap-2 mb-3">
-											<div className="w-4 h-4 bg-orange-300 rounded animate-pulse"></div>
-											<span className="font-semibold text-orange-800">참고 레시피</span>
-										</div>
-										<div className="bg-white/70 p-3 rounded-lg border border-orange-200 animate-pulse">
-											<div className="h-4 bg-orange-200 rounded w-3/4"></div>
-										</div>
-									</div>
-								)}
-								{!citedRecipesLoading && citedRecipes.length > 0 && (
-									<div className="mt-4 p-4 bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl border-l-4 border-orange-300">
-										<div className="flex items-center gap-2 mb-3">
-											<svg className="w-4 h-4 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
-												<path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z" />
-												<path d="M17.5 10.5c.88 0 1.73.09 2.5.26V9.24c-.79-.15-1.64-.24-2.5-.24-1.7 0-3.24.29-4.5.83v1.66c1.13-.64 2.7-.99 4.5-.99zM13 12.49v1.66c1.13-.64 2.7-.99 4.5-.99.88 0 1.73.09 2.5.26V11.9c-.79-.15-1.64-.24-2.5-.24-1.7 0-3.24.29-4.5.83zM17.5 14.33c-1.7 0-3.24.29-4.5.83v1.66c1.13-.64 2.7-.99 4.5-.99.88 0 1.73.09 2.5.26v-1.52c-.79-.15-1.64-.24-2.5-.24z" />
-											</svg>
-											<span className="font-semibold text-orange-800">참고 레시피</span>
-											<span className="text-xs text-orange-600 bg-orange-200 px-2 py-1 rounded-full">{citedRecipes.length}개</span>
-										</div>
-										<div className="space-y-2">
-											{citedRecipes.map((citedRecipeItem) => {
-												const authorProfile = Array.isArray(citedRecipeItem.author) ? citedRecipeItem.author[0] : citedRecipeItem.author
-												    const authorName = authorProfile?.username || "익명"
-												const recipeDate = citedRecipeItem.created_at 
-													? new Date(citedRecipeItem.created_at).toLocaleDateString('ko-KR', { 
-															year: 'numeric', 
-															month: '2-digit', 
-															day: '2-digit' 
-														}).replace(/\./g, '.').replace(/\s/g, '') 
-													: ""
-
-												return (
-													<Link key={citedRecipeItem.id} href={`/recipes/${citedRecipeItem.id}`} className="block group">
-														<div className="bg-white p-3 rounded-lg border border-orange-200 hover:border-orange-300 hover:shadow-sm transition-all duration-200 group-hover:scale-[1.02]">
-															<div className="flex justify-between items-center">
-																<div className="flex items-center gap-2 flex-1">
-																	<div className="w-2 h-2 bg-orange-400 rounded-full group-hover:bg-orange-500 transition-colors"></div>
-																	<span className="text-gray-800 text-sm font-medium group-hover:text-orange-800 transition-colors">
-																		{authorName}의 {citedRecipeItem.title}
-																	</span>
-																</div>
-																{recipeDate && <span className="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded-full ml-3 flex-shrink-0">{recipeDate}</span>}
-															</div>
-														</div>
-													</Link>
-												)
-											})}
-										</div>
-									</div>
-								)}
+								{renderCitedRecipes()}
 
 								{/* 기존 recipe_id 기반 참고 레시피 (하위호환) */}
 								{item.recipe_id && citedRecipe && (

@@ -2,7 +2,7 @@ import Link from "next/link"
 
 export default function TermsOfServicePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* 헤더 */}
         <div className="text-center mb-8">
@@ -139,7 +139,7 @@ export default function TermsOfServicePage() {
                 </p>
                 <div className="bg-yellow-50 p-4 rounded-2xl border border-yellow-200">
                   <p className="text-sm text-gray-700">
-                    <strong>⚠️ 중요:</strong> 본 서비스는 개인이 비영리 목적으로 운영하는 커뮤니티 서비스로, 상업적 서비스 수준의 가용성이나 성능을 보장하지 않습니다.
+                    <strong>중요:</strong> 본 서비스는 개인이 비영리 목적으로 운영하는 커뮤니티 서비스로, 상업적 서비스 수준의 가용성이나 성능을 보장하지 않습니다.
                   </p>
                 </div>
               </div>

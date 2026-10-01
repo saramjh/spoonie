@@ -12,7 +12,6 @@ export default function BottomNavBar() {
 	const pathname = usePathname()
 	const { session, profile } = useSessionStore()
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-	const [showDebug, setShowDebug] = useState(false)
 
 	const handleCreateButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
 		// 🔧 접근성 문제 해결: 모달이 열릴 때 포커스 제거하여 aria-hidden 충돌 방지
@@ -73,25 +72,6 @@ export default function BottomNavBar() {
 
 	return (
 		<>
-			{/* 임시 디버깅 패널 */}
-			{showDebug && (
-				<div className="fixed top-0 left-0 right-0 bg-black text-white text-xs p-2 z-[100] max-w-md mx-auto">
-					<div className="flex justify-between items-start">
-						<div>
-							<div>
-								Session: {session ? "✅" : "❌"} {session?.email}
-							</div>
-							<div>
-								Profile: {profile ? "✅" : "❌"} {profile?.username}
-							</div>
-							<div>Public ID: {profile?.public_id || "null"}</div>
-						</div>
-						<button onClick={() => setShowDebug(false)} className="text-white">
-							✕
-						</button>
-					</div>
-				</div>
-			)}
 
 			<nav className="fixed bottom-0 left-0 right-0 bg-white border-t z-50 max-w-md mx-auto">
 				<div className="flex justify-around items-center h-16">
@@ -108,7 +88,7 @@ export default function BottomNavBar() {
 					</Link>
 
 					{/* 3. 중앙 생성 버튼 (+) */}
-					<button onClick={handleCreateButtonClick} onDoubleClick={() => setShowDebug(true)} className="flex flex-col items-center gap-1 text-gray-500 transition-all duration-200 hover:text-orange-500 active:scale-95">
+					<button onClick={handleCreateButtonClick} className="flex flex-col items-center gap-1 text-gray-500 transition-all duration-200 hover:text-orange-500 active:scale-95">
 						<div className="bg-orange-500 hover:bg-orange-600 active:bg-orange-700 rounded-xl p-3 shadow-bauhaus hover:shadow-bauhaus-lg transition-all duration-200 transform hover:scale-105 active:scale-95">
 							<Plus className="w-6 h-6 text-white" />
 						</div>

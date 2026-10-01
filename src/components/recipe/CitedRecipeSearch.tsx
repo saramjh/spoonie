@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
 
-import { X } from 'lucide-react';
+import { X, ChefHat } from "lucide-react";
 import { createSupabaseBrowserClient } from '@/lib/supabase-client';
 import type { Item } from '@/types/item';
 import { format } from 'date-fns'; // 날짜 포맷팅을 위해 date-fns 임포트
@@ -151,7 +151,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
              onClick={() => setShowSearch(true)}>
           <div className="flex flex-col items-center gap-2">
             <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center group-hover:bg-orange-200 transition-colors">
-              <span className="text-lg">🍳</span>
+              <ChefHat className="w-5 h-5 text-orange-600" aria-hidden="true" />
             </div>
             <p className="text-sm text-gray-600 group-hover:text-orange-600 transition-colors">
               참고한 레시피가 있다면 추가해보세요
@@ -190,7 +190,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
                             <Image src={recipe.image_urls[0]} alt={`${recipe.title} 썸네일`} width={32} height={32} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full bg-orange-100 flex items-center justify-center">
-                              <span className="text-xs">🍳</span>
+                              <ChefHat className="w-3.5 h-3.5 text-orange-500" aria-hidden="true" />
                             </div>
                           )}
                         </div>
@@ -213,10 +213,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
       {/* 🏷️ 선택된 레시피들 - 토스 스타일 카드 */}
       {selectedRecipes.length > 0 && (
         <div className="space-y-2">
-          <div className="text-sm text-gray-600 flex items-center gap-1">
-            <span>📚</span>
-            <span>참고 레시피 {selectedRecipes.length}개</span>
-          </div>
+          <p className="text-sm text-gray-600">참고 레시피 {selectedRecipes.length}개</p>
           <div className="grid gap-2">
             {selectedRecipes.map(recipe => (
               <div key={recipe.item_id} className="bg-orange-50 border border-orange-200 rounded-xl p-3 flex items-center gap-3 group hover:bg-orange-100 transition-colors">
@@ -226,7 +223,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
                     <Image src={recipe.image_urls[0]} alt={`${recipe.title} 썸네일`} width={40} height={40} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full bg-orange-100 flex items-center justify-center">
-                      <span className="text-sm">🍳</span>
+                      <ChefHat className="w-4 h-4 text-orange-500" aria-hidden="true" />
                     </div>
                   )}
                 </div>
