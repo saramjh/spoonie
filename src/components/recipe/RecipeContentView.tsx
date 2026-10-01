@@ -216,7 +216,7 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 						{steps.map((step, index) => {
 							const isDone = doneSteps.has(index)
 							return (
-								<li key={index} className="border-b border-border last:border-b-0">
+								<li key={index} id={`step-${index + 1}`} className="scroll-mt-16 border-b border-border last:border-b-0">
 									<div className="flex gap-3 py-4">
 										<button
 											type="button"

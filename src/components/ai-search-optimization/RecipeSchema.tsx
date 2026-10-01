@@ -13,10 +13,14 @@ export default function RecipeSchema({ item, baseUrl }: { item: ItemDetail; base
     .filter(Boolean)
   const steps = [...(item.instructions ?? [])]
     .sort((a, b) => a.step_number - b.step_number)
+    // 화면의 단계 번호와 앵커(#step-N)를 그대로 쓴다
+    .map((s, index) => ({ ...s, number: index + 1 }))
     .filter((s) => s.description)
-    .map((s, index) => ({
+    .map((s) => ({
       "@type": "HowToStep",
-      position: index + 1,
+      position: s.number,
+      name: `${s.number}단계`,
+      url: `${baseUrl}/recipes/${item.id}#step-${s.number}`,
       text: s.description,
       ...(s.image_url && { image: s.image_url }),
     }))
