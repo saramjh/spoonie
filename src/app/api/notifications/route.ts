@@ -22,7 +22,7 @@ const deleteNotificationSchema = z.object({
 
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = createSupabaseRouteHandlerClient()
+    const supabase = await createSupabaseRouteHandlerClient()
     
     // 인증 확인
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -142,7 +142,7 @@ export async function DELETE(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createSupabaseRouteHandlerClient()
+    const supabase = await createSupabaseRouteHandlerClient()
     
     // 인증 확인
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -217,7 +217,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createSupabaseRouteHandlerClient()
+    const supabase = await createSupabaseRouteHandlerClient()
     
     // 인증 확인
     const { data: { user }, error: authError } = await supabase.auth.getUser()

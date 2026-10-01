@@ -17,13 +17,14 @@ import { fetchUserItems, fetchFollowCounts, PUBLIC_PROFILE_COLUMNS, type UserPro
 import BreadcrumbSchema, { createBreadcrumbs } from '@/components/ai-search-optimization/BreadcrumbSchema'
 
 interface Props {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 // 🎯 동적 메타데이터 생성 (기존 기능에 영향 없음)
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   try {
-    const supabase = createSupabaseServerClient()
+    const supabase = await createSupabaseServerClient()
     
     // 🔥 최소한의 데이터만 가져와서 메타데이터 생성 (성능 최적화)
     const { data: profile, error } = await supabase
@@ -138,7 +139,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 // 존재하지 않는 프로필은 "not_found", 그 밖의 오류는 null(클라이언트에서 기존 방식으로 조회).
 async function loadInitialProfileData(identifier: string) {
   try {
-    const supabase = createSupabaseServerClient()
+    const supabase = await createSupabaseServerClient()
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier)
     const [{ data: profile, error }, { data: { user } }] = await Promise.all([
       supabase.from('profiles').select(PUBLIC_PROFILE_COLUMNS).eq(isUUID ? 'id' : 'public_id', identifier).maybeSingle(),
@@ -161,7 +162,8 @@ async function loadInitialProfileData(identifier: string) {
   }
 }
 
-export default async function ProfilePage({ params }: Props) {
+export default async function ProfilePage(props: Props) {
+  const params = await props.params;
   const initial = await loadInitialProfileData(params.id)
   // loading.tsx가 먼저 스트리밍되므로 상태 코드는 200이며, Next가 noindex 메타 태그를 넣어 색인에서 제외한다
   if (initial === 'not_found') notFound()

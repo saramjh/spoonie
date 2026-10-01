@@ -23,7 +23,7 @@ export async function GET(request: Request) {
 	const next = safeNextPath(searchParams.get("next"))
 
 	if (code) {
-		const supabase = createSupabaseRouteHandlerClient()
+		const supabase = await createSupabaseRouteHandlerClient()
 		const { error } = await supabase.auth.exchangeCodeForSession(code)
 
 		if (!error) {

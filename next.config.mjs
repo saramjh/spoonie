@@ -109,8 +109,6 @@ const nextConfig = {
 		],
 		unoptimized: true, // Supabase 이미지에 대한 Next.js 서버 측 최적화 비활성화
 	},
-	// 🎯 폰트 최적화 설정
-	optimizeFonts: true,
 	// 🔧 실험적 기능
 	experimental: {
 		optimizePackageImports: ['lucide-react'],
@@ -132,27 +130,6 @@ const nextConfig = {
 		removeConsole: process.env.NODE_ENV === 'production' ? {
 			exclude: ['error', 'warn'] // error, warn은 유지
 		} : false,
-	},
-	// 🔧 번들 크기 최적화로 SyntaxError 위험 감소  
-	webpack: (config, { dev, isServer }) => {
-		if (!dev && !isServer) {
-			config.optimization = {
-				...config.optimization,
-				splitChunks: {
-					...config.optimization.splitChunks,
-					cacheGroups: {
-						...config.optimization.splitChunks.cacheGroups,
-						vendor: {
-							test: /[\\/]node_modules[\\/]/,
-							name: 'vendors', 
-							chunks: 'all',
-							maxSize: 200000, // 200KB로 제한하여 파싱 안정성 향상
-						},
-					},
-				},
-			}
-		}
-		return config
 	},
 	// 🌐 개발 환경에서 Cross-Origin 요청 허용 (모바일 테스트용)
 	allowedDevOrigins: [

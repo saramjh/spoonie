@@ -2,7 +2,7 @@ import { createSupabaseRouteHandlerClient } from "@/lib/supabase-server";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
-	const supabase = createSupabaseRouteHandlerClient();
+	const supabase = await createSupabaseRouteHandlerClient();
 
 	// 로그인한 본인만 자신의 계정을 삭제할 수 있다. 삭제 대상은 세션에서 정하고, 본문 값은 확인용으로만 쓴다.
 	const { data: { user }, error: authError } = await supabase.auth.getUser();

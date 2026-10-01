@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic'
 // 더 많아지면 generateSitemaps로 사이트맵을 나눠야 한다.
 const MAX_PER_TYPE = 1000
 
-type SupabaseServerClient = ReturnType<typeof createSupabaseServerClient>
+type SupabaseServerClient = Awaited<ReturnType<typeof createSupabaseServerClient>>
 type ItemRow = { id: string; created_at: string; updated_at?: string | null }
 
 /**
@@ -47,7 +47,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]
 
   try {
-    const supabase = createSupabaseServerClient()
+    const supabase = await createSupabaseServerClient()
 
     const [recipes, posts, profilesResult] = await Promise.all([
       getPublicItems(supabase, 'recipe'),

@@ -26,7 +26,7 @@ export async function getInitialFeedData(): Promise<ServerFeedData> {
 
   // const startTime = Date.now() // Performance tracking not used
   
-  const supabase = createSupabaseServerClient()
+  const supabase = await createSupabaseServerClient()
   
   try {
     // 사용자 확인과 피드 조회는 서로 의존하지 않으므로 병렬로 보낸다.

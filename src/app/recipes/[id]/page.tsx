@@ -18,13 +18,14 @@ import RecipeSchema from '@/components/ai-search-optimization/RecipeSchema'
 import BreadcrumbSchema, { createBreadcrumbs } from '@/components/ai-search-optimization/BreadcrumbSchema'
 
 interface Props {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 // 🎯 동적 메타데이터 생성 (기존 기능에 영향 없음)
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   try {
-    const supabase = createSupabaseServerClient()
+    const supabase = await createSupabaseServerClient()
     
     // 🔥 최소한의 데이터만 가져와서 메타데이터 생성 (성능 최적화)
     const { data: recipe, error } = await supabase
@@ -137,7 +138,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 // 존재하지 않거나 접근할 수 없는 항목은 "not_found", 그 밖의 오류는 null(클라이언트에서 재시도).
 async function loadInitialItem(itemId: string) {
   try {
-    return await fetchItemDetail(createSupabaseServerClient(), itemId)
+    return await fetchItemDetail(await createSupabaseServerClient(), itemId)
   } catch (error) {
     if (error instanceof ItemNotFoundError) return "not_found" as const
     console.error("❌ Initial item load error:", error)
@@ -145,7 +146,8 @@ async function loadInitialItem(itemId: string) {
   }
 }
 
-export default async function RecipeDetailPage({ params }: Props) {
+export default async function RecipeDetailPage(props: Props) {
+  const params = await props.params;
   const initialItem = await loadInitialItem(params.id)
   // loading.tsx가 먼저 스트리밍되므로 상태 코드는 200이며, Next가 noindex 메타 태그를 넣어 색인에서 제외한다
   if (initialItem === "not_found") notFound()

@@ -2,7 +2,7 @@ import { createSupabaseRouteHandlerClient } from "@/lib/supabase-server"
 import { NextResponse } from "next/server"
 
 export async function POST(request: Request) {
-	const supabase = createSupabaseRouteHandlerClient()
+	const supabase = await createSupabaseRouteHandlerClient()
 
 	// Check if we have a session
 	const {

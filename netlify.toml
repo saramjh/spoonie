@@ -8,9 +8,8 @@
   publish = ".next"
 
 [build.environment]
-  # Node.js 버전 (Next.js 14 호환)
-  NODE_VERSION = "18"
-  NPM_VERSION = "9"
+  # Node.js 버전 (Next.js 16은 Node 20.9 이상 필요)
+  NODE_VERSION = "22"
   # Next.js 최적화 설정
   NEXT_TELEMETRY_DISABLED = "1"
 
