@@ -16,6 +16,7 @@ export const metadata: Metadata = {
     description: "원하는 레시피를 쉽고 빠르게 검색해보세요.",
     url: `${process.env.NEXT_PUBLIC_APP_URL}/search`,
     type: 'website',
+    images: [{ url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'}/og-default.png`, width: 1200, height: 630, alt: '스푸니' }],
   },
 
   robots: {

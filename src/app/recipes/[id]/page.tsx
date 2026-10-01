@@ -12,6 +12,7 @@
 import { Metadata } from 'next'
 import { createSupabasePublicClient } from '@/lib/supabase-public'
 import { notFound } from 'next/navigation'
+import { formatCookingTime } from '@/lib/recipe-amount'
 import { fetchItemDetail, ItemNotFoundError } from '@/lib/item-detail'
 import RecipeDetailClient from './RecipeDetailClient'
 import RecipeSchema from '@/components/ai-search-optimization/RecipeSchema'
@@ -38,7 +39,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         tags,
         cooking_time_minutes,
         servings,
-        profiles!user_id(display_name, username)
+        profiles!user_id(display_name, username),
+        ingredients(name, order_index)
       `)
       .eq('id', params.id)
       .eq('item_type', 'recipe')
@@ -56,8 +58,17 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
     const profileData = Array.isArray(recipe.profiles) ? recipe.profiles[0] : recipe.profiles
     const authorName = profileData?.username || '익명'
-    const imageUrl = recipe.image_urls?.[0] || '/default-recipe.jpg'
-    const cleanDescription = recipe.description?.replace(/\n/g, ' ').slice(0, 160) || '맛있는 레시피입니다.'
+    const imageUrl = recipe.image_urls?.[0] || `${process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'}/og-default.png`
+    // 검색 결과 설명: 작성자의 소개 다음에 인분·조리 시간·재료 (레시피라는 정보가 한 줄에 보이게)
+    const ingredientNames = [...(recipe.ingredients || [])].sort((a, b) => a.order_index - b.order_index).map((i) => i.name)
+    const cookingTime = formatCookingTime(recipe.cooking_time_minutes)
+    const facts = [
+      recipe.servings ? `${recipe.servings}인분` : null,
+      cookingTime ? `조리 ${cookingTime}` : null,
+      ingredientNames.length ? `재료 ${ingredientNames.slice(0, 5).join(', ')}${ingredientNames.length > 5 ? ` 외 ${ingredientNames.length - 5}가지` : ''}` : null,
+    ].filter(Boolean).join(' · ')
+    const intro = recipe.description?.replace(/\n/g, ' ').trim()
+    const cleanDescription = [intro, facts].filter(Boolean).join(' — ').slice(0, 160) || `${recipe.title} 레시피`
     
     // SEO 최적화된 제목 생성
     const seoTitle = `${recipe.title} - ${authorName}님의 레시피 | 스푸니`

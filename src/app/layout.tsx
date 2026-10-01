@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 		siteName: "스푸니 (Spoonie)",
 		images: [
 			{
-				url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'}/logo-full.svg`,
+				url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'}/og-default.png`,
 				width: 1200,
 				height: 630,
 				alt: "스푸니 - 레시피 공유 플랫폼",
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
 		card: "summary_large_image",
 		title: "스푸니 - 레시피 공유 플랫폼",
 		description: "맛있는 레시피를 공유하고 요리 영감을 얻어보세요.",
-		images: [`${process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'}/logo-full.svg`],
+		images: [`${process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'}/og-default.png`],
 	},
 	// 검색엔진 소유 확인
 	verification: {

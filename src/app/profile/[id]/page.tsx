@@ -30,6 +30,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     const { data: profile, error } = await supabase
       .from('profiles')
       .select(`
+        id,
         public_id,
         display_name,
         username,
@@ -45,11 +46,20 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       return { 
         title: '프로필 - 스푸니',
         description: '요리를 사랑하는 사람들의 프로필을 확인해보세요.',
+        robots: { index: false, follow: true }, // 없는 프로필
       }
     }
 
+    // 공개 레시피가 있는 프로필만 색인한다 (빈 프로필은 검색 결과에서 얇은 페이지가 된다)
+    const { count: publicRecipes } = await supabase
+      .from('items')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', profile.id)
+      .eq('item_type', 'recipe')
+      .eq('is_public', true)
+
     const displayName = profile.username || '익명'
-    const profileImageUrl = profile.avatar_url || '/default-avatar.jpg'
+    const profileImageUrl = profile.avatar_url || `${process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'}/og-default.png`
     
     // 프로필 설명 생성 (profile_message 우선, 없으면 통계 기반)
     let profileDescription = ''
@@ -104,14 +114,9 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       },
       
       // 검색 엔진 최적화
-      robots: {
-        index: true,
-        follow: true,
-        googleBot: {
-          'max-image-preview': 'large',
-          'max-snippet': -1,
-        },
-      },
+      robots: publicRecipes
+        ? { index: true, follow: true, googleBot: { 'max-image-preview': 'large', 'max-snippet': -1 } }
+        : { index: false, follow: true },
       
       // 정규 URL 설정
       alternates: {

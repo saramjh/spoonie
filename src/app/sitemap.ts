@@ -1,19 +1,20 @@
 /**
- * 동적 사이트맵. 요청마다 DB를 조회하므로 새 글, 삭제, 비공개 전환이 자동으로 반영된다.
+ * 사이트맵. 검색 유입의 착지인 레시피와, 공개 레시피가 있는 작성자 프로필만 넣는다.
+ * 레시피드는 색인하지 않으므로 넣지 않는다 (docs/discovery-and-behavior.md).
+ * 로그인 정보 없이 공개 데이터로 만들고 1시간마다 다시 만든다 (크롤러가 올 때마다 서버 함수가 돌지 않게).
  */
 
 import { MetadataRoute } from 'next'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { createSupabasePublicClient } from '@/lib/supabase-public'
 
-// cookies를 쓰는 Supabase 서버 클라이언트 때문에 동적 렌더링
-export const dynamic = 'force-dynamic'
+export const revalidate = 3600
 
 // PostgREST 기본 응답 한도가 1000행이므로 종류별 최대 1000개.
 // 더 많아지면 generateSitemaps로 사이트맵을 나눠야 한다.
 const MAX_PER_TYPE = 1000
 
-type SupabaseServerClient = Awaited<ReturnType<typeof createSupabaseServerClient>>
-type ItemRow = { id: string; created_at: string; updated_at?: string | null }
+type SupabaseServerClient = ReturnType<typeof createSupabasePublicClient>
+type ItemRow = { id: string; user_id: string; created_at: string; updated_at?: string | null }
 
 /**
  * 공개 항목 조회. items.updated_at 컬럼이 있으면 수정 시각을 쓰고,
@@ -29,11 +30,11 @@ async function getPublicItems(supabase: SupabaseServerClient, itemType: 'recipe'
       .order('created_at', { ascending: false })
       .limit(MAX_PER_TYPE)
 
-  const withUpdated = await query('id, created_at, updated_at')
+  const withUpdated = await query('id, user_id, created_at, updated_at')
   if (!withUpdated.error) return (withUpdated.data ?? []) as unknown as ItemRow[]
   if (withUpdated.error.code !== '42703') throw withUpdated.error
 
-  const createdOnly = await query('id, created_at')
+  const createdOnly = await query('id, user_id, created_at')
   if (createdOnly.error) throw createdOnly.error
   return (createdOnly.data ?? []) as unknown as ItemRow[]
 }
@@ -47,18 +48,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]
 
   try {
-    const supabase = await createSupabaseServerClient()
-
-    const [recipes, posts, profilesResult] = await Promise.all([
-      getPublicItems(supabase, 'recipe'),
-      getPublicItems(supabase, 'post'),
-      supabase
-        .from('profiles')
-        .select('public_id, updated_at')
-        .not('public_id', 'is', null)
-        .order('updated_at', { ascending: false })
-        .limit(MAX_PER_TYPE),
-    ])
+    const supabase = createSupabasePublicClient()
+    const recipes = await getPublicItems(supabase, 'recipe')
+    const authorIds = Array.from(new Set(recipes.map((r) => r.user_id)))
+    const profilesResult = authorIds.length
+      ? await supabase.from('profiles').select('public_id, updated_at').in('id', authorIds).not('public_id', 'is', null)
+      : { data: [] as { public_id: string; updated_at: string }[] }
 
     const lastModified = (row: ItemRow) => new Date(row.updated_at || row.created_at)
 
@@ -69,12 +64,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: lastModified(recipe),
         changeFrequency: 'weekly' as const,
         priority: 0.8,
-      })),
-      ...posts.map((post) => ({
-        url: `${baseUrl}/posts/${post.id}`,
-        lastModified: lastModified(post),
-        changeFrequency: 'weekly' as const,
-        priority: 0.6,
       })),
       ...(profilesResult.data ?? []).map((profile) => ({
         url: `${baseUrl}/profile/${profile.public_id}`,

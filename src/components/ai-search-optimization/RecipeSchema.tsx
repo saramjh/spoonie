@@ -1,5 +1,6 @@
 import { serializeJsonLd } from "@/lib/json-ld"
 import type { ItemDetail } from "@/types/item"
+import { formatAmount } from "@/lib/recipe-amount"
 
 /**
  * schema.org Recipe 구조화 데이터.
@@ -8,7 +9,7 @@ import type { ItemDetail } from "@/types/item"
 export default function RecipeSchema({ item, baseUrl }: { item: ItemDetail; baseUrl: string }) {
   const authorName = item.display_name || item.username
   const ingredients = (item.ingredients ?? [])
-    .map((i) => [i.amount || "", i.unit, i.name].filter(Boolean).join(" ").trim())
+    .map((i) => [i.name, [formatAmount(Number(i.amount), i.unit), i.unit].filter(Boolean).join("")].filter(Boolean).join(" ").trim())
     .filter(Boolean)
   const steps = [...(item.instructions ?? [])]
     .sort((a, b) => a.step_number - b.step_number)

@@ -55,7 +55,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
     const profileData = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles
     const authorName = profileData?.username || '익명'
-    const imageUrl = post.image_urls?.[0] || '/default-post.jpg'
+    const imageUrl = post.image_urls?.[0] || `${process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'}/og-default.png`
     
     // 설명 생성 (description 우선, 없으면 content에서 추출)
     let cleanDescription = ''
@@ -119,16 +119,9 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         creator: `@${profileData?.username || 'spoonie'}`,
       },
       
-      // 검색 엔진 최적화
-      robots: {
-        index: true,
-        follow: true,
-        googleBot: {
-          'max-image-preview': 'large',
-          'max-snippet': -1,
-          'max-video-preview': -1,
-        },
-      },
+      // 검색 유입의 착지는 레시피가 맡는다 (docs/discovery-and-behavior.md). 레시피드는 짧은 활동 기록이라
+      // 색인하지 않고, 안의 링크(출처 레시피, 작성자)만 따라가게 한다. 공유 미리보기는 그대로 쓴다.
+      robots: { index: false, follow: true },
       
       // 정규 URL 설정
       alternates: {
