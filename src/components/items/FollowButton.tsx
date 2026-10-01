@@ -4,7 +4,6 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { useFollowStore } from "@/store/followStore"
 import { useToast } from "@/hooks/use-toast"
-import { notificationService } from "@/lib/notification-service"
 import { useSessionStore } from "@/store/sessionStore"
 import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
 
@@ -62,11 +61,7 @@ export default function FollowButton({ userId, initialIsFollowing, className }: 
 						description: "이제 이 사용자의 게시물을 받아볼 수 있습니다.",
 					})
 					
-					// 🔔 팔로우 알림 발송
-					if (session?.id) {
-						notificationService.notifyFollow(userId, session.id)
-							.catch(error => console.error('❌ 팔로우 알림 발송 실패:', error))
-					}
+					// 팔로우 알림과 푸시는 DB 트리거가 서버에서 처리한다
 				}
 			}
 			

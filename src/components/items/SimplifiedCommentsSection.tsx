@@ -15,7 +15,6 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import { Send, Trash2, CornerUpLeft } from "lucide-react"
 import { Comment } from "@/types/item"
 import { timeAgo } from "@/lib/utils"
-import { notificationService } from "@/lib/notification-service"
 import Link from "next/link"
 import useSWR from "swr"
 import type { Item } from "@/types/item"
@@ -115,8 +114,7 @@ export default function SimplifiedCommentsSection({
       // 댓글 목록 새로고침
       mutateComments()
       
-      // 🚀 알림 시스템 연동 - 게시글 작성자에게 알림
-      await notificationService.notifyComment(itemId, currentUserId, "new_comment_id")
+      // 댓글/답글 알림과 푸시는 DB 트리거가 서버에서 처리한다
       
 
       toast({ title: "댓글이 추가되었습니다." })
@@ -176,8 +174,7 @@ export default function SimplifiedCommentsSection({
       setReplyTexts({ ...replyTexts, [parentCommentId]: "" })
       setReplyingTo(null)
       
-      // 🚀 알림 시스템 연동 - 게시글 작성자 + 원댓글 작성자에게 알림
-      await notificationService.notifyReply(itemId, parentCommentId, currentUserId, "new_reply_id")
+      // 댓글/답글 알림과 푸시는 DB 트리거가 서버에서 처리한다
       
 
       toast({ title: "답글이 추가되었습니다." })
