@@ -69,7 +69,8 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
           closeSplash()
           
           if (userError) {
-            console.error("❌ ClientLayoutWrapper: Auth error:", userError)
+            // 세션이 없는 것은 비로그인 방문의 정상 상태라 오류로 남기지 않는다
+            if (userError.name !== "AuthSessionMissingError") console.error("❌ ClientLayoutWrapper: Auth error:", userError)
             // 토큰 관련 에러인 경우 조용히 로그아웃 처리
             if (userError.message?.includes('Invalid Refresh Token') || 
                 userError.message?.includes('refresh_token_not_found')) {
