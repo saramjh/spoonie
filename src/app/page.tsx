@@ -4,8 +4,8 @@ import { getPublicFeedData } from "@/lib/server-data"
 
 // 🔧 동적 라우팅 강제 (개인화된 피드 때문에)
 // 홈 HTML은 공개 피드로 정적 생성해 CDN에서 바로 보낸다 (스플래시가 즉시 보이도록).
-// 60초마다 다시 만들고, 로그인 사용자 정보는 클라이언트가 스플래시 동안 채운다.
-export const revalidate = 60
+// 5분마다 다시 만든다(엣지 캐시가 오래 남아 첫 접속이 빠르다). 새 글과 로그인 사용자 정보는 클라이언트가 스플래시 동안 채운다.
+export const revalidate = 300
 
 // 🚀 홈페이지 SEO 최적화 (TBWA 가이드 적용)
 export const metadata: Metadata = {
