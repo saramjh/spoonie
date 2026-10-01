@@ -1,14 +1,19 @@
 /**
- * 🆓 완전 무료 푸시 알림 훅
- * Web Push API + Netlify Functions 사용
+ * 웹 푸시 구독 관리 훅
+ *
+ * 브라우저 구독을 만들고 user_push_settings에 저장한다. 실제 발송은 서버가 한다
+ * (알림 저장 → DB 트리거 → netlify/functions/push-dispatch).
+ *
+ * VAPID 키가 교체되면 기존 구독으로는 발송이 실패하고, 기존 구독이 남아 있으면 새 키로 구독할 수도 없다.
+ * 그래서 저장된 구독의 키가 현재 키와 다르면 해지하고, 알림 권한이 이미 있으면 새 키로 다시 구독한다.
  */
 
 import { useState, useEffect } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabase-client';
 
-const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'your-vapid-public-key';
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
 
-interface PushSubscription {
+interface PushSubscriptionData {
   endpoint: string;
   keys: {
     p256dh: string;
@@ -20,25 +25,61 @@ export function usePushNotification() {
   const [isSupported, setIsSupported] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [subscription, setSubscription] = useState<PushSubscription | null>(null);
+  const [subscription, setSubscription] = useState<PushSubscriptionData | null>(null);
 
   useEffect(() => {
-    // 브라우저 푸시 지원 여부 확인
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
+    if ('serviceWorker' in navigator && 'PushManager' in window && VAPID_PUBLIC_KEY) {
       setIsSupported(true);
       checkCurrentSubscription();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 구독을 만들고 서버에 저장한다 (권한은 이미 허용된 상태여야 한다)
+  const createAndSaveSubscription = async (registration: ServiceWorkerRegistration): Promise<boolean> => {
+    const newSubscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+    });
+    const subscriptionData = newSubscription.toJSON() as PushSubscriptionData;
+
+    const supabase = createSupabaseBrowserClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { error } = await supabase
+        .from('user_push_settings')
+        .upsert(
+          { user_id: user.id, subscription_data: subscriptionData, enabled: true, updated_at: new Date().toISOString() },
+          { onConflict: 'user_id' }
+        );
+      if (error) {
+        console.error('❌ 구독 정보 저장 실패:', error);
+        return false;
+      }
+    }
+
+    setSubscription(subscriptionData);
+    setIsSubscribed(true);
+    return true;
+  };
 
   const checkCurrentSubscription = async () => {
     try {
       const registration = await navigator.serviceWorker.getRegistration();
-      if (registration) {
-        const currentSubscription = await registration.pushManager.getSubscription();
-        if (currentSubscription) {
-          setIsSubscribed(true);
-          setSubscription(currentSubscription.toJSON() as PushSubscription);
-        }
+      if (!registration) return;
+      const currentSubscription = await registration.pushManager.getSubscription();
+      if (!currentSubscription) return;
+
+      if (usesCurrentKey(currentSubscription)) {
+        setIsSubscribed(true);
+        setSubscription(currentSubscription.toJSON() as PushSubscriptionData);
+        return;
+      }
+
+      // 이전 VAPID 키로 만든 구독: 해지하고, 이미 허용된 사용자라면 새 키로 다시 구독한다
+      await currentSubscription.unsubscribe();
+      if (Notification.permission === 'granted') {
+        await createAndSaveSubscription(registration);
       }
     } catch (error) {
       console.error('❌ 구독 상태 확인 실패:', error);
@@ -54,75 +95,25 @@ export function usePushNotification() {
     setIsLoading(true);
 
     try {
-      // 1. 알림 권한 요청
       const permission = await Notification.requestPermission();
-      
       if (permission !== 'granted') {
         alert('푸시 알림 권한이 필요합니다.');
         return false;
       }
 
-      // 2. Service Worker 등록 확인
       const registration = await navigator.serviceWorker.getRegistration();
       if (!registration) {
         console.error('Service Worker가 등록되지 않았습니다.');
         return false;
       }
 
-      // 3. 푸시 구독 생성
-      const newSubscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-      });
-
-      const subscriptionData = newSubscription.toJSON() as PushSubscription;
-
-      // 4. 🆓 Supabase에 구독 정보 저장 (무료 플랜)
-      const supabase = createSupabaseBrowserClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        // 먼저 기존 레코드 확인
-        const { data: existing } = await supabase
-          .from('user_push_settings')
-          .select('id')
-          .eq('user_id', user.id)
-          .single();
-
-        let error;
-        if (existing) {
-          // 기존 레코드 업데이트
-          const result = await supabase
-            .from('user_push_settings')
-            .update({
-              subscription_data: subscriptionData,
-              enabled: true,
-              updated_at: new Date().toISOString()
-            })
-            .eq('user_id', user.id);
-          error = result.error;
-        } else {
-          // 새 레코드 생성
-          const result = await supabase
-            .from('user_push_settings')
-            .insert({
-              user_id: user.id,
-              subscription_data: subscriptionData,
-              enabled: true
-            });
-          error = result.error;
-        }
-
-        if (error) {
-          console.error('❌ 구독 정보 저장 실패:', error);
-          return false;
-        }
+      // 다른 키로 만든 구독이 남아 있으면 새 구독이 거부되므로 먼저 해지한다
+      const existing = await registration.pushManager.getSubscription();
+      if (existing && !usesCurrentKey(existing)) {
+        await existing.unsubscribe();
       }
 
-      setSubscription(subscriptionData);
-      setIsSubscribed(true);
-      return true;
-
+      return await createAndSaveSubscription(registration);
     } catch (error) {
       console.error('❌ 푸시 구독 실패:', error);
       return false;
@@ -143,10 +134,8 @@ export function usePushNotification() {
         }
       }
 
-      // Supabase에서 구독 정보 제거
       const supabase = createSupabaseBrowserClient();
       const { data: { user } } = await supabase.auth.getUser();
-      
       if (user) {
         await supabase
           .from('user_push_settings')
@@ -156,7 +145,6 @@ export function usePushNotification() {
 
       setSubscription(null);
       setIsSubscribed(false);
-
     } catch (error) {
       console.error('❌ 구독 해제 실패:', error);
     } finally {
@@ -170,20 +158,25 @@ export function usePushNotification() {
     isLoading,
     subscription,
     subscribeToPush,
-    unsubscribeFromPush
+    unsubscribeFromPush,
   };
+}
+
+// 구독이 현재 VAPID 공개키로 만들어졌는지 확인
+function usesCurrentKey(subscription: PushSubscription): boolean {
+  const key = subscription.options?.applicationServerKey;
+  if (!key) return false;
+  const current = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+  const used = new Uint8Array(key);
+  return used.length === current.length && used.every((byte, i) => byte === current[i]);
 }
 
 // VAPID 키 변환 유틸리티
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding)
-    .replace(/-/g, '+')
-    .replace(/_/g, '/');
-
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
   const rawData = window.atob(base64);
   const outputArray = new Uint8Array(rawData.length);
-
   for (let i = 0; i < rawData.length; ++i) {
     outputArray[i] = rawData.charCodeAt(i);
   }
