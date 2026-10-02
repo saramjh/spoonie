@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { UserCheck, UserPlus } from "lucide-react"
 import { useFollowStore } from "@/store/followStore"
 import { useToast } from "@/hooks/use-toast"
 import { useSessionStore } from "@/store/sessionStore"
@@ -12,11 +13,11 @@ interface FollowButtonProps {
 	userId: string
 	initialIsFollowing?: boolean // 업계 표준: 초기값으로만 사용, 이후 글로벌 상태 우선
 	className?: string
-	// text: 카드·목록 머리의 글자 버튼(테두리 없음). primary: 프로필처럼 그 화면의 주요 동작일 때
-	appearance?: "text" | "primary"
+	// icon: 카드·목록 머리의 아이콘 버튼(사람+ / 사람✓, 상태는 aria-label로). primary: 프로필처럼 그 화면의 주요 동작일 때(아이콘 + 글자)
+	appearance?: "icon" | "primary"
 }
 
-export default function FollowButton({ userId, initialIsFollowing, className, appearance = "text" }: FollowButtonProps) {
+export default function FollowButton({ userId, initialIsFollowing, className, appearance = "icon" }: FollowButtonProps) {
 	const { toast } = useToast()
 	const { session } = useSessionStore()
 	
@@ -89,23 +90,31 @@ export default function FollowButton({ userId, initialIsFollowing, className, ap
 
 	return (
 		<>
-			<Button
-				variant={appearance === "primary" ? (isFollowing ? "outline" : "default") : "ghost"}
-				size={appearance === "primary" ? "default" : "sm"}
-				onClick={handleFollowToggle}
-				disabled={isProcessing}
-				className={cn(appearance === "text" && (isFollowing ? "px-3 text-ink-soft" : "px-3 font-semibold text-orange-ink hover:text-orange-ink"), className)}
-				aria-pressed={isFollowing}
-			>
-				{isProcessing ? (
-					<div className="flex items-center gap-2">
-						<div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-						<span>{isFollowing ? "언팔로우 중..." : "팔로우 중..."}</span>
-					</div>
-				) : (
-					<span>{isFollowing ? "팔로잉" : "팔로우"}</span>
-				)}
-			</Button>
+			{appearance === "icon" ? (
+				<Button
+					variant="ghost"
+					size="icon"
+					onClick={handleFollowToggle}
+					disabled={isProcessing}
+					aria-pressed={isFollowing}
+					aria-label={isFollowing ? "팔로잉 중, 누르면 팔로우 취소" : "팔로우"}
+					title={isFollowing ? "팔로잉" : "팔로우"}
+					className={cn(isFollowing ? "text-ink-soft" : "text-orange-ink hover:text-orange-ink", className)}
+				>
+					{isFollowing ? <UserCheck className="!size-5" aria-hidden /> : <UserPlus className="!size-5" aria-hidden />}
+				</Button>
+			) : (
+				<Button
+					variant={isFollowing ? "outline" : "default"}
+					onClick={handleFollowToggle}
+					disabled={isProcessing}
+					aria-pressed={isFollowing}
+					className={className}
+				>
+					{isFollowing ? <UserCheck aria-hidden /> : <UserPlus aria-hidden />}
+					{isFollowing ? "팔로잉" : "팔로우"}
+				</Button>
+			)}
 
 			{/* 토스 스타일 로그인 유도 바텀시트 */}
 			<LoginPromptSheet

@@ -47,10 +47,12 @@ const config: Config = {
 				border: "rgb(var(--rule-line) / <alpha-value>)",
 				input: "rgb(var(--rule-line) / <alpha-value>)",
 				ring: "rgb(var(--orange-ink) / <alpha-value>)",
+				// 주요 동작 면은 흑연에 흰 글자. 주황(brand)은 로고와 작은 신호에만 (DESIGN.md Colors)
 				primary: {
-					DEFAULT: "rgb(var(--brand-orange) / <alpha-value>)",
-					foreground: "rgb(var(--ink) / <alpha-value>)",
+					DEFAULT: "rgb(var(--ink) / <alpha-value>)",
+					foreground: "rgb(var(--paper) / <alpha-value>)",
 				},
+				brand: "rgb(var(--brand-orange) / <alpha-value>)",
 				secondary: {
 					DEFAULT: "rgb(var(--paper-tint) / <alpha-value>)",
 					foreground: "rgb(var(--ink) / <alpha-value>)",

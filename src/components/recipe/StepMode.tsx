@@ -201,7 +201,7 @@ export default function StepMode({ steps, ingredients, servingsLabel, startAt, r
 						router.push(data.session ? target : `/login?next=${encodeURIComponent(target)}`)
 					}}
 					disabled={!recipeId}
-					className="h-14 rounded-lg bg-primary text-heading text-primary-foreground active:brightness-95"
+					className="h-14 rounded-lg bg-primary text-heading text-primary-foreground active:bg-primary/85"
 				>
 					사진으로 남기기
 				</button>
@@ -219,7 +219,7 @@ export default function StepMode({ steps, ingredients, servingsLabel, startAt, r
 				<button
 					type="button"
 					onClick={() => (isLast ? finish() : go(index + 1))}
-					className="h-14 rounded-lg bg-primary text-heading text-primary-foreground active:brightness-95"
+					className="h-14 rounded-lg bg-primary text-heading text-primary-foreground active:bg-primary/85"
 				>
 					{isLast ? "다 만들었어요" : "다음 단계"}
 				</button>

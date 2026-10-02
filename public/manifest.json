@@ -4,7 +4,7 @@
   "description": "A social platform for sharing recipes.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#dde7e1",
+  "background_color": "#eceae5",
   "theme_color": "#ffffff",
   "icons": [
     {

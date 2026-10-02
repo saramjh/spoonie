@@ -6,15 +6,15 @@
 	/* 팔레트의 유일한 출처 (DESIGN.md Colors). RGB 채널로 두어 Tailwind의 투명도 변형(bg-ink/70)과 CSS(rgb(var(--ink)))가 같은 값을 쓴다.
 	   tailwind.config.ts는 이 변수만 가리킨다. 색을 바꾸려면 여기와 DESIGN.md만 고친다. */
 	:root {
-		--door: 221 231 225; /* 법랑 문 판 #dde7e1 */
+		--door: 236 234 229; /* 법랑 문 판 #eceae5: 따뜻한 돌빛 법랑. 음식 사진의 색을 죽이지 않는다 */
 		--paper: 255 255 255; /* 종이 */
-		--ink: 35 40 43; /* 흑연 #23282b */
-		--ink-soft: 91 100 105; /* 옅은 흑연 #5b6469, 종이 위 6:1 */
-		--brand-orange: 255 105 0; /* #ff6900, 글자는 흑연으로 얹는다 */
+		--ink: 31 35 38; /* 흑연 #1f2326. 주요 동작 면의 색이기도 하다 */
+		--ink-soft: 104 106 107; /* 옅은 흑연 #686a6b, 종이 위 5.6:1, 문 판 위 4.7:1 */
+		--brand-orange: 255 105 0; /* #ff6900 로고 색. 큰 면에 칠하지 않고 신호(알림 숫자, 진행 막대, 켜짐 점)에만 */
 		--orange-ink: 179 71 0; /* #b34700, 종이 위 5.5:1. 포커스 링 */
-		--rule-line: 213 221 216; /* 구분선 #d5ddd8 */
-		--paper-tint: 238 242 239; /* 종이 그늘 #eef2ef: 사진이 오기 전 자리, 눌린 행 */
-		--changed-mark: 201 223 210; /* 바뀐 분량 표시 #c9dfd2 */
+		--rule-line: 224 221 214; /* 구분선 #e0ddd6 */
+		--paper-tint: 244 242 238; /* 종이 그늘 #f4f2ee: 사진이 오기 전 자리, 눌린 행 */
+		--changed-mark: 245 224 198; /* 바뀐 분량 표시 #f5e0c6 (살구) */
 		--like: 214 69 61; /* 좋아요 하트 #d6453d */
 		--danger: 200 56 45; /* 지우기·오류 #c8382d, 종이 위 5:1 */
 		--sheet-shadow: 0 1px 1px rgb(var(--ink) / 0.06), 0 6px 14px -8px rgb(var(--ink) / 0.22);
@@ -44,8 +44,6 @@
 	/* 법랑 문 판: 위에서 비치는 빛으로 위쪽이 조금 밝다. 화면에 고정해 스크롤해도 조명이 따라 움직이지 않는다 */
 	.door-surface {
 		background-color: rgb(var(--door));
-		background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 38%);
-		background-attachment: fixed;
 	}
 
 	/* 브라우저가 그리는 부분도 같은 팔레트로: 포커스 링, 글자 입력 커서 */

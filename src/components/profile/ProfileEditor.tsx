@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label"
 import { Camera, Loader2, RefreshCw, CheckCircle } from "lucide-react"
 import { validateUsername, checkUsernameAvailability, generateUniqueUsername } from "@/lib/username-generator"
 import { useSessionStore } from "@/store/sessionStore"
-import { getCacheManager } from "@/lib/unified-cache-manager"
 import { optimizeImages } from "@/lib/image-utils"
 import { PageHeader, PageLoading, Sheet } from "@/components/kit"
 import { revalidateMyProfilePage } from "@/lib/revalidate-item"
@@ -63,7 +62,6 @@ export default function ProfileEditor({
   // Seamless sync를 위한 optimistic update 추적
   const [optimisticUpdates, setOptimisticUpdates] = useState<Set<string>>(new Set())
   const updateSeq = useRef(0)
-  const rollbackFunctions = useRef<Map<string, () => void>>(new Map())
 
 
   /**
@@ -178,33 +176,7 @@ export default function ProfileEditor({
         setSessionProfile(optimisticProfile)
       }
 
-      // STEP 2: 캐시 매니저를 통한 전역 업데이트 (선택적)
-      let rollback: (() => void) | null = null
-      
-      try {
-        const profileUpdateOperation = {
-          type: 'update' as const,
-          itemId: user.id,
-          userId: user.id,
-          data: {
-            username: formData.username,
-            profile_message: formData.profileMessage,
-            avatar_url: formData.avatarUrl
-          }
-        }
-
-        // Optimistic update 실행 + 롤백 함수 보관
-        const manager = getCacheManager()
-        rollback = await manager.optimisticUpdate(profileUpdateOperation)
-        if (rollback) {
-          rollbackFunctions.current.set(updateId, rollback)
-        }
-      } catch (cacheError) {
-        console.warn('Cache manager integration failed, continuing without it:', cacheError)
-        // 캐시 매니저 실패 시에도 계속 진행
-      }
-
-      // STEP 3: 백그라운드에서 실제 DB 업데이트
+      // STEP 2: 실제 DB 업데이트 (화면의 내 이름·사진은 위에서 세션에 먼저 반영했다)
       await performActualProfileUpdate()
       revalidateMyProfilePage() // 미리 만든 프로필 페이지를 바뀐 내용으로 바로 갱신
 
@@ -214,7 +186,6 @@ export default function ProfileEditor({
         newSet.delete(updateId)
         return newSet
       })
-      rollbackFunctions.current.delete(updateId)
 
       // 토스식 성공 피드백
       toast({
@@ -231,17 +202,6 @@ export default function ProfileEditor({
     } catch (error) {
       console.error('Profile save failed:', error)
       
-      // 실패 시 자동 롤백
-      const rollback = rollbackFunctions.current.get(updateId)
-      if (rollback) {
-        try {
-          rollback()
-        } catch (rollbackError) {
-          console.error('Rollback failed:', rollbackError)
-        }
-        rollbackFunctions.current.delete(updateId)
-      }
-
       // Session Store 롤백
       if (sessionProfile && initialProfile) {
         setSessionProfile({

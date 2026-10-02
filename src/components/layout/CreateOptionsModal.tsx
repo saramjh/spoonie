@@ -31,7 +31,7 @@ export default function CreateOptionsModal({ isOpen, onClose }: CreateOptionsMod
 						<button
 							type="button"
 							onClick={() => handleNavigation("/recipes/new")}
-							className="flex w-full items-center gap-4 rounded-lg bg-primary px-4 py-4 text-left text-primary-foreground active:brightness-95"
+							className="flex w-full items-center gap-4 rounded-lg bg-primary px-4 py-4 text-left text-primary-foreground active:bg-primary/85"
 						>
 							<BookPlus className="h-7 w-7 flex-shrink-0" aria-hidden />
 							<span>

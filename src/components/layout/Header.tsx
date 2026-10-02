@@ -132,7 +132,7 @@ export default function Header() {
         >
           <Bell aria-hidden className={`h-6 w-6 text-ink-soft ${isShaking ? 'animate-bell-shake' : ''}`} />
           {unreadCount != null && unreadCount > 0 && (
-            <span className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-micro tabular-nums text-primary-foreground ring-2 ring-paper">
+            <span className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-brand text-micro tabular-nums text-ink ring-2 ring-paper">
               {unreadCount < 100 ? unreadCount : '99+'}
             </span>
           )}

@@ -90,7 +90,7 @@ export default function BottomNavBar() {
 
 					{/* 3. 중앙 생성 버튼 (+) */}
 					<button onClick={handleCreateButtonClick} aria-label="새 글 쓰기" className="flex items-center justify-center">
-						<span className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary text-primary-foreground active:brightness-95">
+						<span className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary text-primary-foreground active:bg-primary/85">
 							<Plus className="h-6 w-6" strokeWidth={2.5} aria-hidden />
 						</span>
 					</button>

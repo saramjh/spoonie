@@ -204,7 +204,7 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 						<button
 							type="button"
 							onClick={() => setStepModeAt(firstUndone(steps.length, doneSteps))}
-							className="inline-flex h-11 items-center rounded-lg bg-primary px-4 text-label font-semibold text-primary-foreground active:brightness-95"
+							className="inline-flex h-11 items-center rounded-lg bg-primary px-4 text-label font-semibold text-primary-foreground active:bg-primary/85"
 						>
 							요리 시작
 						</button>

@@ -35,10 +35,10 @@
   - 저장 목록: `bookmarks_*`
   - 목록 창: `likers|`, `follow_list|`
   - 레시피 활동: `recipeActivity|`
-- **좋아요·저장·댓글·팔로우·글 추가**는 `lib/unified-cache-manager.ts`의 `cacheManager`로만 바꾼다. 화면을 먼저 바꾸고 DB에 쓰며, 실패하면 되돌린다.
+- **좋아요·저장·댓글·팔로우·글 추가·수정**은 `lib/unified-cache-manager.ts`의 `cacheManager`로만 바꾼다. 화면을 먼저 바꾸고 DB에 쓰며, DB가 실패하면 화면을 되돌리고 오류를 던진다(부르는 쪽 catch가 안내). 상태는 절대값(좋아요함/안 함)으로 바꾸고, 같은 글·같은 동작은 차례대로 처리한다.
 - **글 지우기**는 `cacheManager.deleteItems(ids)` 하나로. 모든 목록·상세 캐시에서 바로 빼고, 돌려받은 함수로 실패 시 목록을 다시 받는다.
 - **키 앞부분으로 여러 캐시를 다시 받거나 고칠 때**는 `lib/swr-cache.ts`(`revalidateStartingWith`, `updateStartingWith`)를 쓴다. SWR의 `mutate((key) => …)`는 무한 스크롤 목록(`$inf$` 키: 피드·레시피북)을 건너뛰어 닿지 않는다.
-- **zustand**는 세션(`sessionStore`), 팔로우 상태(`followStore`), 레시피북 필터(`recipeStore`)만.
+- **zustand**는 세션(`sessionStore`), 팔로우 상태(`followStore`), 레시피북 필터(`recipeStore`)만. 세션은 앱 시작 때 한 번, 그 뒤로는 Supabase 인증 이벤트(로그인·로그아웃)로 맞춘다 (`ClientLayoutWrapper`).
 - 피드 다시 받기는 두 곳뿐이다. 탭 복귀(`usePageVisibility`)와 뒤로 가기로 홈 복귀(`ClientLayoutWrapper`). 주기적 조회(폴링)는 하지 않는다.
 - 알림 숫자와 댓글은 필터를 건 실시간 구독(`useRealtimeRefresh`)으로 받는다.
 
@@ -74,5 +74,5 @@
 
 ## 남은 빚
 
-- `unified-cache-manager.ts`(약 1,000줄)는 화면별 캐시 모양마다 갱신 함수를 따로 갖고 있다. 이제 모두 `lib/swr-cache`로 실제 목록에 닿지만, 키·모양을 한 곳에 모으면 절반 이하로 줄일 수 있다.
-- 롤백이 백업 없이 역연산(±1)으로만 되돌린다. 실패가 겹치면 숫자가 어긋날 수 있다 (좋아요는 3초 뒤 서버 값으로 덮어 맞춘다).
+- 홈에서 드물게 "int64" 페이지 오류가 잡힌다(재현 안 됨). 홈에만 있는 외부 스크립트(애드센스)로 보이지만 확인 전이다.
+

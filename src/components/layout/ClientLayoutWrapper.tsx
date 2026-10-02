@@ -130,6 +130,31 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
     initializeAuth()
   }, [isInitialLoad, setSession, setProfile, setStoreInitialLoad, initializeFollowState])
 
+  // 로그인·로그아웃이 화면 이동(새로고침 없이)으로 일어나도 세션·프로필·팔로우 상태를 맞춘다.
+  // (처음 한 번만 채우면, 로그인 화면에서 로그인한 뒤 홈으로 넘어왔을 때 하단이 "로그인"으로 남고 팔로우가 로그인을 다시 요구했다)
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient()
+    const { data } = supabase.auth.onAuthStateChange((event, authSession) => {
+      if (event === "SIGNED_OUT") {
+        setSession(null)
+        setProfile(null)
+        useFollowStore.setState({ followingUsers: new Set() })
+        return
+      }
+      if (event !== "SIGNED_IN" || !authSession?.user) return
+      const user = authSession.user
+      if (useSessionStore.getState().session?.id === user.id) return
+      setSession(user)
+      // 이벤트 처리기 안에서 Supabase를 다시 부르면 막힐 수 있어 다음 차례로 미룬다
+      setTimeout(async () => {
+        void initializeFollowState(user.id).catch((error) => console.error("❌ Follow state initialization failed:", error))
+        const { data: profile } = await supabase.from("profiles").select("id, username, display_name, avatar_url, public_id").eq("id", user.id).maybeSingle()
+        setProfile(profile ?? null)
+      }, 0)
+    })
+    return () => data.subscription.unsubscribe()
+  }, [setSession, setProfile, initializeFollowState])
+
   // 뒤로 가기로 홈에 돌아오면 피드를 다시 받는다 (이 앱의 유일한 뒤로 가기 처리기).
   // 도착한 주소는 window.location으로 읽는다 (pathname은 떠나는 화면의 값이다)
   useEffect(() => {

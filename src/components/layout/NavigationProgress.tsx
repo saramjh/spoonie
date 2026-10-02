@@ -104,7 +104,7 @@ export default function NavigationProgress() {
   return (
     <div aria-hidden="true" data-nav-progress className="pointer-events-none fixed inset-x-0 top-0 z-[110] h-[3px]">
       <div
-        className="h-full bg-primary transition-[width,opacity] duration-200 ease-out"
+        className="h-full bg-brand transition-[width,opacity] duration-200 ease-out"
         style={{ width: `${progress}%`, opacity: progress >= 100 ? 0 : 1 }}
       />
     </div>

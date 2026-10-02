@@ -2,23 +2,23 @@
 name: Spoonie
 description: 집밥 기록가의 레시피를 냉장고 문에 붙인 종이처럼 보여 주는 레시피 공유 앱
 colors:
-  door: "#dde7e1"
+  door: "#eceae5"
   paper: "#ffffff"
-  ink: "#23282b"
-  ink-soft: "#5b6469"
+  ink: "#1f2326"
+  ink-soft: "#686a6b"
   brand-orange: "#ff6900"
   orange-ink: "#b34700"
-  rule-line: "#d5ddd8"
-  paper-tint: "#eef2ef"
-  changed-mark: "#c9dfd2"
+  rule-line: "#e0ddd6"
+  paper-tint: "#f4f2ee"
+  changed-mark: "#f5e0c6"
   selection: "#ffd2b0"
-  magnet-red: "#d6453d"
-  magnet-orange: "#ff6900"
-  magnet-yellow: "#f2c230"
-  magnet-green: "#3e9b5f"
-  magnet-blue: "#2e6fba"
-  magnet-purple: "#7a5cc2"
-  magnet-gray: "#8a9296"
+  magnet-red: "#c4553f"
+  magnet-orange: "#e07a2e"
+  magnet-yellow: "#d9a93a"
+  magnet-green: "#5e8c64"
+  magnet-blue: "#3f6e9e"
+  magnet-purple: "#7b63a6"
+  magnet-gray: "#8f8a82"
 typography:
   display:
     fontFamily: "Pretendard Variable, Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Apple SD Gothic Neo, Noto Sans KR, sans-serif"
@@ -83,15 +83,15 @@ spacing:
   target: "44px"
 components:
   button-primary:
-    backgroundColor: "{colors.brand-orange}"
-    textColor: "{colors.ink}"
-    typography: "{typography.meta}"
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.paper}"
+    typography: "{typography.label}"
     rounded: "{rounded.control}"
     height: "44px"
     padding: "0 16px"
   button-step-next:
-    backgroundColor: "{colors.brand-orange}"
-    textColor: "{colors.ink}"
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.paper}"
     rounded: "{rounded.control}"
     height: "56px"
   button-step-prev:
@@ -134,7 +134,7 @@ components:
 
 **Creative North Star: "냉장고 문"**
 
-레시피는 냉장고 문에 자석으로 붙여 둔 흰 종이 한 장이다. 옅은 민트 회색 법랑 문 판이 화면의 바닥이 되고, 그 위에 모서리가 거의 각진 흰 종이가 짧고 부드러운 그림자로 살짝 떠 있다. 글자는 흑연 잉크 한 가지 농도와 그보다 옅은 보조 잉크 두 단계로만 쓴다. 인용한 레시피는 그 종이 뒤로 겹쳐 붙은 다른 종이의 가장자리로 보이고, 색상 라벨은 종이 머리를 누르는 둥근 자석이 된다.
+레시피는 냉장고 문에 자석으로 붙여 둔 흰 종이 한 장이다. 따뜻한 돌빛 법랑 문 판이 화면의 바닥이 되고, 그 위에 모서리가 거의 각진 흰 종이가 짧고 부드러운 그림자로 살짝 떠 있다. 글자는 흑연 잉크 한 가지 농도와 그보다 옅은 보조 잉크 두 단계로만 쓴다. 인용한 레시피는 그 종이 뒤로 겹쳐 붙은 다른 종이의 가장자리로 보이고, 색상 라벨은 종이 머리를 누르는 둥근 자석이 된다.
 
 밀도는 부엌에서 휴대폰을 세워 두고 한 손으로 읽는 거리에 맞춘다. 본문과 재료·단계 줄은 17px, 누르는 곳은 모두 44px 이상, 재료 한 줄은 48px 이상이다. 장식은 종이·자석·구분선 세 가지 물성에서만 나온다. 카드 안의 카드, 회색 탭, 슬라이더, 주황 원 번호는 이 세계에서 쓰지 않는다(방향 계약에서 거부한 기본값이며 빌드에서도 쓰이지 않는다).
 
@@ -150,24 +150,25 @@ components:
 
 ## Colors
 
-차가운 민트 회색 법랑과 흰 종이, 흑연 잉크로 된 거의 무채색 팔레트에 브랜드 주황 한 점을 얹는다.
+따뜻한 돌빛 법랑과 흰 종이, 흑연 잉크로 된 거의 무채색 팔레트. 주요 동작은 흑연 면이고, 브랜드 주황은 큰 면에 칠하지 않고 로고와 작은 신호에만 쓴다. 음식 사진이 화면에서 가장 색이 많은 것이 되게 한다.
 
 ### Primary
-- **브랜드 주황** (brand-orange): 로고와 화면당 하나의 주요 동작 면("요리 시작", "다음 단계", "로그인하고 만드는 법 보기")에만 칠한다. 이 면 위의 글자는 반드시 흑연(ink)이다. 흰 글자는 이 주황 위에서 대비가 모자라므로 얹지 않는다.
-- **주황 잉크** (orange-ink): 종이 위에서 글자·아이콘 대비가 필요한 주황의 어두운 형태. 저장된 북마크 아이콘 선과 포커스 링(`--ring`)에 쓴다. 주황을 글자색으로 써야 한다면 brand-orange가 아니라 이것을 쓴다.
+- **주요 동작 면** (`primary` = ink): "요리 시작", "다음 단계", "완료", 하단 + 같은 화면의 주요 동작. 흑연 면에 흰(paper) 글자. 화면당 하나.
+- **브랜드 주황** (brand-orange, `brand`): 로고와 작은 신호에만. 알림 숫자 배지(글자는 ink), 이동 진행 막대, 거르기 켜짐 점. 버튼·카드 같은 큰 면에는 칠하지 않는다.
+- **주황 잉크** (orange-ink): 종이 위에서 글자·아이콘 대비가 필요한 주황의 어두운 형태. 저장된 북마크 아이콘, 팔로우 아이콘, "더보기" 같은 글자 링크, 포커스 링(`--ring`)에 쓴다. 주황을 글자색으로 써야 한다면 brand-orange가 아니라 이것을 쓴다.
 
 ### Neutral
 - **법랑 문 판** (door): 상세 화면과 요리 모드의 바닥. 종이가 놓이는 면이며 그 자체에 내용이 올라가지 않는다. 요리 모드 단계 레일의 빈 칸 뒤 배경이기도 하다.
 - **종이** (paper): 레시피 본문, 댓글, 참고 레시피 가장자리, 요리 모드 단계 카드, 상세 상단 막대의 면.
 - **흑연** (ink): 제목, 본문, 재료 이름, 분량, 체크된 상자 면.
-- **옅은 흑연** (ink-soft): 메타 줄, 단위, 개수, 끝낸 단계와 지운 재료, 비활성 아이콘. 종이 위에서 약 6:1.
+- **옅은 흑연** (ink-soft): 메타 줄, 단위, 개수, 끝낸 단계와 지운 재료, 비활성 아이콘. 종이 위 5.6:1, 문 판 위 4.7:1.
 - **구분선** (rule-line): `--border`. 재료 줄 사이, 단계 사이, 섹션 머리 위의 1px 선, 인분 조절기 테두리.
 - **종이 그늘** (paper-tint): `--muted`. 단계 사진이 로드되기 전 자리.
 - **선택 영역** (selection): 텍스트를 드래그 선택했을 때의 연한 주황 배경, 글자는 ink.
 
 ### Tertiary
-- **바뀐 분량 표시** (changed-mark): 인분을 바꾸거나 가진 재료 양에 맞출 때 값이 바뀐 분량 숫자 뒤에 2.5초 동안 깔린다. 문 판과 같은 색 계열이라 종이 위에서 조용히 보인다.
-- **자석 색** (magnet-red ~ magnet-gray): 레시피 색상 라벨이 있을 때만 종이 왼쪽 위를 누르는 20px 납작한 단추 자석의 색(목록 16px). 라벨 값(red, orange, yellow, green, blue, purple, gray)과 1:1로 대응한다. 자석 외의 장식에는 쓰지 않는다.
+- **바뀐 분량 표시** (changed-mark): 인분을 바꾸거나 가진 재료 양에 맞출 때 값이 바뀐 분량 숫자 뒤에 2.5초 동안 깔린다. 옅은 살구색이라 종이 위에서 조용히 보인다.
+- **자석 색** (magnet-red ~ magnet-gray): 레시피 색상 라벨이 있을 때만 종이 왼쪽 위를 누르는 20px 납작한 단추 자석의 색(목록 16px). 라벨 값(red, orange, yellow, green, blue, purple, gray)과 1:1로 대응한다. 돌빛 문 판에 맞춰 채도를 낮춘 흙빛 계열이다. 자석 외의 장식에는 쓰지 않는다.
 
 ### Tokens in code
 - 색의 유일한 출처는 `src/app/globals.css`의 `:root` RGB 변수다. `tailwind.config.ts`는 그 변수만 가리키고, 컴포넌트는 hex나 Tailwind 기본 팔레트(gray-500 등)를 쓰지 않는다.
@@ -176,9 +177,9 @@ components:
 - 그림자 색도 `rgb(var(--ink) / a)`로 쓴다. 자석 색은 `src/lib/color-options.ts` 한 곳에 있다.
 
 ### Named Rules
-**The 흑연 위 주황 Rule.** 주황 면 위의 글자는 언제나 ink다. 주황 면에 흰 글자를 올리지 않는다.
+**The 주황은 신호 Rule.** 주황은 면이 아니라 신호다. 로고, 숫자 배지, 진행 막대, 켜짐 점, 주황 잉크 글자·아이콘에만 쓰고 버튼 면에는 칠하지 않는다. 작은 주황 면 위의 글자는 ink다(흰 글자는 대비가 모자라다).
 
-**The 주황 한 점 Rule.** 한 화면에서 brand-orange로 칠한 면은 지금 해야 할 주요 동작 하나뿐이다. 나머지 강조는 ink의 굵기와 ink-soft의 대비로 만든다.
+**The 흑연 한 면 Rule.** 한 화면에서 흑연(primary)으로 칠한 면은 지금 해야 할 주요 동작 하나뿐이다. 나머지 강조는 ink의 굵기와 ink-soft의 대비로 만든다.
 
 **The 라벨 있을 때만 Rule.** 자석은 색상 라벨이 지정된 레시피에만 나타난다. 라벨이 없으면 자석 자리를 비워 둔다.
 
@@ -242,10 +243,10 @@ components:
 손에 밀가루가 묻어도 누를 수 있는, 크고 평평한 면.
 - **Shape:** 살짝 둥근 모서리 (8px)
 - **Size:** 높이 44px 하나(화면 아래 고정된 주요 버튼만 48px). 작은 버튼(sm)도 40px 아래로 내리지 않는다. 글자는 `label`.
-- **Primary:** brand-orange 면에 ink 글자 600, 좌우 16px. 누르는 동안 밝기를 95%로 낮춘다. 화면당 하나.
+- **Primary:** 흑연 면에 흰 글자 600, 좌우 16px. hover 90%, 누르는 동안 80% 농도. 화면당 하나.
 - **Outline:** 종이 면에 흑연 20% 선, hover에서 35%와 종이 그늘. 입력칸과 같은 선.
-- **Ghost:** 선 없이 글자만, hover에 흑연 5% 면. 도구 줄 아이콘, "선택"·"완료", 카드 머리의 "팔로우"(주황 잉크 600 글자)처럼 같은 줄에 여럿 놓이는 동작.
-- **Step Next / Prev (요리 모드):** 높이 56px, 17px. 다음은 주황 면 700 굵기로 폭의 2/3, 이전은 종이 면에 흑연 20% 선으로 1/3. 첫 단계에서 이전은 ink-soft 40%로 비활성.
+- **Ghost:** 선 없이 글자만, hover에 흑연 5% 면. 도구 줄 아이콘, "선택"·"완료", 카드 머리의 팔로우 아이콘(사람+ 주황 잉크 / 사람✓ 옅은 흑연, 상태는 aria-label)처럼 같은 줄에 여럿 놓이는 동작.
+- **Step Next / Prev (요리 모드):** 높이 56px, 17px. 다음은 흑연 면에 흰 글자로 폭의 2/3, 이전은 종이 면에 흑연 20% 선으로 1/3. 첫 단계에서 이전은 ink-soft 40%로 비활성.
 - **Icon:** 44×44px 투명 버튼, 아이콘 20–24px, 색은 ink-soft. 각 아이콘 버튼은 aria-label을 갖는다.
 - **Text link:** ink 글자에 밑줄(4px 띄움). "원래대로", "가진 재료 양에 맞추기" 같은 보조 동작.
 - **Focus:** 2px orange-ink 링(`--ring`).
@@ -350,7 +351,7 @@ components:
 
 ### Don't:
 - **Don't** 종이 안에 다시 그림자 진 카드를 넣지 않는다. 구획은 1px 구분선 하나로 나눈다.
-- **Don't** 주황(brand-orange) 면에 흰 글자를 올리지 않는다.
+- **Don't** 주황(brand-orange)을 버튼·카드 같은 큰 면에 칠하지 않는다. 작은 주황 면 위 글자는 ink.
 - **Don't** 단계 번호를 주황 원에 넣지 않는다. 번호는 ink 맨 숫자다.
 - **Don't** 인분 조절에 슬라이더를 쓰지 않는다. −/+ 조절기와 직접 맞춤 입력을 쓴다.
 - **Don't** 섹션을 회색 탭으로 전환하지 않는다. 재료와 만드는 법은 한 종이 위에 차례로 놓는다.
