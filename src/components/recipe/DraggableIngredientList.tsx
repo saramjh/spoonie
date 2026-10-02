@@ -148,7 +148,7 @@ function SortableIngredientItem({
           
           {/* 에러 메시지 */}
           {errors.ingredients && Array.isArray(errors.ingredients) && errors.ingredients[index] && (
-            <div className="space-y-1 text-sm text-destructive">
+            <div className="space-y-1 text-meta text-destructive">
               {(errors.ingredients[index] as any)?.name?.message && (
                 <p>{(errors.ingredients[index] as any)?.name?.message}</p>
               )}
@@ -175,16 +175,16 @@ function DragOverlayItem({ ingredient }: { ingredient: DraggableIngredient }) {
         
         <div className="flex-1 space-y-2">
           {/* 1행: 재료명 */}
-          <div className="bg-door rounded-md px-3 py-2 text-sm">
+          <div className="bg-door rounded-md px-3 py-2 text-label">
             {ingredient.name || '재료명'}
           </div>
           
           {/* 2행: 수량 + 단위 + 삭제버튼 영역 */}
           <div className="flex gap-2">
-            <div className="flex-1 bg-door rounded-md px-3 py-2 text-sm text-center">
+            <div className="flex-1 bg-door rounded-md px-3 py-2 text-label text-center">
               {ingredient.amount || ''}
             </div>
-            <div className="flex-1 bg-door rounded-md px-3 py-2 text-sm text-center">
+            <div className="flex-1 bg-door rounded-md px-3 py-2 text-label text-center">
               {ingredient.unit || ''}
             </div>
             <div className="w-9 h-9"></div>

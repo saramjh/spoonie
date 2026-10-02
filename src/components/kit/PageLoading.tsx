@@ -6,7 +6,7 @@ export function PageLoading({ label = "불러오는 중" }: { label?: string }) 
 	return (
 		<div role="status" aria-label={label} className="flex min-h-[50vh] flex-col items-center justify-center gap-3">
 			<SpoonieLogo variant="icon" motion="stir" className="h-10 w-10" title="" />
-			<span className="text-sm text-ink-soft">{label}</span>
+			<span className="text-meta text-ink-soft">{label}</span>
 		</div>
 	)
 }

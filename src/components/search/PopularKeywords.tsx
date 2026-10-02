@@ -12,7 +12,7 @@ export default function PopularKeywords({ keywords, isLoading, onKeywordClick }:
   if (isLoading) {
     return (
       <div>
-        <h2 className="text-lg font-bold mb-4">인기 검색어</h2>
+        <h2 className="text-heading mb-4">인기 검색어</h2>
         <div className="flex flex-wrap gap-2">
           {Array.from({ length: 8 }).map((_, i) => (
             <Skeleton key={i} className="h-8 w-24 rounded-full" />
@@ -28,13 +28,13 @@ export default function PopularKeywords({ keywords, isLoading, onKeywordClick }:
 
   return (
     <div>
-      <h2 className="text-lg font-bold mb-4">인기 검색어</h2>
+      <h2 className="text-heading mb-4">인기 검색어</h2>
       <div className="flex flex-wrap gap-2">
         {keywords.map(({ keyword }) => (
           <button 
             key={keyword} 
             onClick={() => onKeywordClick(keyword)}
-            className="px-4 py-2 bg-muted text-ink rounded-full text-sm font-medium hover:bg-border transition-colors"
+            className="px-4 py-2 bg-muted text-ink rounded-full text-label font-medium hover:bg-border transition-colors"
           >
             {keyword}
           </button>

@@ -107,7 +107,7 @@ export default function FollowListModal({ direction, isOpen, onClose, userId, cu
 						</div>
 					) : error ? (
 						<div className="py-8 text-center">
-							<p className="text-sm text-destructive">{copy.title} 목록을 불러오지 못했어요.</p>
+							<p className="text-meta text-destructive">{copy.title} 목록을 불러오지 못했어요.</p>
 							<Button variant="outline" size="sm" onClick={() => mutate()} className="mt-4">
 								다시 시도
 							</Button>
@@ -115,7 +115,7 @@ export default function FollowListModal({ direction, isOpen, onClose, userId, cu
 					) : people.length === 0 ? (
 						<div className="py-8 text-center">
 							<Users className="mx-auto mb-4 h-12 w-12 text-ink-soft/60" aria-hidden />
-							<p className="text-sm text-ink-soft">{copy.empty}</p>
+							<p className="text-meta text-ink-soft">{copy.empty}</p>
 						</div>
 					) : (
 						<ul className="space-y-1">
@@ -127,8 +127,8 @@ export default function FollowListModal({ direction, isOpen, onClose, userId, cu
 											<AvatarFallback className="bg-border text-ink-soft">{person.username?.charAt(0) || "?"}</AvatarFallback>
 										</Avatar>
 										<span className="min-w-0">
-											<span className="block truncate text-[15px] font-semibold text-ink">{person.username}</span>
-											<span className="block text-[13px] text-ink-soft">
+											<span className="block truncate text-label font-semibold text-ink">{person.username}</span>
+											<span className="block text-meta text-ink-soft">
 												<RelativeTime iso={person.followed_at} />
 											</span>
 										</span>

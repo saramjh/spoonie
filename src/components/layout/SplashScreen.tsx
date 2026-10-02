@@ -8,7 +8,7 @@ export default function SplashScreen() {
 	return (
 		<div data-splash className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-door" role="status" aria-label="스푸니를 여는 중">
 			<SpoonieLogo motion="intro" className="h-[57px] w-[180px]" />
-			<p className="mt-5 text-lg font-semibold text-ink-soft motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-500">요리의 즐거움, 한 스푼</p>
+			<p className="mt-5 text-heading text-ink-soft motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-500">요리의 즐거움, 한 스푼</p>
 		</div>
 	)
 }

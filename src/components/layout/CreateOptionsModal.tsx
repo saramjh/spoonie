@@ -35,8 +35,8 @@ export default function CreateOptionsModal({ isOpen, onClose }: CreateOptionsMod
 						>
 							<BookPlus className="h-7 w-7 flex-shrink-0" aria-hidden />
 							<span>
-								<span className="block text-[17px] font-bold">레시피 쓰기</span>
-								<span className="block text-sm">재료와 단계를 기록해 두고 요리할 때 다시 꺼내 봐요.</span>
+								<span className="block text-heading">레시피 쓰기</span>
+								<span className="block text-label">재료와 단계를 기록해 두고 요리할 때 다시 꺼내 봐요.</span>
 							</span>
 						</button>
 						<button
@@ -46,11 +46,11 @@ export default function CreateOptionsModal({ isOpen, onClose }: CreateOptionsMod
 						>
 							<ImagePlus className="h-7 w-7 flex-shrink-0 text-ink-soft" aria-hidden />
 							<span>
-								<span className="block text-[17px] font-semibold">레시피드 쓰기</span>
-								<span className="block text-sm text-ink-soft">사진과 글로 요리 이야기를 남겨요.</span>
+								<span className="block text-heading">레시피드 쓰기</span>
+								<span className="block text-meta text-ink-soft">사진과 글로 요리 이야기를 남겨요.</span>
 							</span>
 						</button>
-						<p className="px-1 pt-1 text-[13px] leading-relaxed text-ink-soft">
+						<p className="px-1 pt-1 text-meta text-ink-soft">
 							다른 사람의 레시피로 만들었다면 그 레시피 화면의 &lsquo;이 레시피로 만들었어요&rsquo;로 남겨 주세요. 원래 레시피와 이어지고 작성자에게도 알려져요.
 						</p>
 					</div>

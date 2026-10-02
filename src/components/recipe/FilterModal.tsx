@@ -46,7 +46,7 @@ export default function FilterModal({ isOpen, onClose }: FilterModalProps) {
 					<div className="space-y-6 p-4">
 						{/* 태그 필터 */}
 						<div>
-							<label htmlFor="filter-category" className="block text-sm font-medium text-ink mb-2">
+							<label htmlFor="filter-category" className="block text-label font-medium text-ink mb-2">
 								태그 필터
 							</label>
 							<Input 
@@ -61,14 +61,14 @@ export default function FilterModal({ isOpen, onClose }: FilterModalProps) {
 
 						{/* 색상 라벨 필터 */}
 						<div>
-							<p className="mb-1 block text-sm font-medium text-ink">색상 라벨</p>
+							<p className="mb-1 block text-label font-medium text-ink">색상 라벨</p>
 							<ColorLabelPicker value={filterColorLabel || null} onChange={(next) => setFilterColorLabel(next ?? "")} />
 						</div>
 
 						{/* 정렬 기준 */}
 						<div className="grid grid-cols-2 gap-4">
 							<div>
-								<label htmlFor="sort-by" className="block text-sm font-medium text-ink mb-2">
+								<label htmlFor="sort-by" className="block text-label font-medium text-ink mb-2">
 									정렬 기준
 								</label>
 								<Select onValueChange={(value: string) => setSortBy(value)} defaultValue={sortBy}>
@@ -85,7 +85,7 @@ export default function FilterModal({ isOpen, onClose }: FilterModalProps) {
 
 							{/* 정렬 순서 */}
 							<div>
-								<label htmlFor="sort-order" className="block text-sm font-medium text-ink mb-2">
+								<label htmlFor="sort-order" className="block text-label font-medium text-ink mb-2">
 									정렬 순서
 								</label>
 								<Select onValueChange={(value: "asc" | "desc") => setSortOrder(value)} defaultValue={sortOrder}>

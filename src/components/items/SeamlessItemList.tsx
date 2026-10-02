@@ -123,7 +123,7 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
           
           return (
             <div key={item.id || item.item_id}>
-              {showPeriod && <h2 className={`px-1 pb-2 text-[13px] font-semibold text-ink-soft ${index === 0 ? "" : "pt-3"}`}>{period}</h2>}
+              {showPeriod && <h2 className={`px-1 pb-2 text-meta font-semibold text-ink-soft ${index === 0 ? "" : "pt-3"}`}>{period}</h2>}
               <PostCard 
                 item={item} 
                 currentUser={currentUser}
@@ -162,7 +162,7 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
       {/* 빈 상태 */}
       {feedItems.length === 0 && !isLoading && (
         <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-          <h3 className="text-xl font-semibold text-ink">아직 게시물이 없어요</h3>
+          <h3 className="text-title text-ink">아직 게시물이 없어요</h3>
           <p className="text-ink-soft text-center">
             첫 번째 레시피나 레시피드를 작성해보세요!
           </p>

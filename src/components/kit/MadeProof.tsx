@@ -24,7 +24,7 @@ export function MadeProof({ madeCount = 0, continuedCount = 0, thumbs = [], clas
 					))}
 				</span>
 			)}
-			<span className="text-[13px] font-semibold text-ink">{parts.join(" · ")}</span>
+			<span className="text-meta font-semibold text-ink">{parts.join(" · ")}</span>
 		</span>
 	)
 }

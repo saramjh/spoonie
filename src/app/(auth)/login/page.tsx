@@ -109,7 +109,7 @@ export default function LoginPage() {
 			<main className="w-full max-w-sm mx-auto pt-8">
 				{/* 컴팩트한 브랜드 영역 */}
 				<div className="text-center mb-6">
-					<h1 className="text-[22px] font-bold text-ink">로그인</h1>
+					<h1 className="text-title text-ink">로그인</h1>
 				</div>
 
 				{/* 로그인 카드 */}
@@ -122,13 +122,13 @@ export default function LoginPage() {
 								name="email"
 								render={({ field }) => (
 									<FormItem className="space-y-1.5">
-										<FormLabel className="text-sm font-medium text-ink">이메일</FormLabel>
+										<FormLabel className="text-label font-medium text-ink">이메일</FormLabel>
 										<FormControl>
 											{/* 토스 스타일 입력필드 */}
 											<Input 
 												 
 												{...field} 
-												className="h-12 rounded-md border border-ink/40 bg-paper text-base focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0" 
+												className="h-12 rounded-md border border-ink/40 bg-paper text-body focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0" 
 											/>
 										</FormControl>
 										<FormMessage />
@@ -140,13 +140,13 @@ export default function LoginPage() {
 								name="password"
 								render={({ field }) => (
 									<FormItem className="space-y-1.5">
-										<FormLabel className="text-sm font-medium text-ink">비밀번호</FormLabel>
+										<FormLabel className="text-label font-medium text-ink">비밀번호</FormLabel>
 										<FormControl>
 											<Input 
 												type="password" 
 												 
 												{...field} 
-												className="h-12 rounded-md border border-ink/40 bg-paper text-base focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0" 
+												className="h-12 rounded-md border border-ink/40 bg-paper text-body focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0" 
 											/>
 										</FormControl>
 										<FormMessage />
@@ -157,7 +157,7 @@ export default function LoginPage() {
 							<Button 
 								type="submit" 
 								disabled={form.formState.isSubmitting || isRedirecting}
-								className="h-12 w-full text-base"
+								className="h-12 w-full text-body"
 							>
 								{form.formState.isSubmitting || isRedirecting ? (
 									<>
@@ -171,7 +171,7 @@ export default function LoginPage() {
 
 						{/* 비밀번호 찾기 링크 */}
 						<div className="text-center mt-4 mb-6">
-							<Link href="/forgot-password" className="text-sm text-ink-soft hover:text-orange-ink transition-colors duration-200">
+							<Link href="/forgot-password" className="text-meta text-ink-soft hover:text-orange-ink transition-colors duration-200">
 								비밀번호를 잊으셨나요?
 							</Link>
 						</div>
@@ -181,7 +181,7 @@ export default function LoginPage() {
 							<div className="absolute inset-0 flex items-center">
 								<span className="w-full border-t border-border" />
 							</div>
-							<div className="relative flex justify-center text-[13px]">
+							<div className="relative flex justify-center text-meta">
 								<span className="bg-paper px-4 text-ink-soft font-medium">또는</span>
 							</div>
 						</div>
@@ -189,7 +189,7 @@ export default function LoginPage() {
 						{/* 소셜 로그인 */}
 						<Button 
 							variant="outline" 
-							className="h-12 w-full text-base" 
+							className="h-12 w-full text-body" 
 							onClick={handleGoogleLogin}
 							disabled={isGoogleRedirecting}
 						>
@@ -204,23 +204,23 @@ export default function LoginPage() {
 
 				{/* 회원가입 링크 */}
 				<div className="mt-8 text-center">
-					<span className="text-sm text-ink-soft">계정이 없으신가요? </span>
-					<Link href={signupHref} className="text-sm font-semibold text-orange-ink hover:text-orange-ink transition-colors duration-200">
+					<span className="text-meta text-ink-soft">계정이 없으신가요? </span>
+					<Link href={signupHref} className="text-label font-semibold text-orange-ink hover:text-orange-ink transition-colors duration-200">
 						회원가입
 					</Link>
 				</div>
 
 				{/* 법적 문서 링크 */}
 				<div className="mt-6 text-center space-x-3">
-					<Link href="/legal/privacy" className="text-[13px] text-ink-soft hover:text-ink transition-colors duration-200">
+					<Link href="/legal/privacy" className="text-meta text-ink-soft hover:text-ink transition-colors duration-200">
 						개인정보처리방침
 					</Link>
-					<span className="text-[13px] text-ink-soft/60">|</span>
-					<Link href="/legal/terms" className="text-[13px] text-ink-soft hover:text-ink transition-colors duration-200">
+					<span className="text-meta text-ink-soft/60">|</span>
+					<Link href="/legal/terms" className="text-meta text-ink-soft hover:text-ink transition-colors duration-200">
 						이용약관
 					</Link>
-					<span className="text-[13px] text-ink-soft/60">|</span>
-					<Link href="/legal/policy" className="text-[13px] text-ink-soft hover:text-ink transition-colors duration-200">
+					<span className="text-meta text-ink-soft/60">|</span>
+					<Link href="/legal/policy" className="text-meta text-ink-soft hover:text-ink transition-colors duration-200">
 						운영정책
 					</Link>
 				</div>

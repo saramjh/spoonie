@@ -150,7 +150,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
         <button
           type="button"
           onClick={() => setShowSearch(true)}
-          className="flex h-11 w-full items-center gap-2 rounded-md border border-dashed border-ink/30 px-3 text-left text-[15px] text-ink-soft"
+          className="flex h-11 w-full items-center gap-2 rounded-md border border-dashed border-ink/30 px-3 text-left text-label text-ink-soft"
         >
           <Search className="h-4 w-4" aria-hidden />
           레시피 찾아서 고르기
@@ -191,8 +191,8 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium truncate">{recipe.title}</div>
-                          <div className="text-[13px] text-ink-soft truncate">
+                          <div className="text-label font-medium truncate">{recipe.title}</div>
+                          <div className="text-meta text-ink-soft truncate">
                             {recipe.username || "익명"} • {recipe.created_at && format(new Date(recipe.created_at), 'MM.dd')}
                           </div>
                         </div>
@@ -225,7 +225,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
                 {/* 내용 */}
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-ink truncate">{recipe.title}</div>
-                  <div className="text-sm text-ink-soft truncate">{recipe.username || "익명"}의 레시피</div>
+                  <div className="text-meta text-ink-soft truncate">{recipe.username || "익명"}의 레시피</div>
                 </div>
                 {/* 삭제 버튼 */}
                 <button 

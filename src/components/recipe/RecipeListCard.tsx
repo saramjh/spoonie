@@ -82,9 +82,9 @@ export default function RecipeListCard({
         )}
       </span>
       <span className="block min-w-0 flex-1 text-left">
-        <span className="block truncate text-[17px] font-semibold text-ink">{displayItem.title}</span>
-        {meta.length > 0 && <span className="mt-0.5 block truncate text-sm text-ink-soft">{meta.join(" · ")}</span>}
-        <span className="mt-0.5 block truncate text-[13px] text-ink-soft">
+        <span className="block truncate text-heading text-ink">{displayItem.title}</span>
+        {meta.length > 0 && <span className="mt-0.5 block truncate text-meta text-ink-soft">{meta.join(" · ")}</span>}
+        <span className="mt-0.5 block truncate text-meta text-ink-soft">
           {madeCount > 0 && <span className="font-semibold text-ink">{madeCount}명이 만들어 봤어요 · </span>}
           {showAuthor && item.username ? `${item.username} · ` : ""}
           <RelativeTime iso={item.created_at} compact />

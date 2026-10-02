@@ -191,7 +191,7 @@ export const SimplifiedLikeButton = forwardRef<HTMLButtonElement, SimplifiedLike
           aria-label={`좋아요 ${likesCount}개, 좋아요한 사람 보기`}
           className="h-11 min-w-0 pl-0.5 pr-2 text-ink-soft hover:text-ink transition-colors"
         >
-          <span className="text-sm font-medium tabular-nums">{likesCount}</span>
+          <span className="text-label font-medium tabular-nums">{likesCount}</span>
         </Button>
       </div>
 

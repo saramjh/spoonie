@@ -85,7 +85,7 @@ export default function SignupPage() {
 			<main className="w-full max-w-sm mx-auto pt-8">
 				{/* 컴팩트한 브랜드 영역 */}
 				<div className="text-center mb-6">
-					<h1 className="text-[22px] font-bold text-ink">회원가입</h1>
+					<h1 className="text-title text-ink">회원가입</h1>
 				</div>
 
 				{/* 회원가입 카드 */}
@@ -98,12 +98,12 @@ export default function SignupPage() {
 								name="email"
 								render={({ field }) => (
 									<FormItem className="space-y-1.5">
-										<FormLabel className="text-sm font-medium text-ink">이메일</FormLabel>
+										<FormLabel className="text-label font-medium text-ink">이메일</FormLabel>
 										<FormControl>
 											<Input 
 												 
 												{...field} 
-												className="h-12 rounded-md border border-ink/40 bg-paper text-base focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0" 
+												className="h-12 rounded-md border border-ink/40 bg-paper text-body focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0" 
 											/>
 										</FormControl>
 										<FormMessage />
@@ -115,13 +115,13 @@ export default function SignupPage() {
 								name="password"
 								render={({ field }) => (
 									<FormItem className="space-y-1.5">
-										<FormLabel className="text-sm font-medium text-ink">비밀번호</FormLabel>
+										<FormLabel className="text-label font-medium text-ink">비밀번호</FormLabel>
 										<FormControl>
 											<Input 
 												type="password" 
 												placeholder="6자 이상" 
 												{...field} 
-												className="h-12 rounded-md border border-ink/40 bg-paper text-base focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0" 
+												className="h-12 rounded-md border border-ink/40 bg-paper text-body focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0" 
 											/>
 										</FormControl>
 										<FormMessage />
@@ -133,13 +133,13 @@ export default function SignupPage() {
 								name="confirmPassword"
 								render={({ field }) => (
 									<FormItem className="space-y-1.5">
-										<FormLabel className="text-sm font-medium text-ink">비밀번호 확인</FormLabel>
+										<FormLabel className="text-label font-medium text-ink">비밀번호 확인</FormLabel>
 										<FormControl>
 											<Input 
 												type="password" 
 												 
 												{...field} 
-												className="h-12 rounded-md border border-ink/40 bg-paper text-base focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0" 
+												className="h-12 rounded-md border border-ink/40 bg-paper text-body focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0" 
 											/>
 										</FormControl>
 										<FormMessage />
@@ -149,7 +149,7 @@ export default function SignupPage() {
 							<Button 
 								type="submit" 
 								disabled={form.formState.isSubmitting || isRedirecting}
-								className="h-12 w-full text-base"
+								className="h-12 w-full text-body"
 							>
 								{form.formState.isSubmitting || isRedirecting ? (
 									<>
@@ -163,23 +163,23 @@ export default function SignupPage() {
 
 						{/* 로그인 링크 */}
 						<div className="mt-8 text-center">
-							<span className="text-sm text-ink-soft">이미 계정이 있으신가요? </span>
-							<Link href="/login" className="text-sm font-semibold text-orange-ink hover:text-orange-ink transition-colors duration-200">
+							<span className="text-meta text-ink-soft">이미 계정이 있으신가요? </span>
+							<Link href="/login" className="text-label font-semibold text-orange-ink hover:text-orange-ink transition-colors duration-200">
 								로그인
 							</Link>
 						</div>
 
 						{/* 법적 문서 링크 */}
 						<div className="mt-6 text-center space-x-3">
-							<Link href="/legal/privacy" className="text-[13px] text-ink-soft hover:text-ink transition-colors duration-200">
+							<Link href="/legal/privacy" className="text-meta text-ink-soft hover:text-ink transition-colors duration-200">
 								개인정보처리방침
 							</Link>
-							<span className="text-[13px] text-ink-soft/60">|</span>
-							<Link href="/legal/terms" className="text-[13px] text-ink-soft hover:text-ink transition-colors duration-200">
+							<span className="text-meta text-ink-soft/60">|</span>
+							<Link href="/legal/terms" className="text-meta text-ink-soft hover:text-ink transition-colors duration-200">
 								이용약관
 							</Link>
-							<span className="text-[13px] text-ink-soft/60">|</span>
-							<Link href="/legal/policy" className="text-[13px] text-ink-soft hover:text-ink transition-colors duration-200">
+							<span className="text-meta text-ink-soft/60">|</span>
+							<Link href="/legal/policy" className="text-meta text-ink-soft hover:text-ink transition-colors duration-200">
 								운영정책
 							</Link>
 						</div>

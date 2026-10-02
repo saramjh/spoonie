@@ -27,11 +27,11 @@ export function SourceRow({ recipes, creationOrigin, className, asLink = true }:
 		<>
 			<span className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-[2px] bg-muted">{thumb && <Photo src={thumb} sizes="40px" />}</span>
 			<span className="min-w-0 flex-1">
-				<span className="block text-[13px] text-ink-soft">
+				<span className="block text-meta text-ink-soft">
 					{cooked ? `${authorName}의 레시피로 만들었어요` : `참고한 레시피 · ${authorName}`}
 					{rest.length > 0 && ` 외 ${rest.length}개`}
 				</span>
-				<span className="block truncate text-[15px] font-semibold text-ink">{first.title || "레시피"}</span>
+				<span className="block truncate text-label font-semibold text-ink">{first.title || "레시피"}</span>
 			</span>
 		</>
 	)

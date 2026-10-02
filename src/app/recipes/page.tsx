@@ -524,17 +524,18 @@ export default function RecipesPage() {
 
 			{/* 반응형 최적화: 컨테이너 최대 너비 + 패딩 조정 */}
 			<main className="flex-1 overflow-y-auto px-3 py-3 max-w-7xl mx-auto w-full">
-				{/* 검색·거르기·보기 방식. 고르는 동안에는 고른 수와 지우기·완료 줄로 바뀐다 */}
-				{isSelecting ? (
-					<Sheet className="sticky top-0 z-10 mb-3 flex items-center justify-between gap-2 px-3">
-						<p className="text-[15px] text-ink" aria-live="polite">
-							{selectedRecipes.length > 0 ? <><span className="font-semibold tabular-nums">{selectedRecipes.length}</span>개 골랐어요</> : "지울 레시피를 골라 주세요"}
-						</p>
-						<div className="flex items-center gap-1">
+				{/* 도구 줄: 검색 / 거르기 / 보기 방식 / 선택. 고르는 동안에는 같은 높이·같은 자리에서 "고른 수 · 지우기 · 완료"로 바뀐다
+				    (줄 높이가 같아 켜고 끌 때 아래 목록이 움직이지 않는다. "선택"과 "완료"는 같은 오른쪽 끝) */}
+				<div className="mb-3 flex h-11 items-center gap-1">
+					{isSelecting ? (
+						<>
+							<p className="min-w-0 flex-1 truncate pl-1 text-label text-ink" aria-live="polite">
+								{selectedRecipes.length > 0 ? <><span className="font-semibold tabular-nums">{selectedRecipes.length}</span>개 골랐어요</> : <span className="text-ink-soft">지울 레시피를 골라 주세요</span>}
+							</p>
 						<AlertDialog>
 							<AlertDialogTrigger asChild>
-								<Button variant="outline" disabled={selectedRecipes.length === 0} className="text-destructive">
-									<Trash2 className="h-4 w-4" aria-hidden />
+								<Button variant="ghost" disabled={selectedRecipes.length === 0} className="px-3 text-destructive hover:text-destructive">
+									<Trash2 aria-hidden />
 									지우기
 								</Button>
 							</AlertDialogTrigger>
@@ -549,49 +550,45 @@ export default function RecipesPage() {
 								</AlertDialogFooter>
 							</AlertDialogContent>
 						</AlertDialog>
-							<Button variant="ghost" onClick={stopSelecting}>
+							<Button variant="ghost" onClick={stopSelecting} className="px-3 font-semibold">
 								완료
 							</Button>
-						</div>
-					</Sheet>
-				) : (
-				<div className="flex gap-2 mb-3">
-					<div className="relative flex-grow min-w-0">
-						<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-ink-soft" aria-hidden />
-						<Input 
-							placeholder={
-								currentTab === "my_recipes" 
-									? "레시피·재료 검색" 
-									: "레시피·재료·사람 검색"
-							} 
-							value={localSearchTerm} 
-							onChange={(e) => setLocalSearchTerm(e.target.value)} 
-							aria-label="레시피 검색" className="h-11 pl-10 bg-paper text-[15px]" 
-						/>
-					</div>
-					{/* 필터 버튼은 나의 레시피에서만 표시 */}
-					{currentTab === "my_recipes" && (
-						<Button variant="outline" size="icon" onClick={() => setIsFilterModalOpen(true)} aria-label="색상 라벨로 거르기">
-							<SlidersHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
-						</Button>
+						</>
+					) : (
+						<>
+							<div className="relative min-w-0 flex-1">
+								<Search className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-ink-soft" aria-hidden />
+								<Input
+									placeholder={currentTab === "my_recipes" ? "레시피·재료 검색" : "레시피·재료·사람 검색"}
+									value={localSearchTerm}
+									onChange={(e) => setLocalSearchTerm(e.target.value)}
+									aria-label="레시피 검색"
+									className="pl-9"
+								/>
+							</div>
+							{currentTab === "my_recipes" && (
+								<Button variant="ghost" size="icon" onClick={() => setIsFilterModalOpen(true)} aria-label="색상 라벨로 거르기">
+									<SlidersHorizontal className="!size-5" aria-hidden />
+								</Button>
+							)}
+							<Button variant="ghost" size="icon" onClick={() => setViewMode(viewMode === "card" ? "list" : "card")} aria-label={viewMode === "card" ? "목록으로 보기" : "격자로 보기"}>
+								{viewMode === "card" ? <List className="!size-5" aria-hidden /> : <Grid className="!size-5" aria-hidden />}
+							</Button>
+							{currentTab === "my_recipes" && recipes.length > 0 && (
+								<Button variant="ghost" onClick={() => setIsSelecting(true)} className="px-3">
+									선택
+								</Button>
+							)}
+						</>
 					)}
-					{currentTab === "my_recipes" && recipes.length > 0 && (
-						<Button variant="outline" onClick={() => setIsSelecting(true)} className="px-3">
-							선택
-						</Button>
-					)}
-					<Button variant="outline" size="icon" onClick={() => setViewMode(viewMode === "card" ? "list" : "card")} aria-label={viewMode === "card" ? "목록으로 보기" : "격자로 보기"}>
-						{viewMode === "card" ? <List className="w-4 h-4 sm:w-5 sm:h-5" /> : <Grid className="w-4 h-4 sm:w-5 sm:h-5" />}
-					</Button>
 				</div>
-				)}
 
 				{/* 2열 통일 그리드 시스템 */}
 				{isLoading && recipes.length === 0 ? (
 					<div className={
 						viewMode === "card" 
 							? "grid grid-cols-2 gap-3" 
-							: "space-y-2.5"
+							: "space-y-2"
 					}>
 						{Array.from({ length: viewMode === "card" ? 4 : 3 }).map((_, i) => (
 							<RecipeCardSkeleton key={i} />
@@ -599,8 +596,8 @@ export default function RecipesPage() {
 					</div>
 				) : isEmpty ? (
 					<Sheet className="px-5 py-6">
-						<p className="text-[17px] font-semibold text-ink">{currentTab === "my_recipes" ? "아직 쓴 레시피가 없어요" : "팔로우한 사람의 레시피가 아직 없어요"}</p>
-						<p className="mt-1 text-[15px] text-ink-soft">{currentTab === "my_recipes" ? "레시피를 쓰면 여기에 모여서 요리할 때 다시 꺼내 볼 수 있어요." : "검색에서 마음에 드는 사람을 팔로우하면 그 사람의 레시피가 여기에 모여요."}</p>
+						<p className="text-heading text-ink">{currentTab === "my_recipes" ? "아직 쓴 레시피가 없어요" : "팔로우한 사람의 레시피가 아직 없어요"}</p>
+						<p className="mt-1 text-label text-ink-soft">{currentTab === "my_recipes" ? "레시피를 쓰면 여기에 모여서 요리할 때 다시 꺼내 볼 수 있어요." : "검색에서 마음에 드는 사람을 팔로우하면 그 사람의 레시피가 여기에 모여요."}</p>
 						{currentTab === "my_recipes" && (
 							<Button asChild className="mt-4">
 								<Link href="/recipes/new">레시피 쓰기</Link>
@@ -611,7 +608,7 @@ export default function RecipesPage() {
 					<div className={
 						viewMode === "card" 
 							? "grid grid-cols-2 gap-3" 
-							: "space-y-2.5"
+							: "space-y-2"
 					}>
 						{recipes.map((item, index) =>
 							viewMode === "card" ? (
@@ -642,8 +639,8 @@ export default function RecipesPage() {
 				{isLoadingMore && (
 					<div className={
 						viewMode === "card" 
-							? "grid grid-cols-2 gap-3 mt-4" 
-							: "space-y-2.5 mt-4"
+							? "grid grid-cols-2 gap-3 mt-3" 
+							: "space-y-2 mt-2"
 					}>
 						{Array.from({ length: viewMode === "card" ? 2 : 1 }).map((_, i) => (
 							<RecipeCardSkeleton key={i} />
@@ -653,7 +650,7 @@ export default function RecipesPage() {
 
 				<div ref={observerElem} className="h-px" />
 
-				{isReachingEnd && !isEmpty && <p className="py-6 text-center text-[13px] text-ink-soft">여기까지예요</p>}
+				{isReachingEnd && !isEmpty && <p className="py-6 text-center text-meta text-ink-soft">여기까지예요</p>}
 			</main>
 
 			<FilterModal isOpen={isFilterModalOpen} onClose={() => setIsFilterModalOpen(false)} />

@@ -12,6 +12,20 @@ const config: Config = {
 			},
 		},
 		extend: {
+			// 글자 역할 (DESIGN.md Typography). 크기 값이 아니라 역할 이름으로 쓴다. 기본 굵기·줄 간격·자간이 함께 온다.
+			// display/title은 700, heading은 600으로 정해져 있어 따로 font-bold를 붙이지 않는다.
+			fontSize: {
+				display: ["1.625rem", { lineHeight: "1.25", letterSpacing: "-0.02em", fontWeight: "700" }],
+				// 요리 모드의 지금 단계: 팔 길이 거리에서 읽는 큰 글자, 굵기는 본문 쪽
+				step: ["1.625rem", { lineHeight: "1.55", fontWeight: "500" }],
+				title: ["1.25rem", { lineHeight: "1.35", letterSpacing: "-0.015em", fontWeight: "700" }],
+				heading: ["1.0625rem", { lineHeight: "1.4", letterSpacing: "-0.01em", fontWeight: "600" }],
+				read: ["1.0625rem", { lineHeight: "1.65" }],
+				body: ["1rem", { lineHeight: "1.6" }],
+				label: ["0.9375rem", { lineHeight: "1.4" }],
+				meta: ["0.8125rem", { lineHeight: "1.45" }],
+				micro: ["0.6875rem", { lineHeight: "1.2", fontWeight: "600" }],
+			},
 			fontFamily: {
 				sans: ['"Pretendard Variable"', "Pretendard", "-apple-system", "BlinkMacSystemFont", "system-ui", '"Apple SD Gothic Neo"', '"Noto Sans KR"', "sans-serif"],
 			},

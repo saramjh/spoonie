@@ -461,7 +461,7 @@ export default function TossSeamlessProfileEditor({
               <Image src={currentAvatarUrl} alt="" width={88} height={88} priority className="h-full w-full object-cover" />
             </div>
             <div>
-              <label htmlFor="avatar-upload" className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg border border-ink/25 px-4 text-[15px] font-medium text-ink">
+              <label htmlFor="avatar-upload" className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg border border-ink/25 px-4 text-label font-medium text-ink">
                 <Camera className="h-4 w-4" aria-hidden />
                 사진 바꾸기
               </label>
@@ -472,12 +472,12 @@ export default function TossSeamlessProfileEditor({
                 className="sr-only"
                 onChange={(e) => e.target.files?.[0] && handleAvatarUpload(e.target.files[0])}
               />
-              {formData.avatarFile && <p className="mt-1 text-[13px] text-ink-soft">저장하면 바뀌어요</p>}
+              {formData.avatarFile && <p className="mt-1 text-meta text-ink-soft">저장하면 바뀌어요</p>}
             </div>
           </div>
 
           <div>
-            <Label htmlFor="username" className="text-sm font-medium text-ink">
+            <Label htmlFor="username" className="text-label font-medium text-ink">
               이름
             </Label>
             <div className="relative mt-1.5">
@@ -497,14 +497,14 @@ export default function TossSeamlessProfileEditor({
                   <CheckCircle className="mr-1 h-4 w-4 text-ink" aria-label="쓸 수 있는 이름" />
                 )}
                 {validation.canChangeUsername && (
-                  <Button type="button" variant="ghost" onClick={generateSmartUsername} disabled={validation.isGenerating} className="h-10 px-2 text-sm">
+                  <Button type="button" variant="ghost" onClick={generateSmartUsername} disabled={validation.isGenerating} className="h-10 px-2 text-label">
                     <RefreshCw className={`h-4 w-4 ${validation.isGenerating ? "animate-spin" : ""}`} aria-hidden />
                     추천
                   </Button>
                 )}
               </div>
             </div>
-            <p id="username-help" className={`mt-1.5 text-[13px] ${validation.username.error ? "text-destructive" : "text-ink-soft"}`}>
+            <p id="username-help" className={`mt-1.5 text-meta ${validation.username.error ? "text-destructive" : "text-ink-soft"}`}>
               {!validation.canChangeUsername
                 ? "이름은 한 번만 바꿀 수 있어서 이미 바꾼 이름을 쓰고 있어요."
                 : validation.username.error
@@ -515,10 +515,10 @@ export default function TossSeamlessProfileEditor({
 
           <div>
             <div className="flex items-baseline justify-between">
-              <Label htmlFor="profileMessage" className="text-sm font-medium text-ink">
+              <Label htmlFor="profileMessage" className="text-label font-medium text-ink">
                 소개
               </Label>
-              <span className={`text-[13px] tabular-nums ${formData.profileMessage.length > 130 ? "text-ink" : "text-ink-soft"}`}>
+              <span className={`text-meta tabular-nums ${formData.profileMessage.length > 130 ? "text-ink" : "text-ink-soft"}`}>
                 {formData.profileMessage.length}/150
               </span>
             </div>
@@ -528,14 +528,14 @@ export default function TossSeamlessProfileEditor({
               onChange={(e) => setFormData((prev) => ({ ...prev, profileMessage: e.target.value }))}
               placeholder="어떤 요리를 주로 하는지 적어 보세요"
               maxLength={150}
-              className="mt-1.5 h-28 resize-none text-[16px] leading-relaxed"
+              className="mt-1.5 h-28 resize-none text-body"
             />
           </div>
         </Sheet>
       </main>
 
       <div className={mode === "full" ? "fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md border-t border-border bg-paper px-3 pb-[max(env(safe-area-inset-bottom),12px)] pt-3" : "pt-3"}>
-        <Button onClick={handleOptimisticSave} disabled={!canSave || optimisticUpdates.size > 0} className="h-12 w-full text-base">
+        <Button onClick={handleOptimisticSave} disabled={!canSave || optimisticUpdates.size > 0} className="h-12 w-full text-body">
           {optimisticUpdates.size > 0 ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden />

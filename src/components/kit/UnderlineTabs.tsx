@@ -28,7 +28,7 @@ export function UnderlineTabs<K extends string>({ items, value, onChange, label,
 					aria-selected={value === item.key}
 					onClick={() => onChange(item.key)}
 					className={cn(
-						"-mb-px h-12 border-b-2 px-4 text-[15px] font-semibold",
+						"-mb-px h-12 border-b-2 px-4 text-label font-semibold",
 						stretch && "flex-1",
 						value === item.key ? "border-ink text-ink" : "border-transparent text-ink-soft"
 					)}

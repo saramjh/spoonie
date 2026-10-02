@@ -132,7 +132,7 @@ export default function BookmarksPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Bookmark className="w-16 h-16 text-ink-soft/60 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-ink mb-2">로그인이 필요합니다</h2>
+          <h2 className="text-title text-ink mb-2">로그인이 필요합니다</h2>
           <p className="text-ink-soft mb-4">북마크 기능을 사용하려면 로그인해주세요.</p>
           <Button onClick={() => router.push("/login")}>로그인하기</Button>
         </div>
@@ -155,14 +155,14 @@ export default function BookmarksPage() {
           </div>
         ) : error ? (
           <Sheet className="px-5 py-6">
-            <p className="text-[17px] font-semibold text-ink">저장한 글을 불러오지 못했어요</p>
-            <p className="mt-1 text-[15px] text-ink-soft">연결 상태를 확인하고 다시 시도해 주세요.</p>
+            <p className="text-heading text-ink">저장한 글을 불러오지 못했어요</p>
+            <p className="mt-1 text-label text-ink-soft">연결 상태를 확인하고 다시 시도해 주세요.</p>
             <Button className="mt-4" onClick={() => mutate()}>다시 시도</Button>
           </Sheet>
         ) : !bookmarkedItems || bookmarkedItems.length === 0 ? (
           <Sheet className="px-5 py-6">
-            <p className="text-[17px] font-semibold text-ink">아직 저장한 글이 없어요</p>
-            <p className="mt-1 text-[15px] text-ink-soft">레시피나 레시피드의 저장 버튼을 누르면 여기에 모여요.</p>
+            <p className="text-heading text-ink">아직 저장한 글이 없어요</p>
+            <p className="mt-1 text-label text-ink-soft">레시피나 레시피드의 저장 버튼을 누르면 여기에 모여요.</p>
             <Button className="mt-4" onClick={() => router.push("/")}>홈으로</Button>
           </Sheet>
         ) : (

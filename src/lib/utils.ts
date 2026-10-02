@@ -1,7 +1,12 @@
 import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { extendTailwindMerge } from "tailwind-merge"
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
+
+// 글자 역할(text-display ~ text-micro)을 크기로 알려 준다. 모르면 색(text-ink)과 같은 무리로 보고 서로 지운다
+const twMerge = extendTailwindMerge({
+  extend: { classGroups: { "font-size": [{ text: ["display", "step", "title", "heading", "read", "body", "label", "meta", "micro"] }] } },
+})
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))

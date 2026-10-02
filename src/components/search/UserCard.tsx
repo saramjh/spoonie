@@ -41,8 +41,8 @@ export default function UserCard({ user }: UserCardProps) {
             <h3 className="font-semibold text-ink truncate">
               			{user.username}
             </h3>
-            <p className="text-sm text-ink-soft truncate">@{user.username}</p>
-            <p className="text-[13px] text-ink-soft">
+            <p className="text-meta text-ink-soft truncate">@{user.username}</p>
+            <p className="text-meta text-ink-soft">
               {user.items_count}개의 레시피 & 레시피드
             </p>
           </div>

@@ -115,7 +115,7 @@ export default function PushNotificationSettings() {
   // 한 줄 설정: 무엇을 받는지와 켜고 끄는 버튼 하나
   if (!isSupported) {
     return (
-      <p className="rounded-[3px] bg-paper px-4 py-3 text-sm text-ink-soft shadow-sheet">
+      <p className="rounded-[3px] bg-paper px-4 py-3 text-meta text-ink-soft shadow-sheet">
         이 브라우저에서는 휴대폰 알림을 받을 수 없어요. 홈 화면에 스푸니를 추가하면 받을 수 있어요.
       </p>
     )
@@ -124,12 +124,12 @@ export default function PushNotificationSettings() {
   return (
     <Sheet as="section" className="flex items-center gap-3 px-4 py-3">
       <div className="min-w-0 flex-1">
-        <h2 className="text-[15px] font-semibold text-ink">휴대폰 알림 {isSubscribed ? "켜짐" : "꺼짐"}</h2>
-        <p className="mt-0.5 text-[13px] text-ink-soft">
+        <h2 className="text-label font-semibold text-ink">휴대폰 알림 {isSubscribed ? "켜짐" : "꺼짐"}</h2>
+        <p className="mt-0.5 text-meta text-ink-soft">
           {isSubscribed ? "앱을 닫아도 만들었어요·댓글·좋아요·팔로우를 알려 드려요." : "켜면 앱을 닫아도 새 소식을 알려 드려요."}
         </p>
         {isSubscribed && process.env.NODE_ENV === "development" && (
-          <button type="button" onClick={handleTestPush} className="mt-1 text-[13px] text-ink underline underline-offset-4">
+          <button type="button" onClick={handleTestPush} className="mt-1 text-meta text-ink underline underline-offset-4">
             테스트 알림 보내기
           </button>
         )}

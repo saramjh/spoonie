@@ -82,7 +82,7 @@ export default function InstructionImageUploader({ imageUrl, onImageChange, plac
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="inline-flex h-11 items-center gap-2 rounded-lg border border-dashed border-ink/30 px-3 text-sm text-ink-soft"
+          className="inline-flex h-11 items-center gap-2 rounded-lg border border-dashed border-ink/30 px-3 text-meta text-ink-soft"
         >
           <Camera className="h-4 w-4" aria-hidden />
           {placeholder}

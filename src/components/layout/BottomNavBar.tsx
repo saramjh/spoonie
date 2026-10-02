@@ -38,7 +38,7 @@ export default function BottomNavBar() {
 			return (
 				<Link href="/login" className={getLinkClass("/login")}>
 					<User className="w-6 h-6" aria-hidden />
-					<span className="text-[13px] font-medium">로그인</span>
+					<span className="text-meta font-medium">로그인</span>
 				</Link>
 			)
 		}
@@ -66,7 +66,7 @@ export default function BottomNavBar() {
 				<div className="w-7 h-7 flex items-center justify-center">
 					<Loader2 className="w-6 h-6 animate-spin" />
 				</div>
-				<span className="text-[13px] font-medium">로딩중</span>
+				<span className="text-meta font-medium">로딩중</span>
 			</div>
 		)
 	}
@@ -79,13 +79,13 @@ export default function BottomNavBar() {
 					{/* 1. 홈 */}
 					<Link href="/" className={getLinkClass("/")}>
 						<Home className="w-6 h-6" aria-hidden />
-						<span className="text-[13px] font-medium">홈</span>
+						<span className="text-meta font-medium">홈</span>
 					</Link>
 
 					{/* 2. 레시피북 */}
 					<Link href="/recipes" className={getLinkClass("/recipes")}>
 						<Book className="w-6 h-6" aria-hidden />
-						<span className="text-[13px] font-medium">레시피북</span>
+						<span className="text-meta font-medium">레시피북</span>
 					</Link>
 
 					{/* 3. 중앙 생성 버튼 (+) */}
@@ -98,7 +98,7 @@ export default function BottomNavBar() {
 					{/* 4. 검색 */}
 					<Link href="/search" className={getLinkClass("/search")}>
 						<Search className="w-6 h-6" aria-hidden />
-						<span className="text-[13px] font-medium">검색</span>
+						<span className="text-meta font-medium">검색</span>
 					</Link>
 
 					{/* 5. 로그인/마이페이지 */}

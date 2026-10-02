@@ -272,7 +272,7 @@ export default function SimplifiedCommentsSection({
                 <IntentLink href={`/profile/${comment.user?.public_id || comment.user?.username || comment.user_id}`}>
                   <Avatar className="h-8 w-8 border hover:opacity-80 transition-opacity">
                     <AvatarImage src={comment.user?.avatar_url || undefined} />
-                    <AvatarFallback className="text-[13px]">
+                    <AvatarFallback className="text-meta">
                       {comment.user?.username?.charAt(0) || "U"}
                     </AvatarFallback>
                   </Avatar>
@@ -283,23 +283,23 @@ export default function SimplifiedCommentsSection({
                     {/* 유저네임 + 프로필 링크 */}
                     <IntentLink
                       href={`/profile/${comment.user?.public_id || comment.user?.username || comment.user_id}`}
-                      className="font-semibold text-ink text-sm hover:underline transition-colors"
+                      className="font-semibold text-ink text-label hover:underline transition-colors"
                     >
                       {comment.user?.username || '익명'}
                     </IntentLink>
-                    <span className="text-[13px] text-ink-soft">
+                    <span className="text-meta text-ink-soft">
                       {timeAgo(comment.created_at)}
                     </span>
                   </div>
                   
                   {/* 댓글 내용 */}
                   {comment.is_deleted ? (
-                    <p className="text-ink-soft text-sm italic whitespace-pre-wrap mt-1">
+                    <p className="text-ink-soft text-meta italic whitespace-pre-wrap mt-1">
                       삭제된 댓글입니다.
                     </p>
                   ) : (
                     <>
-                      <p className="text-ink text-sm whitespace-pre-wrap mt-1 break-words">
+                      <p className="text-ink text-label whitespace-pre-wrap mt-1 break-words">
                         {comment.content}
                       </p>
 
@@ -309,7 +309,7 @@ export default function SimplifiedCommentsSection({
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-[13px] text-ink-soft hover:text-ink p-1 h-auto"
+                            className="text-meta text-ink-soft hover:text-ink p-1 h-auto"
                             onClick={() => handleReply(comment.id)}
                           >
                             <CornerUpLeft className="w-3 h-3 mr-1" />
@@ -328,7 +328,7 @@ export default function SimplifiedCommentsSection({
                           placeholder="답글을 입력하세요..."
                           value={replyTexts[comment.id] || ""}
                           onChange={(e) => setReplyTexts({ ...replyTexts, [comment.id]: e.target.value })}
-                          className="text-sm"
+                          className="text-label"
                           onKeyPress={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
                               e.preventDefault()
@@ -344,7 +344,7 @@ export default function SimplifiedCommentsSection({
                           <Send className="w-4 h-4" />
                         </Button>
                       </div>
-                      <Button variant="ghost" size="sm" onClick={handleCancelReply} className="text-[13px]">
+                      <Button variant="ghost" size="sm" onClick={handleCancelReply} className="text-meta">
                         취소
                       </Button>
                     </div>
@@ -376,7 +376,7 @@ export default function SimplifiedCommentsSection({
                         <IntentLink href={`/profile/${reply.user?.public_id || reply.user?.username || reply.user_id}`}>
                           <Avatar className="h-6 w-6 border hover:opacity-80 transition-opacity">
                             <AvatarImage src={reply.user?.avatar_url || undefined} />
-                            <AvatarFallback className="text-[13px]">
+                            <AvatarFallback className="text-meta">
                               {reply.user?.username?.charAt(0) || "U"}
                             </AvatarFallback>
                           </Avatar>
@@ -386,22 +386,22 @@ export default function SimplifiedCommentsSection({
                           <div className="flex items-baseline gap-2 flex-wrap">
                             <IntentLink
                               href={`/profile/${reply.user?.public_id || reply.user?.username || reply.user_id}`}
-                              className="font-semibold text-ink text-[13px] hover:underline transition-colors"
+                              className="font-semibold text-ink text-meta hover:underline transition-colors"
                             >
                               {reply.user?.username || '익명'}
                             </IntentLink>
-                            <span className="text-[13px] text-ink-soft">
+                            <span className="text-meta text-ink-soft">
                               {timeAgo(reply.created_at)}
                             </span>
                           </div>
                           
                           {/* 대댓글 내용 */}
                           {reply.is_deleted ? (
-                            <p className="text-ink-soft text-[13px] italic whitespace-pre-wrap mt-1">
+                            <p className="text-ink-soft text-meta italic whitespace-pre-wrap mt-1">
                               삭제된 댓글입니다.
                             </p>
                           ) : (
-                            <p className="text-ink text-[13px] whitespace-pre-wrap mt-1 break-words">
+                            <p className="text-ink text-meta whitespace-pre-wrap mt-1 break-words">
                               {reply.content}
                             </p>
                           )}

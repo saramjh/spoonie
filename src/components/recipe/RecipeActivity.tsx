@@ -41,9 +41,9 @@ export function RecipeActivity({ recipeId, userId }: { recipeId: string; userId?
 		if (facts.length === 0) return null
 		return (
 			<div className="mt-4 border-l-2 border-orange-ink pl-3">
-				<p className="text-[13px] font-semibold text-ink">내 레시피가 쓰인 기록</p>
-				<p className="mt-0.5 text-[15px] tabular-nums text-ink">{facts.join(" · ")}</p>
-				<p className="mt-0.5 text-[13px] text-ink-soft">나만 보여요. 로그인한 다른 사람 기준이에요.</p>
+				<p className="text-meta font-semibold text-ink">내 레시피가 쓰인 기록</p>
+				<p className="mt-0.5 text-label tabular-nums text-ink">{facts.join(" · ")}</p>
+				<p className="mt-0.5 text-meta text-ink-soft">나만 보여요. 로그인한 다른 사람 기준이에요.</p>
 			</div>
 		)
 	}
@@ -51,9 +51,9 @@ export function RecipeActivity({ recipeId, userId }: { recipeId: string; userId?
 	if (!data.remind || !data.last_cook_start) return null
 	return (
 		<div className="mt-4 flex items-center justify-between gap-3 border-y border-border py-3">
-			<p className="min-w-0 text-[15px] text-ink">
+			<p className="min-w-0 text-label text-ink">
 				이 레시피로 요리를 시작했어요
-				<span className="block text-[13px] text-ink-soft">
+				<span className="block text-meta text-ink-soft">
 					<RelativeTime iso={data.last_cook_start} />
 				</span>
 			</p>

@@ -9,7 +9,7 @@ interface SectionHeadingProps extends HTMLAttributes<HTMLHeadingElement> {
 
 export function SectionHeading({ count, as: Tag = "h2", className, children, ...props }: SectionHeadingProps) {
 	return (
-		<Tag className={cn("text-lg font-bold text-ink", className)} {...props}>
+		<Tag className={cn("text-heading text-ink", className)} {...props}>
 			{children}
 			{count !== undefined && count !== null && count !== false && <span className="font-medium tabular-nums text-ink-soft"> {count}</span>}
 		</Tag>

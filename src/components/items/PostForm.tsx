@@ -374,8 +374,8 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 
 	const errors = form.formState.errors
 	const sourceRecipes = !isEditMode && sourceRecipeId ? selectedCitedRecipes.filter((r) => r.id === sourceRecipeId) : []
-	const fieldLabel = "text-sm font-medium text-ink"
-	const errorText = "mt-1 text-sm text-destructive"
+	const fieldLabel = "text-label font-medium text-ink"
+	const errorText = "mt-1 text-meta text-destructive"
 	const handleCitedChange = (recipes: Item[]) => {
 		setSelectedCitedRecipes(recipes)
 		const recipeIds = recipes.map((r: Item) => String(r.id || r.item_id || "")).filter((id) => id !== "")
@@ -386,9 +386,9 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 	const citedSection = (
 		<section aria-labelledby="post-cited" className={sourceRecipeId ? "border-t border-border px-4 pb-5 pt-5" : "border-b border-border px-4 pb-4 pt-4"}>
 			<SectionHeading id="post-cited">
-				{sourceRecipeId ? "함께 참고한 레시피" : "어떤 레시피로 만들었나요?"} <span className="text-sm font-normal text-ink-soft">(선택)</span>
+				{sourceRecipeId ? "함께 참고한 레시피" : "어떤 레시피로 만들었나요?"} <span className="text-meta font-normal text-ink-soft">(선택)</span>
 			</SectionHeading>
-			{!sourceRecipeId && <p className="mt-1 text-[13px] text-ink-soft">고르면 그 레시피 화면의 만들어 본 기록에 이어져요.</p>}
+			{!sourceRecipeId && <p className="mt-1 text-meta text-ink-soft">고르면 그 레시피 화면의 만들어 본 기록에 이어져요.</p>}
 			<div className="mt-2">
 				<CitedRecipeSearch selectedRecipes={selectedCitedRecipes} onSelectedRecipesChange={handleCitedChange} />
 			</div>
@@ -429,7 +429,7 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 								{...form.register("content")}
 								placeholder={sourceRecipeId ? "어떻게 만들었는지, 바꾼 점이나 맛은 어땠는지" : "요리 이야기를 들려 주세요"}
 								rows={6}
-								className="mt-1.5 resize-none text-[16px] leading-relaxed"
+								className="mt-1.5 resize-none text-body"
 							/>
 							{errors.content && <p className={errorText}>{errors.content.message}</p>}
 						</div>
@@ -475,13 +475,13 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 								<RadioGroup value={field.value.toString()} onValueChange={(value) => field.onChange(value === "true")} className="mt-1">
 									<label htmlFor="post-public" className="flex min-h-12 items-center gap-3">
 										<RadioGroupItem value="true" id="post-public" />
-										<span className="text-[15px] text-ink">
+										<span className="text-label text-ink">
 											공개 <span className="text-ink-soft">· 누구나 볼 수 있어요</span>
 										</span>
 									</label>
 									<label htmlFor="post-private" className="flex min-h-12 items-center gap-3">
 										<RadioGroupItem value="false" id="post-private" />
-										<span className="text-[15px] text-ink">
+										<span className="text-label text-ink">
 											비공개 <span className="text-ink-soft">· 나만 봐요</span>
 										</span>
 									</label>
@@ -493,7 +493,7 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 			</form>
 
 			<div className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md border-t border-border bg-paper px-3 pb-[max(env(safe-area-inset-bottom),12px)] pt-3">
-				<Button type="submit" form="post-form" disabled={isSubmitting} className="h-12 w-full text-base">
+				<Button type="submit" form="post-form" disabled={isSubmitting} className="h-12 w-full text-body">
 					{isSubmitting ? "저장하는 중..." : isEditMode ? "고친 내용 저장" : sourceRecipeId ? "기록 남기기" : "레시피드 올리기"}
 				</Button>
 			</div>

@@ -269,22 +269,22 @@ export default function SearchClient({ initialExplore }: { initialExplore?: Expl
 
   return (
     <div className="min-h-screen">
-      <div className="px-2 py-4 pb-20">
-      {/* Instagram 스타일 검색바 */}
-      <div className="relative mb-6">
-        <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-ink-soft" />
+      <div className="px-3 pb-20 pt-3">
+      <div className="relative mb-5">
+        <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-ink-soft" aria-hidden />
         <Input
           type="text"
-          placeholder="레시피, 피드, 사용자 검색..."
-          className={`pl-12 ${searchTerm ? 'pr-12' : 'pr-4'} h-12 text-base`}
+          placeholder="레시피·재료·사람 검색"
+          aria-label="검색"
+          className={searchTerm ? "pl-9 pr-11" : "pl-9"}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        {/* 유튜브 스타일 X 버튼 (검색어가 있을 때만 표시) */}
         {searchTerm && (
           <button
             onClick={() => setSearchTerm('')}
-            className="absolute right-1 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center"
+            type="button"
+            className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center"
             aria-label="검색어 지우기"
           >
             <X className="h-5 w-5 text-ink-soft" aria-hidden />
@@ -331,7 +331,7 @@ export default function SearchClient({ initialExplore }: { initialExplore?: Expl
 
           {activeTab !== 'users' && (
             <>
-              {isLoadingMore && <p className="py-4 text-center text-sm text-ink-soft">찾는 중...</p>}
+              {isLoadingMore && <p className="py-4 text-center text-meta text-ink-soft">찾는 중...</p>}
               {!isReachingEnd && <div ref={observerRef} className="h-10" />}
             </>
           )}
@@ -380,7 +380,7 @@ export default function SearchClient({ initialExplore }: { initialExplore?: Expl
           {explore && explore.made.length > 0 && (
             <section aria-labelledby="explore-made">
               <SectionHeading id="explore-made" className="px-1">요즘 만들어 본 기록</SectionHeading>
-              <p className="mb-2 mt-0.5 px-1 text-[13px] text-ink-soft">사진 아래가 만든 레시피예요.</p>
+              <p className="mb-2 mt-0.5 px-1 text-meta text-ink-soft">사진 아래가 만든 레시피예요.</p>
               <div className="grid grid-cols-3 gap-x-1 gap-y-3">
                 {explore.made.map(({ item, sourceTitle }) => (
                   <MadeRecordTile key={item.id} item={item} sourceTitle={sourceTitle} />

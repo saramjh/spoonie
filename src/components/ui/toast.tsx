@@ -76,7 +76,7 @@ const ToastAction = React.forwardRef<
   <ToastPrimitives.Action
     ref={ref}
     className={cn(
-      "inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 group-[.destructive]:border-muted/40 group-[.destructive]:hover:border-destructive/30 group-[.destructive]:hover:bg-destructive group-[.destructive]:hover:text-destructive-foreground group-[.destructive]:focus:ring-destructive",
+      "inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-meta font-medium ring-offset-background transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 group-[.destructive]:border-muted/40 group-[.destructive]:hover:border-destructive/30 group-[.destructive]:hover:bg-destructive group-[.destructive]:hover:text-destructive-foreground group-[.destructive]:focus:ring-destructive",
       className
     )}
     {...props}
@@ -110,7 +110,7 @@ const ToastTitle = React.forwardRef<
     ref={ref}
     className={cn(
       // 토스식 타이틀: 명확하고 읽기 쉬운 폰트
-      "text-sm font-semibold leading-5 tracking-tight",
+      "text-label font-semibold leading-5 tracking-tight",
       className
     )}
     {...props}
@@ -126,7 +126,7 @@ const ToastDescription = React.forwardRef<
     ref={ref}
     className={cn(
       // 토스식 설명: 적절한 대비와 간격
-      "text-sm leading-5 opacity-85 mt-1",
+      "text-label leading-5 opacity-85 mt-1",
       className
     )}
     {...props}

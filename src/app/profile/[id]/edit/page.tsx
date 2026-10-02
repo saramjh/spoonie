@@ -81,7 +81,7 @@ export default function ProfileEditPage() {
 					<div className="mt-8 border-t border-border pt-4">
 						<AlertDialog>
 							<AlertDialogTrigger asChild>
-								<button type="button" className="inline-flex h-11 items-center gap-2 text-[15px] text-destructive underline underline-offset-4">
+								<button type="button" className="inline-flex h-11 items-center gap-2 text-label text-destructive underline underline-offset-4">
 									<Trash2 className="h-4 w-4" aria-hidden />
 									회원 탈퇴
 								</button>
@@ -89,7 +89,7 @@ export default function ProfileEditPage() {
 							<AlertDialogContent>
 								<AlertDialogHeader>
 									<AlertDialogTitle>정말 탈퇴할까요?</AlertDialogTitle>
-									<AlertDialogDescription className="text-[15px] leading-relaxed text-ink-soft">
+									<AlertDialogDescription className="text-body text-ink-soft">
 										내 레시피, 레시피드, 댓글과 사진이 모두 지워지고 되돌릴 수 없어요. 계속하려면 아래에 &lsquo;탈퇴&rsquo;라고 입력해 주세요.
 									</AlertDialogDescription>
 								</AlertDialogHeader>

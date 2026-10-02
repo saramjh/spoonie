@@ -8,7 +8,7 @@ export function PhotoCount({ count, className }: { count: number; className?: st
 		<span
 			role="img"
 			aria-label={`사진 ${count}장`}
-			className={cn("absolute right-1.5 top-1.5 z-10 flex items-center gap-1 rounded-[3px] bg-ink/70 px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-paper", className)}
+			className={cn("absolute right-1.5 top-1.5 z-10 flex items-center gap-1 rounded-[3px] bg-ink/70 px-1.5 py-0.5 text-micro tabular-nums text-paper", className)}
 		>
 			<Images className="h-3 w-3" aria-hidden />
 			{count}

@@ -199,12 +199,12 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 						{currentAvatarUrl && currentAvatarUrl !== "/icon-only.svg" ? (
 							<Image src={currentAvatarUrl} alt="" fill sizes="72px" priority className="object-cover" />
 						) : (
-							<span className="flex h-full w-full items-center justify-center text-2xl font-bold text-ink-soft">{profile?.username?.charAt(0) || "?"}</span>
+							<span className="flex h-full w-full items-center justify-center text-title text-ink-soft">{profile?.username?.charAt(0) || "?"}</span>
 						)}
 					</div>
 					<div className="min-w-0 flex-1">
 						<div className="flex items-center justify-between gap-2">
-							<h1 className="truncate text-[22px] font-bold text-ink">{profile?.username}</h1>
+							<h1 className="truncate text-title text-ink">{profile?.username}</h1>
 							{isOwner && (
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
@@ -225,12 +225,12 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 								</DropdownMenu>
 							)}
 						</div>
-						<p className="mt-0.5 text-[15px] text-ink">
+						<p className="mt-0.5 text-label text-ink">
 							레시피 <span className="font-semibold tabular-nums">{recipes.length}</span>
 							{lineageFacts.length > 0 && <span className="text-ink-soft"> · {lineageFacts.join(" · ")}</span>}
 						</p>
 						{showFollowCounts && (
-							<p className="mt-0.5 text-sm text-ink-soft">
+							<p className="mt-0.5 text-meta text-ink-soft">
 								<button type="button" onClick={() => setFollowList("followers")} className="py-1 underline-offset-4 hover:underline">
 									팔로워 <span className="tabular-nums">{followCounts?.followers || 0}</span>
 								</button>
@@ -243,14 +243,14 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 					</div>
 				</div>
 
-				{profile?.profile_message && <p className="mt-3 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-ink">{profile.profile_message}</p>}
+				{profile?.profile_message && <p className="mt-3 whitespace-pre-wrap break-words text-body text-ink">{profile.profile_message}</p>}
 				{profile?.show_join_date !== false && profile?.created_at && (
-					<p className="mt-2 text-[13px] text-ink-soft">
+					<p className="mt-2 text-meta text-ink-soft">
 						{new Date(profile.created_at).toLocaleDateString("ko-KR", { year: "numeric", month: "long" })} 가입
 					</p>
 				)}
 
-				{!isOwner && profile && <FollowButton userId={profile.id} initialIsFollowing={isFollowing} className="mt-4 w-full" />}
+				{!isOwner && profile && <FollowButton userId={profile.id} initialIsFollowing={isFollowing} appearance="primary" className="mt-4 w-full" />}
 			</header>
 
 			<UnderlineTabs
@@ -285,10 +285,10 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 										{thumb ? (
 											<Photo src={thumb} sizes="(max-width: 448px) 33vw, 150px" priority={index < 3} />
 										) : (
-											<span className="h-full p-2 text-[13px] leading-snug text-ink line-clamp-4">{item.content}</span>
+											<span className="h-full p-2 text-meta text-ink line-clamp-4">{item.content}</span>
 										)}
 										<PhotoCount count={item.image_urls?.length || 0} />
-										{!item.is_public && <span className="absolute left-1 top-1 rounded-[2px] bg-ink/80 px-1.5 text-[11px] text-paper">비공개</span>}
+										{!item.is_public && <span className="absolute left-1 top-1 rounded-[2px] bg-ink/80 px-1.5 text-micro text-paper">비공개</span>}
 									</IntentLink>
 								</li>
 							)

@@ -103,8 +103,8 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 	return (
 		<div>
 			<div className="flex items-baseline justify-between">
-				<Label className="text-sm font-medium text-ink">{label}</Label>
-				<span className="text-sm tabular-nums text-ink-soft">
+				<Label className="text-label font-medium text-ink">{label}</Label>
+				<span className="text-meta tabular-nums text-ink-soft">
 					{images.length}/{maxImages}
 				</span>
 			</div>
@@ -124,7 +124,7 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 										className={`relative block h-full w-full overflow-hidden rounded-[3px] bg-muted ${isCover ? "ring-2 ring-ink ring-offset-2 ring-offset-paper" : ""}`}
 									>
 										<Image src={image.preview} alt="" fill sizes="96px" className="object-cover" priority={index === 0} />
-										{isCover && <span className="absolute bottom-1 left-1 rounded-[2px] bg-ink/85 px-1.5 py-0.5 text-[11px] font-bold text-paper">대표</span>}
+										{isCover && <span className="absolute bottom-1 left-1 rounded-[2px] bg-ink/85 px-1.5 py-0.5 text-micro text-paper">대표</span>}
 									</button>
 									<button
 										type="button"
@@ -145,7 +145,7 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 									type="button"
 									onClick={() => fileInputRef.current?.click()}
 									disabled={isProcessing}
-									className="flex h-full w-full flex-col items-center justify-center gap-1 rounded-[3px] border border-dashed border-ink/30 text-sm text-ink-soft"
+									className="flex h-full w-full flex-col items-center justify-center gap-1 rounded-[3px] border border-dashed border-ink/30 text-meta text-ink-soft"
 								>
 									<ImagePlus className="h-5 w-5" aria-hidden />
 									{isProcessing ? "줄이는 중" : "추가"}
@@ -153,7 +153,7 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 							</li>
 						)}
 					</ul>
-					{showThumbnailSelector && images.length > 1 && <p className="mt-1 text-[13px] text-ink-soft">사진을 누르면 대표 사진이 돼요.</p>}
+					{showThumbnailSelector && images.length > 1 && <p className="mt-1 text-meta text-ink-soft">사진을 누르면 대표 사진이 돼요.</p>}
 				</>
 			) : (
 				<button
@@ -163,8 +163,8 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 					className={`mt-2 flex w-full flex-col items-center justify-center gap-2 rounded-[3px] border border-dashed border-ink/30 bg-muted text-ink-soft ${frame === "recipe" ? "aspect-[4/3]" : "aspect-square"}`}
 				>
 					<Camera className="h-8 w-8" aria-hidden />
-					<span className="text-[15px] font-medium text-ink">{isProcessing ? "사진을 줄이는 중" : placeholder}</span>
-					<span className="text-[13px]">최대 {maxImages}장, 올릴 때 자동으로 줄여요</span>
+					<span className="text-label font-medium text-ink">{isProcessing ? "사진을 줄이는 중" : placeholder}</span>
+					<span className="text-meta">최대 {maxImages}장, 올릴 때 자동으로 줄여요</span>
 				</button>
 			)}
 

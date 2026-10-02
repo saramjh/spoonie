@@ -102,7 +102,7 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 						>
 							<Minus className="h-4 w-4" aria-hidden />
 						</button>
-						<output aria-live="polite" className="min-w-[4.5rem] text-center text-base font-semibold tabular-nums text-ink">
+						<output aria-live="polite" className="min-w-[4.5rem] text-center text-body font-semibold tabular-nums text-ink">
 							{reference ? "직접 맞춤" : `${servings}인분`}
 						</output>
 						<button
@@ -118,7 +118,7 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 				</div>
 
 				{isScaled && (
-					<p className="mt-2 text-sm text-ink-soft">
+					<p className="mt-2 text-meta text-ink-soft">
 						{referenceIngredient
 							? `${referenceIngredient.name} ${formatAmount(reference!.target, referenceIngredient.unit)}${referenceIngredient.unit}에 맞춘 양이에요.`
 							: `원래 ${baseServings}인분 기준에서 바꾼 양이에요.`}{" "}
@@ -134,14 +134,14 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 							const isChecked = checked.has(index)
 							const amountText = formatAmount(ing.amount, ing.unit)
 							const amountClass = cn(
-								"rounded-sm px-1 text-[17px] font-semibold tabular-nums transition-colors duration-500 motion-reduce:transition-none",
+								"rounded-sm px-1 text-heading tabular-nums transition-colors duration-500 motion-reduce:transition-none",
 								changed.has(index) ? "bg-changed-mark text-ink" : "bg-transparent",
 								isChecked && "text-ink-soft"
 							)
 							if (adjusting) {
 								return (
 									<li key={index} className="flex min-h-12 items-center gap-3 py-2">
-										<label htmlFor={`amount-${index}`} className="flex-1 text-[17px] text-ink">
+										<label htmlFor={`amount-${index}`} className="flex-1 text-read text-ink">
 											{ing.name}
 										</label>
 										<span className="flex items-center gap-1">
@@ -153,9 +153,9 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 													const value = parseFloat(e.target.value)
 													if (Number.isFinite(value) && value > 0) setReference({ index, target: value })
 												}}
-												className="h-11 w-20 rounded-md border border-border bg-paper px-2 text-right text-[17px] font-semibold tabular-nums text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+												className="h-11 w-20 rounded-md border border-border bg-paper px-2 text-right text-heading tabular-nums text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 											/>
-											<span className="w-10 text-sm text-ink-soft">{ing.unit}</span>
+											<span className="w-10 text-meta text-ink-soft">{ing.unit}</span>
 										</span>
 									</li>
 								)
@@ -170,10 +170,10 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 										className="flex min-h-12 w-full items-center gap-3 py-2.5 text-left"
 									>
 										<CheckBox checked={isChecked} />
-										<span className={cn("flex-1 text-[17px] text-ink", isChecked && "text-ink-soft line-through decoration-ink-soft/70")}>{ing.name}</span>
+										<span className={cn("flex-1 text-read text-ink", isChecked && "text-ink-soft line-through decoration-ink-soft/70")}>{ing.name}</span>
 										<span className="flex-shrink-0 text-right">
 											<span className={amountClass}>{amountText}</span>
-											{ing.unit && <span className={cn("text-[15px] text-ink-soft", !amountText && "pl-1")}>{ing.unit}</span>}
+											{ing.unit && <span className={cn("text-label text-ink-soft", !amountText && "pl-1")}>{ing.unit}</span>}
 										</span>
 									</button>
 								</li>
@@ -188,7 +188,7 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 					<button
 						type="button"
 						onClick={() => setAdjusting((value) => !value)}
-						className="mt-3 inline-flex min-h-11 items-center text-sm font-medium text-ink underline underline-offset-4"
+						className="mt-3 inline-flex min-h-11 items-center text-label font-medium text-ink underline underline-offset-4"
 					>
 						{adjusting ? "맞추기 끝내기" : "가진 재료 양에 맞추기"}
 					</button>
@@ -204,7 +204,7 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 						<button
 							type="button"
 							onClick={() => setStepModeAt(firstUndone(steps.length, doneSteps))}
-							className="inline-flex h-11 items-center rounded-lg bg-primary px-4 text-[15px] font-semibold text-primary-foreground active:brightness-95"
+							className="inline-flex h-11 items-center rounded-lg bg-primary px-4 text-label font-semibold text-primary-foreground active:brightness-95"
 						>
 							요리 시작
 						</button>
@@ -224,14 +224,14 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 											aria-label={isDone ? `${index + 1}단계 끝냄 표시 지우기` : `${index + 1}단계 끝냄으로 표시`}
 											onClick={() => setDoneSteps((set) => toggle(set, index))}
 											className={cn(
-												"-ml-1.5 flex h-11 w-11 flex-shrink-0 items-start justify-center pt-1 text-lg font-bold tabular-nums",
+												"-ml-1.5 flex h-11 w-11 flex-shrink-0 items-start justify-center pt-1 text-heading tabular-nums",
 												isDone ? "text-ink-soft" : "text-ink"
 											)}
 										>
 											{isDone ? <Check className="mt-0.5 h-5 w-5" strokeWidth={2.5} aria-hidden /> : index + 1}
 										</button>
 										<div className={cn("min-w-0 flex-1 pt-1", isDone && "text-ink-soft")}>
-											<p className="whitespace-pre-wrap break-words text-[17px] leading-[1.65]">{step.description}</p>
+											<p className="whitespace-pre-wrap break-words text-read">{step.description}</p>
 											{step.image_url && (
 												<div className="relative mt-3 aspect-[4/3] w-full overflow-hidden rounded-[3px] bg-muted">
 													<Photo src={step.image_url} alt={`${index + 1}단계 사진`} sizes="(max-width: 448px) 85vw, 380px" fit="contain" />

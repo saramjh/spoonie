@@ -70,8 +70,8 @@ export default function ResetPasswordPage() {
 							<Image src="/icon-only.svg" alt="스푸니" width={32} height={32} />
 						</div>
 					</Link>
-					<h1 className="text-2xl font-bold text-ink mb-1">새 비밀번호 설정</h1>
-					<p className="text-sm text-ink-soft">새로운 비밀번호를 입력해주세요.</p>
+					<h1 className="text-title text-ink mb-1">새 비밀번호 설정</h1>
+					<p className="text-meta text-ink-soft">새로운 비밀번호를 입력해주세요.</p>
 				</div>
 
 				{/* 비밀번호 재설정 카드 */}
@@ -84,13 +84,13 @@ export default function ResetPasswordPage() {
 								name="password"
 								render={({ field }) => (
 									<FormItem className="space-y-1.5">
-										<FormLabel className="text-sm font-medium text-ink">새 비밀번호</FormLabel>
+										<FormLabel className="text-label font-medium text-ink">새 비밀번호</FormLabel>
 										<FormControl>
 											<Input 
 												type="password" 
 												placeholder="6자 이상" 
 												{...field} 
-												className="h-12 rounded-md border border-ink/40 bg-paper text-base focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0" 
+												className="h-12 rounded-md border border-ink/40 bg-paper text-body focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0" 
 											/>
 										</FormControl>
 										<FormMessage />
@@ -102,13 +102,13 @@ export default function ResetPasswordPage() {
 								name="confirmPassword"
 								render={({ field }) => (
 									<FormItem className="space-y-1.5">
-										<FormLabel className="text-sm font-medium text-ink">새 비밀번호 확인</FormLabel>
+										<FormLabel className="text-label font-medium text-ink">새 비밀번호 확인</FormLabel>
 										<FormControl>
 											<Input 
 												type="password" 
 												 
 												{...field} 
-												className="h-12 rounded-md border border-ink/40 bg-paper text-base focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0" 
+												className="h-12 rounded-md border border-ink/40 bg-paper text-body focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0" 
 											/>
 										</FormControl>
 										<FormMessage />
@@ -117,7 +117,7 @@ export default function ResetPasswordPage() {
 							/>
 							<Button 
 								type="submit" 
-								className="h-12 w-full text-base"
+								className="h-12 w-full text-body"
 							>
 								비밀번호 재설정
 							</Button>
@@ -126,7 +126,7 @@ export default function ResetPasswordPage() {
 
 						{/* 로그인 링크 */}
 						<div className="mt-8 text-center">
-							<Link href="/login" className="text-sm font-semibold text-orange-ink hover:text-orange-ink transition-colors duration-200">
+							<Link href="/login" className="text-label font-semibold text-orange-ink hover:text-orange-ink transition-colors duration-200">
 								로그인으로 돌아가기
 							</Link>
 						</div>

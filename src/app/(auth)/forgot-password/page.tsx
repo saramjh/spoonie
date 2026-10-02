@@ -63,8 +63,8 @@ export default function ForgotPasswordPage() {
 							<Image src="/icon-only.svg" alt="스푸니" width={32} height={32} />
 						</div>
 					</Link>
-					<h1 className="text-2xl font-bold text-ink mb-1">비밀번호 찾기</h1>
-					<p className="text-sm text-ink-soft">가입 시 사용한 이메일 주소를 입력해주세요.</p>
+					<h1 className="text-title text-ink mb-1">비밀번호 찾기</h1>
+					<p className="text-meta text-ink-soft">가입 시 사용한 이메일 주소를 입력해주세요.</p>
 				</div>
 
 				{/* 비밀번호 찾기 카드 */}
@@ -77,12 +77,12 @@ export default function ForgotPasswordPage() {
 								name="email"
 								render={({ field }) => (
 									<FormItem className="space-y-1.5">
-										<FormLabel className="text-sm font-medium text-ink">이메일 주소</FormLabel>
+										<FormLabel className="text-label font-medium text-ink">이메일 주소</FormLabel>
 										<FormControl>
 											<Input 
 												 
 												{...field} 
-												className="h-12 rounded-md border border-ink/40 bg-paper text-base focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0" 
+												className="h-12 rounded-md border border-ink/40 bg-paper text-body focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0" 
 											/>
 										</FormControl>
 										<FormMessage />
@@ -91,7 +91,7 @@ export default function ForgotPasswordPage() {
 							/>
 							<Button 
 								type="submit" 
-								className="h-12 w-full text-base"
+								className="h-12 w-full text-body"
 							>
 								재설정 링크 보내기
 							</Button>
@@ -100,7 +100,7 @@ export default function ForgotPasswordPage() {
 
 						{/* 로그인 링크 */}
 						<div className="mt-8 text-center">
-							<Link href="/login" className="text-sm font-semibold text-orange-ink hover:text-orange-ink transition-colors duration-200">
+							<Link href="/login" className="text-label font-semibold text-orange-ink hover:text-orange-ink transition-colors duration-200">
 								로그인으로 돌아가기
 							</Link>
 						</div>

@@ -65,8 +65,8 @@ export default function RecipeCard({ item, isSelectable, isSelected, onSelectCha
 				{isSelectable && <CheckBox checked={!!isSelected} className="absolute right-2 top-2" />}
 			</span>
 			<span className="block px-3 pb-3 pt-2 text-left">
-				<span className="line-clamp-2 text-[15px] font-semibold leading-snug text-ink">{displayItem.title}</span>
-				<span className="mt-1 block truncate text-[13px] text-ink-soft">
+				<span className="line-clamp-2 text-label font-semibold text-ink">{displayItem.title}</span>
+				<span className="mt-1 block truncate text-meta text-ink-soft">
 					{[showAuthor ? item.username : null, ...meta, !displayItem.is_public ? "비공개" : null].filter(Boolean).join(" · ")}
 				</span>
 			</span>

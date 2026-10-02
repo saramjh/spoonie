@@ -272,7 +272,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 						<div className="h-4 bg-border rounded animate-pulse w-48"></div>
 						<div className="h-3 bg-border rounded animate-pulse w-32 mx-auto"></div>
 					</div>
-					<p className="text-ink-soft text-sm">컨텐츠를 불러오는 중...</p>
+					<p className="text-ink-soft text-meta">컨텐츠를 불러오는 중...</p>
 				</div>
 			</div>
 		)
@@ -284,8 +284,8 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 			<div className="flex flex-col h-full items-center justify-center p-8">
 				<div className="text-center space-y-4">
 					<div className="space-y-2">
-						<h3 className="text-lg font-semibold text-ink">콘텐츠를 불러올 수 없습니다</h3>
-						<p className="text-ink-soft text-sm">잘못된 링크이거나 삭제된 콘텐츠일 수 있습니다.</p>
+						<h3 className="text-heading text-ink">콘텐츠를 불러올 수 없습니다</h3>
+						<p className="text-ink-soft text-meta">잘못된 링크이거나 삭제된 콘텐츠일 수 있습니다.</p>
 					</div>
 				</div>
 			</div>
@@ -436,7 +436,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 							key={cited.id}
 							href={`/recipes/${cited.id}`}
 							className={cn(
-								"block rounded-t-[3px] bg-paper px-3 pb-3 pt-2 text-sm shadow-sheet",
+								"block rounded-t-[3px] bg-paper px-3 pb-3 pt-2 text-label shadow-sheet",
 								i === 0 ? "-rotate-[0.6deg]" : "-mt-1 mx-1 rotate-[0.4deg]"
 							)}
 						>
@@ -479,7 +479,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 									<div className="relative aspect-square overflow-hidden rounded-[2px] bg-muted">
 										{made.image_url && <Photo src={made.image_url} sizes="112px" />}
 									</div>
-									<p className="mt-1 truncate text-[13px] text-ink-soft">{made.username}</p>
+									<p className="mt-1 truncate text-meta text-ink-soft">{made.username}</p>
 								</IntentLink>
 							</li>
 						))}
@@ -491,17 +491,17 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 
 				{relations.continued.length > 0 && (
 					<>
-						<h2 className="mt-6 text-lg font-bold text-ink">
+						<h2 className="mt-6 text-heading text-ink">
 							이어진 레시피 <span className="font-medium tabular-nums text-ink-soft">{relations.continued.length}</span>
 						</h2>
 						<ul className="mt-2 divide-y divide-border">
 							{relations.continued.map((next) => (
 								<li key={next.id}>
-									<IntentLink href={`/recipes/${next.id}`} className="flex min-h-12 items-center gap-2 py-2.5 text-[15px] text-ink">
+									<IntentLink href={`/recipes/${next.id}`} className="flex min-h-12 items-center gap-2 py-2.5 text-label text-ink">
 										<span className="min-w-0 truncate">
 											{next.username}의 <span className="font-semibold">{next.title}</span>
 										</span>
-										{next.relation_type === "adapted" && <span className="flex-shrink-0 text-sm text-ink-soft">고친 버전</span>}
+										{next.relation_type === "adapted" && <span className="flex-shrink-0 text-meta text-ink-soft">고친 버전</span>}
 									</IntentLink>
 								</li>
 							))}
@@ -510,7 +510,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 				)}
 				<Link
 					href={requireLogin(`/recipes/new?fork=${stableItemId}`)}
-					className="mt-3 inline-flex min-h-11 items-center text-[15px] font-medium text-ink underline underline-offset-4"
+					className="mt-3 inline-flex min-h-11 items-center text-label font-medium text-ink underline underline-offset-4"
 				>
 					참고해서 내 레시피 만들기
 				</Link>
@@ -532,7 +532,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 							<AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
 						</Avatar>
 						<span className="truncate font-semibold text-ink">{authorName}</span>
-						<span className="flex-shrink-0 text-sm text-ink-soft">{isRecipe ? "레시피" : "레시피드"}</span>
+						<span className="flex-shrink-0 text-meta text-ink-soft">{isRecipe ? "레시피" : "레시피드"}</span>
 					</IntentLink>
 
 					<div className="flex items-center pr-1">
@@ -556,7 +556,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 								</DropdownMenuContent>
 							</DropdownMenu>
 						) : (
-							currentUser && <FollowButton userId={item.user_id} initialIsFollowing={item.is_following} className="w-[80px]" />
+							currentUser && <FollowButton userId={item.user_id} initialIsFollowing={item.is_following} />
 						)}
 					</div>
 				</header>
@@ -588,8 +588,8 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 						<div className="px-4 pb-1 pt-6">
 							{isRecipe ? (
 								<>
-									{item.title && <h1 className="text-[26px] font-bold leading-tight tracking-[-0.01em] text-ink [text-wrap:balance]">{item.title}</h1>}
-									<p className="mt-2 text-[15px] text-ink-soft">
+									{item.title && <h1 className="text-display text-ink [text-wrap:balance]">{item.title}</h1>}
+									<p className="mt-2 text-label text-ink-soft">
 										{[item.servings ? `${item.servings}인분` : null, cookingTime ? `조리 ${cookingTime}` : null, ingredientCount ? `재료 ${ingredientCount}가지` : null]
 											.filter(Boolean)
 											.join(" · ")}
@@ -603,20 +603,20 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 										</a>
 									)}
 									<RecipeActivity recipeId={stableItemId} userId={currentUser?.id} />
-									{item.description && <p className="mt-4 whitespace-pre-wrap break-words text-[16px] leading-[1.65] text-ink">{item.description}</p>}
+									{item.description && <p className="mt-4 whitespace-pre-wrap break-words text-body text-ink">{item.description}</p>}
 								</>
 							) : (
 								<>
 									{/* 레시피드는 사진과 글이 주인공이라 제목을 키우지 않는다 (DESIGN.md Interface Grammar 1) */}
-									{item.title && <h1 className="mb-1.5 text-[17px] font-semibold text-ink">{item.title}</h1>}
-									<p className="whitespace-pre-wrap break-words text-[16px] leading-[1.7] text-ink">{item.content}</p>
+									{item.title && <h1 className="mb-1.5 text-heading text-ink">{item.title}</h1>}
+									<p className="whitespace-pre-wrap break-words text-body text-ink">{item.content}</p>
 								</>
 							)}
 
 							{item.tags && item.tags.length > 0 && (
 								<ul className="mt-4 flex flex-wrap gap-x-3 gap-y-1" aria-label="태그">
 									{item.tags.map((tag, idx) => (
-										<li key={idx} className="text-[15px] text-ink-soft">
+										<li key={idx} className="text-label text-ink-soft">
 											#{tag}
 										</li>
 									))}
@@ -625,14 +625,14 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 
 							{/* 기존 recipe_id 기반 참고 레시피 (하위호환) */}
 							{!isRecipe && item.recipe_id && citedRecipe && (
-								<IntentLink href={`/recipes/${citedRecipe.id}`} className="mt-4 block text-[15px] text-ink underline underline-offset-4">
+								<IntentLink href={`/recipes/${citedRecipe.id}`} className="mt-4 block text-label text-ink underline underline-offset-4">
 									{/* @ts-expect-error - profiles relation can be array or object */}
 									참고한 레시피: {citedRecipe.profiles?.username || "익명"}의 {citedRecipe.title}
 								</IntentLink>
 							)}
 
 							{!isRecipe && (
-								<p className="mt-3 text-sm text-ink-soft">
+								<p className="mt-3 text-meta text-ink-soft">
 									<RelativeTime iso={item.created_at} />
 								</p>
 							)}
@@ -651,7 +651,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 								/>
 								<a href="#comments" className="flex h-11 items-center gap-1.5 px-2" aria-label={`댓글 ${cachedItem?.comments_count || 0}개`}>
 									<MessageCircle className="h-5 w-5" aria-hidden />
-									<span className="text-sm font-medium tabular-nums">{cachedItem?.comments_count || 0}</span>
+									<span className="text-label font-medium tabular-nums">{cachedItem?.comments_count || 0}</span>
 								</a>
 							</div>
 							<div className="flex items-center">
@@ -693,7 +693,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 										<li key={made.id} className="w-28 flex-shrink-0">
 											<IntentLink href={`/posts/${made.id}`} className="block">
 												<div className="relative aspect-square overflow-hidden rounded-[2px] bg-muted">{made.image_url && <Photo src={made.image_url} sizes="112px" />}</div>
-												<p className="mt-1 truncate text-[13px] text-ink-soft">{made.username}</p>
+												<p className="mt-1 truncate text-meta text-ink-soft">{made.username}</p>
 											</IntentLink>
 										</li>
 									))}
@@ -715,7 +715,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 					</Sheet>
 
 					<div id="comments" ref={commentsRef} className="mt-3 scroll-mt-16 rounded-[3px] bg-paper p-4 shadow-sheet">
-						<h2 className="mb-3 text-lg font-bold text-ink">
+						<h2 className="mb-3 text-heading text-ink">
 							댓글 {(cachedItem?.comments_count || 0) > 0 && <span className="font-medium tabular-nums text-ink-soft">{cachedItem?.comments_count}</span>}
 						</h2>
 						<SimplifiedCommentsSection currentUserId={currentUser?.id} itemId={stableItemId} cachedItem={cachedItem || item} />

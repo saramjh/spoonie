@@ -25,62 +25,49 @@ typography:
     fontSize: "26px"
     fontWeight: 700
     lineHeight: 1.25
-    letterSpacing: "-0.01em"
-  step-display:
-    fontFamily: "Pretendard Variable, Pretendard, sans-serif"
+    letterSpacing: "-0.02em"
+  step:
+    fontFamily: "Pretendard Variable, Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Apple SD Gothic Neo, Noto Sans KR, sans-serif"
     fontSize: "26px"
     fontWeight: 500
     lineHeight: 1.55
-  page-title:
-    fontFamily: "Pretendard Variable, Pretendard, sans-serif"
-    fontSize: "22px"
-    fontWeight: 700
-    lineHeight: 1.3
-  card-title:
-    fontFamily: "Pretendard Variable, Pretendard, sans-serif"
+  title:
+    fontFamily: "Pretendard Variable, Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Apple SD Gothic Neo, Noto Sans KR, sans-serif"
     fontSize: "20px"
     fontWeight: 700
     lineHeight: 1.35
-  headline:
-    fontFamily: "Pretendard Variable, Pretendard, sans-serif"
-    fontSize: "18px"
-    fontWeight: 700
-    lineHeight: 1.55
-  title:
-    fontFamily: "Pretendard Variable, Pretendard, sans-serif"
-    fontSize: "17px"
-    fontWeight: 400
-    lineHeight: 1.65
-  amount:
-    fontFamily: "Pretendard Variable, Pretendard, sans-serif"
+    letterSpacing: "-0.015em"
+  heading:
+    fontFamily: "Pretendard Variable, Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Apple SD Gothic Neo, Noto Sans KR, sans-serif"
     fontSize: "17px"
     fontWeight: 600
-    fontFeature: "\"tnum\" 1"
-  body:
-    fontFamily: "Pretendard Variable, Pretendard, sans-serif"
-    fontSize: "16px"
+    lineHeight: 1.4
+    letterSpacing: "-0.01em"
+  read:
+    fontFamily: "Pretendard Variable, Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Apple SD Gothic Neo, Noto Sans KR, sans-serif"
+    fontSize: "17px"
     fontWeight: 400
     lineHeight: 1.65
-  meta:
-    fontFamily: "Pretendard Variable, Pretendard, sans-serif"
-    fontSize: "15px"
+  body:
+    fontFamily: "Pretendard Variable, Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Apple SD Gothic Neo, Noto Sans KR, sans-serif"
+    fontSize: "16px"
     fontWeight: 400
-    lineHeight: 1.5
+    lineHeight: 1.6
   label:
-    fontFamily: "Pretendard Variable, Pretendard, sans-serif"
-    fontSize: "14px"
+    fontFamily: "Pretendard Variable, Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Apple SD Gothic Neo, Noto Sans KR, sans-serif"
+    fontSize: "15px"
     fontWeight: 500
-    lineHeight: 1.45
-  caption:
-    fontFamily: "Pretendard Variable, Pretendard, sans-serif"
+    lineHeight: 1.4
+  meta:
+    fontFamily: "Pretendard Variable, Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Apple SD Gothic Neo, Noto Sans KR, sans-serif"
     fontSize: "13px"
     fontWeight: 400
     lineHeight: 1.45
-  badge:
-    fontFamily: "Pretendard Variable, Pretendard, sans-serif"
+  micro:
+    fontFamily: "Pretendard Variable, Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Apple SD Gothic Neo, Noto Sans KR, sans-serif"
     fontSize: "11px"
-    fontWeight: 700
-    lineHeight: 1
+    fontWeight: 600
+    lineHeight: 1.2
 rounded:
   sheet: "3px"
   check: "4px"
@@ -203,14 +190,21 @@ components:
 **Character:** 한글을 위해 고른 한 가족으로 모든 계층을 굵기와 크기만으로 나눈다. 자체 호스팅한 가변 동적 서브셋(`/fonts/pretendard`, weight 45–920, `font-display: swap`)이며, 본문 전체에 `word-break: keep-all`을 걸어 한국어가 어절 단위로 줄을 바꾼다.
 
 ### Hierarchy
-- **Display** (700, 26px, 1.25, -0.01em, `text-wrap: balance`): 레시피 제목. 종이 한 장에 하나.
-- **Step Display** (500, 26px, 1.55): 요리 모드에서 지금 단계 설명. 팔 길이 거리에서 읽히는 크기.
-- **Headline** (700, 18px): "재료", "만드는 법", "이 레시피를 참고한 글" 같은 섹션 머리. 머리 옆 개수는 500 굵기 ink-soft tabular 숫자로 붙인다.
-- **Title** (400, 17px, 1.65): 재료 이름, 단계 설명, 요리 모드 다음 단계 미리보기. 요리 중에 읽는 줄은 모두 이 크기다.
-- **Amount** (600, 17px, tabular): 분량 숫자. 단위는 15px ink-soft로 뒤에 붙는다.
-- **Body** (400, 16px, 1.65): 레시피 소개, 레시피드 본문(행간 1.7).
-- **Meta** (400, 15px): 제목 아래 한 줄 메타(인분 · 조리 시간 · 재료 수 · 작성 시각), 태그, 참고 목록 줄. 주요 버튼 글자도 15px 600.
-- **Label** (500, 14px): 개수, 보조 안내, 요리 모드 "다음 · N단계".
+글자는 크기 값이 아니라 **역할 이름**으로 쓴다 (`tailwind.config.ts` fontSize, 클래스 `text-<역할>`). 역할마다 굵기·줄 간격·자간이 함께 정해져 있어 같은 역할은 어느 화면에서나 같은 모양이다. 아래 9개 밖의 크기는 쓰지 않는다.
+
+| 역할 | 크기 / 줄 간격 | 굵기 | 쓰는 곳 |
+|---|---|---|---|
+| `display` | 26 / 1.25, -0.02em | 700 | 레시피 상세 제목, 요리 완료 제목. 화면에 하나 |
+| `step` | 26 / 1.55 | 500 | 요리 모드의 지금 단계 설명 (팔 길이 거리) |
+| `title` | 20 / 1.35, -0.015em | 700 | 페이지 제목, 피드의 레시피 제목, 프로필 이름 |
+| `heading` | 17 / 1.4, -0.01em | 600 | 섹션 머리("재료 5"), 목록·빈 상태 제목, 분량 숫자 |
+| `read` | 17 / 1.65 | 400 | 재료 이름, 조리 단계. 부엌에서 거리를 두고 읽는 줄 |
+| `body` | 16 / 1.6 | 400 | 소개, 레시피드 본문, 안내 문단 |
+| `label` | 15 / 1.4 | 500 | 버튼, 탭, 입력, 이름, 한 줄 메타 |
+| `meta` | 13 / 1.45 | 400 | 시각, 개수, 보조 설명, 오류 문구 |
+| `micro` | 11 / 1.2 | 600 | 숫자 배지에만 |
+
+**굵기는 역할을 따른다.** 700은 display·title, 600은 heading과 강조(이름, 고른 수), 500은 조작부(label), 400은 읽는 글. display·title·heading에는 `font-bold` 같은 굵기 클래스를 붙이지 않는다(역할이 정한다).
 
 ### Named Rules
 **The Tabular Rule.** 개수·분량·단계 번호·좋아요 수 같은 숫자는 모두 tabular 숫자로 쓴다.
@@ -247,7 +241,10 @@ components:
 ### Buttons
 손에 밀가루가 묻어도 누를 수 있는, 크고 평평한 면.
 - **Shape:** 살짝 둥근 모서리 (8px)
-- **Primary:** brand-orange 면에 ink 글자, 15px 600, 높이 44px, 좌우 16px. 누르는 동안 밝기를 95%로 낮춘다.
+- **Size:** 높이 44px 하나(화면 아래 고정된 주요 버튼만 48px). 작은 버튼(sm)도 40px 아래로 내리지 않는다. 글자는 `label`.
+- **Primary:** brand-orange 면에 ink 글자 600, 좌우 16px. 누르는 동안 밝기를 95%로 낮춘다. 화면당 하나.
+- **Outline:** 종이 면에 흑연 20% 선, hover에서 35%와 종이 그늘. 입력칸과 같은 선.
+- **Ghost:** 선 없이 글자만, hover에 흑연 5% 면. 도구 줄 아이콘, "선택"·"완료", 카드 머리의 "팔로우"(주황 잉크 600 글자)처럼 같은 줄에 여럿 놓이는 동작.
 - **Step Next / Prev (요리 모드):** 높이 56px, 17px. 다음은 주황 면 700 굵기로 폭의 2/3, 이전은 종이 면에 흑연 20% 선으로 1/3. 첫 단계에서 이전은 ink-soft 40%로 비활성.
 - **Icon:** 44×44px 투명 버튼, 아이콘 20–24px, 색은 ink-soft. 각 아이콘 버튼은 aria-label을 갖는다.
 - **Text link:** ink 글자에 밑줄(4px 띄움). "원래대로", "가진 재료 양에 맞추기" 같은 보조 동작.
@@ -276,8 +273,12 @@ components:
 본문 종이 뒤로 겹친 종이 가장자리 한 줄. 14px로 "참고한 레시피"(ink-soft) + "작성자의 제목"(600 ink), 두 장을 넘으면 마지막 줄 끝에 "외 N개". 줄 전체가 그 레시피로 가는 링크다.
 
 ### Inputs / Fields
-- **Style:** 종이 면, 1px 구분선 테두리, 6px 모서리, 높이 44px, 폭 80px, 17px 600 tabular 오른쪽 정렬. 지금은 "가진 재료 양에 맞추기" 분량 입력에만 쓰인다.
-- **Focus:** 외곽선 대신 2px orange-ink 링.
+- **Style:** 버튼과 같은 규격. 높이 44px, 8px 모서리, 종이 면에 흑연 20% 선(hover 35%), 좌우 14px, 글자 `body`, 자리 안내 글자는 ink-soft 80%. 검색칸은 왼쪽 18px 돋보기에 맞춰 안쪽 36px.
+- **Focus:** 테두리가 흑연으로 진해진다(링을 겹치지 않는다). 여러 줄 입력도 같다.
+- **분량 입력:** 6px 모서리, 폭 80px, `heading` tabular 오른쪽 정렬 ("가진 재료 양에 맞추기").
+
+### Tool Row (도구 줄)
+목록 화면 위의 한 줄(높이 44px): 검색칸이 남은 폭을 다 쓰고, 오른쪽에 선 없는 아이콘 버튼과 글자 버튼. 고르는 모드에서는 같은 높이·같은 자리에서 "N개 골랐어요 · 지우기 · 완료"로 바뀌어 아래 목록이 움직이지 않는다. 켜는 "선택"과 끄는 "완료"는 같은 오른쪽 끝에 있다.
 
 ### Navigation
 - **상세 상단 막대:** 종이 면, 아래 1px 구분선, 높이 56px, 스크롤해도 위에 붙어 있다. 왼쪽 뒤로(44px), 가운데 32px 아바타 + 작성자 이름(600 ink) + 글 종류(14px ink-soft), 오른쪽 작성자 본인이면 더보기 메뉴, 아니면 팔로우.

@@ -112,14 +112,14 @@ export default function LoginPromptSheet({
 				className="focus:outline-none sm:mx-auto sm:max-w-md"
 			>
 				<DrawerHeader className="px-5 pb-2 pt-5 text-left">
-					<DrawerTitle className="text-xl font-bold text-ink">{actionInfo.title}</DrawerTitle>
-					<DrawerDescription className="text-[15px] text-ink-soft">로그인하면 지금 보던 화면으로 바로 돌아와요.</DrawerDescription>
+					<DrawerTitle className="text-title text-ink">{actionInfo.title}</DrawerTitle>
+					<DrawerDescription className="text-label text-ink-soft">로그인하면 지금 보던 화면으로 바로 돌아와요.</DrawerDescription>
 				</DrawerHeader>
 				<div className="space-y-2 px-5 pb-6 pt-3">
-					<Button ref={loginButtonRef} onClick={handleLogin} className="h-12 w-full text-base">
+					<Button ref={loginButtonRef} onClick={handleLogin} className="h-12 w-full text-body">
 						로그인
 					</Button>
-					<Button onClick={handleSignup} variant="outline" className="h-12 w-full text-base">
+					<Button onClick={handleSignup} variant="outline" className="h-12 w-full text-body">
 						처음이에요, 가입할게요
 					</Button>
 				</div>

@@ -134,7 +134,7 @@ export default function ImageCarousel({
       </div>
       {/* 여러 장이면 몇 번째 사진인지와 전체 장수를 오른쪽 위에 둔다 */}
       {images.length > 1 && (
-        <span aria-live="polite" className="absolute right-2.5 top-2.5 z-30 rounded-full bg-ink/70 px-2 py-0.5 text-[13px] font-semibold tabular-nums text-paper">
+        <span aria-live="polite" className="absolute right-2.5 top-2.5 z-30 rounded-full bg-ink/70 px-2 py-0.5 text-meta font-semibold tabular-nums text-paper">
           {selectedIndex + 1}/{images.length}
           <span className="sr-only">번째 사진</span>
         </span>

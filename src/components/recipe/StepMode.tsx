@@ -108,14 +108,14 @@ export default function StepMode({ steps, ingredients, servingsLabel, startAt, r
 				<button ref={closeRef} type="button" onClick={onClose} aria-label="요리 모드 닫기" className="flex h-11 w-11 items-center justify-center">
 					<X className="h-6 w-6" aria-hidden />
 				</button>
-				<p className="flex-1 text-base font-semibold tabular-nums" aria-live="polite">
+				<p className="flex-1 text-body font-semibold tabular-nums" aria-live="polite">
 					{index + 1} <span className="font-normal text-ink-soft">/ {steps.length}단계</span>
 				</p>
 				<button
 					type="button"
 					onClick={() => setShowIngredients((value) => !value)}
 					aria-expanded={showIngredients}
-					className="h-11 px-3 text-[15px] font-medium underline underline-offset-4"
+					className="h-11 px-3 text-label font-medium underline underline-offset-4"
 				>
 					재료 {servingsLabel}
 				</button>
@@ -143,8 +143,8 @@ export default function StepMode({ steps, ingredients, servingsLabel, startAt, r
 			>
 				{finished ? (
 					<Sheet className="px-5 py-6">
-						<h2 className="text-[26px] font-bold leading-tight">다 만들었어요</h2>
-						<p className="mt-3 text-[17px] leading-[1.6] text-ink-soft">
+						<h2 className="text-display">다 만들었어요</h2>
+						<p className="mt-3 text-read text-ink-soft">
 							사진 한 장과 한 줄이면 이 레시피의 &lsquo;만들어 본 기록&rsquo;으로 남아요. 레시피를 쓴 사람에게도 알려 줘요.
 						</p>
 					</Sheet>
@@ -156,7 +156,7 @@ export default function StepMode({ steps, ingredients, servingsLabel, startAt, r
 							<Photo src={step.image_url} alt={`${index + 1}단계 사진`} sizes="(max-width: 448px) 100vw, 448px" fit="contain" />
 						</div>
 					)}
-					<p className="whitespace-pre-wrap break-words text-[26px] font-medium leading-[1.55]">{step.description}</p>
+					<p className="whitespace-pre-wrap break-words text-step">{step.description}</p>
 				</Sheet>
 
 				)}
@@ -164,17 +164,17 @@ export default function StepMode({ steps, ingredients, servingsLabel, startAt, r
 				{/* 다음 단계를 미리 보여 주어 손을 멈추지 않고 준비할 수 있게 한다 */}
 				{!finished && !isLast && (
 					<div className="mt-3 px-2 text-ink-soft">
-						<p className="text-sm font-semibold">다음 · {index + 2}단계</p>
-						<p className="mt-1 line-clamp-3 whitespace-pre-wrap break-words text-[17px] leading-[1.6]">{steps[index + 1].description}</p>
+						<p className="text-label font-semibold">다음 · {index + 2}단계</p>
+						<p className="mt-1 line-clamp-3 whitespace-pre-wrap break-words text-read">{steps[index + 1].description}</p>
 					</div>
 				)}
 
 				{showIngredients && (
 					<Sheet className="absolute inset-x-3 top-0 max-h-full overflow-y-auto px-5 py-4">
-						<p className="text-sm font-semibold text-ink-soft">재료 · {servingsLabel}</p>
+						<p className="text-label font-semibold text-ink-soft">재료 · {servingsLabel}</p>
 						<ul className="mt-2 divide-y divide-border">
 							{ingredients.map((ing, i) => (
-								<li key={i} className="flex justify-between gap-3 py-2.5 text-[17px]">
+								<li key={i} className="flex justify-between gap-3 py-2.5 text-read">
 									<span>{ing.name}</span>
 									<span className="font-semibold tabular-nums">
 										{formatAmount(ing.amount, ing.unit)}
@@ -189,7 +189,7 @@ export default function StepMode({ steps, ingredients, servingsLabel, startAt, r
 
 			{finished ? (
 			<div className="grid grid-cols-[1fr_2fr] gap-2 px-3 pb-[max(env(safe-area-inset-bottom),12px)] pt-2">
-				<button type="button" onClick={onClose} className="h-14 rounded-lg border border-ink/20 bg-paper text-[17px] font-semibold">
+				<button type="button" onClick={onClose} className="h-14 rounded-lg border border-ink/20 bg-paper text-heading">
 					닫기
 				</button>
 				<button
@@ -201,7 +201,7 @@ export default function StepMode({ steps, ingredients, servingsLabel, startAt, r
 						router.push(data.session ? target : `/login?next=${encodeURIComponent(target)}`)
 					}}
 					disabled={!recipeId}
-					className="h-14 rounded-lg bg-primary text-[17px] font-bold text-primary-foreground active:brightness-95"
+					className="h-14 rounded-lg bg-primary text-heading text-primary-foreground active:brightness-95"
 				>
 					사진으로 남기기
 				</button>
@@ -212,14 +212,14 @@ export default function StepMode({ steps, ingredients, servingsLabel, startAt, r
 					type="button"
 					onClick={() => go(index - 1)}
 					disabled={index === 0}
-					className="h-14 rounded-lg border border-ink/20 bg-paper text-[17px] font-semibold disabled:text-ink-soft/40"
+					className="h-14 rounded-lg border border-ink/20 bg-paper text-heading disabled:text-ink-soft/40"
 				>
 					이전
 				</button>
 				<button
 					type="button"
 					onClick={() => (isLast ? finish() : go(index + 1))}
-					className="h-14 rounded-lg bg-primary text-[17px] font-bold text-primary-foreground active:brightness-95"
+					className="h-14 rounded-lg bg-primary text-heading text-primary-foreground active:brightness-95"
 				>
 					{isLast ? "다 만들었어요" : "다음 단계"}
 				</button>

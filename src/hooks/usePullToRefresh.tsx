@@ -128,7 +128,7 @@ export const usePullToRefresh = () => {
         if (isRefreshing) {
             return (
                 <div className="fixed inset-x-0 top-0 z-50 flex justify-center pt-3" role="status" aria-label="새로 불러오는 중">
-                    <span className="flex items-center gap-2 rounded-full bg-paper py-1.5 pl-2 pr-4 text-sm font-medium text-ink shadow-sheet">
+                    <span className="flex items-center gap-2 rounded-full bg-paper py-1.5 pl-2 pr-4 text-label font-medium text-ink shadow-sheet">
                         <SpoonieLogo variant="icon" motion="stir" className="h-6 w-6" title="" />
                         새로 불러오는 중
                     </span>
@@ -138,7 +138,7 @@ export const usePullToRefresh = () => {
 
         return (
             <div style={indicatorStyle} className="overflow-hidden text-center flex items-center justify-center bg-door">
-                <div style={textStyle} className="text-sm font-medium text-ink-soft">
+                <div style={textStyle} className="text-meta font-medium text-ink-soft">
                     {pullDistance >= PULL_THRESHOLD ? "놓으면 새로고침" : PULL_TO_REFRESH_TEXT}
                 </div>
             </div>

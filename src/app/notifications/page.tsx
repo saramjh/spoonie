@@ -354,7 +354,7 @@ export default function NotificationsPage() {
         {/* 로딩 상태 헤더 */}
         <div className="sticky top-0 z-10 bg-paper border-b border-border">
           <div className="flex items-center justify-between px-4 py-4">
-            <h1 className="text-xl font-bold text-ink">알림</h1>
+            <h1 className="text-title text-ink">알림</h1>
             <div className="w-12 h-7 bg-muted rounded-lg animate-pulse"></div>
           </div>
         </div>
@@ -391,7 +391,7 @@ export default function NotificationsPage() {
         title="알림"
         trailing={
           notifications.length > 0 ? (
-            <Button variant="ghost" onClick={toggleEditMode} className="text-[15px]">
+            <Button variant="ghost" onClick={toggleEditMode} className="text-label">
               {isSelecting ? "완료" : "편집"}
             </Button>
           ) : undefined
@@ -403,7 +403,7 @@ export default function NotificationsPage() {
 
         {isSelecting && notifications.length > 0 && (
           <Sheet className="sticky top-14 z-10 flex items-center justify-between px-2">
-            <button type="button" onClick={toggleSelectAll} role="checkbox" aria-checked={allSelected} className="flex h-12 items-center gap-2 px-2 text-[15px] text-ink">
+            <button type="button" onClick={toggleSelectAll} role="checkbox" aria-checked={allSelected} className="flex h-12 items-center gap-2 px-2 text-label text-ink">
               <CheckBox checked={allSelected} />
               전체 선택
               {selectedIds.size > 0 && <span className="tabular-nums text-ink-soft">· {selectedIds.size}개</span>}
@@ -449,11 +449,11 @@ export default function NotificationsPage() {
                       )}
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className={`block text-[15px] leading-relaxed ${unread ? "text-ink" : "text-ink-soft"}`}>
+                      <span className={`block text-body ${unread ? "text-ink" : "text-ink-soft"}`}>
                         <span className="font-semibold text-ink">{notification.from_profile?.username || "스푸니"}</span>{" "}
                         {generateNotificationMessage(notification)}
                       </span>
-                      <span className="mt-0.5 block text-[13px] text-ink-soft">
+                      <span className="mt-0.5 block text-meta text-ink-soft">
                         {formatDistanceToNowStrict(new Date(notification.created_at), { addSuffix: true, locale: ko })}
                         {unread && <span className="sr-only"> · 읽지 않음</span>}
                       </span>

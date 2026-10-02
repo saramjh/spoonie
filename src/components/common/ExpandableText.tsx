@@ -35,9 +35,9 @@ export default function ExpandableText({ text, maxLines = 2, maxCharacters = 120
 
   return (
     <div>
-      <p className={cn("whitespace-pre-line text-sm leading-relaxed text-ink", className, shouldTruncate && CLAMP[maxLines])}>{text}</p>
+      <p className={cn("whitespace-pre-line text-body text-ink", className, shouldTruncate && CLAMP[maxLines])}>{text}</p>
       {shouldTruncate && (
-        <button type="button" onClick={handleExpand} className="mt-1 text-sm font-medium text-orange-ink">
+        <button type="button" onClick={handleExpand} className="mt-1 text-label font-medium text-orange-ink">
           더보기
         </button>
       )}

@@ -590,8 +590,8 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 
 	const errors = form.formState.errors
 	const selectedColor = form.watch("color_label")
-	const fieldLabel = "text-sm font-medium text-ink"
-	const errorText = "mt-1 text-sm text-destructive"
+	const fieldLabel = "text-label font-medium text-ink"
+	const errorText = "mt-1 text-meta text-destructive"
 
 	// 쓰는 순서 = 읽는 순서: 사진 → 제목 → 분량·시간 → 설명 → 재료 → 만드는 법 → 참고 → 내 정리 (DESIGN.md Interface Grammar)
 	return (
@@ -604,7 +604,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 				{!isEditMode && forkFrom && (
 					<Sheet>
 						<SourceRow recipes={selectedCitedRecipes.filter((r) => r.id === forkFrom.id)} asLink={false} className="border-t-0" />
-						<p className="px-4 pb-3 pt-2 text-sm text-ink-soft">분량, 재료, 단계를 가져왔어요. 내 방식대로 고치고 내가 만든 사진을 올려 주세요.</p>
+						<p className="px-4 pb-3 pt-2 text-meta text-ink-soft">분량, 재료, 단계를 가져왔어요. 내 방식대로 고치고 내가 만든 사진을 올려 주세요.</p>
 					</Sheet>
 				)}
 
@@ -626,7 +626,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 							<Label htmlFor="title" className={fieldLabel}>
 								제목
 							</Label>
-							<Input id="title" placeholder="예: 대파 듬뿍 김치찌개" className="mt-1.5 h-12 text-[17px] font-semibold" {...form.register("title")} />
+							<Input id="title" placeholder="예: 대파 듬뿍 김치찌개" className="mt-1.5 h-12 text-heading" {...form.register("title")} />
 							{errors.title && <p className={errorText}>{errors.title.message}</p>}
 						</div>
 
@@ -655,7 +655,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 										className="h-full min-w-0 flex-1 rounded-none border-0 px-0 text-center tabular-nums focus-visible:ring-0"
 										{...form.register("servings")}
 									/>
-									<span className="pr-1 text-sm text-ink-soft">인분</span>
+									<span className="pr-1 text-meta text-ink-soft">인분</span>
 									<button
 										type="button"
 										aria-label="1인분 늘리기"
@@ -684,7 +684,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 										className="h-full min-w-0 flex-1 border-0 text-right tabular-nums focus-visible:ring-0"
 										{...form.register("cooking_time_minutes")}
 									/>
-									<span className="pl-1 text-sm text-ink-soft">분</span>
+									<span className="pl-1 text-meta text-ink-soft">분</span>
 								</div>
 								{errors.cooking_time_minutes && <p className={errorText}>{errors.cooking_time_minutes.message}</p>}
 							</div>
@@ -702,7 +702,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 						<div className="flex items-baseline justify-between">
 							<SectionHeading id="form-ingredients" count={ingredients.length}>
 								재료</SectionHeading>
-							{ingredients.length > 1 && <span className="text-[13px] text-ink-soft">왼쪽 손잡이로 순서 바꾸기</span>}
+							{ingredients.length > 1 && <span className="text-meta text-ink-soft">왼쪽 손잡이로 순서 바꾸기</span>}
 						</div>
 						<div className="mt-2">
 							<DraggableIngredientList
@@ -735,12 +735,12 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 						<ol className="mt-2">
 							{instructions.map((field, index) => (
 								<li key={field.id} className="flex gap-3 border-b border-border py-4 last:border-b-0">
-									<span className="w-6 flex-shrink-0 pt-2.5 text-lg font-bold tabular-nums text-ink">{index + 1}</span>
+									<span className="w-6 flex-shrink-0 pt-2.5 text-heading tabular-nums text-ink">{index + 1}</span>
 									<div className="min-w-0 flex-1 space-y-2">
 										<Textarea
 											placeholder="이 단계에서 할 일을 적어 주세요"
 											aria-label={`${index + 1}단계 설명`}
-											className="min-h-[88px] text-[16px] leading-relaxed"
+											className="min-h-[88px] text-body"
 											{...form.register(`instructions.${index}.description`)}
 										/>
 										{errors.instructions?.[index]?.description && <p className={errorText}>{errors.instructions[index].description.message}</p>}
@@ -752,7 +752,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 												<button
 													type="button"
 													onClick={() => removeInstruction(index)}
-													className="h-11 flex-shrink-0 px-1 text-sm text-ink-soft underline underline-offset-4 hover:text-destructive"
+													className="h-11 flex-shrink-0 px-1 text-meta text-ink-soft underline underline-offset-4 hover:text-destructive"
 												>
 													단계 지우기
 												</button>
@@ -771,9 +771,9 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 
 					<section aria-labelledby="form-cited" className="border-t border-border px-4 pb-5 pt-5">
 						<SectionHeading id="form-cited">
-							참고한 레시피 <span className="text-sm font-normal text-ink-soft">(선택)</span>
+							참고한 레시피 <span className="text-meta font-normal text-ink-soft">(선택)</span>
 						</SectionHeading>
-						<p className="mt-1 text-[13px] text-ink-soft">바탕이 된 레시피를 고르면 그 레시피의 &lsquo;이어진 레시피&rsquo;에 실리고 작성자에게 알려져요.</p>
+						<p className="mt-1 text-meta text-ink-soft">바탕이 된 레시피를 고르면 그 레시피의 &lsquo;이어진 레시피&rsquo;에 실리고 작성자에게 알려져요.</p>
 						<div className="mt-2">
 							<CitedRecipeSearch selectedRecipes={selectedCitedRecipes} onSelectedRecipesChange={handleSelectedCitedRecipesChange} />
 						</div>
@@ -811,13 +811,13 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 								<RadioGroup value={field.value.toString()} onValueChange={(value) => field.onChange(value === "true")} className="mt-1">
 									<label htmlFor="public" className="flex min-h-12 items-center gap-3">
 										<RadioGroupItem value="true" id="public" />
-										<span className="text-[15px] text-ink">
+										<span className="text-label text-ink">
 											공개 <span className="text-ink-soft">· 누구나 보고 만들어 볼 수 있어요</span>
 										</span>
 									</label>
 									<label htmlFor="private" className="flex min-h-12 items-center gap-3">
 										<RadioGroupItem value="false" id="private" />
-										<span className="text-[15px] text-ink">
+										<span className="text-label text-ink">
 											비공개 <span className="text-ink-soft">· 나만 봐요</span>
 										</span>
 									</label>
@@ -829,7 +829,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 			</form>
 
 			<div className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md border-t border-border bg-paper px-3 pb-[max(env(safe-area-inset-bottom),12px)] pt-3">
-				<Button type="submit" form="recipe-form" disabled={isSubmitting} className="h-12 w-full text-base">
+				<Button type="submit" form="recipe-form" disabled={isSubmitting} className="h-12 w-full text-body">
 					{isSubmitting ? (isEditMode ? "고치는 중..." : "저장하는 중...") : isEditMode ? "고친 내용 저장" : "레시피 저장"}
 				</Button>
 			</div>

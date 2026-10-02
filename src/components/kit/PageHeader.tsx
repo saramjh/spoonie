@@ -29,7 +29,7 @@ export function PageHeader({ title, leading = "back", trailing, titleAlign = "ce
 					취소
 				</Button>
 			)}
-			<h1 className={titleAlign === "start" ? "text-[22px] font-bold text-ink" : "text-[17px] font-semibold text-ink"}>{title}</h1>
+			<h1 className={titleAlign === "start" ? "text-title text-ink" : "text-heading text-ink"}>{title}</h1>
 			{trailing ?? (titleAlign === "center" ? <span className={leading === "cancel" ? "w-16" : "w-11"} aria-hidden /> : null)}
 		</header>
 	)

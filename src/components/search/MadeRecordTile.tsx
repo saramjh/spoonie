@@ -21,8 +21,8 @@ export default function MadeRecordTile({ item, sourceTitle, priority = false }: 
 				)}
 				<PhotoCount count={item.image_urls?.length || 0} />
 			</span>
-			{sourceTitle && <span className="mt-1 block truncate text-[13px] font-semibold text-ink">{sourceTitle}</span>}
-			<span className={`block truncate text-[13px] text-ink-soft ${sourceTitle ? "" : "mt-1"}`}>{item.username || item.title || "레시피드"}</span>
+			{sourceTitle && <span className="mt-1 block truncate text-meta font-semibold text-ink">{sourceTitle}</span>}
+			<span className={`block truncate text-meta text-ink-soft ${sourceTitle ? "" : "mt-1"}`}>{item.username || item.title || "레시피드"}</span>
 		</IntentLink>
 	)
 }

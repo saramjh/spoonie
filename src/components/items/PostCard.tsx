@@ -241,10 +241,10 @@ export default function PostCard({
             </Avatar>
           </IntentLink>
           <div className="min-w-0">
-            <IntentLink href={profileHref} className="block truncate text-[15px] font-semibold text-ink">
+            <IntentLink href={profileHref} className="block truncate text-label font-semibold text-ink">
               {enrichedItem.username || "알 수 없는 사용자"}
             </IntentLink>
-            <p className="text-[13px] text-ink-soft">
+            <p className="text-meta text-ink-soft">
               <span>{isRecipe ? "레시피" : "레시피드"}</span>
               {" · "}
               <IntentLink href={detailUrl}>
@@ -283,17 +283,17 @@ export default function PostCard({
       {/* 레시피(자산)는 글이 먼저: 제목·메타가 사진 위에 온다 */}
       {isRecipe && (
         <div className="cursor-pointer px-4 pb-3" onClick={goDetail}>
-          <h2 className="text-[20px] font-bold leading-snug text-ink [text-wrap:balance]">
+          <h2 className="text-title text-ink [text-wrap:balance]">
             <IntentLink href={detailUrl}>{displayItem.title}</IntentLink>
           </h2>
           {(displayItem.servings || cookingTime) && (
-            <p className="mt-1 text-[15px] text-ink-soft">
+            <p className="mt-1 text-label text-ink-soft">
               {[displayItem.servings ? `${displayItem.servings}인분` : null, cookingTime ? `조리 ${cookingTime}` : null].filter(Boolean).join(" · ")}
             </p>
           )}
           {/* 핵심 재료: 사진 없이도 무엇을 만드는 글인지 읽힌다 */}
           {!!displayItem.key_ingredients?.length && (
-            <p className="mt-0.5 truncate text-[15px] text-ink">
+            <p className="mt-0.5 truncate text-label text-ink">
               <span className="text-ink-soft">재료 {displayItem.ingredient_count}가지 · </span>
               {displayItem.key_ingredients.join(", ")}
               {(displayItem.ingredient_count || 0) > displayItem.key_ingredients.length && <span className="text-ink-soft"> 외</span>}
@@ -327,7 +327,7 @@ export default function PostCard({
         {isRecipe ? (
           <>
             {displayItem.description && (
-              <ExpandableText text={displayItem.description} maxLines={2} onExpand={() => router.push(detailUrl)} className="text-[15px] text-ink" />
+              <ExpandableText text={displayItem.description} maxLines={2} onExpand={() => router.push(detailUrl)} className="text-label text-ink" />
             )}
             {/* 다른 사람이 실제로 만든 기록: 레시피의 신뢰 증거 */}
             <MadeProof
@@ -339,15 +339,15 @@ export default function PostCard({
           </>
         ) : (
           <>
-            {displayItem.title && <p className="mb-1 text-[15px] font-semibold text-ink">{displayItem.title}</p>}
-            <ExpandableText text={displayItem.content || ""} maxLines={3} onExpand={() => router.push(detailUrl)} className="text-[16px] leading-[1.65] text-ink" />
+            {displayItem.title && <p className="mb-1 text-label font-semibold text-ink">{displayItem.title}</p>}
+            <ExpandableText text={displayItem.content || ""} maxLines={3} onExpand={() => router.push(detailUrl)} className="text-body text-ink" />
           </>
         )}
 
         {displayItem.tags && displayItem.tags.length > 0 && (
           <ul className="mt-2 flex flex-wrap gap-x-3 gap-y-1" aria-label="태그">
             {displayItem.tags.map((tag, idx) => (
-              <li key={idx} className="text-sm text-ink-soft">
+              <li key={idx} className="text-meta text-ink-soft">
                 #{tag}
               </li>
             ))}
@@ -368,7 +368,7 @@ export default function PostCard({
           />
           <button type="button" onClick={handleCommentClick} className="flex h-11 items-center gap-1.5 px-2" aria-label={`댓글 ${cachedItem.comments_count || 0}개`}>
             <MessageCircle className="h-5 w-5" aria-hidden />
-            <span className="text-sm font-medium tabular-nums">{cachedItem.comments_count || 0}</span>
+            <span className="text-label font-medium tabular-nums">{cachedItem.comments_count || 0}</span>
           </button>
         </div>
         <div className="flex items-center">

@@ -12,9 +12,11 @@ interface FollowButtonProps {
 	userId: string
 	initialIsFollowing?: boolean // 업계 표준: 초기값으로만 사용, 이후 글로벌 상태 우선
 	className?: string
+	// text: 카드·목록 머리의 글자 버튼(테두리 없음). primary: 프로필처럼 그 화면의 주요 동작일 때
+	appearance?: "text" | "primary"
 }
 
-export default function FollowButton({ userId, initialIsFollowing, className }: FollowButtonProps) {
+export default function FollowButton({ userId, initialIsFollowing, className, appearance = "text" }: FollowButtonProps) {
 	const { toast } = useToast()
 	const { session } = useSessionStore()
 	
@@ -88,11 +90,11 @@ export default function FollowButton({ userId, initialIsFollowing, className }: 
 	return (
 		<>
 			<Button
-				variant={isFollowing ? "ghost" : "outline"}
-				size="sm"
+				variant={appearance === "primary" ? (isFollowing ? "outline" : "default") : "ghost"}
+				size={appearance === "primary" ? "default" : "sm"}
 				onClick={handleFollowToggle}
 				disabled={isProcessing}
-				className={cn(isFollowing && "text-ink-soft", className)}
+				className={cn(appearance === "text" && (isFollowing ? "px-3 text-ink-soft" : "px-3 font-semibold text-orange-ink hover:text-orange-ink"), className)}
 				aria-pressed={isFollowing}
 			>
 				{isProcessing ? (
