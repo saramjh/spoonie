@@ -5,7 +5,7 @@ import { Item } from '@/types/item'
 
 import { useEffect } from 'react'
 
-export function useSSAItemCache(itemId: string, fallbackData: Item) {
+export function useItemCache(itemId: string, fallbackData: Item) {
   const { data: cachedItem, mutate } = useSWR(`itemDetail|${itemId}`, null, {
     fallbackData,
     revalidateOnFocus: false,

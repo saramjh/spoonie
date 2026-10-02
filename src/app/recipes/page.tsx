@@ -10,17 +10,17 @@ import { Trash2, Search, SlidersHorizontal, List, Grid } from "lucide-react"
 
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import useSWRInfinite from "swr/infinite"
-import { useSWRConfig } from "swr"
 import { useRecipeStore } from "@/store/recipeStore"
 import RecipeCard from "@/components/recipe/RecipeCard"
 import RecipeCardSkeleton from "@/components/recipe/RecipeCardSkeleton"
 import FilterModal, { hasActiveRecipeFilter } from "@/components/recipe/FilterModal"
 import RecipeListCard from "@/components/recipe/RecipeListCard"
 import type { User } from "@supabase/supabase-js"
-import type { Item } from "@/types/item"
+import type { Item, Profile } from "@/types/item"
 import { useToast } from "@/hooks/use-toast"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Sheet, StateSheet, UnderlineTabs } from "@/components/kit"
+import { cacheManager } from "@/lib/unified-cache-manager"
 import { revalidateItemPage } from "@/lib/revalidate-item"
 import { collectItemImageUrls, removeItemImages } from "@/lib/item-images"
 
@@ -187,10 +187,10 @@ const PAGE_SIZE = 12
 	}
 
 	// SSA 기반: 홈 피드와 동일한 데이터 변환 로직 적용
-	return data.map((item: Item & { profiles?: any }) => {
+	return data.map((item: Item & { profiles?: Profile | Profile[] | null }) => {
 		// 나의 레시피(RPC)는 이미 평면화된 데이터, 모두의 레시피는 profiles 관계 데이터
-		const profileData = tab === "my_recipes" 
-			? item  // RPC 함수에서 이미 평면화됨
+		const profileData: Partial<Profile> | null | undefined = tab === "my_recipes"
+			? { display_name: item.display_name, username: item.username ?? undefined, avatar_url: item.avatar_url, public_id: item.user_public_id ?? undefined } // RPC가 이미 평면화해 준다
 			: (Array.isArray(item.profiles) ? item.profiles[0] : item.profiles)
 		
 		const userLikeStatus = userLikesMap.get(item.id)
@@ -209,7 +209,7 @@ const PAGE_SIZE = 12
 			display_name: profileData?.display_name || item.display_name || null,
 			username: profileData?.username || item.username || null,
 			avatar_url: profileData?.avatar_url || item.avatar_url || null,
-			user_public_id: profileData?.public_id || profileData?.user_public_id || item.user_public_id || null,
+			user_public_id: profileData?.public_id || item.user_public_id || null,
 			user_email: null,
 			title: item.title,
 			content: item.content,
@@ -248,7 +248,6 @@ export default function RecipesPage() {
 	const router = useRouter()
 	const searchParams = useSearchParams()
 	const { toast } = useToast()
-	const { mutate } = useSWRConfig()
 
 
 	const [currentUser, setCurrentUser] = useState<User | null>(null)
@@ -312,7 +311,7 @@ export default function RecipesPage() {
 		[currentUser, userLoading, currentTab, sortBy, sortOrder, searchTerm, filterCategory, filterColorLabel]
 	)
 
-	const { data, size, setSize, isLoading, mutate: mutateRecipes } = useSWRInfinite(getKey, fetcher, { revalidateFirstPage: false })
+	const { data, size, setSize, isLoading } = useSWRInfinite(getKey, fetcher, { revalidateFirstPage: false })
 
 	// 업계 표준: 팔로우 스토어에서 자동으로 캐시 무효화 처리하므로 이벤트 리스너 불필요
 
@@ -362,87 +361,8 @@ export default function RecipesPage() {
 
 		
 
-		// 업계 표준: 1. 레시피북 캐시에서 즉시 제거 (Instagram/Twitter 방식)
-		mutateRecipes(
-			(cachedData: any[] | any[][] | undefined) => {
-				
-				if (!cachedData || !Array.isArray(cachedData)) {
-					
-					return cachedData;
-				}
-				
-				// useSWRInfinite 페이지 구조 처리
-				const hasPageStructure = cachedData.length > 0 && Array.isArray(cachedData[0]);
-				
-				if (hasPageStructure) {
-					
-					return cachedData.map((page: any) => 
-						page.filter((recipe: any) => {
-							const shouldKeep = !selectedRecipes.includes(recipe.item_id || recipe.id);
-							if (!shouldKeep) {
-								
-							}
-							return shouldKeep;
-						})
-					);
-				} else {
-					// 평면 배열 구조 처리 (폴백)
-					
-					return cachedData.filter((recipe: any) => {
-						const shouldKeep = !selectedRecipes.includes(recipe.item_id || recipe.id);
-						if (!shouldKeep) {
-							
-						}
-						return shouldKeep;
-					});
-				}
-			},
-			{ revalidate: false } // 즉시 UI 업데이트, 서버 재검증 없음
-		)
-
-		// 업계 표준: 2. 홈화면 캐시에서도 즉시 제거 (동기화)
-		mutate(
-			(key) => {
-				const isMatch = typeof key === "string" && key.startsWith("items|");
-				
-				return isMatch;
-			},
-			(cachedData: any) => {
-				
-				if (!cachedData || !Array.isArray(cachedData)) {
-					
-					return cachedData;
-				}
-				
-				// 홈피드도 동일한 방식으로 처리
-				const hasPageStructure = cachedData.length > 0 && 
-				                         Array.isArray(cachedData[0]) && 
-				                         (cachedData[0].length === 0 || typeof cachedData[0][0] === 'object');
-				
-				if (hasPageStructure) {
-					
-					return cachedData.map((page: any) => 
-						page.filter((feedItem: any) => {
-							const shouldKeep = !selectedRecipes.includes(feedItem.item_id);
-							if (!shouldKeep) {
-								
-							}
-							return shouldKeep;
-						})
-					);
-				} else {
-					
-					return cachedData.filter((feedItem: any) => {
-						const shouldKeep = !selectedRecipes.includes(feedItem.item_id);
-						if (!shouldKeep) {
-							
-						}
-						return shouldKeep;
-					});
-				}
-			},
-			{ revalidate: false }
-		)
+		// 1. 모든 목록·상세 캐시에서 바로 뺀다. 실패하면 rollback이 목록을 다시 받는다
+		const rollback = await cacheManager.deleteItems(selectedRecipes)
 
 		try {
 			
@@ -458,29 +378,16 @@ export default function RecipesPage() {
 			
 			
 
-			// 업계 표준: 4. 성공시 최종 캐시 확정
-			await mutateRecipes() // 레시피북 캐시 확정
-			await mutate((key: string) => typeof key === "string" && key.startsWith("items|")) // 홈화면 캐시 확정
 			
-			toast({
-				title: "성공",
-				description: `${selectedRecipes.length}개의 레시피를 삭제했습니다.`,
-			})
+			toast({ title: `레시피 ${selectedRecipes.length}개를 지웠어요` })
 			stopSelecting()
 			
 		} catch (error: unknown) {
 			console.error("❌ RecipeBook: Database deletion failed:", error)
 			
-			// 업계 표준: 5. 실패시 Optimistic Update 롤백
+			rollback() // 지운 줄 알았던 레시피를 목록에 되돌린다 (서버에서 다시 받기)
 			
-			await mutateRecipes() // 레시피북 롤백
-			await mutate((key: string) => typeof key === "string" && key.startsWith("items|")) // 홈화면 롤백
-			
-			toast({
-				title: "오류",
-				description: "레시피 삭제 중 오류가 발생했습니다.",
-				variant: "destructive",
-			})
+			toast({ title: "지우지 못했어요", description: "잠시 뒤 다시 해 주세요.", variant: "destructive" })
 			console.error("Error deleting recipes:", error)
 		}
 	}

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { LogOut, Trash2 } from "lucide-react"
-import TossSeamlessProfileEditor from "@/components/profile/TossSeamlessProfileEditor"
+import ProfileEditor from "@/components/profile/ProfileEditor"
 import { PageHeader, SectionHeading, Sheet } from "@/components/kit"
 // useSessionStore removed - using local state instead
 
@@ -68,7 +68,7 @@ export default function ProfileEditPage() {
 			<PageHeader title="프로필 수정" />
 
 			<main className="space-y-3 px-3 pt-3">
-				<TossSeamlessProfileEditor mode="inline" />
+				<ProfileEditor mode="inline" />
 
 				<Sheet as="section" className="px-4 py-5">
 					<SectionHeading>계정</SectionHeading>

@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Share2, MessageCircle, MoreVertical, Trash2, Edit, Heart } from "lucide-react"
 import { formatCookingTime } from "@/lib/recipe-amount"
 import FollowButton from "./FollowButton"
-import { SimplifiedLikeButton } from "@/components/items/SimplifiedLikeButton"
+import { LikeButton } from "@/components/items/LikeButton"
 import { BookmarkButton } from "@/components/items/BookmarkButton"
 import { useRouter } from "@/lib/navigation"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
@@ -19,7 +19,7 @@ import ImageCarousel from "@/components/common/ImageCarousel"
 import { useCitedRecipes } from "@/hooks/useCitedRecipes"
 import { enrichWithCachedAuthor, cacheAuthors } from "@/lib/author-cache"
 import { orderImagesForDisplay } from "@/lib/thumbnail"
-import { useSSAItemCache } from "@/hooks/useSSAItemCache"
+import { useItemCache } from "@/hooks/useItemCache"
 import ExpandableText from "@/components/common/ExpandableText"
 import { cacheManager } from "@/lib/unified-cache-manager"
 import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
@@ -79,7 +79,7 @@ export default function PostCard({
   }), [item])
 
   // 썸네일 관리 - SSA 캐시된 데이터 사용 (캐시 데이터를 먼저 가져옴)
-  const cachedItem = useSSAItemCache(stableItemId, stableFallbackData)
+  const cachedItem = useItemCache(stableItemId, stableFallbackData)
   // 표시용 값: 수정 직후 즉시 갱신되는 개별 항목 캐시를 우선하고, 캐시에 없는 값만 목록 데이터를 쓴다.
   // (홈 피드 목록 캐시는 새로고침 전까지 갱신되지 않아 수정한 제목, 본문 등이 이전 값으로 남던 문제 방지)
   const displayItem: Item = { ...item, ...cachedItem }
@@ -162,9 +162,8 @@ export default function PostCard({
 
 
     try {
-      // SSA STEP 1: 즉시 홈화면에서 제거 (0ms 응답)
-      const { cacheManager } = await import('@/lib/unified-cache-manager')
-      const rollback = await cacheManager.deleteItem(item.item_id || item.id)
+      // 1. 모든 목록·상세 캐시에서 바로 뺀다. 실패하면 rollback이 목록을 다시 받는다
+      const rollback = await cacheManager.deleteItems([item.item_id || item.id])
       
       // SSA STEP 2: 백그라운드 DB 삭제
       try {
@@ -357,7 +356,7 @@ export default function PostCard({
 
       <footer className="flex items-center justify-between px-2 pb-1 pt-1">
         <div className="flex items-center text-ink-soft">
-          <SimplifiedLikeButton
+          <LikeButton
             itemId={item.item_id || item.id}
             itemType={item.item_type}
             authorId={item.user_id}

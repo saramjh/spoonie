@@ -55,8 +55,8 @@ export async function POST(request: Request) {
 		}
 
 		return NextResponse.json({ message: "User and associated data deleted successfully" }, { status: 200 });
-	} catch (error: any) {
-		console.error("Unhandled error during user deletion:", error.message);
+	} catch (error: unknown) {
+		console.error("Unhandled error during user deletion:", error instanceof Error ? error.message : error);
 		return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
 	}
 }

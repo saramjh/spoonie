@@ -10,15 +10,16 @@
  */
 
 import { mutate } from 'swr'
+import { revalidateStartingWith, updateStartingWith } from '@/lib/swr-cache'
 import { createSupabaseBrowserClient } from '@/lib/supabase-client'
 import { Item } from '@/types/item'
 
 interface CacheOperation {
-  type: 'like' | 'comment' | 'follow' | 'bookmark' | 'create' | 'update' | 'delete' | 'add_new' | 'thumbnail_update'
+  type: 'like' | 'comment' | 'follow' | 'bookmark' | 'create' | 'update' | 'add_new'
   itemId: string
   userId?: string | null
   delta?: number
-  data?: unknown
+  data?: Partial<Item>
   timestamp?: number
 }
 
@@ -245,28 +246,19 @@ class UnifiedCacheManager {
       // Removed excessive log - only keep for critical errors
       
       if (type === 'like') {
-        // 서버에서 실제 상태 조회
-        const [likesResult, likeStatusResult] = await Promise.all([
-          this.supabase.from('likes').select('user_id').eq('item_id', itemId),
-          this.supabase.from('likes').select('user_id').eq('item_id', itemId).eq('user_id', userId).maybeSingle()
+        // 서버의 실제 값(좋아요 수, 내가 눌렀는지)으로 화면을 덮는다. 몇 번 실행돼도 결과가 같다.
+        // (예전에는 서버 값을 확인하고도 ±1을 다시 더해, 좋아요 뒤 3초쯤에 숫자가 하나 더 올라갈 수 있었다)
+        const [countResult, mineResult] = await Promise.all([
+          this.supabase.from('likes').select('item_id', { count: 'exact', head: true }).eq('item_id', itemId),
+          this.supabase.from('likes').select('user_id').eq('item_id', itemId).eq('user_id', userId).maybeSingle(),
         ])
-        
-        const serverLikesCount = likesResult.data?.length || 0
-        const serverHasLiked = !!likeStatusResult.data
-        
-        // 상태 불일치 시 서버 상태로 조정
-        const correctionOperation: CacheOperation = {
-          type: 'like',
+        if (countResult.error || mineResult.error) return
+        await this.updateAllCaches({
+          type: 'update',
           itemId,
           userId,
-          delta: serverHasLiked ? 1 : -1,
-          data: { correction: true, serverLikesCount, serverHasLiked }
-        }
-        
-        // SSA 패턴으로 정정 (기존 아키텍처 활용)
-        await this.updateAllCaches(correctionOperation)
-        
-        // Removed excessive log
+          data: { likes_count: countResult.count ?? 0, is_liked: !!mineResult.data },
+        })
       }
     } catch (error) {
       console.error(`❌ SSA: State verification failed for ${itemId}:`, error)
@@ -560,7 +552,7 @@ class UnifiedCacheManager {
             currentItem = {
               id: itemId,
               item_id: itemId,
-              user_id: (data as any)?.userId || (data as any)?.user_id || '',
+              user_id: (data as { userId?: string; user_id?: string } | undefined)?.userId || (data as { user_id?: string } | undefined)?.user_id || '',
               item_type: 'post',
               created_at: new Date().toISOString(),
               title: null,
@@ -798,7 +790,7 @@ class UnifiedCacheManager {
   /**
    * 업데이트 값 계산 (현재 아이템 기준)
    */
-  private calculateUpdates(type: string, delta?: number, data?: any): (item: Item) => Partial<Item> {
+  private calculateUpdates(type: string, delta?: number, data?: Partial<Item>): (item: Item) => Partial<Item> {
     return (currentItem: Item) => {
       const updates: Partial<Item> = {}
       
@@ -826,12 +818,12 @@ class UnifiedCacheManager {
           if (delta !== undefined) {
             // 북마크: 절대 상태 기반 (한 유저당 1개 북마크 원칙)
             const newIsBookmarked = delta > 0
-            const currentIsBookmarked = (currentItem as any).is_bookmarked || false
+            const currentIsBookmarked = currentItem.is_bookmarked || false
             
             // 상태 변화가 있을 때만 bookmarks_count 조정
             if (newIsBookmarked !== currentIsBookmarked) {
-              (updates as any).bookmarks_count = Math.max(0, ((currentItem as any).bookmarks_count || 0) + (newIsBookmarked ? 1 : -1));
-              (updates as any).is_bookmarked = newIsBookmarked
+              updates.bookmarks_count = Math.max(0, (currentItem.bookmarks_count || 0) + (newIsBookmarked ? 1 : -1));
+              updates.is_bookmarked = newIsBookmarked
             }
             // 상태 변화가 없으면 업데이트 안함 (중복 방지)
           }
@@ -920,6 +912,9 @@ class UnifiedCacheManager {
 
 }
 
+// 글 목록을 담는 캐시 키 (docs/architecture.md 화면 상태)
+const LIST_KEY_PREFIXES = ['items|', 'recipes||', 'search_page|', 'bookmarks_', 'user_items_', 'explore|']
+
 /**
  * 싱글톤 인스턴스
  */
@@ -937,7 +932,7 @@ export const getCacheManager = (): UnifiedCacheManager => {
  */
 export const cacheManager = {
   // SSA 기반 스마트 좋아요 토글 (Request Deduplication + Batch Processing)
-  like: async (itemId: string, userId: string, liked: boolean, data?: any) => {
+  like: async (itemId: string, userId: string, liked: boolean, data?: Partial<Item>) => {
     const manager = getCacheManager()
     const rollback = await manager.smartUpdate({
       type: 'like',
@@ -950,7 +945,7 @@ export const cacheManager = {
   },
   
   // SSA 기반 스마트 북마크 토글 (Request Deduplication + Batch Processing)
-  bookmark: async (itemId: string, userId: string, bookmarked: boolean, data?: any) => {
+  bookmark: async (itemId: string, userId: string, bookmarked: boolean, data?: Partial<Item>) => {
     const manager = getCacheManager()
     const rollback = await manager.smartUpdate({
       type: 'bookmark',
@@ -963,7 +958,7 @@ export const cacheManager = {
   },
   
   // SSA 기반 스마트 댓글 토글 (Request Deduplication + Batch Processing)
-  comment: async (itemId: string, userId: string, delta: number, data?: any) => {
+  comment: async (itemId: string, userId: string, delta: number, data?: Partial<Item>) => {
     const manager = getCacheManager()
     const rollback = await manager.smartUpdate({
       type: 'comment',
@@ -1000,30 +995,44 @@ export const cacheManager = {
       data: newItem
     })
     
-          // 개별 아이템 캐시도 함께 업데이트 (useSSAItemCache가 찾을 수 있도록)
+          // 개별 아이템 캐시도 함께 업데이트 (useItemCache가 찾을 수 있도록)
       await mutate(`itemDetail|${itemId}`, newItem, { revalidate: false })
     
     return rollback
   },
   
   // 아이템 삭제
-  deleteItem: async (itemId: string) => {
-    const manager = getCacheManager()
-    const rollback = await manager.optimisticUpdate({
-      type: 'delete',
-      itemId
-    })
-    return rollback
+  /**
+   * 글 지우기: 화면의 모든 목록·상세 캐시에서 바로 뺀다 (DB 삭제 전에 부른다).
+   * 실패하면 돌려받은 함수를 불러 목록을 서버에서 다시 받는다 (지운 줄 알았던 글이 돌아온다).
+   * 캐시 모양: 무한 스크롤(Item[][]), 목록(Item[]), 탐색({ recipes, made }), 글 하나(itemDetail|id)
+   */
+  deleteItems: async (itemIds: string[]) => {
+    const gone = new Set(itemIds)
+    const keep = (row: unknown) => {
+      const r = row as { id?: string; item_id?: string; item?: { id?: string } } | null
+      return !r || !(gone.has(r.item_id ?? '') || gone.has(r.id ?? '') || gone.has(r.item?.id ?? ''))
+    }
+    const prune = (data: unknown): unknown => {
+      if (Array.isArray(data)) return data.map((page) => (Array.isArray(page) ? page.filter(keep) : page)).filter((row) => Array.isArray(row) || keep(row))
+      if (data && typeof data === 'object' && 'recipes' in data && 'made' in data) {
+        const explore = data as { recipes: unknown[]; made: unknown[] }
+        return { ...explore, recipes: explore.recipes.filter(keep), made: explore.made.filter(keep) }
+      }
+      return data
+    }
+    // 무한 스크롤 목록(피드·레시피북)은 SWR이 '$inf$' 접두어를 붙인 키에 담는다. 떼고 비교해야 실제 목록에 닿는다
+    await updateStartingWith(LIST_KEY_PREFIXES, prune)
+    await Promise.all(itemIds.map((id) => mutate(`itemDetail|${id}`, undefined, { revalidate: false })))
+    return () => {
+      void revalidateStartingWith(LIST_KEY_PREFIXES)
+    }
   },
+
   
   // 홈피드만 무효화 (성능 최적화)
   revalidateHomeFeed: async () => {
-    // Removed excessive logs
-    await mutate(
-      (key) => typeof key === 'string' && key.startsWith('items|'),
-      undefined,
-      { revalidate: true }
-    )
+    await revalidateStartingWith(['items|'])
   },
   
 

@@ -1,6 +1,6 @@
 /**
  * BookmarkButton - SSA 표준 북마크 토글 버튼
- * SimplifiedLikeButton과 동일한 SSA 패턴 적용
+ * LikeButton과 동일한 SSA 패턴 적용
  */
 
 "use client"
@@ -11,7 +11,7 @@ import { Bookmark } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { cacheManager } from "@/lib/unified-cache-manager"
-import { useSSAItemCache } from "@/hooks/useSSAItemCache"
+import { useItemCache } from "@/hooks/useItemCache"
 import { mutate } from "swr"
 import type { Item } from "@/types/item"
 import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
@@ -81,7 +81,7 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
     is_bookmarked: initialIsBookmarked
   }
 
-  const cachedItem = useSSAItemCache(itemId, fallbackItem)
+  const cachedItem = useItemCache(itemId, fallbackItem)
   
   // CRITICAL DEBUG: BookmarkButton 최종 데이터 확인
 
@@ -93,7 +93,7 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
   const { toast } = useToast()
 
-  // Race Condition 방지 (SimplifiedLikeButton과 동일한 패턴)
+  // Race Condition 방지 (LikeButton과 동일한 패턴)
   const isProcessingRef = useRef(false)
   const lastClickTimeRef = useRef(0)
 

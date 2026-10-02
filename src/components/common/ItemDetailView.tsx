@@ -8,10 +8,10 @@ import { Button } from "@/components/ui/button"
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
-import { SimplifiedLikeButton } from "@/components/items/SimplifiedLikeButton"
+import { LikeButton } from "@/components/items/LikeButton"
 import { BookmarkButton } from "@/components/items/BookmarkButton"
 import FollowButton from "@/components/items/FollowButton"
-import SimplifiedCommentsSection from "@/components/items/SimplifiedCommentsSection"
+import CommentsSection from "@/components/items/CommentsSection"
 import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
 import ImageCarousel from "@/components/common/ImageCarousel"
 import RecipeContentView from "@/components/recipe/RecipeContentView"
@@ -29,7 +29,7 @@ import Link from "next/link"
 
 import { useAuthorRecipes, useCitedRecipes, useRecipeRelations } from "@/hooks/useCitedRecipes"
 import { orderImagesForDisplay } from "@/lib/thumbnail"
-import { useSSAItemCache } from "@/hooks/useSSAItemCache"
+import { useItemCache } from "@/hooks/useItemCache"
 import { cacheManager } from "@/lib/unified-cache-manager"
 import { IntentLink, MadeProof, Photo, RelativeTime, SectionHeading, Sheet, SourceRow } from "@/components/kit"
 import { revalidateItemPage } from "@/lib/revalidate-item"
@@ -127,7 +127,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	}, [item, stableItemId])
 
 	// SSA 발전: 실시간 캐시 업데이트 구독 (홈화면과 동일) - hooks를 조건부 렌더링 전에 호출
-	const cachedItem = useSSAItemCache(stableItemId || 'null', stableFallbackData)
+	const cachedItem = useItemCache(stableItemId || 'null', stableFallbackData)
 	
 	// 썸네일 관리 - 캐시된 아이템의 최신 thumbnail_index 사용
 	const orderedImages = orderImagesForDisplay(cachedItem?.image_urls || item?.image_urls, cachedItem?.thumbnail_index ?? item?.thumbnail_index)
@@ -217,21 +217,6 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		}
 	}, [comments])
 
-	// 페이지 언마운트 시 홈화면과 상태 동기화 useEffect
-	useEffect(() => {
-		return () => {
-			// 페이지 이동 시 현재 아이템의 상태를 홈화면에 동기화
-			// 강제로 홈화면 피드 새로고침 (확실한 동기화)
-			// 모든 홈 피드 캐시 무효화
-			mutate(
-				(key) => typeof key === "string" && 
-				         key.startsWith(`items|`) && 
-				         key.endsWith(`|${currentUser?.id || "guest"}`),
-				undefined,
-				{ revalidate: true } // 서버에서 다시 가져오기
-			)
-		}
-	}, [currentUser?.id, mutate])
 	
 	// 더블탭 좋아요 핸들러 (프로필 그리드와 동일한 SSA 기반 로직)
 	const handleDoubleTapLike = async () => {
@@ -314,49 +299,9 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		
 		
 		
-		// 업계 표준: 1. 모든 관련 캐시에서 즉시 제거 (Instagram/Twitter 방식)
-		mutate(
-			(key) => {
-				const isRecipeBook = typeof key === "string" && key.startsWith("recipes||");
-				const isHomeFeed = typeof key === "string" && key.startsWith("items|");
-				
-				return isRecipeBook || isHomeFeed;
-			},
-			// Note: Using any type here due to complex SWR cache structure variations
-			(cachedData: any) => {
-				if (!cachedData || !Array.isArray(cachedData)) {
-					return cachedData;
-				}
-				
-				// 더 정확한 구조 감지: useSWRInfinite 페이지 구조 vs 평면 배열
-				const hasPageStructure = cachedData.length > 0 && 
-				                         Array.isArray(cachedData[0]) && 
-				                         (cachedData[0].length === 0 || typeof cachedData[0][0] === 'object');
-				
-				if (hasPageStructure) {
-					
-					return cachedData.map((page: any) => 
-						page.filter((feedItem: any) => {
-							const shouldKeep = (feedItem.item_id || feedItem.id) !== item.item_id;
-							if (!shouldKeep) {
-							}
-							return shouldKeep;
-						})
-					);
-				} else {
-					// fallbackData나 평면 배열 구조 처리
+		// 1. 모든 목록·상세 캐시에서 바로 뺀다. 실패하면 rollback이 목록을 다시 받는다
+		const rollback = await cacheManager.deleteItems([item.item_id])
 
-					return cachedData.filter((feedItem: any) => {
-						const shouldKeep = (feedItem.item_id || feedItem.id) !== item.item_id;
-						if (!shouldKeep) {
-						}
-						return shouldKeep;
-					});
-				}
-			},
-			{ revalidate: false }
-		)
-		
 		try {
 	
 			
@@ -375,9 +320,6 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 			
 
 			
-			// 업계 표준: 3. 성공시 최종 캐시 확정
-			await mutate((key) => typeof key === "string" && (key.startsWith("items|") || key.startsWith("recipes||")))
-			
 			toast({
 				title: `${isRecipe ? "레시피" : "레시피드"}가 삭제되었습니다.`,
 			})
@@ -386,8 +328,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		} catch (error) {
 			console.error("❌ ItemDetailView: Database deletion failed:", error)
 			
-			// 4. 실패시 Optimistic Update 롤백
-			await mutate((key) => typeof key === "string" && (key.startsWith("items|") || key.startsWith("recipes||")))
+			rollback()
 			
 			toast({
 				title: "삭제에 실패했습니다.",
@@ -640,7 +581,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 
 						<div className="flex items-center justify-between px-2 py-1">
 							<div className="flex items-center gap-1 text-ink-soft">
-								<SimplifiedLikeButton
+								<LikeButton
 									itemId={stableItemId}
 									itemType={item.item_type}
 									authorId={item.user_id}
@@ -718,7 +659,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 						<h2 className="mb-3 text-heading text-ink">
 							댓글 {(cachedItem?.comments_count || 0) > 0 && <span className="font-medium tabular-nums text-ink-soft">{cachedItem?.comments_count}</span>}
 						</h2>
-						<SimplifiedCommentsSection currentUserId={currentUser?.id} itemId={stableItemId} cachedItem={cachedItem || item} />
+						<CommentsSection currentUserId={currentUser?.id} itemId={stableItemId} cachedItem={cachedItem || item} />
 					</div>
 				</div>
 			</article>

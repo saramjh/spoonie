@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useItemDetail } from "@/hooks/useItemDetail"
-import { useSSAItemCache } from "@/hooks/useSSAItemCache"
+import { useItemCache } from "@/hooks/useItemCache"
 import type { Item, ItemDetail } from "@/types/item"
 
 /**
@@ -12,7 +12,7 @@ import type { Item, ItemDetail } from "@/types/item"
  */
 export function useEditInitialData(itemId: string) {
 	const { item: baseItem, isLoading, error } = useItemDetail(itemId)
-	const cachedItem = useSSAItemCache(itemId, (baseItem ?? { id: itemId, item_id: itemId }) as Item)
+	const cachedItem = useItemCache(itemId, (baseItem ?? { id: itemId, item_id: itemId }) as Item)
 	const [initialData, setInitialData] = useState<ItemDetail | null>(null)
 
 	// 처음 값이 준비되는 렌더에서 한 번만 정한다 (effect로 옮겨 담으면 렌더가 한 번 더 일어난다)

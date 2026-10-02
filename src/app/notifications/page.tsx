@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import type { User } from '@supabase/supabase-js';
 import Image from 'next/image'
 import { createSupabaseBrowserClient } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
@@ -38,7 +39,7 @@ export default function NotificationsPage() {
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const userId: string | undefined = currentUser?.id;
   
@@ -92,7 +93,8 @@ export default function NotificationsPage() {
       toast({ title: '알림 불러오기 실패', description: "알림을 불러오는 중 오류가 발생했습니다. " + error.message, variant: 'destructive' });
     } else {
       // 데이터 변환 처리
-      const transformedData: Notification[] = (data || []).map((item: any) => ({
+      type NotificationRow = Omit<Notification, 'from_profile' | 'related_item'> & { from_profile: Notification['from_profile'] | Notification['from_profile'][]; related_item: Notification['related_item'] | Notification['related_item'][] }
+      const transformedData: Notification[] = ((data || []) as unknown as NotificationRow[]).map((item) => ({
         id: item.id,
         created_at: item.created_at,
         type: item.type,
@@ -212,7 +214,7 @@ export default function NotificationsPage() {
         variant: "default"
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       // 실패 시 롤백
       setNotifications(originalNotifications);
       setSelectedIds(new Set(idsToDelete));
@@ -222,7 +224,7 @@ export default function NotificationsPage() {
 
       toast({
         title: "삭제 실패",
-        description: error.message || "일괄 삭제 중 오류가 발생했습니다.",
+        description: (error instanceof Error && error.message) || "일괄 삭제 중 오류가 발생했습니다.",
         variant: "destructive"
       });
     }

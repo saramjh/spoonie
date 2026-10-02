@@ -40,10 +40,7 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
 
   // 피드 갱신: 탭으로 돌아올 때(여기), 뒤로 가기로 홈에 돌아올 때(ClientLayoutWrapper).
   // 테이블 전체를 구독하는 실시간 채널은 모든 방문자에게 사이트 전체 변경을 보내 부담이 커지므로 쓰지 않는다.
-  usePageVisibility({
-    revalidateKeys: ['items|', 'comments_'],
-    debug: process.env.NODE_ENV === 'development'
-  })
+  usePageVisibility({ revalidateKeys: ['items|', 'comments_'] })
 
 
   // 사용자 상태. 가입은 스크롤 도중이 아니라 좋아요·기록처럼 행동하는 순간에만 권한다 (PRODUCT.md 비회원 정책)

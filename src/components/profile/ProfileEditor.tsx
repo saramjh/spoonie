@@ -25,15 +25,15 @@ interface Profile {
   username_changed_count?: number
 }
 
-interface TossSeamlessProfileEditorProps {
+interface ProfileEditorProps {
   mode?: 'full' | 'inline' | 'modal'
   onSaveComplete?: () => void
 }
 
-export default function TossSeamlessProfileEditor({ 
+export default function ProfileEditor({ 
   mode = 'full',
   onSaveComplete 
-}: TossSeamlessProfileEditorProps) {
+}: ProfileEditorProps) {
   const supabase = createSupabaseBrowserClient()
   const router = useRouter()
   const { toast } = useToast()

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { mutate } from 'swr';
+import { revalidateStartingWith } from '@/lib/swr-cache';
 import SpoonieLogo from "@/components/brand/SpoonieLogo";
 
 const PULL_THRESHOLD = 80; // 당겨야 하는 최소 거리 (px)
@@ -40,47 +40,10 @@ export const usePullToRefresh = () => {
             
             try {
                 
-                // 1. 🔥 SWR 캐시 완전 무효화 (모든 키 패턴)
-                await Promise.all([
-                    // 홈 피드 데이터
-                    mutate(
-                        (key) => typeof key === 'string' && key.startsWith('items|'),
-                        undefined,
-                        { revalidate: true, populateCache: false }
-                    ),
-                    // 아이템 상세 데이터
-                    mutate(
-                        (key) => typeof key === 'string' && key.startsWith('itemDetail|'),
-                        undefined,
-                        { revalidate: true, populateCache: false }
-                    ),
-                    // 댓글 데이터
-                    mutate(
-                        (key) => typeof key === 'string' && key.startsWith('comments_'),
-                        undefined,
-                        { revalidate: true, populateCache: false }
-                    ),
-                    // 사용자 프로필 데이터
-                    mutate(
-                        (key) => typeof key === 'string' && key.startsWith('user_items_'),
-                        undefined,
-                        { revalidate: true, populateCache: false }
-                    ),
-                    // 레시피 데이터
-                    mutate(
-                        (key) => typeof key === 'string' && key.startsWith('recipes||'),
-                        undefined,
-                        { revalidate: true, populateCache: false }
-                    ),
-                    // 검색 결과
-                    mutate(
-                        (key) => typeof key === 'string' && (key.startsWith('search_') || key.startsWith('popular_')),
-                        undefined,
-                        { revalidate: true, populateCache: false }
-                    )
-                ]);
+                // 1. 지금 화면에 떠 있는 목록을 서버에서 다시 받는다 (무한 스크롤 목록 포함, lib/swr-cache)
+                await revalidateStartingWith(['items|', 'recipes||', 'user_items_', 'comments_', 'search_', 'popular_', 'explore|']);
 
-                // 2. ⏱️ 최소 1초 새로고침 표시 (사용자 피드백)
+                // 2. 최소 1초는 새로고침 표시를 보여 준다
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 
             } catch (error) {

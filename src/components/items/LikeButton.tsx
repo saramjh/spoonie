@@ -11,12 +11,12 @@ import { Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { cacheManager } from "@/lib/unified-cache-manager"
-import { useSSAItemCache } from "@/hooks/useSSAItemCache"
+import { useItemCache } from "@/hooks/useItemCache"
 import type { Item } from "@/types/item"
 import LikersModal from "./LikersModal"
 import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
 
-interface SimplifiedLikeButtonProps {
+interface LikeButtonProps {
   itemId: string
   itemType: 'post' | 'recipe'
   authorId: string
@@ -27,7 +27,7 @@ interface SimplifiedLikeButtonProps {
   	cachedItem?: Item // SSA 캐시된 완전한 아이템 데이터 (이미지 보존용)
 }
 
-export const SimplifiedLikeButton = forwardRef<HTMLButtonElement, SimplifiedLikeButtonProps>(({
+export const LikeButton = forwardRef<HTMLButtonElement, LikeButtonProps>(({
   itemId,
   itemType,
   currentUserId,
@@ -75,7 +75,7 @@ export const SimplifiedLikeButton = forwardRef<HTMLButtonElement, SimplifiedLike
     is_bookmarked: false
   }
 
-  const cachedItem = useSSAItemCache(itemId, fallbackItem)
+  const cachedItem = useItemCache(itemId, fallbackItem)
   
 
   
@@ -139,7 +139,7 @@ export const SimplifiedLikeButton = forwardRef<HTMLButtonElement, SimplifiedLike
       // 부모 컴포넌트에게 알림 (캐시 매니저가 업데이트한 후의 정확한 값 전달)
 
     } catch (error: unknown) {
-      console.error(`❌ SimplifiedLikeButton: Error for ${itemId}:`, error)
+      console.error(`❌ LikeButton: Error for ${itemId}:`, error)
       
       toast({
         title: "좋아요 처리 실패",
@@ -214,4 +214,4 @@ export const SimplifiedLikeButton = forwardRef<HTMLButtonElement, SimplifiedLike
   )
 })
 
-SimplifiedLikeButton.displayName = "SimplifiedLikeButton" 
+LikeButton.displayName = "LikeButton" 

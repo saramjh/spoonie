@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import type { RecipeFormValues } from "@/components/recipe/RecipeForm"
 import { createPortal } from "react-dom"
 import {
   DndContext,
@@ -40,16 +41,16 @@ export interface DraggableIngredient extends Ingredient {
 interface DraggableIngredientListProps {
   ingredients: DraggableIngredient[]
   onReorder: (newOrder: DraggableIngredient[]) => void
-  register: UseFormRegister<any>
-  errors: FieldErrors<any>
+  register: UseFormRegister<RecipeFormValues>
+  errors: FieldErrors<RecipeFormValues>
   onRemove: (index: number) => void
 }
 
 interface SortableIngredientItemProps {
   ingredient: DraggableIngredient
   index: number
-  register: UseFormRegister<any>
-  errors: FieldErrors<any>
+  register: UseFormRegister<RecipeFormValues>
+  errors: FieldErrors<RecipeFormValues>
   onRemove: (index: number) => void
 }
 
@@ -149,14 +150,14 @@ function SortableIngredientItem({
           {/* 에러 메시지 */}
           {errors.ingredients && Array.isArray(errors.ingredients) && errors.ingredients[index] && (
             <div className="space-y-1 text-meta text-destructive">
-              {(errors.ingredients[index] as any)?.name?.message && (
-                <p>{(errors.ingredients[index] as any)?.name?.message}</p>
+              {errors.ingredients[index]?.name?.message && (
+                <p>{errors.ingredients[index]?.name?.message}</p>
               )}
-              {(errors.ingredients[index] as any)?.amount?.message && (
-                <p>{(errors.ingredients[index] as any)?.amount?.message}</p>
+              {errors.ingredients[index]?.amount?.message && (
+                <p>{errors.ingredients[index]?.amount?.message}</p>
               )}
-              {(errors.ingredients[index] as any)?.unit?.message && (
-                <p>{(errors.ingredients[index] as any)?.unit?.message}</p>
+              {errors.ingredients[index]?.unit?.message && (
+                <p>{errors.ingredients[index]?.unit?.message}</p>
               )}
             </div>
           )}

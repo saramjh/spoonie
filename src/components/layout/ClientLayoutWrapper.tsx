@@ -1,9 +1,9 @@
 "use client"
 
 import { useEffect, useState, ReactNode } from "react"
+import { revalidateStartingWith } from "@/lib/swr-cache"
 import { usePathname } from "next/navigation"
 import { rememberPath } from "@/lib/surface"
-import { useSWRConfig } from "swr"
 import SplashScreen from "./SplashScreen"
 import AppWrapper from "./AppWrapper"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
@@ -22,7 +22,6 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
   const { isInitialLoad, setSession, setProfile, setInitialLoad: setStoreInitialLoad } = useSessionStore()
   const { initializeFollowState } = useFollowStore() // 업계 표준: 팔로우 상태 초기화
 
-  const { mutate } = useSWRConfig()
   const pathname = usePathname()
   // 스플래시는 홈으로 들어올 때만 보여 준다. 공유 링크로 상세에 들어오면 이미 그려진 본문을 가리지 않는다.
   const [splashRoute] = useState(() => pathname === "/")
@@ -136,11 +135,11 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
   useEffect(() => {
     const handlePopState = () => {
       if (window.location.pathname !== "/") return
-      mutate((key) => typeof key === "string" && key.startsWith("items|"), undefined, { revalidate: true })
+      void revalidateStartingWith(["items|"])
     }
     window.addEventListener("popstate", handlePopState)
     return () => window.removeEventListener("popstate", handlePopState)
-  }, [mutate])
+  }, [])
 
   // 스플래시는 페이지 위에 겹치는 오버레이로만 그린다.
   // 페이지를 스플래시로 대체하면 서버 HTML에 본문이 빠져 검색엔진이 빈 페이지를 보게 된다.

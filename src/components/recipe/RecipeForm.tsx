@@ -71,7 +71,7 @@ const recipeSchema = z.object({
 	cited_recipe_ids: z.array(z.string()).optional(), // 참고 레시피 ID 배열
 })
 
-type RecipeFormValues = z.infer<typeof recipeSchema>
+export type RecipeFormValues = z.infer<typeof recipeSchema>
 
 interface RecipeFormProps {
 	initialData?: Item | null

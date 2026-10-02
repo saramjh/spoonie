@@ -35,7 +35,9 @@
   - 저장 목록: `bookmarks_*`
   - 목록 창: `likers|`, `follow_list|`
   - 레시피 활동: `recipeActivity|`
-- **좋아요·저장·댓글·팔로우·글 추가/삭제**는 `lib/unified-cache-manager.ts`의 `cacheManager`로만 바꾼다. 화면을 먼저 바꾸고 DB에 쓰며, 실패하면 되돌린다.
+- **좋아요·저장·댓글·팔로우·글 추가**는 `lib/unified-cache-manager.ts`의 `cacheManager`로만 바꾼다. 화면을 먼저 바꾸고 DB에 쓰며, 실패하면 되돌린다.
+- **글 지우기**는 `cacheManager.deleteItems(ids)` 하나로. 모든 목록·상세 캐시에서 바로 빼고, 돌려받은 함수로 실패 시 목록을 다시 받는다.
+- **키 앞부분으로 여러 캐시를 다시 받거나 고칠 때**는 `lib/swr-cache.ts`(`revalidateStartingWith`, `updateStartingWith`)를 쓴다. SWR의 `mutate((key) => …)`는 무한 스크롤 목록(`$inf$` 키: 피드·레시피북)을 건너뛰어 닿지 않는다.
 - **zustand**는 세션(`sessionStore`), 팔로우 상태(`followStore`), 레시피북 필터(`recipeStore`)만.
 - 피드 다시 받기는 두 곳뿐이다. 탭 복귀(`usePageVisibility`)와 뒤로 가기로 홈 복귀(`ClientLayoutWrapper`). 주기적 조회(폴링)는 하지 않는다.
 - 알림 숫자와 댓글은 필터를 건 실시간 구독(`useRealtimeRefresh`)으로 받는다.
@@ -72,6 +74,5 @@
 
 ## 남은 빚
 
-- `unified-cache-manager.ts`(약 1,000줄)가 화면별 캐시 모양을 하나하나 안다. 키와 모양을 `lib`의 한 모듈로 모으면 줄일 수 있다.
-- `any` 타입 경고 44개 (대부분 Supabase 응답 매핑).
-- 이름에 남은 옛 표기: `TossSeamlessProfileEditor`, `Simplified*`, `useSSAItemCache`.
+- `unified-cache-manager.ts`(약 1,000줄)의 좋아요·저장·댓글 목록 갱신은 아직 `mutate((key) => …)`를 써서 무한 스크롤 목록에는 닿지 않는다. 카드가 글별 캐시(`itemDetail|`)를 따르므로 화면 숫자는 맞지만, 목록 데이터 자체는 다시 받을 때까지 옛 값이다. `lib/swr-cache`로 옮기면서 화면별 갱신 함수를 하나로 줄일 수 있다.
+- 롤백이 백업 없이 역연산(±1)으로만 되돌린다. 실패가 겹치면 숫자가 어긋날 수 있다 (좋아요는 3초 뒤 서버 값으로 덮어 맞춘다).

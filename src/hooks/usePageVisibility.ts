@@ -1,84 +1,21 @@
 "use client"
 
-import { useEffect, useCallback } from 'react'
-import { mutate } from 'swr'
+import { useEffect } from "react"
+import { revalidateStartingWith } from "@/lib/swr-cache"
 
 /**
- * 업계 표준: Page Visibility API 기반 심리스 동기화
- * Instagram/Facebook/Twitter와 동일한 방식으로 히스토리 뒤로가기 보장
- * 
- * 작동 원리:
- * 1. 페이지가 숨겨짐 (hidden) → 상태 저장
- * 2. 페이지가 다시 보여짐 (visible) → 캐시 갱신
- * 3. 백그라운드에서 변경된 데이터 즉시 반영
+ * 탭으로 돌아오면(다른 앱·탭에 있다가 다시 볼 때) 지정한 목록을 다시 받는다.
+ * 화면에 떠 있는 목록만 실제로 요청이 나간다. 무한 스크롤 목록도 닿는다 (lib/swr-cache).
+ * focus 이벤트는 듣지 않는다: 탭 복귀 때 visibilitychange와 함께 와서 같은 목록을 두 번 받게 된다.
  */
-export function usePageVisibility(options: {
-  /** 갱신할 SWR 키 패턴들 */
-  revalidateKeys?: string[]
-  /** 디버그 로그 활성화 */
-  debug?: boolean
-} = {}) {
-  const { 
-    revalidateKeys = ['items|', 'item_details_', 'comments_'], 
-    debug = false 
-  } = options
-
-  const handleVisibilityChange = useCallback(async () => {
-    if (typeof document === 'undefined') return
-
-    if (!document.hidden) {
-      // 페이지가 다시 보여질 때 (히스토리 뒤로가기 포함)
-      if (debug) {
-  
-      }
-
-      // 업계 표준: 중요한 캐시들만 선별적으로 갱신
-      for (const keyPattern of revalidateKeys) {
-        await mutate(
-          (key) => typeof key === 'string' && key.startsWith(keyPattern),
-          undefined,
-          { 
-            revalidate: true,
-            populateCache: true,
-            // 조건부 갱신: stale 데이터만 갱신 (성능 최적화)
-            optimisticData: (currentData) => currentData
-          }
-        )
-      }
-
-      if (debug) {
-  
-      }
-    } else {
-      // 페이지가 숨겨질 때 (상세페이지로 이동 등)
-      if (debug) {
-  
-      }
-    }
-  }, [revalidateKeys, debug])
-
-  useEffect(() => {
-    if (typeof document === 'undefined') return
-
-    // Page Visibility API 리스너 등록
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-
-    // 추가 보장: focus/blur 이벤트도 함께 처리
-    const handleFocus = () => {
-      if (!document.hidden) {
-        handleVisibilityChange()
-      }
-    }
-
-    window.addEventListener('focus', handleFocus)
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-      window.removeEventListener('focus', handleFocus)
-    }
-  }, [handleVisibilityChange])
-
-  return {
-    isVisible: typeof document !== 'undefined' ? !document.hidden : true
-  }
-} 
+export function usePageVisibility({ revalidateKeys }: { revalidateKeys: string[] }) {
+	const keys = revalidateKeys.join(",")
+	useEffect(() => {
+		const prefixes = keys.split(",")
+		const onVisibilityChange = () => {
+			if (!document.hidden) void revalidateStartingWith(prefixes)
+		}
+		document.addEventListener("visibilitychange", onVisibilityChange)
+		return () => document.removeEventListener("visibilitychange", onVisibilityChange)
+	}, [keys])
+}

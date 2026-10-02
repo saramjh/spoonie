@@ -8,7 +8,7 @@ import PostCard from "@/components/items/PostCard"
 import PostCardSkeleton from "@/components/items/PostCardSkeleton"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import { useSessionStore } from "@/store/sessionStore"
-import type { Item } from "@/types/item"
+import type { Item, Profile } from "@/types/item"
 import useSWR from "swr"
 import { PageHeader, Sheet } from "@/components/kit"
 
@@ -37,8 +37,12 @@ const fetchBookmarks = async (userId: string): Promise<Item[]> => {
   if (bookmarksError) throw bookmarksError
   if (!bookmarksData || bookmarksData.length === 0) return []
 
+  // Supabase 관계 조회는 한 건이어도 배열로 올 수 있다
+  type BookmarkedItem = Item & { profiles?: Profile | Profile[] | null }
+  const itemOf = (bookmark: { items: unknown }) => (Array.isArray(bookmark.items) ? bookmark.items[0] : bookmark.items) as BookmarkedItem
+
   // 북마크된 아이템들의 현재 좋아요/팔로우 상태 확인
-  const itemIds = bookmarksData.map(bookmark => (bookmark.items as any).id)
+  const itemIds = bookmarksData.map(bookmark => itemOf(bookmark).id)
   const userLikesMap = new Map<string, boolean>()
   const userFollowsMap = new Map<string, boolean>()
 
@@ -56,7 +60,7 @@ const fetchBookmarks = async (userId: string): Promise<Item[]> => {
 
     // 팔로우 상태 확인
     const authorIds = bookmarksData
-      .map(bookmark => (bookmark.items as any).user_id)
+      .map(bookmark => itemOf(bookmark).user_id)
       .filter(authorUserId => authorUserId !== userId)
     
     if (authorIds.length > 0) {
@@ -74,7 +78,7 @@ const fetchBookmarks = async (userId: string): Promise<Item[]> => {
 
   // 데이터 변환 (기존 피드와 동일한 형식)
   const transformedItems: Item[] = bookmarksData.map(bookmark => {
-    const item = bookmark.items as any
+    const item = itemOf(bookmark)
     const profileData = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
 
     return {

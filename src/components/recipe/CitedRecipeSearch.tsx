@@ -89,6 +89,8 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
       setSearchResults([]);
     } else {
       // Item 타입에 맞게 데이터 변환
+      // Supabase 관계 조회는 한 건이어도 배열로 올 수 있다
+      const authorOf = (row: { author?: unknown }) => (Array.isArray(row.author) ? row.author[0] : row.author) as { username?: string; avatar_url?: string | null; public_id?: string | null } | undefined
       const formattedData: Item[] = itemData.map(item => ({
         id: item.id,
         item_id: item.id,
@@ -96,9 +98,9 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
         item_type: item.item_type,
         created_at: item.created_at,
         is_public: true, // 검색 결과에서는 is_public이 항상 true라고 가정
-        username: (item.author as any)?.username || "익명",
-        avatar_url: (item.author as any)?.avatar_url || null,
-        user_public_id: (item.author as any)?.public_id || null,
+        username: authorOf(item)?.username || "익명",
+        avatar_url: authorOf(item)?.avatar_url || null,
+        user_public_id: authorOf(item)?.public_id || null,
         user_email: null, // 이메일은 가져오지 않음
         title: item.title,
         content: null, // 게시물이 아니므로 null

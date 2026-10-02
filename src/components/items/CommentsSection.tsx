@@ -20,17 +20,17 @@ import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh"
 import type { Item } from "@/types/item"
 import { IntentLink } from "@/components/kit"
 
-interface SimplifiedCommentsSectionProps {
+interface CommentsSectionProps {
   currentUserId?: string
   itemId: string
   cachedItem?: Item // 전체 아이템 데이터 추가
 }
 
-export default function SimplifiedCommentsSection({ 
+export default function CommentsSection({ 
   currentUserId, 
   itemId, 
   cachedItem
-}: SimplifiedCommentsSectionProps) {
+}: CommentsSectionProps) {
   const [newComment, setNewComment] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   
@@ -62,7 +62,7 @@ export default function SimplifiedCommentsSection({
         .order('created_at', { ascending: true })
 
       if (error) {
-        console.error('❌ SimplifiedCommentsSection: 댓글 로딩 실패:', error)
+        console.error('❌ CommentsSection: 댓글 로딩 실패:', error)
         throw error
       }
       

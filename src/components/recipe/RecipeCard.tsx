@@ -3,7 +3,7 @@
 import { ChefHat } from "lucide-react"
 import { CheckBox, IntentLink, Magnet, Photo, PhotoCount } from "@/components/kit"
 import { formatCookingTime } from "@/lib/recipe-amount"
-import { useSSAItemCache } from "@/hooks/useSSAItemCache"
+import { useItemCache } from "@/hooks/useItemCache"
 import { useNavigation } from "@/hooks/useNavigation"
 import type { Item } from "@/types/item"
 import { cn } from "@/lib/utils"
@@ -32,7 +32,7 @@ export default function RecipeCard({ item, isSelectable, isSelected, onSelectCha
 		image_urls: item.image_urls || null, // 섬네일 실시간 업데이트 지원
 		thumbnail_index: item.thumbnail_index || 0,
 	}
-	const cachedItem = useSSAItemCache(item.item_id, fallbackItem)
+	const cachedItem = useItemCache(item.item_id, fallbackItem)
 	// 표시용 값: 수정 직후 즉시 갱신되는 개별 항목 캐시를 우선한다
 	const displayItem: Item = { ...item, ...cachedItem }
 
