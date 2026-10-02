@@ -1,7 +1,7 @@
 {
-  "name": "스푸니",
-  "short_name": "스푸니",
-  "description": "레시피를 쓰고, 그 레시피로 만든 요리를 나누는 곳",
+  "name": "Spoonie",
+  "short_name": "Spoonie",
+  "description": "A social platform for sharing recipes.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#dde7e1",
