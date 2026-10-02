@@ -1,8 +1,10 @@
 {
+  "id": "/",
   "name": "Spoonie",
   "short_name": "Spoonie",
   "description": "A social platform for sharing recipes.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#eceae5",
   "theme_color": "#ffffff",
@@ -18,9 +20,5 @@
       "type": "image/png"
     }
   ],
-  "permissions": [
-    "notifications"
-  ],
-  "gcm_sender_id": "103953800507",
   "lang": "ko"
 }

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { LogOut, Trash2 } from "lucide-react"
 import ProfileEditor from "@/components/profile/ProfileEditor"
+import { InstallAppRow } from "@/components/install/InstallApp"
 import { PageHeader, SectionHeading, Sheet } from "@/components/kit"
 // useSessionStore removed - using local state instead
 
@@ -69,6 +70,11 @@ export default function ProfileEditPage() {
 
 			<main className="space-y-3 px-3 pt-3">
 				<ProfileEditor mode="inline" />
+
+				<Sheet as="section" className="px-4 py-5">
+					<SectionHeading>앱으로 설치</SectionHeading>
+					<InstallAppRow />
+				</Sheet>
 
 				<Sheet as="section" className="px-4 py-5">
 					<SectionHeading>계정</SectionHeading>

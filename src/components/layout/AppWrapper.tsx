@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation"
 import BottomNavBar from "./BottomNavBar"
 import Header from "./Header"
 import { usePullToRefresh } from "@/hooks/usePullToRefresh"
+import { SamsungInstallNotice } from "@/components/install/InstallApp"
 
 const SUB_SCREEN = /^\/(?:(?:recipes|posts)\/[^/]+|bookmarks|notifications|profile\/[^/]+\/edit)(?:\/|$)/
 
@@ -27,6 +28,7 @@ export default function AppWrapper({ children }: { children: React.ReactNode }) 
 			<div style={wrapperStyle} className="relative flex flex-col w-full">
 				{!noHeader && <Header />}
 				<main className="flex-1 w-full">
+					{pathname === "/" && <SamsungInstallNotice />}
 					<div className={`${!noBottomNav ? "pb-16" : ""}`}>{children}</div>
 				</main>
 			</div>

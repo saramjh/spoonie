@@ -10,6 +10,10 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import { useSessionStore } from "@/store/sessionStore"
 import { useFollowStore } from "@/store/followStore" // 업계 표준: 팔로우 상태 관리
 import { startAuthorCacheCleanup } from "@/lib/author-cache"
+import { captureInstallPrompt } from "@/lib/install"
+
+// 크롬의 "설치할 수 있음" 신호는 화면이 그려지기 전에 올 수 있어 모듈을 읽을 때 바로 듣는다
+captureInstallPrompt()
 
 const SPLASH_MIN_MS = 1000
 const SPLASH_MAX_MS = 3000
