@@ -6,6 +6,7 @@ import { formatCookingTime } from "@/lib/recipe-amount"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import { useNavigation } from "@/hooks/useNavigation"
 import type { Item } from "@/types/item"
+import { cn } from "@/lib/utils"
 
 interface RecipeCardProps {
 	item: Item
@@ -45,42 +46,44 @@ export default function RecipeCard({ item, isSelectable, isSelected, onSelectCha
 	const showColor = showColorLabel
 	const cookingTime = formatCookingTime(displayItem.cooking_time_minutes)
 	const thumbnail = cachedItem.image_urls?.[cachedItem.thumbnail_index || 0]
-	const meta = [displayItem.servings ? `${displayItem.servings}인분` : null, cookingTime].filter(Boolean)
+	const meta = [displayItem.servings ? `${displayItem.servings}인분` : null, cookingTime ? `조리 ${cookingTime}` : null].filter(Boolean)
 
+	// 카드 한 장의 모양. 선택 모드에서는 누르면 선택되고(레시피로 가지 않는다), 평소에는 레시피로 간다
+	const face = (
+		<>
+			{showColor && <Magnet color={displayItem.color_label} size="md" className="absolute -top-2 left-3 z-20" />}
+			<span className="relative block aspect-[4/3] w-full overflow-hidden rounded-t-[3px] bg-muted">
+				{/* 선택 모드에서는 같은 자리에 선택 상자가 오므로 사진 장수는 감춘다 */}
+				{!isSelectable && <PhotoCount count={cachedItem.image_urls?.length || 0} />}
+				{thumbnail ? (
+					<Photo src={thumbnail} sizes="(max-width: 448px) 50vw, 220px" priority={priority} />
+				) : (
+					<span className="flex h-full w-full items-center justify-center">
+						<ChefHat className="h-6 w-6 text-ink-soft" aria-hidden />
+					</span>
+				)}
+				{isSelectable && <CheckBox checked={!!isSelected} className="absolute right-2 top-2" />}
+			</span>
+			<span className="block px-3 pb-3 pt-2 text-left">
+				<span className="line-clamp-2 text-[15px] font-semibold leading-snug text-ink">{displayItem.title}</span>
+				<span className="mt-1 block truncate text-[13px] text-ink-soft">
+					{[showAuthor ? item.username : null, ...meta, !displayItem.is_public ? "비공개" : null].filter(Boolean).join(" · ")}
+				</span>
+			</span>
+		</>
+	)
+	const sheet = cn("relative block w-full rounded-[3px] bg-paper shadow-sheet", isSelected && "ring-2 ring-ink")
+
+	if (isSelectable) {
+		return (
+			<button type="button" role="checkbox" aria-checked={!!isSelected} aria-label={`${displayItem.title || "레시피"} 선택`} onClick={() => handleSelectChange(!isSelected)} className={sheet}>
+				{face}
+			</button>
+		)
+	}
 	return (
-		<div className="relative">
-			{isSelectable && (
-				<button
-					type="button"
-					role="checkbox"
-					aria-checked={!!isSelected}
-					aria-label={`${displayItem.title || "레시피"} 선택`}
-					onClick={() => handleSelectChange(!isSelected)}
-					className="absolute right-0 top-0 z-30 flex h-11 w-11 items-center justify-center"
-				>
-					<CheckBox checked={!!isSelected} />
-				</button>
-			)}
-
-			<IntentLink href={detailUrl} className="relative block rounded-[3px] bg-paper shadow-sheet">
-				{showColor && <Magnet color={displayItem.color_label} size="md" className="absolute -top-2 left-3 z-20" />}
-				<div className="relative aspect-[4/3] w-full overflow-hidden rounded-t-[3px] bg-muted">
-					<PhotoCount count={cachedItem.image_urls?.length || 0} />
-					{thumbnail ? (
-						<Photo src={thumbnail} sizes="(max-width: 448px) 50vw, 220px" priority={priority} />
-					) : (
-						<div className="flex h-full w-full items-center justify-center">
-							<ChefHat className="h-6 w-6 text-ink-soft" aria-hidden />
-						</div>
-					)}
-				</div>
-				<div className="px-3 pb-3 pt-2">
-					<h3 className="line-clamp-2 text-[15px] font-semibold leading-snug text-ink">{displayItem.title}</h3>
-					<p className="mt-1 truncate text-[13px] text-ink-soft">
-						{[showAuthor ? item.username : null, ...meta, !displayItem.is_public ? "비공개" : null].filter(Boolean).join(" · ")}
-					</p>
-				</div>
-			</IntentLink>
-		</div>
+		<IntentLink href={detailUrl} className={sheet}>
+			{face}
+		</IntentLink>
 	)
 }

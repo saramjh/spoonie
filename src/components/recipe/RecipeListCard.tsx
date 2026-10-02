@@ -6,6 +6,7 @@ import { formatCookingTime } from "@/lib/recipe-amount"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import { useNavigation } from "@/hooks/useNavigation"
 import type { Item } from "@/types/item"
+import { cn } from "@/lib/utils"
 
 interface RecipeListCardProps {
   	item: Item;
@@ -66,44 +67,45 @@ export default function RecipeListCard({
   // 다른 사람이 만들어 본 수: 레시피의 신뢰 증거 (0이면 숨김)
   const madeCount = displayItem.made_count || 0
 
-  // 레시피북의 한 줄: 문 판에 접어 붙인 종이처럼 머리(사진, 제목, 한 줄 메타)만 보인다
-  return (
-    <div className="relative">
-      {isSelectable && (
-        <button
-          type="button"
-          role="checkbox"
-          aria-checked={isSelected}
-          aria-label={`${displayItem.title || "레시피"} 선택`}
-          onClick={() => handleSelectChange(!isSelected)}
-          className="absolute left-0 top-0 z-30 flex h-11 w-11 items-center justify-center"
-        >
-          <CheckBox checked={!!isSelected} />
-        </button>
-      )}
+  // 레시피북의 한 줄: 문 판에 접어 붙인 종이처럼 머리(사진, 제목, 한 줄 메타)만 보인다.
+  // 선택 모드에서는 누르면 선택되고(레시피로 가지 않는다), 평소에는 레시피로 간다
+  const face = (
+    <>
+      {showColor && <Magnet color={displayItem.color_label} size="sm" className="absolute -left-1.5 top-1/2 z-20 -translate-y-1/2" />}
+      <span className="relative block h-[72px] w-[72px] flex-shrink-0 overflow-hidden rounded-[2px] bg-muted">
+        {thumbnail ? (
+          <Photo src={thumbnail} sizes="72px" priority={priority} />
+        ) : (
+          <span className="flex h-full w-full items-center justify-center">
+            <ChefHat className="h-6 w-6 text-ink-soft" aria-hidden />
+          </span>
+        )}
+      </span>
+      <span className="block min-w-0 flex-1 text-left">
+        <span className="block truncate text-[17px] font-semibold text-ink">{displayItem.title}</span>
+        {meta.length > 0 && <span className="mt-0.5 block truncate text-sm text-ink-soft">{meta.join(" · ")}</span>}
+        <span className="mt-0.5 block truncate text-[13px] text-ink-soft">
+          {madeCount > 0 && <span className="font-semibold text-ink">{madeCount}명이 만들어 봤어요 · </span>}
+          {showAuthor && item.username ? `${item.username} · ` : ""}
+          <RelativeTime iso={item.created_at} compact />
+          {!displayItem.is_public && " · 비공개"}
+        </span>
+      </span>
+      {isSelectable && <CheckBox checked={!!isSelected} />}
+    </>
+  )
+  const sheet = cn("relative flex w-full items-center gap-3 rounded-[3px] bg-paper p-2 pr-4 shadow-sheet", isSelected && "ring-2 ring-ink")
 
-      <IntentLink href={detailUrl} className="relative flex items-center gap-3 rounded-[3px] bg-paper p-2 pr-4 shadow-sheet">
-        {showColor && <Magnet color={displayItem.color_label} size="sm" className="absolute -left-1.5 top-1/2 z-20 -translate-y-1/2" />}
-        <div className="relative h-[72px] w-[72px] flex-shrink-0 overflow-hidden rounded-[2px] bg-muted">
-          {thumbnail ? (
-            <Photo src={thumbnail} sizes="72px" priority={priority} />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <ChefHat className="h-6 w-6 text-ink-soft" aria-hidden />
-            </div>
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate text-[17px] font-semibold text-ink">{displayItem.title}</h3>
-          {meta.length > 0 && <p className="mt-0.5 truncate text-sm text-ink-soft">{meta.join(" · ")}</p>}
-          <p className="mt-0.5 truncate text-[13px] text-ink-soft">
-            {madeCount > 0 && <span className="font-semibold text-ink">{madeCount}명이 만들어 봤어요 · </span>}
-            {showAuthor && item.username ? `${item.username} · ` : ""}
-            <RelativeTime iso={item.created_at} compact />
-            {!displayItem.is_public && " · 비공개"}
-          </p>
-        </div>
-      </IntentLink>
-    </div>
+  if (isSelectable) {
+    return (
+      <button type="button" role="checkbox" aria-checked={!!isSelected} aria-label={`${displayItem.title || "레시피"} 선택`} onClick={() => handleSelectChange(!isSelected)} className={sheet}>
+        {face}
+      </button>
+    )
+  }
+  return (
+    <IntentLink href={detailUrl} className={sheet}>
+      {face}
+    </IntentLink>
   )
 }

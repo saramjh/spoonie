@@ -254,6 +254,12 @@ export default function RecipesPage() {
 	const [currentUser, setCurrentUser] = useState<User | null>(null)
 	const [userLoading, setUserLoading] = useState(true)
 	const [selectedRecipes, setSelectedRecipes] = useState<string[]>([])
+	// 고르기는 따로 켠다: 평소에는 카드를 누르면 레시피가 열린다
+	const [isSelecting, setIsSelecting] = useState(false)
+	const stopSelecting = () => {
+		setIsSelecting(false)
+		setSelectedRecipes([])
+	}
 	const [isFilterModalOpen, setIsFilterModalOpen] = useState(false)
 	const [currentTab, setCurrentTab] = useState<Tab>("my_recipes")
 
@@ -341,7 +347,7 @@ export default function RecipesPage() {
 	const handleTabChange = (tab: Tab) => {
 		setCurrentTab(tab)
 		setStoreCurrentTab(tab)
-		setSelectedRecipes([])
+		stopSelecting()
 		router.push(`/recipes?tab=${tab === "my_recipes" ? "my" : "all"}`, { scroll: false })
 	}
 
@@ -459,7 +465,7 @@ export default function RecipesPage() {
 				title: "성공",
 				description: `${selectedRecipes.length}개의 레시피를 삭제했습니다.`,
 			})
-			setSelectedRecipes([])
+			stopSelecting()
 			
 		} catch (error: unknown) {
 			console.error("❌ RecipeBook: Database deletion failed:", error)
@@ -518,15 +524,45 @@ export default function RecipesPage() {
 
 			{/* 반응형 최적화: 컨테이너 최대 너비 + 패딩 조정 */}
 			<main className="flex-1 overflow-y-auto px-3 py-3 max-w-7xl mx-auto w-full">
-				{/* 검색/필터 영역 - 모바일 최적화 */}
+				{/* 검색·거르기·보기 방식. 고르는 동안에는 고른 수와 지우기·완료 줄로 바뀐다 */}
+				{isSelecting ? (
+					<Sheet className="sticky top-0 z-10 mb-3 flex items-center justify-between gap-2 px-3">
+						<p className="text-[15px] text-ink" aria-live="polite">
+							{selectedRecipes.length > 0 ? <><span className="font-semibold tabular-nums">{selectedRecipes.length}</span>개 골랐어요</> : "지울 레시피를 골라 주세요"}
+						</p>
+						<div className="flex items-center gap-1">
+						<AlertDialog>
+							<AlertDialogTrigger asChild>
+								<Button variant="outline" disabled={selectedRecipes.length === 0} className="text-destructive">
+									<Trash2 className="h-4 w-4" aria-hidden />
+									지우기
+								</Button>
+							</AlertDialogTrigger>
+							<AlertDialogContent className="max-w-sm sm:max-w-md">
+								<AlertDialogHeader>
+									<AlertDialogTitle>레시피 {selectedRecipes.length}개를 지울까요?</AlertDialogTitle>
+									<AlertDialogDescription>지운 레시피는 되돌릴 수 없어요. 이 레시피로 남긴 다른 사람의 기록에서는 출처가 사라져요.</AlertDialogDescription>
+								</AlertDialogHeader>
+								<AlertDialogFooter>
+									<AlertDialogCancel>취소</AlertDialogCancel>
+									<AlertDialogAction onClick={handleDeleteSelected} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">지우기</AlertDialogAction>
+								</AlertDialogFooter>
+							</AlertDialogContent>
+						</AlertDialog>
+							<Button variant="ghost" onClick={stopSelecting}>
+								완료
+							</Button>
+						</div>
+					</Sheet>
+				) : (
 				<div className="flex gap-2 mb-3">
 					<div className="relative flex-grow min-w-0">
 						<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-ink-soft" aria-hidden />
 						<Input 
 							placeholder={
 								currentTab === "my_recipes" 
-									? "레시피명, 재료명으로 검색..." 
-									: "레시피명, 사용자명, 재료명, 태그로 검색..."
+									? "레시피·재료 검색" 
+									: "레시피·재료·사람 검색"
 							} 
 							value={localSearchTerm} 
 							onChange={(e) => setLocalSearchTerm(e.target.value)} 
@@ -539,32 +575,15 @@ export default function RecipesPage() {
 							<SlidersHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
 						</Button>
 					)}
+					{currentTab === "my_recipes" && recipes.length > 0 && (
+						<Button variant="outline" onClick={() => setIsSelecting(true)} className="px-3">
+							선택
+						</Button>
+					)}
 					<Button variant="outline" size="icon" onClick={() => setViewMode(viewMode === "card" ? "list" : "card")} aria-label={viewMode === "card" ? "목록으로 보기" : "격자로 보기"}>
 						{viewMode === "card" ? <List className="w-4 h-4 sm:w-5 sm:h-5" /> : <Grid className="w-4 h-4 sm:w-5 sm:h-5" />}
 					</Button>
 				</div>
-
-				{currentTab === "my_recipes" && selectedRecipes.length > 0 && (
-					<div className="mb-3 sm:mb-4 flex justify-end">
-						<AlertDialog>
-							<AlertDialogTrigger asChild>
-								<Button variant="destructive" size="sm" className="text-[13px] sm:text-sm">
-									<Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-									선택 삭제 ({selectedRecipes.length})
-								</Button>
-							</AlertDialogTrigger>
-							<AlertDialogContent className="max-w-sm sm:max-w-md">
-								<AlertDialogHeader>
-									<AlertDialogTitle>정말 삭제하시겠습니까?</AlertDialogTitle>
-									<AlertDialogDescription>선택한 {selectedRecipes.length}개의 레시피를 영구적으로 삭제합니다. 이 작업은 되돌릴 수 없습니다.</AlertDialogDescription>
-								</AlertDialogHeader>
-								<AlertDialogFooter>
-									<AlertDialogCancel>취소</AlertDialogCancel>
-									<AlertDialogAction onClick={handleDeleteSelected}>삭제</AlertDialogAction>
-								</AlertDialogFooter>
-							</AlertDialogContent>
-						</AlertDialog>
-					</div>
 				)}
 
 				{/* 2열 통일 그리드 시스템 */}
@@ -599,7 +618,7 @@ export default function RecipesPage() {
 								<RecipeCard 
 									key={item.item_id} 
 									item={item} 
-									isSelectable={currentTab === "my_recipes"} 
+									isSelectable={isSelecting} 
 									isSelected={selectedRecipes.includes(item.item_id)} 
 									onSelect={() => handleSelectRecipe(item.item_id)} 
 									showAuthor={currentTab === "all_recipes"}
@@ -609,7 +628,7 @@ export default function RecipesPage() {
 								<RecipeListCard 
 									key={item.item_id} 
 									item={item} 
-									isSelectable={currentTab === "my_recipes"} 
+									isSelectable={isSelecting} 
 									isSelected={selectedRecipes.includes(item.item_id)} 
 									onSelect={() => handleSelectRecipe(item.item_id)} 
 									showAuthor={currentTab === "all_recipes"}
