@@ -1,8 +1,9 @@
 "use client"
 
 import Link from "next/link"
+import { useHydrated } from "@/hooks/useHydrated"
 import { useRouter } from "@/lib/navigation"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Loader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -38,11 +39,10 @@ export default function LoginPage() {
 	const [isRedirecting, setIsRedirecting] = useState(false)
 	const [isGoogleRedirecting, setIsGoogleRedirecting] = useState(false)
 	// 가입 화면으로 가도 돌아갈 곳(next)을 잃지 않게 한다
-	const [signupHref, setSignupHref] = useState("/signup")
-	useEffect(() => {
-		const next = new URLSearchParams(window.location.search).get("next")
-		if (next) setSignupHref(`/signup?next=${encodeURIComponent(safeNextPath(next))}`)
-	}, [])
+	// 주소는 화면이 뜬 뒤에 읽는다 (미리 만든 HTML과 어긋나지 않게)
+	const hydrated = useHydrated()
+	const next = hydrated ? new URLSearchParams(window.location.search).get("next") : null
+	const signupHref = next ? `/signup?next=${encodeURIComponent(safeNextPath(next))}` : "/signup"
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {

@@ -1,83 +1,46 @@
 "use client"
 
 import { useState } from "react"
+import { cn } from "@/lib/utils"
 
 interface ExpandableTextProps {
   text: string
-  maxLines?: number
-  maxCharacters?: number // 글자 수 기준 추가
+  maxLines?: 2 | 3
+  maxCharacters?: number
+  // 글자 크기·색·줄 간격은 부르는 쪽이 정한다 (기본값보다 우선)
   className?: string
-  expandButtonClass?: string
+  // 있으면 "더보기"가 펼치는 대신 이것을 부른다 (예: 상세로 이동)
   onExpand?: () => void
 }
 
+// Tailwind가 클래스를 찾을 수 있게 문자열 그대로 둔다
+const CLAMP = { 2: "line-clamp-2", 3: "line-clamp-3" } as const
+
 /**
- * 업계 표준 방식의 확장 가능한 텍스트 컴포넌트 (Instagram/Facebook/Twitter 스타일)
- * 
- * @param text - 표시할 텍스트
- * @param maxLines - 초기 표시할 최대 줄 수 (기본: 2줄)
- * @param maxCharacters - 글자 수 기준 (기본: 120자)
- * @param className - 텍스트 스타일
- * @param expandButtonClass - 더보기 버튼 스타일
- * @param onExpand - 더보기 클릭시 실행할 함수 (예: 상세페이지로 이동)
+ * 긴 글을 몇 줄로 접고 "더보기"를 단다. 줄바꿈은 그대로 두고, 한국어 줄바꿈 규칙(keep-all)은 전역 설정을 따른다.
  */
-export default function ExpandableText({ 
-  text, 
-  maxLines = 2, 
-  maxCharacters = 120,
-  className = "text-sm text-ink",
-  expandButtonClass = "text-orange-ink hover:text-orange-ink text-sm font-medium ml-1",
-  onExpand
-}: ExpandableTextProps) {
+export default function ExpandableText({ text, maxLines = 2, maxCharacters = 120, className, onExpand }: ExpandableTextProps) {
   const [isExpanded, setIsExpanded] = useState(false)
 
   if (!text) return null
 
-  // 간단한 방식: 글자 수와 줄바꿈 개수 기준으로 생략 여부 결정
-  const lineCount = text.split('\n').length
-  const isLongText = text.length > maxCharacters || lineCount > maxLines
+  const isLongText = text.length > maxCharacters || text.split("\n").length > maxLines
   const shouldTruncate = isLongText && !isExpanded
 
   const handleExpand = (e: React.MouseEvent) => {
-    e.stopPropagation() // 부모 클릭 이벤트 방지
-    
-    if (onExpand) {
-      onExpand() // 상세페이지로 이동
-    } else {
-      setIsExpanded(true) // 인라인 확장
-    }
+    e.stopPropagation() // 카드 전체의 상세 이동과 겹치지 않게
+    if (onExpand) onExpand()
+    else setIsExpanded(true)
   }
 
-  // 텍스트 잘라내기
-  const displayText = shouldTruncate 
-    ? text.substring(0, maxCharacters) + (text.length > maxCharacters ? '...' : '')
-    : text
-
   return (
-    <div className="relative">
-      <div
-        className={`${className} break-words leading-relaxed ${
-          shouldTruncate ? 'line-clamp-2' : ''
-        }`}
-        style={{
-          wordBreak: 'break-word',
-          overflowWrap: 'break-word',
-          whiteSpace: 'pre-line', // 줄바꿈 보존
-        }}
-      >
-        {displayText}
-      </div>
-      
-      {/* Instagram/Facebook 스타일 더보기 버튼 */}
-      {isLongText && !isExpanded && (
-        <button
-          onClick={handleExpand}
-          className={`${expandButtonClass} inline-block transition-colors duration-200 mt-1`}
-          aria-label="더 보기"
-        >
+    <div>
+      <p className={cn("whitespace-pre-line text-sm leading-relaxed text-ink", className, shouldTruncate && CLAMP[maxLines])}>{text}</p>
+      {shouldTruncate && (
+        <button type="button" onClick={handleExpand} className="mt-1 text-sm font-medium text-orange-ink">
           더보기
         </button>
       )}
     </div>
   )
-} 
+}

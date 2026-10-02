@@ -62,6 +62,7 @@ export default function TossSeamlessProfileEditor({
   
   // Seamless sync를 위한 optimistic update 추적
   const [optimisticUpdates, setOptimisticUpdates] = useState<Set<string>>(new Set())
+  const updateSeq = useRef(0)
   const rollbackFunctions = useRef<Map<string, () => void>>(new Map())
 
 
@@ -163,7 +164,7 @@ export default function TossSeamlessProfileEditor({
   const handleOptimisticSave = async () => {
     if (!user) return
 
-    const updateId = `profile_update_${Date.now()}`
+    const updateId = `profile_update_${++updateSeq.current}`
     setOptimisticUpdates(prev => new Set(prev).add(updateId))
 
     try {

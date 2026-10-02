@@ -14,18 +14,16 @@ export default function NavigationProgress() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [progress, setProgress] = useState<number | null>(null)
-  const timers = useRef<{ tick?: ReturnType<typeof setInterval>; limit?: ReturnType<typeof setTimeout>; hide?: ReturnType<typeof setTimeout> }>({})
+  const timers = useRef<{ tick?: ReturnType<typeof setInterval>; limit?: ReturnType<typeof setTimeout> }>({})
 
   const clearTimers = () => {
     clearInterval(timers.current.tick)
     clearTimeout(timers.current.limit)
-    clearTimeout(timers.current.hide)
   }
 
   const finish = () => {
     clearTimers()
     setProgress((p) => (p === null ? null : 100))
-    timers.current.hide = setTimeout(() => setProgress(null), 250)
   }
 
   const start = () => {
@@ -38,16 +36,29 @@ export default function NavigationProgress() {
     timers.current.limit = setTimeout(finish, MAX_VISIBLE_MS)
   }
 
-  // 마지막으로 화면에 그려진 주소. 이미 새 화면이 그려진 뒤 도착한 이벤트로 막대를 켜지 않기 위해 쓴다.
-  const renderedLocation = useRef("")
+  // 주소가 바뀌면 이동 완료: 렌더 중에 한 번만 맞춘다 (effect에서 바꾸면 렌더가 한 번 더 일어난다)
+  const query = searchParams?.toString()
+  const location = pathname + (query ? `?${query}` : "")
+  const [seenLocation, setSeenLocation] = useState(location)
+  if (location !== seenLocation) {
+    setSeenLocation(location)
+    if (progress !== null) setProgress(100)
+  }
 
-  // 주소가 바뀌면 이동 완료
+  // 마지막으로 화면에 그려진 주소. 이미 새 화면이 그려진 뒤 도착한 뒤로 가기 이벤트로 막대를 켜지 않기 위해 쓴다.
+  const renderedLocation = useRef(location)
   useEffect(() => {
-    const query = searchParams?.toString()
-    renderedLocation.current = pathname + (query ? `?${query}` : "")
-    finish()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, searchParams])
+    renderedLocation.current = location
+  }, [location])
+
+  // 다 차면 진행 타이머를 멈추고 잠깐 뒤에 감춘다
+  useEffect(() => {
+    if (progress !== 100) return
+    clearInterval(timers.current.tick)
+    clearTimeout(timers.current.limit)
+    const hide = setTimeout(() => setProgress(null), 250)
+    return () => clearTimeout(hide)
+  }, [progress])
 
   useEffect(() => {
     const onStart = () => start()

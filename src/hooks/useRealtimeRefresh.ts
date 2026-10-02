@@ -19,8 +19,11 @@ export function useRealtimeRefresh(options: {
   onChange: () => void
 }) {
   const { channel, table, filter, events = ["INSERT"], onChange } = options
+  // 최신 onChange를 기억한다 (구독을 다시 맺지 않고)
   const onChangeRef = useRef(onChange)
-  onChangeRef.current = onChange
+  useEffect(() => {
+    onChangeRef.current = onChange
+  })
   const eventsKey = events.join(",")
 
   useEffect(() => {

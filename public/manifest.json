@@ -1,12 +1,11 @@
-
 {
-  "name": "Spoonie",
-  "short_name": "Spoonie",
-  "description": "A social platform for sharing recipes.",
+  "name": "스푸니",
+  "short_name": "스푸니",
+  "description": "레시피를 쓰고, 그 레시피로 만든 요리를 나누는 곳",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#fff7ed",
-  "theme_color": "#f97316",
+  "background_color": "#dde7e1",
+  "theme_color": "#ffffff",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",
@@ -19,6 +18,9 @@
       "type": "image/png"
     }
   ],
-  "permissions": ["notifications"],
-  "gcm_sender_id": "103953800507"
+  "permissions": [
+    "notifications"
+  ],
+  "gcm_sender_id": "103953800507",
+  "lang": "ko"
 }

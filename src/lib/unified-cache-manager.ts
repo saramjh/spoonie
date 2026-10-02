@@ -277,7 +277,6 @@ class UnifiedCacheManager {
    * 모든 관련 캐시 업데이트 (홈피드, 상세페이지, 검색, 프로필)
    */
   private async updateAllCaches(operation: CacheOperation): Promise<void> {
-    const { userId } = operation
     
 
     // 팔로우/언팔로우 시 팔로우 수 캐시 즉시 무효화 (비용 최적화)
@@ -345,18 +344,7 @@ class UnifiedCacheManager {
 
     }
     
-    try {
-      // 4. 프로필 캐시 업데이트
-      if (userId) {
-
-        await this.updateProfileCache(operation)
-
-      } else {
-
-      }
-    } catch {
-
-    }
+    // 프로필 목록의 카드는 글별 캐시(itemDetail|)를 따르므로 따로 갱신하지 않는다
     
     try {
       // 5. 레시피북 캐시 업데이트 (해당하는 경우)
@@ -628,12 +616,7 @@ class UnifiedCacheManager {
     // SSA 표준: 검색 결과의 개별 아이템 실시간 업데이트
     await mutate(
       (key) => typeof key === 'string' && (
-        key.startsWith('search_page|') ||                 // 무한스크롤 검색 결과
-        key.startsWith('popular_posts') ||                // 인기 게시물
-        key.startsWith('popular_recipes') ||              // 인기 레시피
-        key.includes('search_grid') ||                    // 검색 그리드 뷰
-        key.includes('search_list') ||                    // 검색 목록 뷰
-        key.includes('search_results')                    // 일반 검색 결과
+        key.startsWith('search_page|')                    // 검색 결과 (무한 스크롤). 탐색 목록의 카드는 글별 캐시(itemDetail|)를 따른다
       ),
       (cacheData: Item[] | Item[][] | undefined) => {
         if (!cacheData) return cacheData
@@ -676,43 +659,6 @@ class UnifiedCacheManager {
       (key) => typeof key === 'string' && key.startsWith('search_users|'),
       undefined,  // 사용자 검색은 무효화만 (구조가 다름)
       { revalidate: false }
-    )
-  }
-
-  /**
-   * 프로필 캐시 업데이트 (모든 사용자 뷰 포함)
-   */
-  private async updateProfileCache(operation: CacheOperation): Promise<void> {
-    const { userId, itemId } = operation
-    
-    // 모든 프로필 관련 캐시 업데이트 (그리드, 목록, 탭별 뷰 등)
-    await mutate(
-      (key) => typeof key === 'string' && (
-        key.includes(`user_items_${userId}`) ||           // 기본 프로필 뷰
-        key.includes(`profile_${userId}`) ||              // 프로필 상세 뷰
-        key.includes(`user_grid_${userId}`) ||            // 그리드 뷰
-        key.includes(`user_feed_${userId}`)               // 피드 뷰
-      ),
-      (data: Item[][] | undefined) => {
-        if (!data || !Array.isArray(data)) return data
-        
-        return data.map(page => {
-          if (!Array.isArray(page)) return page // page가 배열인지 안전하게 확인
-          
-          return page.map(item => {
-            if (item.id === itemId || item.item_id === itemId) {
-
-              const calculateUpdates = this.calculateUpdates(operation.type, operation.delta, operation.data)
-              const updates = calculateUpdates(item)
-              const updatedItem = { ...item, ...updates }
-
-              return updatedItem
-            }
-            return item
-          })
-        })
-      },
-      { revalidate: false, populateCache: true }
     )
   }
 
@@ -972,30 +918,6 @@ class UnifiedCacheManager {
     await this.updateAllCaches(reverseOperation)
   }
 
-  /**
-   * 정리
-   */
-  cleanup(): void {
-    if (this.batchTimer) {
-      clearTimeout(this.batchTimer)
-    }
-    this.rollbackStack.clear()
-  }
-
-  /**
-   * 전체 캐시 동기화 (긴급 상황용)
-   */
-  async invalidateAllCaches(): Promise<void> {
-
-    
-    await Promise.all([
-      mutate((key) => typeof key === 'string' && key.startsWith('items|')),
-      mutate((key) => typeof key === 'string' && key.startsWith('item_details_')),
-      mutate((key) => typeof key === 'string' && key.startsWith('recipes|')),
-      mutate((key) => typeof key === 'string' && key.startsWith('search_')),
-      mutate((key) => typeof key === 'string' && key.startsWith('user_items_')),
-    ])
-  }
 }
 
 /**
@@ -1094,12 +1016,6 @@ export const cacheManager = {
     return rollback
   },
   
-  // 전체 무효화
-  invalidateAll: async () => {
-    const manager = getCacheManager()
-    await manager.invalidateAllCaches()
-  },
-  
   // 홈피드만 무효화 (성능 최적화)
   revalidateHomeFeed: async () => {
     // Removed excessive logs
@@ -1110,22 +1026,7 @@ export const cacheManager = {
     )
   },
   
-  // SSA 기반 썸네일 업데이트 (모든 캐시 동기화)
-  updateThumbnail: async (itemId: string, thumbnailIndex: number, imageUrls: string[]) => {
 
-    
-    const manager = getCacheManager()
-    const rollback = await manager.smartUpdate({
-      type: 'thumbnail_update', 
-      itemId, 
-      userId: '', // 썸네일 업데이트는 userId 불필요
-      delta: 0, // 썸네일 업데이트는 delta 불필요
-      data: { thumbnail_index: thumbnailIndex, image_urls: imageUrls }
-    })
-    
-
-    return rollback
-  },
 
   // 팔로우/언팔로우 처리 (SSA 기반) - DB 저장 포함
   follow: async (currentUserId: string, targetUserId: string, isFollow: boolean) => {

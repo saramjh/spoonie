@@ -21,7 +21,7 @@ export default function TermsOfServicePage() {
             <section className="mb-8">
               <h2 className="text-lg font-bold text-ink mb-3">제1조 (목적)</h2>
               <p className="text-ink leading-relaxed">
-                이 약관은 Spoonie(이하 "서비스")가 제공하는 레시피 공유 및 커뮤니티 서비스의 이용과 관련하여 
+                이 약관은 Spoonie(이하 “서비스”)가 제공하는 레시피 공유 및 커뮤니티 서비스의 이용과 관련하여 
                 서비스와 이용자 간의 권리, 의무 및 책임사항, 기타 필요한 사항을 규정함을 목적으로 합니다.
               </p>
             </section>
@@ -29,10 +29,10 @@ export default function TermsOfServicePage() {
             <section className="mb-8">
               <h2 className="text-lg font-bold text-ink mb-3">제2조 (정의)</h2>
               <ul className="list-disc pl-6 text-ink space-y-2">
-                <li><strong>"서비스"</strong>라 함은 Spoonie가 제공하는 레시피 공유 플랫폼을 의미합니다.</li>
-                <li><strong>"이용자"</strong>라 함은 이 약관에 따라 서비스를 이용하는 회원 및 비회원을 의미합니다.</li>
-                <li><strong>"회원"</strong>이라 함은 서비스에 개인정보를 제공하여 회원등록을 한 자로서, 서비스의 정보를 지속적으로 제공받으며, 서비스를 계속적으로 이용할 수 있는 자를 의미합니다.</li>
-                <li><strong>"콘텐츠"</strong>라 함은 이용자가 서비스 내에 게시한 레시피, 이미지, 댓글, 평가 등 모든 정보를 의미합니다.</li>
+                <li><strong>“서비스”</strong>라 함은 Spoonie가 제공하는 레시피 공유 플랫폼을 의미합니다.</li>
+                <li><strong>“이용자”</strong>라 함은 이 약관에 따라 서비스를 이용하는 회원 및 비회원을 의미합니다.</li>
+                <li><strong>“회원”</strong>이라 함은 서비스에 개인정보를 제공하여 회원등록을 한 자로서, 서비스의 정보를 지속적으로 제공받으며, 서비스를 계속적으로 이용할 수 있는 자를 의미합니다.</li>
+                <li><strong>“콘텐츠”</strong>라 함은 이용자가 서비스 내에 게시한 레시피, 이미지, 댓글, 평가 등 모든 정보를 의미합니다.</li>
               </ul>
             </section>
 

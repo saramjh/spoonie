@@ -12,9 +12,8 @@ import RecipeListCard from '@/components/recipe/RecipeListCard';
 import { useExplore, type ExploreData } from '@/hooks/useExplore';
 import UserCard from '@/components/search/UserCard';
 import type { Item } from '@/types/item';
-import { getPopularKeywordsCached, optimizedSearch, searchUsers, SearchMetrics, type UserSearchResult } from '@/utils/search-optimization';
+import { getPopularKeywordsCached, optimizedSearch, searchUsers, type UserSearchResult } from '@/lib/search-optimization';
 import { useFollowStore } from '@/store/followStore';
-import { useNavigation } from '@/hooks/useNavigation';
 import { SectionHeading, StateSheet, UnderlineTabs } from "@/components/kit"
 
 // 서버 부담 최소화를 위한 페이지 크기
@@ -33,59 +32,16 @@ interface UserResult {
   latest_items: Item[];
 }
 
+// 인기 키워드와 사람 검색. 실패하면 빈 목록으로 보여 준다 (콘텐츠 검색은 아래 infiniteSearchFetcher)
 const fetcher = async (key: string): Promise<unknown> => {
   const [type, query] = key.split('|');
-
-  switch (type) {
-    case 'popular_keywords':
-      // 최적화된 캐시 기반 인기 키워드 조회
-      const startTime = performance.now();
-      try {
-        const keywords = await getPopularKeywordsCached();
-        const endTime = performance.now();
-        SearchMetrics.recordSearch(endTime - startTime, keywords.length > 0);
-        return keywords;
-      } catch (error) {
-        SearchMetrics.recordError();
-        console.error('❌ Popular keywords fetch failed:', error);
-        return [];
-      }
-
-    case 'search':
-      if (!query) return [];
-      
-      // 디바운싱된 최적화 검색 (콘텐츠용)
-      const searchStartTime = performance.now();
-      try {
-        const results = await optimizedSearch.search(query);
-        const searchEndTime = performance.now();
-        SearchMetrics.recordSearch(searchEndTime - searchStartTime, false);
-        return results;
-      } catch (error) {
-        SearchMetrics.recordError();
-        console.error('❌ Optimized search failed:', error);
-        return [];
-      }
-
-    case 'search_users':
-      if (!query) return [];
-      
-      // 유저네임 전용 검색
-      const userSearchStartTime = performance.now();
-      try {
-        const userResults = await searchUsers(query);
-        const userSearchEndTime = performance.now();
-        SearchMetrics.recordSearch(userSearchEndTime - userSearchStartTime, false);
-        return userResults;
-      } catch (error) {
-        SearchMetrics.recordError();
-        console.error('❌ User search failed:', error);
-        return [];
-      }
-
-    default:
-      return null;
+  try {
+    if (type === 'popular_keywords') return await getPopularKeywordsCached();
+    if (type === 'search_users') return query ? await searchUsers(query) : [];
+  } catch (error) {
+    console.error(`❌ ${type} fetch failed:`, error);
   }
+  return [];
 };
 
 // 무한스크롤을 위한 페이지네이션 fetcher
@@ -177,8 +133,6 @@ const infiniteSearchFetcher = async (key: string): Promise<Item[]> => {
 
 // 검색어가 없을 때의 탐색 목록은 서버가 미리 그린 것(initialExplore)으로 시작한다: 검색엔진이 레시피 링크를 읽고, 첫 화면에 빈칸이 없다
 export default function SearchClient({ initialExplore }: { initialExplore?: ExploreData | null }) {
-  // Smart Navigation: 이 페이지를 거쳐간 navigation history 추적
-  useNavigation({ trackHistory: true })
 
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');

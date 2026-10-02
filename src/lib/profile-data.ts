@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
-import { getCommentCountConcurrencySafe } from "@/utils/concurrency-helpers"
+import { getCommentCountConcurrencySafe } from "@/lib/concurrency-helpers"
 
 /** 누구나 읽을 수 있는 프로필 컬럼. email, role은 포함하지 않는다. */
 export const PUBLIC_PROFILE_COLUMNS =

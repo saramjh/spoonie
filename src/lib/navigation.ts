@@ -10,7 +10,7 @@ import { useRouter as useNextRouter } from "next/navigation"
  */
 export const NAVIGATION_START_EVENT = "spoonie:navigation-start"
 
-export function signalNavigationStart(href?: string) {
+function signalNavigationStart(href?: string) {
   if (typeof window === "undefined") return
   if (href) {
     try {

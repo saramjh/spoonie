@@ -23,14 +23,12 @@ import { IntentLink } from "@/components/kit"
 interface SimplifiedCommentsSectionProps {
   currentUserId?: string
   itemId: string
-  onCommentsCountChange?: (count: number) => void
   cachedItem?: Item // 전체 아이템 데이터 추가
 }
 
 export default function SimplifiedCommentsSection({ 
   currentUserId, 
   itemId, 
-  onCommentsCountChange,
   cachedItem
 }: SimplifiedCommentsSectionProps) {
   const [newComment, setNewComment] = useState("")
@@ -118,7 +116,6 @@ export default function SimplifiedCommentsSection({
 
     // SSA 표준: 즉시 UI 업데이트 + 모든 캐시 동기화 (0ms)
     const rollback = await cacheManager.comment(itemId, currentUserId, 1, cachedItem)
-    // onCommentsCountChange 제거 - 캐시가 UI를 직접 업데이트
 
     try {
       // STEP 2: 백그라운드 DB 업데이트
@@ -174,7 +171,6 @@ export default function SimplifiedCommentsSection({
 
     // STEP 1: 즉시 UI 업데이트 + 모든 캐시 동기화 (0ms)
     const rollback = await cacheManager.comment(itemId, currentUserId, 1, cachedItem)
-    // onCommentsCountChange 제거 - 캐시가 UI를 직접 업데이트
 
     try {
       // STEP 2: 백그라운드 DB 업데이트
@@ -219,7 +215,6 @@ export default function SimplifiedCommentsSection({
 
     // STEP 1: 즉시 UI 업데이트 + 모든 캐시 동기화 (0ms)
     const rollback = await cacheManager.comment(itemId, currentUserId, -1, cachedItem)
-    // onCommentsCountChange 제거 - 캐시가 UI를 직접 업데이트
 
     try {
       // STEP 2: 백그라운드 DB 업데이트
@@ -418,7 +413,7 @@ export default function SimplifiedCommentsSection({
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDeleteComment(reply.id)}
-                            className="text-ink-soft hover:text-[#D6453D] w-5 h-5 p-0"
+                            className="text-ink-soft hover:text-like w-5 h-5 p-0"
                           >
                             <Trash2 className="w-3 h-3" />
                           </Button>

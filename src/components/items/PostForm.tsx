@@ -17,13 +17,12 @@ import { useToast } from "@/hooks/use-toast"
 import type { Item } from "@/types/item"
 import CitedRecipeSearch from "@/components/recipe/CitedRecipeSearch"
 
-import { uploadImagesOptimized, ImageUploadMetrics } from "@/utils/image-optimization"
+import { uploadImagesOptimized } from "@/lib/image-optimization"
 import { cacheManager } from "@/lib/unified-cache-manager"
 import { notificationService } from "@/lib/notification-service"
 import { logEvent } from "@/lib/events"
 import { mutate as globalMutate } from "swr"
-import SourceLine from "@/components/items/SourceLine"
-import { PageHeader, SectionHeading, Sheet } from "@/components/kit"
+import { PageHeader, SectionHeading, Sheet, SourceRow } from "@/components/kit"
 import { revalidateItemPage } from "@/lib/revalidate-item"
 import { removeDroppedImages } from "@/lib/item-images"
 
@@ -60,47 +59,33 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 	const supabase = createSupabaseBrowserClient()
 
 	const [isSubmitting, setIsSubmitting] = useState(false)
-	const [mainImages, setMainImages] = useState<OptimizedImage[]>([])
-	const [thumbnailIndex, setThumbnailIndex] = useState(0)
+	// 수정할 때의 처음 값: 이미 올린 사진과 대표 사진 (수정 화면은 initialData가 준비된 뒤에만 이 폼을 그린다)
+	const editing = isEditMode && initialData ? initialData : null
+	const [mainImages, setMainImages] = useState<OptimizedImage[]>(() =>
+		(editing?.image_urls ?? []).map((url): OptimizedImage => ({ file: new File([], url.split("/").pop()!), preview: url, width: 800, height: 600 }))
+	)
+	const [thumbnailIndex, setThumbnailIndex] = useState(() => Math.max(0, Math.min(editing?.thumbnail_index ?? 0, (editing?.image_urls?.length ?? 1) - 1)))
 	
-	// SSA: 섬네일 변경 시 즉시 캐시 업데이트를 위한 wrapper 함수
-	const handleThumbnailChange = useCallback(async (newIndex: number) => {
-
+	// 대표 사진을 바꾸면 수정 중인 글의 화면 캐시도 바로 바꾼다
+	const editItemId = editing?.id
+	const handleThumbnailChange = useCallback((newIndex: number) => {
 		setThumbnailIndex(newIndex)
-		
-		// 수정 모드이고 itemId가 있는 경우에만 즉시 캐시 업데이트
-		if (isEditMode && initialData?.id) {
-			try {
-				const { data: { user } } = await supabase.auth.getUser()
-				if (user) {
-					const partialUpdate = {
-						thumbnail_index: newIndex,
-						// 기본 정보는 그대로 유지
-						id: initialData.id,
-						item_id: initialData.id,
-					}
-					
-					await cacheManager.updateItem(initialData.id, partialUpdate)
-					
-
-				}
-			} catch (error) {
-				console.error(`❌ PostForm: Failed to update thumbnail cache:`, error)
-				// 캐시 업데이트 실패해도 UI 상태는 유지
-			}
-		}
-	}, [isEditMode, initialData?.id, supabase.auth])
+		if (!editItemId) return
+		cacheManager.updateItem(editItemId, { thumbnail_index: newIndex, id: editItemId, item_id: editItemId }).catch((error) => {
+			console.error("❌ PostForm: Failed to update thumbnail cache:", error)
+		})
+	}, [editItemId])
 	const [selectedCitedRecipes, setSelectedCitedRecipes] = useState<Item[]>([])
 
 	const form = useForm<PostFormValues>({
 		resolver: zodResolver(postSchema),
 		mode: "onChange",
 		defaultValues: {
-			title: "",
-			content: "",
-			is_public: true, // 레시피드 기본값은 공개
-			tags: [],
-			cited_recipe_ids: [],
+			title: editing?.title || "",
+			content: editing?.content || "",
+			is_public: editing?.is_public ?? true, // 레시피드 기본값은 공개
+			tags: editing?.tags || [],
+			cited_recipe_ids: Array.isArray(editing?.cited_recipe_ids) ? editing.cited_recipe_ids.map(String).filter(Boolean) : [],
 		},
 	})
 
@@ -141,45 +126,12 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 		})
 	}, [isEditMode, sourceRecipeId, loadCitedRecipes, form])
 
+	// 수정할 때 이미 연결된 참고 레시피의 제목·작성자를 받는다
+	const editCitedKey = editing?.cited_recipe_ids?.join(",") ?? ""
 	useEffect(() => {
-		if (isEditMode && initialData) {
-			// 안전한 cited_recipe_ids 처리
-			const safeCitedRecipeIds = Array.isArray(initialData.cited_recipe_ids) 
-				? initialData.cited_recipe_ids.map(id => String(id)).filter(id => id !== "")
-				: []
-			
-	
-			
-			form.reset({
-				title: initialData.title || "",
-				content: initialData.content || "",
-				is_public: initialData.is_public ?? true, // 기본값은 공개
-				tags: initialData.tags || [],
-				cited_recipe_ids: safeCitedRecipeIds,
-			})
-
-			if (initialData.image_urls) {
-				const fetchedImages = initialData.image_urls.map(
-					(url): OptimizedImage => ({
-					file: new File([], url.split("/").pop()!),
-					preview: url,
-						width: 800,
-						height: 600,
-					})
-				)
-				setMainImages(fetchedImages)
-				// 업계 표준: 저장된 썸네일 인덱스 복원 또는 기본값(0) 사용
-				const savedThumbnailIndex = (initialData as Item & { thumbnail_index?: number }).thumbnail_index ?? 0
-				setThumbnailIndex(Math.min(savedThumbnailIndex, fetchedImages.length - 1))
-	
-			}
-
-			// 참고 레시피 초기화
-			if (initialData.cited_recipe_ids && initialData.cited_recipe_ids.length > 0) {
-				loadCitedRecipes(initialData.cited_recipe_ids).then(setSelectedCitedRecipes)
-			}
-		}
-	}, [isEditMode, initialData, form, supabase, loadCitedRecipes])
+		if (!editCitedKey) return
+		loadCitedRecipes(editCitedKey.split(",")).then(setSelectedCitedRecipes)
+	}, [editCitedKey, loadCitedRecipes])
 
 	// 폼 에러 핸들러 추가
 	const onError = () => {
@@ -219,7 +171,6 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 		
 
 		// 최적화된 병렬 이미지 업로드 (기존: 순차 → 새로운: 병렬 + 캐싱)
-		const uploadStartTime = Date.now()
 		let uploadedImageUrls: string[] = []
 
 		if (isEditMode && initialData) {
@@ -273,21 +224,6 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 			}
 		}
 
-		// 업로드 성능 메트릭 기록
-		const uploadEndTime = Date.now()
-		const uploadDuration = uploadEndTime - uploadStartTime
-		
-		// 각 이미지의 평균 크기와 시간을 기록
-		mainImages.forEach(img => {
-			if (img.file.size > 0) {
-				ImageUploadMetrics.recordUpload(
-					img.file.size, 
-					uploadDuration / mainImages.length, 
-					true, 
-					false
-				)
-			}
-		})
 
 
 
@@ -467,7 +403,7 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 			<form id="post-form" onSubmit={form.handleSubmit(onSubmit, onError)} className="space-y-3 px-3 pt-3">
 				<Sheet>
 					{sourceRecipes.length > 0 && (
-						<SourceLine recipes={sourceRecipes} creationOrigin={sourceOrigin} className="border-b border-border px-4 py-3" />
+						<SourceRow recipes={sourceRecipes} creationOrigin={sourceOrigin} asLink={false} className="border-t-0" />
 					)}
 					{!sourceRecipeId && citedSection}
 

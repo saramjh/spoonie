@@ -19,7 +19,6 @@ import RecipeListCard from "@/components/recipe/RecipeListCard"
 import type { User } from "@supabase/supabase-js"
 import type { Item } from "@/types/item"
 import { useToast } from "@/hooks/use-toast"
-import { useNavigation } from "@/hooks/useNavigation"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Sheet, StateSheet, UnderlineTabs } from "@/components/kit"
 import { revalidateItemPage } from "@/lib/revalidate-item"
@@ -251,8 +250,6 @@ export default function RecipesPage() {
 	const { toast } = useToast()
 	const { mutate } = useSWRConfig()
 
-	// Smart Navigation: 레시피북 navigation history 추적
-	useNavigation({ trackHistory: true })
 
 	const [currentUser, setCurrentUser] = useState<User | null>(null)
 	const [userLoading, setUserLoading] = useState(true)
@@ -291,9 +288,12 @@ export default function RecipesPage() {
 		return () => clearTimeout(handler)
 	}, [localSearchTerm, setSearchTerm])
 
-	useEffect(() => {
+	// 저장된 검색어가 바깥에서 바뀌면(초기화 등) 입력칸도 맞춘다. 렌더 중에 한 번만 맞춰 렌더가 한 번 더 일어나지 않게 한다
+	const [syncedSearchTerm, setSyncedSearchTerm] = useState(searchTerm)
+	if (searchTerm !== syncedSearchTerm) {
+		setSyncedSearchTerm(searchTerm)
 		setLocalSearchTerm(searchTerm)
-	}, [searchTerm])
+	}
 
 	const getKey = useCallback(
 		(pageIndex: number, previousPageData: Item[]) => {
@@ -632,7 +632,7 @@ export default function RecipesPage() {
 					</div>
 				)}
 
-				<div ref={observerElem} style={{ height: "1px" }} />
+				<div ref={observerElem} className="h-px" />
 
 				{isReachingEnd && !isEmpty && <p className="py-6 text-center text-[13px] text-ink-soft">여기까지예요</p>}
 			</main>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import useSWR from "swr"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -28,69 +28,35 @@ interface LikersModalProps {
 	currentUserId?: string | null
 }
 
+// 좋아요한 사람 최근 50명
+async function fetchLikers(itemId: string): Promise<LikerProfile[]> {
+	const { data, error } = await createSupabaseBrowserClient()
+		.from("likes")
+		.select("user_id, created_at, profiles!user_id (id, username, display_name, avatar_url, public_id)")
+		.eq("item_id", itemId)
+		.order("created_at", { ascending: false })
+		.limit(50)
+	if (error) throw error
+	return (data || []).map((like: { user_id: string; created_at: string; profiles: Profile | Profile[] }) => {
+		const profile = Array.isArray(like.profiles) ? like.profiles[0] : like.profiles
+		return {
+			id: profile?.id || like.user_id,
+			username: profile?.username || "익명",
+			display_name: profile?.username ?? null,
+			avatar_url: profile?.avatar_url ?? null,
+			public_id: profile?.public_id ?? null,
+			liked_at: like.created_at,
+		}
+	})
+}
+
 export default function LikersModal({ isOpen, onClose, itemId, itemType, currentUserId }: LikersModalProps) {
-	const [likers, setLikers] = useState<LikerProfile[]>([])
-	const [loading, setLoading] = useState(false)
-	const [error, setError] = useState<string | null>(null)
-	const supabase = createSupabaseBrowserClient()
-
-	const fetchLikers = useCallback(async () => {
-		setLoading(true)
-		setError(null)
-
-		try {
-			
-
-			const { data, error } = await supabase
-				.from("likes")
-				.select(
-					`
-					user_id,
-					created_at,
-					profiles!user_id (
-						id,
-						username,
-						display_name,
-						avatar_url,
-						public_id
-					)
-				`
-				)
-				.eq("item_id", itemId)
-				.order("created_at", { ascending: false })
-				.limit(50) // 최대 50명까지 표시
-
-			if (error) {
-				throw error
-			}
-
-			const formattedLikers: LikerProfile[] = (data || []).map((like: { user_id: string; created_at: string; profiles: Profile | Profile[] }) => {
-				const profile = Array.isArray(like.profiles) ? like.profiles[0] : like.profiles
-				return {
-					id: profile?.id || like.user_id,
-					username: profile?.username || "익명",
-					        display_name: profile?.username,
-					avatar_url: profile?.avatar_url,
-					public_id: profile?.public_id,
-					liked_at: like.created_at,
-				}
-			})
-
-			
-			setLikers(formattedLikers)
-		} catch (error) {
-			console.error("❌ Error fetching likers:", error)
-			setError("좋아요한 사용자 목록을 불러오는데 실패했습니다.")
-		} finally {
-			setLoading(false)
-		}
-	}, [supabase, itemId])
-
-	useEffect(() => {
-		if (isOpen && itemId) {
-			fetchLikers()
-		}
-	}, [isOpen, itemId, fetchLikers])
+	// 창이 열렸을 때만 받는다
+	const { data: likers = [], error: fetchError, isLoading: loading, mutate } = useSWR(isOpen && itemId ? `likers|${itemId}` : null, () => fetchLikers(itemId), {
+		revalidateOnFocus: false,
+	})
+	const error = fetchError ? "좋아요한 사용자 목록을 불러오는데 실패했습니다." : null
+	const retry = () => mutate()
 
 	return (
 		<Dialog open={isOpen} onOpenChange={onClose}>
@@ -123,7 +89,7 @@ export default function LikersModal({ isOpen, onClose, itemId, itemType, current
 					{error && (
 						<div className="text-center py-8 text-ink-soft">
 							<p>{error}</p>
-							<Button variant="outline" onClick={fetchLikers} className="mt-2">
+							<Button variant="outline" onClick={retry} className="mt-2">
 								다시 시도
 							</Button>
 						</div>

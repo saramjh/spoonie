@@ -17,8 +17,8 @@ import type { User } from "@supabase/supabase-js"
 import type { Item } from "@/types/item"
 import ImageCarousel from "@/components/common/ImageCarousel"
 import { useCitedRecipes } from "@/hooks/useCitedRecipes"
-import { enrichWithCachedAuthor, cacheAuthors } from "@/utils/author-cache"
-import { useThumbnail } from "@/hooks/useThumbnail"
+import { enrichWithCachedAuthor, cacheAuthors } from "@/lib/author-cache"
+import { orderImagesForDisplay } from "@/lib/thumbnail"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import ExpandableText from "@/components/common/ExpandableText"
 import { cacheManager } from "@/lib/unified-cache-manager"
@@ -90,11 +90,7 @@ export default function PostCard({
   
 
   
-  const { orderedImages } = useThumbnail({
-    itemId: stableItemId,
-    imageUrls: cachedItem.image_urls || [],
-    thumbnailIndex: cachedItem.thumbnail_index ?? 0
-  })
+  const orderedImages = orderImagesForDisplay(cachedItem.image_urls, cachedItem.thumbnail_index)
 
 
 
@@ -321,7 +317,7 @@ export default function PostCard({
           />
           {showHeartAnimation && (
             <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
-              <Heart className="h-16 w-16 animate-ping fill-[#D6453D] text-[#D6453D]" aria-hidden />
+              <Heart className="h-16 w-16 animate-ping fill-like text-like" aria-hidden />
             </div>
           )}
         </div>

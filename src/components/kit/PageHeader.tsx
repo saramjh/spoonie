@@ -1,6 +1,7 @@
 "use client"
 
 import type { ReactNode } from "react"
+import { cn } from "@/lib/utils"
 import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "@/lib/navigation"
@@ -17,7 +18,7 @@ interface PageHeaderProps {
 export function PageHeader({ title, leading = "back", trailing, titleAlign = "center", className }: PageHeaderProps) {
 	const router = useRouter()
 	return (
-		<header className={`sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-paper ${titleAlign === "start" ? "pl-4 pr-1" : "px-1"} ${className ?? ""}`}>
+		<header className={cn("sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-paper", titleAlign === "start" ? "pl-4 pr-1" : "px-1", className)}>
 			{leading === "back" && (
 				<Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="뒤로 가기">
 					<ArrowLeft className="h-6 w-6" aria-hidden />

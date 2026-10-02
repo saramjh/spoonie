@@ -39,7 +39,7 @@ export default function PushNotificationSettings() {
           });
         }
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "오류가 발생했습니다",
         description: "푸시 알림 설정 중 문제가 발생했습니다.",
@@ -103,7 +103,7 @@ export default function PushNotificationSettings() {
           variant: "destructive"
         });
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "테스트 오류",
         description: "테스트 중 오류가 발생했습니다.",

@@ -9,6 +9,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useHydrated } from '@/hooks/useHydrated';
 import { createSupabaseBrowserClient } from '@/lib/supabase-client';
 
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
@@ -22,18 +23,12 @@ interface PushSubscriptionData {
 }
 
 export function usePushNotification() {
-  const [isSupported, setIsSupported] = useState(false);
+  // 화면이 뜬 뒤 브라우저 기능으로 판단한다 (서버 렌더와 어긋나지 않게)
+  const hydrated = useHydrated();
+  const isSupported = hydrated && 'serviceWorker' in navigator && 'PushManager' in window && !!VAPID_PUBLIC_KEY;
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [subscription, setSubscription] = useState<PushSubscriptionData | null>(null);
-
-  useEffect(() => {
-    if ('serviceWorker' in navigator && 'PushManager' in window && VAPID_PUBLIC_KEY) {
-      setIsSupported(true);
-      checkCurrentSubscription();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // 구독을 만들고 서버에 저장한다 (권한은 이미 허용된 상태여야 한다)
   const createAndSaveSubscription = async (registration: ServiceWorkerRegistration): Promise<boolean> => {
@@ -85,6 +80,16 @@ export function usePushNotification() {
       console.error('❌ 구독 상태 확인 실패:', error);
     }
   };
+
+  // 지원되는 브라우저면 지금 구독 상태를 한 번 확인한다
+  useEffect(() => {
+    if (!isSupported) return;
+    const check = async () => {
+      await checkCurrentSubscription();
+    };
+    check();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSupported]);
 
   const subscribeToPush = async () => {
     if (!isSupported) {

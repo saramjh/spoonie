@@ -2,7 +2,6 @@ import { Metadata } from 'next'
 import SeamlessItemList from "@/components/items/SeamlessItemList"
 import { getPublicFeedData } from "@/lib/server-data"
 
-// 동적 라우팅 강제 (개인화된 피드 때문에)
 // 홈 HTML은 공개 피드로 정적 생성해 CDN에서 바로 보낸다 (스플래시가 즉시 보이도록).
 // 5분마다 다시 만든다(엣지 캐시가 오래 남아 첫 접속이 빠르다). 새 글과 로그인 사용자 정보는 클라이언트가 스플래시 동안 채운다.
 export const revalidate = 300
@@ -59,32 +58,22 @@ import PostCardSkeleton from "@/components/items/PostCardSkeleton"
  * 레시피(recipe)와 레시피드(post)를 통합한 피드를 표시합니다
  */
 export default async function HomePage() {
-	try {
-		// 서버에서 초기 데이터 미리 로딩 (3번 요청 → 1번으로 통합)
-		const initialData = await getPublicFeedData()
-		
-		
+	// 서버에서 공개 피드 첫 페이지를 받아 HTML에 넣는다. 실패하면 브라우저가 이어서 받는다
+	const initialData = await getPublicFeedData().catch((error) => {
+		console.error("❌ HomePage: initial feed failed:", error)
+		return null
+	})
 
-		return (
-			<div className="min-h-screen">
-				<h1 className="sr-only">스푸니 - 레시피와 요리 이야기를 나누는 커뮤니티</h1>
-				{/* Google 검색 결과의 사이트 이름 */}
-				<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(websiteSchema) }} />
-				<Suspense fallback={<ItemListSkeleton />}>
-					<SeamlessItemList initialData={initialData} />
-				</Suspense>
-			</div>
-		)
-	} catch (error) {
-		console.error("❌ HomePage: Server rendering error:", error)
-		
-		// 서버 에러 시 클라이언트에서 재시도 가능한 폴백
-		return (
-			<div className="min-h-screen">
-				<SeamlessItemList initialData={null} />
-			</div>
-		)
-	}
+	return (
+		<div className="min-h-screen">
+			<h1 className="sr-only">스푸니 - 레시피와 요리 이야기를 나누는 커뮤니티</h1>
+			{/* Google 검색 결과의 사이트 이름 */}
+			<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(websiteSchema) }} />
+			<Suspense fallback={<ItemListSkeleton />}>
+				<SeamlessItemList initialData={initialData} />
+			</Suspense>
+		</div>
+	)
 }
 
 /**

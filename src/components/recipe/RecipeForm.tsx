@@ -22,13 +22,12 @@ import { useToast } from "@/hooks/use-toast"
 
 
 import type { Item, ItemDetail } from "@/types/item"
-import { uploadImagesOptimized, uploadVariants, ImageUploadMetrics } from "@/utils/image-optimization"
+import { uploadImagesOptimized, uploadVariants } from "@/lib/image-optimization"
 import { cacheManager } from "@/lib/unified-cache-manager"
 import { notificationService } from "@/lib/notification-service"
 import { logEvent } from "@/lib/events"
 import { mutate as globalMutate } from "swr"
-import SourceLine from "@/components/items/SourceLine"
-import { ColorLabelPicker, PageHeader, SectionHeading, Sheet } from "@/components/kit"
+import { ColorLabelPicker, PageHeader, SectionHeading, Sheet, SourceRow } from "@/components/kit"
 import { revalidateItemPage } from "@/lib/revalidate-item"
 import { removeDroppedImages } from "@/lib/item-images"
 
@@ -340,7 +339,6 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 		// 업계 표준: 원본 순서 유지 + 썸네일 인덱스 정보 저장 (개선된 Instagram/Facebook 방식)
 		
 
-		const uploadStartTime = Date.now()
 		const newImageFiles = mainImages.filter((img) => img.file.size > 0)
 		const existingImageUrls = mainImages.filter((img) => !newImageFiles.includes(img)).map((img) => img.preview)
 		
@@ -364,18 +362,6 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 				return result.url
 			})
 
-			// 업로드 성능 메트릭 기록
-			const uploadEndTime = Date.now()
-			const uploadDuration = uploadEndTime - uploadStartTime
-			
-			newImageFiles.forEach(img => {
-				ImageUploadMetrics.recordUpload(
-					img.file.size, 
-					uploadDuration / newImageFiles.length, 
-					true, 
-					false
-				)
-			})
 
 			
 		}
@@ -616,9 +602,9 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 			<form id="recipe-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 px-3 pt-3">
 				{/* fork: 무엇을 바탕으로 쓰는지 먼저 보여 준다. 저장하면 원본의 "이어진 레시피"에 고친 버전으로 실린다 */}
 				{!isEditMode && forkFrom && (
-					<Sheet className="px-4 py-3">
-						<SourceLine recipes={selectedCitedRecipes.filter((r) => r.id === forkFrom.id)} />
-						<p className="mt-1 text-sm text-ink-soft">분량, 재료, 단계를 가져왔어요. 내 방식대로 고치고 내가 만든 사진을 올려 주세요.</p>
+					<Sheet>
+						<SourceRow recipes={selectedCitedRecipes.filter((r) => r.id === forkFrom.id)} asLink={false} className="border-t-0" />
+						<p className="px-4 pb-3 pt-2 text-sm text-ink-soft">분량, 재료, 단계를 가져왔어요. 내 방식대로 고치고 내가 만든 사진을 올려 주세요.</p>
 					</Sheet>
 				)}
 

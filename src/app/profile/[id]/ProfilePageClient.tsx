@@ -14,12 +14,10 @@ import Link from "next/link"
 import RecipeCard from "@/components/recipe/RecipeCard"
 import RecipeCardSkeleton from "@/components/recipe/RecipeCardSkeleton"
 import { Skeleton } from "@/components/ui/skeleton"
-import FollowersModal from "@/components/profile/FollowersModal"
-import FollowingModal from "@/components/profile/FollowingModal"
+import FollowListModal, { type FollowDirection } from "@/components/profile/FollowListModal"
 
 import { useSessionStore } from "@/store/sessionStore"
 import { useFollowStore } from "@/store/followStore" // 업계 표준: 글로벌 팔로우 상태
-import { useNavigation } from "@/hooks/useNavigation"
 import { logEvent } from "@/lib/events"
 import { cameFrom } from "@/lib/surface"
 import useSWR from "swr"
@@ -39,8 +37,6 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 	const userId = params.id
 	const supabase = createSupabaseBrowserClient()
 
-	// Smart Navigation: 이 페이지를 거쳐간 navigation history 추적
-	useNavigation({ trackHistory: true })
 
 	const [sessionUser, setSessionUser] = useState<User | null>(null)
 	// 보기 기준은 대상 종류: 레시피(자산) / 레시피드(활동) (DESIGN.md Interface Grammar 2)
@@ -84,8 +80,7 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 	// 업계 표준: 지역 상태 제거, 글로벌 상태만 사용
 	
 	// 모달 상태들
-	const [showFollowersModal, setShowFollowersModal] = useState(false)
-	const [showFollowingModal, setShowFollowingModal] = useState(false)
+	const [followList, setFollowList] = useState<FollowDirection | null>(null)
 	
 	// 현재 팔로우 상태 (글로벌 스토어에서)
 	const isFollowing = profile ? getIsFollowing(profile.id) : false
@@ -236,11 +231,11 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 						</p>
 						{showFollowCounts && (
 							<p className="mt-0.5 text-sm text-ink-soft">
-								<button type="button" onClick={() => setShowFollowersModal(true)} className="py-1 underline-offset-4 hover:underline">
+								<button type="button" onClick={() => setFollowList("followers")} className="py-1 underline-offset-4 hover:underline">
 									팔로워 <span className="tabular-nums">{followCounts?.followers || 0}</span>
 								</button>
 								{" · "}
-								<button type="button" onClick={() => setShowFollowingModal(true)} className="py-1 underline-offset-4 hover:underline">
+								<button type="button" onClick={() => setFollowList("following")} className="py-1 underline-offset-4 hover:underline">
 									팔로잉 <span className="tabular-nums">{followCounts?.following || 0}</span>
 								</button>
 							</p>
@@ -290,7 +285,7 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 										{thumb ? (
 											<Photo src={thumb} sizes="(max-width: 448px) 33vw, 150px" priority={index < 3} />
 										) : (
-											<span className="flex h-full items-center p-2 text-[13px] leading-snug text-ink line-clamp-4">{item.content}</span>
+											<span className="h-full p-2 text-[13px] leading-snug text-ink line-clamp-4">{item.content}</span>
 										)}
 										<PhotoCount count={item.image_urls?.length || 0} />
 										{!item.is_public && <span className="absolute left-1 top-1 rounded-[2px] bg-ink/80 px-1.5 text-[11px] text-paper">비공개</span>}
@@ -304,20 +299,9 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 				)}
 			</div>
 
-			{/* Modals */}
-			<FollowersModal 
-				isOpen={showFollowersModal}
-				onClose={() => setShowFollowersModal(false)}
-				userId={profile?.id || ""}
-				currentUserId={sessionUser?.id || null}
-			/>
-			
-			<FollowingModal 
-				isOpen={showFollowingModal}
-				onClose={() => setShowFollowingModal(false)}
-				userId={profile?.id || ""}
-				currentUserId={sessionUser?.id || null}
-			/>
+			{followList && (
+				<FollowListModal direction={followList} isOpen onClose={() => setFollowList(null)} userId={profile?.id || ""} currentUserId={sessionUser?.id || null} />
+			)}
 		</div>
 	)
 }

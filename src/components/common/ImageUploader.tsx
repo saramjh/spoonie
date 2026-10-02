@@ -27,17 +27,6 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 	const { toast } = useToast()
 	const [isProcessing, setIsProcessing] = useState(false)
 	
-	// SSA: 썸네일 인덱스 동기화를 위한 내부 상태
-	const [currentThumbnailIndex, setCurrentThumbnailIndex] = useState(thumbnailIndex)
-	
-	// SSA: thumbnailIndex prop 변경 감지 및 동기화
-	useEffect(() => {
-		if (thumbnailIndex !== currentThumbnailIndex) {
-	
-			setCurrentThumbnailIndex(thumbnailIndex)
-		}
-	}, [thumbnailIndex, currentThumbnailIndex])
-
 	const handleFileSelect = useCallback(
 		async (e: React.ChangeEvent<HTMLInputElement>) => {
 			const files = Array.from(e.target.files || [])
@@ -90,20 +79,17 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 			const newImages = images.filter((_, i) => i !== index)
 			onImagesChange(newImages)
 
-					if (onThumbnailChange && currentThumbnailIndex >= newImages.length && newImages.length > 0) {
+					if (onThumbnailChange && thumbnailIndex >= newImages.length && newImages.length > 0) {
 			onThumbnailChange(0)
 		}
 	},
-	[images, onImagesChange, currentThumbnailIndex, onThumbnailChange]
+	[images, onImagesChange, thumbnailIndex, onThumbnailChange]
 	)
 
 	const setThumbnail = useCallback(
 		(index: number) => {
-			// Debug: Setting thumbnail index
-			setCurrentThumbnailIndex(index)
-			if (onThumbnailChange) {
-				onThumbnailChange(index)
-			}
+			// 대표 사진은 부르는 쪽(폼)이 가진다
+			onThumbnailChange?.(index)
 		},
 		[onThumbnailChange]
 	)
@@ -127,7 +113,7 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 				<>
 					<ul className="-mx-1 mt-2 flex gap-2 overflow-x-auto px-1 pb-1">
 						{images.map((image, index) => {
-							const isCover = showThumbnailSelector && index === currentThumbnailIndex
+							const isCover = showThumbnailSelector && index === thumbnailIndex
 							return (
 								<li key={`${image.file.name}-${index}`} className="relative h-24 w-24 flex-shrink-0">
 									<button

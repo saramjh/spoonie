@@ -20,7 +20,7 @@ export function Magnet({ color, size = "md", className, decorative = false }: Ma
 			role={decorative ? undefined : "img"}
 			aria-label={decorative ? undefined : `색상 라벨 ${magnet.label}`}
 			aria-hidden={decorative || undefined}
-			className={cn("block rounded-full shadow-[0_2px_4px_rgba(35,40,43,0.35)]", SIZE[size], className)}
+			className={cn("block rounded-full shadow-[0_2px_4px_rgb(var(--ink)/0.35)]", SIZE[size], className)}
 			style={{ backgroundColor: magnet.hex }}
 		/>
 	)

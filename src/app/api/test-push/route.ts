@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import webpush from 'web-push'
 
 // 개발 환경에서만 실제 푸시 테스트를 위한 API
 export async function POST(request: NextRequest) {
@@ -8,7 +9,6 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const webpush = require('web-push')
     const { subscription, notification } = await request.json()
 
     // VAPID 키 설정

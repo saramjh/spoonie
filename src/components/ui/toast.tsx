@@ -27,7 +27,7 @@ ToastViewport.displayName = ToastPrimitives.Viewport.displayName
 
 const toastVariants = cva(
   // 알림 쪽지: 문 판 위에 잠깐 붙는 종이 (DESIGN.md). 색 대신 글자색으로 상태를 말한다
-  "group pointer-events-auto relative flex w-full items-center justify-between space-x-3 overflow-hidden rounded-[3px] bg-paper p-4 pr-12 shadow-[0_16px_40px_-12px_rgba(35,40,43,0.4)] transition-all duration-200 data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-top-full data-[state=open]:slide-in-from-top-full ",
+  "group pointer-events-auto relative flex w-full items-center justify-between space-x-3 overflow-hidden rounded-[3px] bg-paper p-4 pr-12 shadow-[0_16px_40px_-12px_rgb(var(--ink)/0.4)] transition-all duration-200 data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-top-full data-[state=open]:slide-in-from-top-full ",
   {
     variants: {
     variant: {

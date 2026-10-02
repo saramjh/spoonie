@@ -5,26 +5,6 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-client"
  * 서버 부담을 대폭 줄이는 효율적인 검색 구현
  */
 
-interface PopularPost {
-	id: string
-	title: string
-	content?: string
-	image_urls?: string[]
-	created_at: string
-	author: {
-		display_name?: string
-		username?: string
-		avatar_url?: string
-	}
-	// SSA 원칙: 서버에서 정확한 초기 상태 제공
-	is_liked?: boolean
-	likes_count?: number
-	comments_count?: number
-	item_id?: string
-	item_type?: 'recipe' | 'post'
-	user_id?: string
-}
-
 interface SearchResult {
 	id: string
 	title: string
@@ -44,17 +24,16 @@ interface SearchResult {
 
 interface CachedSearchResults {
 	popularKeywords: Array<{ keyword: string; count: number }>
-	popularPosts: PopularPost[]
 	lastUpdated: number
 	ttl: number // Time To Live (ms)
 }
 
-// 메모리 캐시 (production에서는 Redis 권장)
+// 브라우저 메모리 캐시 (탭이 열려 있는 동안)
 const searchCache = new Map<string, CachedSearchResults>()
 const CACHE_TTL = 5 * 60 * 1000 // 5분 캐시
 
 /**
- * 캐시된 인기 키워드 조회 (서버 부담 95% 감소)
+ * 인기 키워드 (5분 동안 다시 조회하지 않는다)
  */
 export async function getPopularKeywordsCached(): Promise<Array<{ keyword: string; count: number }>> {
 	const cacheKey = 'popular_keywords'
@@ -85,7 +64,6 @@ export async function getPopularKeywordsCached(): Promise<Array<{ keyword: strin
 		// 캐시 업데이트
 		searchCache.set(cacheKey, {
 			popularKeywords: result,
-			popularPosts: cached?.popularPosts || [],
 			lastUpdated: Date.now(),
 			ttl: CACHE_TTL
 		})
@@ -94,88 +72,6 @@ export async function getPopularKeywordsCached(): Promise<Array<{ keyword: strin
 	} catch (error) {
 		console.error('❌ Popular keywords fetch failed:', error)
 		return cached?.popularKeywords || []
-	}
-}
-
-/**
- * 캐시된 인기 게시물 조회 (데이터베이스 뷰 활용 + 좋아요 상태 포함)
- */
-export async function getPopularPostsCached(): Promise<PopularPost[]> {
-	const cacheKey = 'popular_posts'
-	const cached = searchCache.get(cacheKey)
-	
-	if (cached && Date.now() - cached.lastUpdated < cached.ttl) {
-
-		return cached.popularPosts
-	}
-
-	
-	const supabase = createSupabaseBrowserClient()
-
-	try {
-		// 현재 사용자 정보 가져오기
-		const { data: { user } } = await supabase.auth.getUser()
-		const currentUserId = user?.id || null
-
-		// 미리 계산된 뷰에서 조회 (인덱스 최적화됨)
-		const { data, error } = await supabase
-			.from('popular_items_view')
-			.select('*')
-			.limit(7)
-
-		if (error) {
-			console.error('❌ Failed to fetch popular posts:', error)
-			return cached?.popularPosts || []
-		}
-
-		let result = data || []
-
-		// SSA 원칙: 서버에서 정확한 is_liked 초기 상태 제공
-		if (currentUserId && result.length > 0) {
-			const itemIds = result.map(item => item.item_id || item.id).filter(Boolean)
-			
-			if (itemIds.length > 0) {
-				const { data: likes } = await supabase
-					.from('likes')
-					.select('item_id')
-					.eq('user_id', currentUserId)
-					.in('item_id', itemIds)
-					
-				const likedItemIds = new Set(likes?.map(like => like.item_id) || [])
-				
-
-				
-				result = result.map(item => {
-					const isLiked = likedItemIds.has(item.item_id || item.id)
-
-					return {
-						...item,
-						is_liked: isLiked
-					}
-				})
-			}
-		} else {
-
-		}
-		
-		// 캐시 업데이트
-		const currentCache = searchCache.get(cacheKey) || { 
-			popularKeywords: [], 
-			popularPosts: [], 
-			lastUpdated: 0, 
-			ttl: CACHE_TTL 
-		}
-		
-		searchCache.set(cacheKey, {
-			...currentCache,
-			popularPosts: result,
-			lastUpdated: Date.now()
-		})
-
-		return result
-	} catch (error) {
-		console.error('❌ Popular posts fetch failed:', error)
-		return cached?.popularPosts || []
 	}
 }
 
@@ -254,61 +150,6 @@ class DebouncedSearch {
  * 싱글톤 검색 인스턴스
  */
 export const optimizedSearch = new DebouncedSearch()
-
-/**
- * 검색 성능 메트릭 수집
- */
-export class SearchMetrics {
-	private static metrics = {
-		totalSearches: 0,
-		cacheHits: 0,
-		cacheMisses: 0,
-		averageResponseTime: 0,
-		errors: 0
-	}
-
-	static recordSearch(responseTime: number, fromCache: boolean): void {
-		this.metrics.totalSearches++
-		
-		if (fromCache) {
-			this.metrics.cacheHits++
-		} else {
-			this.metrics.cacheMisses++
-		}
-
-		// 이동평균으로 응답시간 계산
-		this.metrics.averageResponseTime = 
-			(this.metrics.averageResponseTime * (this.metrics.totalSearches - 1) + responseTime) / 
-			this.metrics.totalSearches
-	}
-
-	static recordError(): void {
-		this.metrics.errors++
-	}
-
-	static getMetrics() {
-		return {
-			...this.metrics,
-			cacheHitRate: this.metrics.totalSearches > 0 
-				? (this.metrics.cacheHits / this.metrics.totalSearches * 100).toFixed(2) + '%'
-				: '0%'
-		}
-	}
-
-	static reset(): void {
-		this.metrics = {
-			totalSearches: 0,
-			cacheHits: 0,
-			cacheMisses: 0,
-			averageResponseTime: 0,
-			errors: 0
-		}
-	}
-}
-
-// ==========================================
-// 유저네임 전용 검색 인터페이스 및 함수
-// ==========================================
 
 export interface UserSearchResult {
 	user_id: string;

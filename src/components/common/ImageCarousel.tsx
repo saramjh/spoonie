@@ -104,7 +104,7 @@ export default function ImageCarousel({
               <>
                 {/* 터치 시 어두운 오버레이 */}
                 {isTouching && (
-                  <div className="absolute inset-0 bg-black/10 z-10" />
+                  <div className="absolute inset-0 bg-ink/10 z-10" />
                 )}
                 
                 {/* 토스 철학: 스마트 클릭 처리 */}
@@ -146,7 +146,7 @@ export default function ImageCarousel({
             onClick={() => emblaApi?.scrollTo(index)}
             className={cn(
               'w-2 h-2 rounded-full transition-all duration-300',
-              selectedIndex === index ? 'bg-paper scale-125 shadow-[0_0_0_1px_rgba(35,40,43,0.25)]' : 'bg-paper/60 shadow-[0_0_0_1px_rgba(35,40,43,0.2)]'
+              selectedIndex === index ? 'bg-paper scale-125 shadow-[0_0_0_1px_rgb(var(--ink)/0.25)]' : 'bg-paper/60 shadow-[0_0_0_1px_rgb(var(--ink)/0.2)]'
             )}
             aria-label={`${index + 1}번째 사진 보기`}
           />

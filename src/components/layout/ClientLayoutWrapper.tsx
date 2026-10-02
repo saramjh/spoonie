@@ -9,9 +9,7 @@ import AppWrapper from "./AppWrapper"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import { useSessionStore } from "@/store/sessionStore"
 import { useFollowStore } from "@/store/followStore" // 업계 표준: 팔로우 상태 관리
-import { RefreshProvider } from "@/contexts/RefreshContext"
-import { startAuthorCacheCleanup } from "@/utils/author-cache"
-import { startMonitoring } from "@/lib/monitoring"
+import { startAuthorCacheCleanup } from "@/lib/author-cache"
 
 const SPLASH_MIN_MS = 1000
 const SPLASH_MAX_MS = 3000
@@ -39,11 +37,9 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
   // 메모리 안전: 전역 서비스 관리
   useEffect(() => {
     const cleanupAuthorCache = startAuthorCacheCleanup()
-    const cleanupMonitoring = startMonitoring()
     
     return () => {
       cleanupAuthorCache()
-      cleanupMonitoring()
     }
   }, [])
 
@@ -135,52 +131,23 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
     initializeAuth()
   }, [isInitialLoad, setSession, setProfile, setStoreInitialLoad, initializeFollowState])
 
-  // 뒤로가기 감지 시 홈화면 피드 새로고침
+  // 뒤로 가기로 홈에 돌아오면 피드를 다시 받는다 (이 앱의 유일한 뒤로 가기 처리기).
+  // 도착한 주소는 window.location으로 읽는다 (pathname은 떠나는 화면의 값이다)
   useEffect(() => {
     const handlePopState = () => {
-
-      
-      // 홈화면으로 돌아갔을 때만 피드 새로고침
-      if (pathname === "/" || pathname === "") {
-
-        
-        // 현재 사용자 정보 가져오기
-        const getCurrentUserAndRefresh = async () => {
-          try {
-            const { createSupabaseBrowserClient } = await import("@/lib/supabase-client")
-            const supabase = createSupabaseBrowserClient()
-            const { data: { user } } = await supabase.auth.getUser()
-            
-            const userId = user?.id || "guest"
-
-            
-            // 모든 홈 피드 캐시 무효화
-            mutate(
-              (key) => typeof key === "string" && 
-                       key.startsWith(`items|`) && 
-                       key.endsWith(`|${userId}`),
-              undefined,
-              { revalidate: true }
-            )
-          } catch (error) {
-            console.error("Error refreshing feed:", error)
-          }
-        }
-        
-        getCurrentUserAndRefresh()
-      }
+      if (window.location.pathname !== "/") return
+      mutate((key) => typeof key === "string" && key.startsWith("items|"), undefined, { revalidate: true })
     }
-
     window.addEventListener("popstate", handlePopState)
     return () => window.removeEventListener("popstate", handlePopState)
-  }, [pathname, mutate])
+  }, [mutate])
 
   // 스플래시는 페이지 위에 겹치는 오버레이로만 그린다.
   // 페이지를 스플래시로 대체하면 서버 HTML에 본문이 빠져 검색엔진이 빈 페이지를 보게 된다.
   return (
-    <RefreshProvider>
+    <>
       <AppWrapper>{children}</AppWrapper>
       {isInitialLoad && splashRoute && <SplashScreen />}
-    </RefreshProvider>
+    </>
   )
 }

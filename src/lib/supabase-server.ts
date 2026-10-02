@@ -2,7 +2,7 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr"
 import { cookies } from "next/headers"
 
 // Next.js 15부터 cookies()는 비동기다. 서버 클라이언트 생성도 비동기로 기다려야 한다.
-export async function createSupabaseServerClient(isRouteHandler = false) {
+async function createSupabaseServerClient(isRouteHandler = false) {
 	const cookieStore = await cookies()
 	
 	return createServerClient(

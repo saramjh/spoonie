@@ -1,6 +1,5 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { StateSheet } from "@/components/kit"
@@ -12,10 +11,8 @@ interface CreateContentAuthPromptProps {
 // 비로그인으로 작성 화면에 들어온 경우: 폼을 흐리게 깔지 않고 종이 한 장으로 안내한다.
 // 로그인 후에는 지금 주소(출처·fork 파라미터 포함)로 돌아와 바로 쓸 수 있다.
 export default function CreateContentAuthPrompt({ contentType }: CreateContentAuthPromptProps) {
-  const [next, setNext] = useState("/")
-  useEffect(() => {
-    setNext(window.location.pathname + window.location.search)
-  }, [])
+  // 로그인 확인이 끝난 뒤(브라우저)에만 그려지므로 지금 주소를 바로 읽는다
+  const next = window.location.pathname + window.location.search
   const isRecipe = contentType === "recipe"
 
   return (

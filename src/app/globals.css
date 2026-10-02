@@ -3,37 +3,22 @@
 @tailwind utilities;
 
 @layer base {
+	/* 팔레트의 유일한 출처 (DESIGN.md Colors). RGB 채널로 두어 Tailwind의 투명도 변형(bg-ink/70)과 CSS(rgb(var(--ink)))가 같은 값을 쓴다.
+	   tailwind.config.ts는 이 변수만 가리킨다. 색을 바꾸려면 여기와 DESIGN.md만 고친다. */
 	:root {
-		/* 냉장고 문: 법랑 문 판 위에 흰 종이, 흑연 잉크. 주황은 로고와 주요 동작 면에만 */
-		--background: 144 17% 89%; /* 문 판 #DDE7E1 */
-		--foreground: 202 10% 15%; /* 흑연 #23282B */
-		--card: 0 0% 100%; /* 종이 */
-		--card-foreground: 202 10% 15%;
-		--popover: 0 0% 100%;
-		--popover-foreground: 202 10% 15%;
-		--primary: 25 100% 50%; /* 브랜드 주황 #FF6900 (글자는 흑연으로 얹는다) */
-		--primary-foreground: 202 10% 15%;
-		--secondary: 135 13% 94%;
-		--secondary-foreground: 202 10% 15%;
-		--muted: 135 13% 94%;
-		--muted-foreground: 201 7% 38%; /* #5B6469, 종이 위 6:1 */
-		--accent: 135 13% 94%;
-		--accent-foreground: 202 10% 15%;
-		--destructive: 4 63% 48%;
-		--destructive-foreground: 0 0% 100%;
-		--border: 142 11% 85%;
-		--input: 142 11% 85%;
-		--ring: 24 100% 35%; /* 주황 잉크 #B34700, 종이 위 5.5:1 */
-		--radius: 0.5rem;
-
-		--door: #dde7e1;
-		--paper: #ffffff;
-		--ink: #23282b;
-		--ink-soft: #5b6469;
-		--orange-ink: #b34700;
-		--sheet-shadow: 0 1px 1px rgba(35, 40, 43, 0.06), 0 6px 14px -8px rgba(35, 40, 43, 0.22);
+		--door: 221 231 225; /* 법랑 문 판 #dde7e1 */
+		--paper: 255 255 255; /* 종이 */
+		--ink: 35 40 43; /* 흑연 #23282b */
+		--ink-soft: 91 100 105; /* 옅은 흑연 #5b6469, 종이 위 6:1 */
+		--brand-orange: 255 105 0; /* #ff6900, 글자는 흑연으로 얹는다 */
+		--orange-ink: 179 71 0; /* #b34700, 종이 위 5.5:1. 포커스 링 */
+		--rule-line: 213 221 216; /* 구분선 #d5ddd8 */
+		--paper-tint: 238 242 239; /* 종이 그늘 #eef2ef: 사진이 오기 전 자리, 눌린 행 */
+		--changed-mark: 201 223 210; /* 바뀐 분량 표시 #c9dfd2 */
+		--like: 214 69 61; /* 좋아요 하트 #d6453d */
+		--danger: 200 56 45; /* 지우기·오류 #c8382d, 종이 위 5:1 */
+		--sheet-shadow: 0 1px 1px rgb(var(--ink) / 0.06), 0 6px 14px -8px rgb(var(--ink) / 0.22);
 	}
-
 }
 
 @layer base {
@@ -41,9 +26,9 @@
 		@apply border-border;
 	}
 	body {
-		@apply bg-background text-foreground;
+		/* 글꼴 목록은 tailwind.config.ts fontFamily.sans 한 곳에 있다 */
+		@apply bg-background font-sans text-foreground;
 		min-height: 100vh;
-		font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
 		word-break: keep-all;
 		overflow-wrap: anywhere;
 		text-rendering: optimizeLegibility;
@@ -52,39 +37,26 @@
 	}
 
 	::selection {
-		background: #ffd2b0;
-		color: var(--ink);
+		background: #ffd2b0; /* selection */
+		color: rgb(var(--ink));
 	}
 
 	/* 법랑 문 판: 위에서 비치는 빛으로 위쪽이 조금 밝다. 화면에 고정해 스크롤해도 조명이 따라 움직이지 않는다 */
 	.door-surface {
-		background-color: var(--door);
+		background-color: rgb(var(--door));
 		background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 38%);
 		background-attachment: fixed;
 	}
 
 	/* 브라우저가 그리는 부분도 같은 팔레트로: 포커스 링, 글자 입력 커서 */
 	:focus-visible {
-		outline: 2px solid var(--orange-ink);
+		outline: 2px solid rgb(var(--orange-ink));
 		outline-offset: 2px;
 	}
 
 	input,
 	textarea {
-		caret-color: var(--orange-ink);
-	}
-
-	/* 🎯 Drag & Drop Overlay 스타일 - dnd-kit 위치 문제 해결 */
-	.dnd-overlay {
-		position: fixed !important;
-		pointer-events: none;
-		z-index: 999;
-		transform-origin: 0 0;
-	}
-
-	/* dnd-kit context 영역 */
-	[data-dnd-context] {
-		position: relative;
+		caret-color: rgb(var(--orange-ink));
 	}
 }
 

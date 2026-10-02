@@ -182,6 +182,12 @@ components:
 - **바뀐 분량 표시** (changed-mark): 인분을 바꾸거나 가진 재료 양에 맞출 때 값이 바뀐 분량 숫자 뒤에 2.5초 동안 깔린다. 문 판과 같은 색 계열이라 종이 위에서 조용히 보인다.
 - **자석 색** (magnet-red ~ magnet-gray): 레시피 색상 라벨이 있을 때만 종이 왼쪽 위를 누르는 32px 원형 자석의 색. 라벨 값(red, orange, yellow, green, blue, purple, gray)과 1:1로 대응한다. 자석 외의 장식에는 쓰지 않는다.
 
+### Tokens in code
+- 색의 유일한 출처는 `src/app/globals.css`의 `:root` RGB 변수다. `tailwind.config.ts`는 그 변수만 가리키고, 컴포넌트는 hex나 Tailwind 기본 팔레트(gray-500 등)를 쓰지 않는다.
+- 팔레트 이름(door, paper, ink, ink-soft, orange-ink, changed-mark, like)과 shadcn 역할 이름(primary, muted, accent, border, ring, destructive)은 같은 변수를 가리킨다. 역할 이름: muted·accent·secondary = paper-tint, border·input = rule-line, ring = orange-ink, destructive = danger.
+- 그 밖의 색: **좋아요** (like) #d6453d, 채운 하트와 하트 hover. **지우기·오류** (danger) #c8382d, 종이 위 5:1.
+- 그림자 색도 `rgb(var(--ink) / a)`로 쓴다. 자석 색은 `src/lib/color-options.ts` 한 곳에 있다.
+
 ### Named Rules
 **The 흑연 위 주황 Rule.** 주황 면 위의 글자는 언제나 ink다. 주황 면에 흰 글자를 올리지 않는다.
 

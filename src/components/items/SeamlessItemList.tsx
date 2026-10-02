@@ -14,11 +14,6 @@ import Link from "next/link"
 import type { User } from "@supabase/supabase-js"
 import type { ServerFeedData } from "@/lib/server-data"
 import { usePageVisibility } from "@/hooks/usePageVisibility"
-import { useHistorySync } from "@/hooks/useHistorySync"
-import { useNavigation } from "@/hooks/useNavigation"
-// 통합 캐시 매니저가 모든 동기화를 처리
-
-
 interface SeamlessItemListProps {
   /**
    * 서버에서 미리 로딩된 초기 데이터 (SSR 최적화용)
@@ -42,26 +37,17 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
 
   const supabase = createSupabaseBrowserClient()
 
-  // Smart Navigation: 홈피드 navigation history 추적
-  useNavigation({ trackHistory: true })
 
-  // 피드는 화면 복귀 시 갱신한다 (usePageVisibility). 테이블 전체를 구독하는 실시간 채널은
-  // 모든 방문자에게 사이트 전체 변경을 보내 부담이 커지므로 사용하지 않는다.
-
-  // 업계 표준: 히스토리 뒤로가기 완벽 보장
+  // 피드 갱신: 탭으로 돌아올 때(여기), 뒤로 가기로 홈에 돌아올 때(ClientLayoutWrapper).
+  // 테이블 전체를 구독하는 실시간 채널은 모든 방문자에게 사이트 전체 변경을 보내 부담이 커지므로 쓰지 않는다.
   usePageVisibility({
     revalidateKeys: ['items|', 'comments_'],
     debug: process.env.NODE_ENV === 'development'
   })
 
-  useHistorySync({
-    homePathPatterns: ['/'],
-    debug: process.env.NODE_ENV === 'development'
-  })
 
   // 사용자 상태. 가입은 스크롤 도중이 아니라 좋아요·기록처럼 행동하는 순간에만 권한다 (PRODUCT.md 비회원 정책)
   const [currentUser, setCurrentUser] = useState<User | null>(initialData?.currentUser || null)
-  const visibleItemsRef = useRef<Set<string>>(new Set())
 
   // 사용자 상태 확인: 홈 HTML은 공개 피드로 정적 생성되므로 로그인 여부는 항상 브라우저에서 확인한다
   useEffect(() => {
@@ -73,130 +59,15 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
     checkUser()
   }, [supabase, initialData])
 
-  /**
-   * 스마트 백그라운드 동기화
-   * 현재 화면에 보이는 아이템들만 선별적으로 동기화
-   */
-  const performSmartSync = useCallback(async (_priority: 'low' | 'normal' | 'high' = 'normal') => {
-    
-    
-    try {
-      // 통합 캐시 매니저가 자동으로 모든 동기화를 처리
-      const result = { success: true, itemsUpdated: 0, syncTime: 0 }
-      
-      if (result.success) {
-        
-      } else {
-        console.warn(`⚠️ Smart sync had errors`)
-      }
-    } catch (error) {
-      console.error("❌ Smart sync failed:", error)
-    }
-  }, [])
-
-  /**
-   * 디바운스된 통계 동기화
-   */
-  const debouncedStatsSync = useCallback(() => {
-    const timeoutId = setTimeout(async () => {
-      const visibleIds = Array.from(visibleItemsRef.current)
-      if (visibleIds.length > 0) {
-        // 통합 캐시 매니저가 자동으로 통계 동기화를 처리
-        
-      }
-    }, 5000)
-
-    return () => clearTimeout(timeoutId)
-  }, [])
-
-  /**
-   * 화면에 보이는 아이템 추적 (Intersection Observer)
-   */
-  const trackVisibleItems = useCallback(() => {
-    if (!window.IntersectionObserver) return
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        const itemId = entry.target.getAttribute('data-item-id')
-        if (!itemId) return
-
-        if (entry.isIntersecting) {
-          visibleItemsRef.current.add(itemId)
-        } else {
-          visibleItemsRef.current.delete(itemId)
-        }
-      })
-
-      // 보이는 아이템들의 통계 업데이트 (5초 디바운스)
-      if (visibleItemsRef.current.size > 0) {
-        debouncedStatsSync()
-      }
-    }, {
-      rootMargin: '100px', // 화면 밖 100px까지 미리 추적
-      threshold: 0.1 // 10% 보이면 추적 시작
-    })
-
-    // 모든 PostCard에 observer 적용
-    const itemElements = document.querySelectorAll('[data-item-id]')
-    itemElements.forEach(el => observer.observe(el))
-
-    return () => observer.disconnect()
-  }, [debouncedStatsSync])
-
-  // Optimistic Updates: 통합 캐시 매니저로 완전 자동화 (데드코드 정리 완료)
-
-  // 페이지 포커스 및 네비게이션 감지
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        
-        performSmartSync('high')
-      }
-    }
-
-    const handlePopState = () => {
-      
-      setTimeout(() => swrMutate(), 100)
-    }
-
-    document.addEventListener("visibilitychange", handleVisibilityChange)
-    window.addEventListener("popstate", handlePopState)
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange)
-      window.removeEventListener("popstate", handlePopState)
-    }
-  }, [performSmartSync, swrMutate])
-
-  // 정기적 백그라운드 동기화 (3분마다) - 스마트 동기화 사용
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (document.visibilityState === 'visible') {
-        performSmartSync('low')
-      }
-    }, 3 * 60 * 1000) // 3분
-
-    return () => clearInterval(interval)
-  }, [performSmartSync])
-
-  // 화면에 보이는 아이템 추적 설정
-  useEffect(() => {
-    const cleanup = trackVisibleItems()
-    return cleanup
-  }, [trackVisibleItems, feedItems])
-
   // 무한 스크롤 Intersection Observer
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
       const target = entries[0]
       if (target.isIntersecting && !isReachingEnd && !isLoading) {
         setSize(size + 1)
-
-        // 새 페이지 로딩 후 스마트 동기화
-        setTimeout(() => performSmartSync('normal'), 1000)
       }
     },
-    [setSize, isReachingEnd, isLoading, size, performSmartSync]
+    [setSize, isReachingEnd, isLoading, size]
   )
 
   useEffect(() => {
@@ -251,7 +122,7 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
           const showPeriod = index === 0 || feedPeriod(feedItems[index - 1].created_at, now) !== period
           
           return (
-            <div key={item.id || item.item_id} data-item-id={item.id || item.item_id}>
+            <div key={item.id || item.item_id}>
               {showPeriod && <h2 className={`px-1 pb-2 text-[13px] font-semibold text-ink-soft ${index === 0 ? "" : "pt-3"}`}>{period}</h2>}
               <PostCard 
                 item={item} 

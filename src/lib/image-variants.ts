@@ -2,7 +2,7 @@
 // 올릴 때 브라우저가 만들고(uploadWithVariants), 화면은 srcset으로 크기에 맞는 것 하나만 받는다.
 // 스푸니 저장소(item-images)의 사진에만 적용한다. 프로필 사진·외부 주소는 원본 그대로 쓴다.
 export const VARIANT_WIDTHS = [400, 800] as const
-export type VariantWidth = (typeof VARIANT_WIDTHS)[number]
+type VariantWidth = (typeof VARIANT_WIDTHS)[number]
 
 const ITEM_IMAGES = "/storage/v1/object/public/item-images/"
 
@@ -10,7 +10,7 @@ export function hasVariants(url: string | null | undefined): url is string {
 	return !!url && url.includes(ITEM_IMAGES) && !/\.w\d+\.jpg$/.test(url)
 }
 
-export function variantUrl(url: string, width: VariantWidth): string {
+function variantUrl(url: string, width: VariantWidth): string {
 	return hasVariants(url) ? `${url}.w${width}.jpg` : url
 }
 

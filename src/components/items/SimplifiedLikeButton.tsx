@@ -25,7 +25,6 @@ interface SimplifiedLikeButtonProps {
   initialHasLiked?: boolean
   isAuthLoading?: boolean
   	cachedItem?: Item // SSA 캐시된 완전한 아이템 데이터 (이미지 보존용)
-  onLikeChange?: (likesCount: number, hasLiked: boolean) => void
 }
 
 export const SimplifiedLikeButton = forwardRef<HTMLButtonElement, SimplifiedLikeButtonProps>(({
@@ -36,7 +35,6 @@ export const SimplifiedLikeButton = forwardRef<HTMLButtonElement, SimplifiedLike
   initialHasLiked = false,
   isAuthLoading = false,
   cachedItem: providedCachedItem,
-  onLikeChange: _onLikeChange // Not used in current implementation
 }, ref) => {
   // SSA 표준: 완전한 아이템 데이터를 fallback으로 사용 (이미지 보존)
 
@@ -139,7 +137,6 @@ export const SimplifiedLikeButton = forwardRef<HTMLButtonElement, SimplifiedLike
       // 좋아요 알림과 푸시는 DB 트리거가 서버에서 처리한다
       
       // 부모 컴포넌트에게 알림 (캐시 매니저가 업데이트한 후의 정확한 값 전달)
-      // onLikeChange는 cacheManager 업데이트 후 useSSAItemCache를 통해 자동으로 반영됨
 
     } catch (error: unknown) {
       console.error(`❌ SimplifiedLikeButton: Error for ${itemId}:`, error)
@@ -169,13 +166,13 @@ export const SimplifiedLikeButton = forwardRef<HTMLButtonElement, SimplifiedLike
           disabled={isLoading || isAuthLoading}
           aria-label={hasLiked ? "좋아요 취소" : "좋아요"}
           aria-pressed={hasLiked}
-          className="h-11 pl-2.5 pr-1 text-ink-soft hover:text-[#D6453D] transition-colors"
+          className="h-11 pl-2.5 pr-1 text-ink-soft hover:text-like transition-colors"
         >
           <Heart 
             aria-hidden
             className={`w-5 h-5 transition-all duration-200 ${
               hasLiked 
-                ? 'fill-[#D6453D] text-[#D6453D] scale-110' 
+                ? 'fill-like text-like scale-110' 
                 : 'hover:scale-105'
             }`} 
           />

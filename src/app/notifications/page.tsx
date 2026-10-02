@@ -40,6 +40,7 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const userId: string | undefined = currentUser?.id;
   
   // 복수 선택 관련 상태
   const [isSelecting, setIsSelecting] = useState(false);
@@ -110,50 +111,17 @@ export default function NotificationsPage() {
 
   // 초기 로딩
   useEffect(() => {
-    setLoading(true);
-    fetchUserAndNotifications().finally(() => setLoading(false));
+    // 받은 뒤에만 상태를 바꾼다 (첫 상태는 loading=true로 시작)
+    const load = async () => {
+      await fetchUserAndNotifications();
+      setLoading(false);
+    };
+    load();
   }, [fetchUserAndNotifications, refreshTrigger]);
 
-  // 실시간 업데이트 시스템 (다중 방식)
+  // 목록 갱신: 탭으로 돌아올 때, 푸시를 받았을 때, 헤더의 실시간 구독이 새 알림을 받았을 때 (주기적 조회는 하지 않는다)
   useEffect(() => {
-    if (!currentUser?.id) return;
-
-    // 1️⃣ 적응형 스마트 폴링 (사용자 활동도에 따라 조정)
-    let pollInterval: NodeJS.Timeout;
-    let lastActivity = Date.now();
-    
-    const updatePollingInterval = () => {
-      if (pollInterval) clearInterval(pollInterval);
-      
-      const timeSinceActivity = Date.now() - lastActivity;
-      let interval;
-      
-      if (timeSinceActivity < 30000) { // 30초 이내 활동
-        interval = 60000; // 실시간 구독의 안전장치: 1분
-      } else if (timeSinceActivity < 120000) { // 2분 이내 활동
-        interval = 120000; // 2분  
-      } else { // 비활성 상태
-        interval = 300000; // 5분
-      }
-      
-      pollInterval = setInterval(() => {
-        if (!document.hidden) {
-          fetchUserAndNotifications();
-        }
-      }, interval);
-    };
-    
-    updatePollingInterval();
-    
-    // 사용자 활동 감지
-    const updateActivity = () => {
-      lastActivity = Date.now();
-      updatePollingInterval();
-    };
-    
-    ['click', 'scroll', 'keydown', 'touchstart'].forEach(event => {
-      document.addEventListener(event, updateActivity, { passive: true });
-    });
+    if (!userId) return;
 
     // 2️⃣ Page Visibility API (탭 전환 시 즉시 새로고침)
     const handleVisibilityChange = () => {
@@ -179,17 +147,13 @@ export default function NotificationsPage() {
     window.addEventListener(NOTIFICATION_RECEIVED_EVENT, handleRealtimeNotification);
 
     return () => {
-      clearInterval(pollInterval);
-      ['click', 'scroll', 'keydown', 'touchstart'].forEach(event => {
-        document.removeEventListener(event, updateActivity);
-      });
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
       }
       window.removeEventListener(NOTIFICATION_RECEIVED_EVENT, handleRealtimeNotification);
     };
-  }, [currentUser?.id, fetchUserAndNotifications]);
+  }, [userId, fetchUserAndNotifications]);
 
   // 개별 알림 읽음 처리
   const markAsRead = async (id: string) => {
@@ -206,8 +170,8 @@ export default function NotificationsPage() {
         
         // Header 뱃지 수 업데이트 (읽지 않은 알림 수 다시 계산)
         const unreadCount = updated.filter(notif => !notif.is_read).length;
-        if (currentUser?.id) {
-          mutate(`unread_notifications_count_${currentUser.id}`, unreadCount);
+        if (userId) {
+          mutate(`unread_notifications_count_${userId}`, unreadCount);
         }
         
         return updated;
@@ -217,7 +181,7 @@ export default function NotificationsPage() {
 
   // 복수 선택 삭제 (업계표준 방식)
   const deleteBatchNotifications = useCallback(async () => {
-    if (!currentUser?.id || selectedIds.size === 0) return;
+    if (!userId || selectedIds.size === 0) return;
 
     const idsToDelete = Array.from(selectedIds);
     
@@ -229,14 +193,14 @@ export default function NotificationsPage() {
 
     // Header 뱃지 즉시 업데이트
     const remainingUnreadCount = notifications.filter(notif => !selectedIds.has(notif.id) && !notif.is_read).length;
-    mutate(`unread_notifications_count_${currentUser.id}`, remainingUnreadCount);
+    mutate(`unread_notifications_count_${userId}`, remainingUnreadCount);
 
     try {
       const { error } = await supabase
         .from('notifications')
         .delete({ count: 'exact' })
         .in('id', idsToDelete)
-        .eq('user_id', currentUser.id);
+        .eq('user_id', userId);
 
       if (error) {
         throw error;
@@ -254,7 +218,7 @@ export default function NotificationsPage() {
       setSelectedIds(new Set(idsToDelete));
       setIsSelecting(true);
       const originalUnreadCount = originalNotifications.filter(notif => !notif.is_read).length;
-      mutate(`unread_notifications_count_${currentUser.id}`, originalUnreadCount);
+      mutate(`unread_notifications_count_${userId}`, originalUnreadCount);
 
       toast({
         title: "삭제 실패",
@@ -262,7 +226,7 @@ export default function NotificationsPage() {
         variant: "destructive"
       });
     }
-  }, [currentUser?.id, notifications, selectedIds, supabase, toast]);
+  }, [userId, notifications, selectedIds, supabase, toast]);
 
   // 전체 선택/해제
   const toggleSelectAll = useCallback(() => {
@@ -288,7 +252,7 @@ export default function NotificationsPage() {
 
   // 모든 읽지 않은 알림 읽음 처리 (뱃지 초기화)
   const markAllAsRead = useCallback(async () => {
-    if (!currentUser?.id) return;
+    if (!userId) return;
 
     const unreadNotifications = notifications.filter(notif => !notif.is_read);
     if (unreadNotifications.length === 0) return;
@@ -296,7 +260,7 @@ export default function NotificationsPage() {
     const { error } = await supabase
       .from('notifications')
       .update({ is_read: true })
-      .eq('user_id', currentUser.id)
+      .eq('user_id', userId)
       .eq('is_read', false);
 
     if (error) {
@@ -308,21 +272,21 @@ export default function NotificationsPage() {
       );
       
       // Header 뱃지 즉시 업데이트 (SWR 캐시 갱신)
-      mutate(`unread_notifications_count_${currentUser.id}`, 0);
+      mutate(`unread_notifications_count_${userId}`, 0);
     }
-  }, [currentUser?.id, notifications, supabase]);
+  }, [userId, notifications, supabase]);
 
   // 알림 페이지 접속 즉시 뱃지 초기화 (UX 개선)
   useEffect(() => {
-    if (currentUser?.id) {
+    if (userId) {
       // 즉시 뱃지를 0으로 만들어서 사용자에게 빠른 피드백 제공
-      mutate(`unread_notifications_count_${currentUser.id}`, 0);
+      mutate(`unread_notifications_count_${userId}`, 0);
     }
-  }, [currentUser?.id]);
+  }, [userId]);
 
   // 알림 페이지 접근 시 모든 읽지 않은 알림 읽음 처리 (백그라운드)
   useEffect(() => {
-    if (currentUser?.id && notifications.length > 0) {
+    if (userId && notifications.length > 0) {
       // 2초 후에 실제 읽음 처리 (사용자가 알림을 확인할 시간 제공)
       const timer = setTimeout(() => {
         markAllAsRead();
@@ -330,7 +294,7 @@ export default function NotificationsPage() {
 
       return () => clearTimeout(timer);
     }
-  }, [currentUser?.id, notifications.length, markAllAsRead]);
+  }, [userId, notifications.length, markAllAsRead]);
   
   const generateNotificationMessage = (notification: Notification) => {
     const itemType = notification.related_item?.item_type;
@@ -472,7 +436,7 @@ export default function NotificationsPage() {
                         router.push(getNotificationLink(notification))
                       }
                     }}
-                    className={`flex w-full items-start gap-3 px-4 py-3.5 text-left ${unread && !isSelecting ? "bg-[#f3f7f5]" : ""}`}
+                    className={`flex w-full items-start gap-3 px-4 py-3.5 text-left ${unread && !isSelecting ? "bg-muted" : ""}`}
                   >
                     {isSelecting && <span className="pt-2.5"><CheckBox checked={selected} /></span>}
                     <span className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-border">

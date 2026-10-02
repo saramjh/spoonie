@@ -64,7 +64,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport = {
-	themeColor: "#f97316",
+	themeColor: "#ffffff", // 상단 막대(종이)와 같은 색으로 브라우저 주소창을 칠한다
 }
 
 export default function RootLayout({

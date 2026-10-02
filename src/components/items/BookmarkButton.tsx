@@ -6,6 +6,7 @@
 "use client"
 
 import { useState, forwardRef, useRef, useCallback } from "react"
+import { cn } from "@/lib/utils"
 import { Bookmark } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
@@ -192,11 +193,7 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
         disabled={isLoading || isAuthLoading}
         aria-label={isBookmarked ? "저장 취소" : "저장하기"}
         aria-pressed={isBookmarked}
-        className={`transition-colors ${className} ${
-          isBookmarked 
-            ? 'text-orange-ink'
-            : 'text-ink-soft hover:text-ink'
-        }`}
+        className={cn("transition-colors", isBookmarked ? "text-orange-ink" : "text-ink-soft hover:text-ink", className)}
       >
         <Bookmark 
           aria-hidden

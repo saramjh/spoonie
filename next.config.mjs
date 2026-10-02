@@ -1,12 +1,14 @@
 import withPWA from "@ducanh2912/next-pwa";
 
-// 🎯 PWA 재활성화 + SyntaxError 근본 해결 전략
-// Supabase Realtime과 Webpack 모듈 충돌 방지를 위한 정교한 캐싱 전략
+// PWA 서비스워커. 캐시 규칙은 workboxOptions.runtimeCaching에 두어야 적용된다
+// (최상위에 두면 무시되고 기본 규칙만 쓰여, Supabase API 응답까지 cross-origin 캐시에 저장됐었다).
+// 아래 규칙이 먼저 맞춰지고, 나머지는 플러그인 기본 규칙(해시된 정적 파일 캐시 우선, 문서 네트워크 우선 등)을 따른다.
+const SUPABASE_HOST = "dtyiyzfftsewpckfkqmo.supabase.co"
+
 const pwaConfig = withPWA({
 	dest: "public",
-	register: true,      // ✅ PWA 다시 활성화!
+	register: true,
 	skipWaiting: true,
-	disable: false,      // ✅ PWA 기능 복원!
 	reloadOnOnline: true,
 	// 글꼴 조각(92개)은 설치 시 미리 받지 않고, 실제로 쓰는 글자 범위만 받아 캐시한다
 	publicExcludes: ["!noprecache/**/*", "!fonts/**/*"],
@@ -14,96 +16,43 @@ const pwaConfig = withPWA({
 	fallbacks: {
 		document: "/offline",
 	},
-	// 🆓 무료 푸시 알림: 기존 PWA 기능 보존하면서 push 기능 추가
+	extendDefaultRuntimeCaching: true,
 	workboxOptions: {
-		// 기존 PWA 기능 유지하면서 커스텀 SW 코드 추가
-		importScripts: ['/custom-sw.js'],
-		additionalManifestEntries: [
-			{ url: '/custom-sw.js', revision: Date.now().toString() }
-		]
+		// 푸시 알림 수신·클릭 처리
+		importScripts: ["/custom-sw.js"],
+		additionalManifestEntries: [{ url: "/custom-sw.js", revision: Date.now().toString() }],
+		runtimeCaching: [
+			{
+				// 로그인 정보·글 데이터(REST, 인증, 실시간, 함수)는 절대 캐시하지 않는다
+				urlPattern: ({ url }) => url.hostname === SUPABASE_HOST && !url.pathname.startsWith("/storage/v1/object/public/"),
+				handler: "NetworkOnly",
+			},
+			{
+				// 업로드한 사진: 파일 이름이 바뀌지 않으므로 캐시 우선 (프로필 사진은 ?t= 로 새 주소가 된다)
+				urlPattern: ({ url }) => url.hostname === SUPABASE_HOST && url.pathname.startsWith("/storage/v1/object/public/"),
+				handler: "CacheFirst",
+				options: {
+					cacheName: "spoonie-photos",
+					expiration: { maxEntries: 300, maxAgeSeconds: 60 * 60 * 24 * 30 },
+					cacheableResponse: { statuses: [0, 200] },
+				},
+			},
+			{
+				// 자체 호스팅 글꼴: 파일 이름이 고정이므로 캐시 우선
+				urlPattern: /\/fonts\/pretendard\/.*\.woff2$/,
+				handler: "CacheFirst",
+				options: {
+					cacheName: "spoonie-fonts",
+					expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 365 },
+				},
+			},
+			{
+				// 분석·광고 요청은 서비스워커가 손대지 않는다
+				urlPattern: /^https:\/\/([a-z0-9-]+\.)*(google-analytics\.com|analytics\.google\.com|googletagmanager\.com|googlesyndication\.com|googleadservices\.com|doubleclick\.net)\//i,
+				handler: "NetworkOnly",
+			},
+		],
 	},
-	// 🚨 핵심: SyntaxError 방지를 위한 전략적 캐싱
-	runtimeCaching: [
-		{
-			// 🎯 JavaScript 파일: 네트워크 우선으로 최신 코드 보장
-			urlPattern: /\/_next\/static\/chunks\/.*\.js$/,
-			handler: 'NetworkFirst',
-			options: {
-				cacheName: 'spoonie-js-cache-v3',
-				expiration: {
-					maxEntries: 30,        // 최소한의 캐시
-					maxAgeSeconds: 60 * 60 * 24 * 2, // 2일로 단축
-				},
-				networkTimeoutSeconds: 3,  // 빠른 타임아웃
-				// 🔥 캐시 무효화 강화
-				plugins: [{
-					cacheKeyWillBeUsed: async ({ request }) => {
-						const url = new URL(request.url)
-						// 빌드 해시가 변경되면 자동으로 캐시 무효화
-						return `${url.pathname}?v=${url.searchParams.get('v') || 'latest'}`
-					}
-				}]
-			},
-		},
-		{
-			// 자체 호스팅 글꼴: 파일명이 고정이므로 캐시 우선
-			urlPattern: /\/fonts\/pretendard\/.*\.woff2$/,
-			handler: 'CacheFirst',
-			options: {
-				cacheName: 'spoonie-fonts',
-				expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 365 },
-			},
-		},
-		{
-			// 🚨 Realtime/WebSocket 관련: 절대 캐시하지 않음
-			urlPattern: /(realtime|websocket|supabase.*realtime)/i,
-			handler: 'NetworkOnly',
-		},
-		{
-			// 🎯 Google Tag Manager 스크립트: 완전 무시 (Service Worker가 개입하지 않음)
-			urlPattern: /^https:\/\/www\.googletagmanager\.com\/gtag\/js\?.*/,
-			handler: 'NetworkOnly',
-		},
-		{
-			// 🎯 Google Analytics 도메인: 네트워크 전용
-			urlPattern: /^https:\/\/(www\.)?google-analytics\.com\/.*/i,
-			handler: 'NetworkOnly',
-		},
-		{
-			// 🎯 Google Analytics 수집 엔드포인트: 네트워크 전용
-			urlPattern: /^https:\/\/(www\.)?googletagmanager\.com\/.*(?:collect|g\/collect).*/i,
-			handler: 'NetworkOnly',
-		},
-		{
-			// 🎯 기타 Google 분석/광고 도메인: 네트워크 전용
-			urlPattern: /^https:\/\/(www\.)?(googleadservices|googlesyndication|doubleclick)\.net\/.*/i,
-			handler: 'NetworkOnly',
-		},
-		{
-			// 🎨 CSS: 안전한 캐싱
-			urlPattern: /\/_next\/static\/css\/.*\.css$/,
-			handler: 'StaleWhileRevalidate',
-			options: {
-				cacheName: 'spoonie-css-cache-v3',
-				expiration: {
-					maxEntries: 20,
-					maxAgeSeconds: 60 * 60 * 24 * 7,
-				},
-			},
-		},
-		{
-			// 🖼️ 이미지: 적극적 캐싱 (변경 빈도 낮음)
-			urlPattern: /\/_next\/static\/media\/.*\.(png|jpg|jpeg|svg|gif|webp)$/,
-			handler: 'CacheFirst',
-			options: {
-				cacheName: 'spoonie-image-cache-v3',
-				expiration: {
-					maxEntries: 100,
-					maxAgeSeconds: 60 * 60 * 24 * 30,
-				},
-			},
-		},
-	],
 });
 
 /** @type {import('next').NextConfig} */

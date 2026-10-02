@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { mutate } from 'swr';
-import { useRefresh } from "@/contexts/RefreshContext";
 import SpoonieLogo from "@/components/brand/SpoonieLogo";
 
 const PULL_THRESHOLD = 80; // 당겨야 하는 최소 거리 (px)
@@ -15,7 +14,6 @@ export const usePullToRefresh = () => {
     const [isPulling, setIsPulling] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const touchStartRef = useRef(0);
-    const { triggerRefresh } = useRefresh();
 
     const handleTouchStart = useCallback((e: TouchEvent) => {
         if (window.scrollY === 0) {
@@ -52,7 +50,7 @@ export const usePullToRefresh = () => {
                     ),
                     // 아이템 상세 데이터
                     mutate(
-                        (key) => typeof key === 'string' && key.startsWith('item_details_'),
+                        (key) => typeof key === 'string' && key.startsWith('itemDetail|'),
                         undefined,
                         { revalidate: true, populateCache: false }
                     ),
@@ -82,10 +80,7 @@ export const usePullToRefresh = () => {
                     )
                 ]);
 
-                // 2. 🔄 RefreshContext 등록된 새로고침 함수들 실행
-                await triggerRefresh();
-
-                // 3. ⏱️ 최소 1초 새로고침 표시 (사용자 피드백)
+                // 2. ⏱️ 최소 1초 새로고침 표시 (사용자 피드백)
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 
             } catch (error) {
@@ -98,7 +93,7 @@ export const usePullToRefresh = () => {
         }
         setIsPulling(false);
         setPullDistance(0);
-    }, [isPulling, pullDistance, triggerRefresh]);
+    }, [isPulling, pullDistance]);
 
     useEffect(() => {
         const handleTouchStartWrapper = (e: TouchEvent) => handleTouchStart(e);

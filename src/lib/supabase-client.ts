@@ -1,5 +1,7 @@
 import { createBrowserClient } from "@supabase/ssr"
 
+let authListenerAttached = false
+
 export function createSupabaseBrowserClient() {
 	const client = createBrowserClient(
 		process.env.NEXT_PUBLIC_SUPABASE_URL!, 
@@ -19,31 +21,15 @@ export function createSupabaseBrowserClient() {
 		}
 	)
 
-	// 인증 상태 변화 처리
-	client.auth.onAuthStateChange(async (event, session) => {
-		if (event === 'TOKEN_REFRESHED') {
-			if (process.env.NODE_ENV === 'development') {
-				console.log('✅ Auth token refreshed successfully')
-			}
-		} else if (event === 'SIGNED_OUT') {
-			if (process.env.NODE_ENV === 'development') {
-				console.log('👋 User signed out')
-			}
-			// 로그아웃 시 캐시 정리
-			if (typeof window !== 'undefined') {
-				window.localStorage.removeItem('supabase.auth.token')
-			}
-		} else if (event === 'SIGNED_IN' && session) {
-			if (process.env.NODE_ENV === 'development') {
-				console.log('✅ User signed in successfully')
-			}
-		} else if (event === 'PASSWORD_RECOVERY') {
-			// 비밀번호 복구 처리
-			if (process.env.NODE_ENV === 'development') {
-				console.log('🔄 Password recovery initiated')
-			}
-		}
-	})
+	// 브라우저에서는 @supabase/ssr이 같은 클라이언트를 돌려준다. 인증 이벤트 처리기는 한 번만 단다
+	// (이 함수는 컴포넌트가 렌더될 때마다 불리므로, 매번 달면 처리기가 계속 쌓인다)
+	if (typeof window !== "undefined" && !authListenerAttached) {
+		authListenerAttached = true
+		client.auth.onAuthStateChange((event) => {
+			// 예전 방식으로 저장된 토큰이 남아 있으면 로그아웃 때 지운다
+			if (event === "SIGNED_OUT") window.localStorage.removeItem("supabase.auth.token")
+		})
+	}
 
 	return client
 }

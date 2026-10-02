@@ -169,17 +169,7 @@ function SortableIngredientItem({
 // 드래그 오버레이 컴포넌트 - 원본과 일치
 function DragOverlayItem({ ingredient }: { ingredient: DraggableIngredient }) {
   return (
-    <Sheet className="pointer-events-none border border-ink/30 p-3"
-      style={{ 
-        width: '100%',
-        maxWidth: '90vw',
-        minWidth: '280px',
-        transform: 'rotate(2deg)',
-        zIndex: 9999,
-        touchAction: 'none',
-        userSelect: 'none'
-      }}
-    >
+    <Sheet className="pointer-events-none z-[9999] w-full min-w-[280px] max-w-[90vw] rotate-2 touch-none select-none border border-ink/30 p-3">
       <div className="flex items-center gap-3">
         <DragHandle />
         
@@ -288,13 +278,8 @@ export default function DraggableIngredientList({
 
   return (
     <div 
-      className="select-none"
-      style={{ 
-        touchAction: 'pan-y',
-        WebkitTouchCallout: 'none',
-        WebkitUserSelect: 'none',
-        userSelect: 'none'
-      }}
+      className="touch-pan-y select-none"
+      style={{ WebkitTouchCallout: "none" }}
     >
       <DndContext 
         sensors={sensors}

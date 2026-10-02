@@ -4,18 +4,25 @@ import { useEffect } from "react"
 import { useToast } from "@/hooks/use-toast"
 
 export default function ServiceWorkerUpdater() {
-	// const [isUpdateAvailable, setIsUpdateAvailable] = useState(false) // Only toast notification used
 	const { toast } = useToast()
 
 	useEffect(() => {
 		if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
 			// 메모리 안전: 이벤트 리스너 레퍼런스 저장
-			const handleControllerChange = () => {
-				// 새로운 서비스 워커가 활성화되면 페이지 새로고침
-				if (!navigator.serviceWorker.controller?.scriptURL.includes('webpack')) {
-					window.location.reload()
-				}
+			// 새 버전의 서비스워커가 넘겨받으면, 옛 화면이 지워진 파일을 찾지 않도록 새로 연다.
+			// - 처음 설치될 때(원래 넘겨받은 워커가 없을 때)는 새로 열지 않는다: 첫 방문자의 화면이 1초 뒤에 다시 열리던 문제
+			// - 쓰는 도중에 화면이 바뀌지 않게, 사용자가 이 탭을 떠나 있을 때 새로 연다
+			const hadController = !!navigator.serviceWorker.controller
+			let reloadPending = false
+			const reloadWhenHidden = () => {
+				if (reloadPending && document.visibilityState === 'hidden') window.location.reload()
 			}
+			const handleControllerChange = () => {
+				if (!hadController) return
+				reloadPending = true
+				reloadWhenHidden()
+			}
+			document.addEventListener('visibilitychange', reloadWhenHidden)
 
 			const handleStateChange = (newWorker: ServiceWorker) => () => {
 				if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
@@ -56,6 +63,7 @@ export default function ServiceWorkerUpdater() {
 			// 메모리 안전: cleanup 함수
 			return () => {
 				navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange)
+				document.removeEventListener('visibilitychange', reloadWhenHidden)
 				updateFoundCleanup?.()
 			}
 		}

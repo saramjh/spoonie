@@ -5,7 +5,6 @@ import ItemDetailView from "@/components/common/ItemDetailView"
 import DetailStateMessage from "@/components/common/DetailStateMessage"
 import PostCardSkeleton from "@/components/items/PostCardSkeleton"
 import { useItemDetail } from "@/hooks/useItemDetail"
-import { useNavigation } from "@/hooks/useNavigation"
 import type { ItemDetail } from "@/types/item"
 
 interface RecipeDetailClientProps {
@@ -16,8 +15,6 @@ interface RecipeDetailClientProps {
 export default function RecipeDetailClient({ params, initialItem }: RecipeDetailClientProps) {
 	const itemId = params.id
 
-	// 네비게이션 체인 유지 (중간 경유지 역할)
-	useNavigation({ trackHistory: true })
 
 	// 통합 아이템 상세 훅 사용
 	const { item, isLoading, error, refresh } = useItemDetail(itemId, initialItem)

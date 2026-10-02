@@ -135,7 +135,7 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 							const amountText = formatAmount(ing.amount, ing.unit)
 							const amountClass = cn(
 								"rounded-sm px-1 text-[17px] font-semibold tabular-nums transition-colors duration-500 motion-reduce:transition-none",
-								changed.has(index) ? "bg-[#C9DFD2] text-ink" : "bg-transparent",
+								changed.has(index) ? "bg-changed-mark text-ink" : "bg-transparent",
 								isChecked && "text-ink-soft"
 							)
 							if (adjusting) {

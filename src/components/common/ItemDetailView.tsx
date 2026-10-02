@@ -28,7 +28,7 @@ import { Item, ItemDetail } from "@/types/item"
 import Link from "next/link"
 
 import { useAuthorRecipes, useCitedRecipes, useRecipeRelations } from "@/hooks/useCitedRecipes"
-import { useThumbnail } from "@/hooks/useThumbnail"
+import { orderImagesForDisplay } from "@/lib/thumbnail"
 import { useSSAItemCache } from "@/hooks/useSSAItemCache"
 import { cacheManager } from "@/lib/unified-cache-manager"
 import { IntentLink, MadeProof, Photo, RelativeTime, SectionHeading, Sheet, SourceRow } from "@/components/kit"
@@ -130,11 +130,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	const cachedItem = useSSAItemCache(stableItemId || 'null', stableFallbackData)
 	
 	// 썸네일 관리 - 캐시된 아이템의 최신 thumbnail_index 사용
-	const { orderedImages } = useThumbnail({
-		itemId: stableItemId || 'null',
-		imageUrls: cachedItem?.image_urls || item?.image_urls || [],
-		thumbnailIndex: cachedItem?.thumbnail_index ?? item?.thumbnail_index ?? 0
-	})
+	const orderedImages = orderImagesForDisplay(cachedItem?.image_urls || item?.image_urls, cachedItem?.thumbnail_index ?? item?.thumbnail_index)
 
 	// SWR 호출 - 조건부 렌더링 전에 호출
 	const { data: citedRecipe } = useSWR(item?.item_type === "post" && item?.recipe_id ? `recipeTitle:${item.recipe_id}` : null, fetcher)
@@ -149,8 +145,6 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 
 	// SSA 표준: 상태 관리 - 조건부 렌더링 전에 호출
 	// commentsCount는 캐시에서 직접 사용 (실시간 동기화)
-	const [localLikesCount, setLocalLikesCount] = useState(cachedItem?.likes_count || 0)
-	const [localHasLiked, setLocalHasLiked] = useState(cachedItem?.is_liked || false)
 	const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
 	const [, setIsAuthLoading] = useState(true)
 	const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -163,22 +157,6 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 
 	const comments = useMemo(() => item?.comments_data || [], [item?.comments_data])
 	
-	// SSA 표준: 캐시 업데이트 시 로컬 상태 동기화
-	useEffect(() => {
-		if (cachedItem) {
-			// commentsCount 제거 - 캐시에서 직접 사용
-			setLocalLikesCount(cachedItem.likes_count || 0)
-			setLocalHasLiked(cachedItem.is_liked || false)
-		}
-	}, [cachedItem])
-
-	// 아이템 상태 동기화 useEffect
-	useEffect(() => {
-		setLocalLikesCount(item?.likes_count || 0)
-		setLocalHasLiked(item?.is_liked || false)
-		// commentsCount 제거 - 캐시에서 직접 사용
-	}, [item?.likes_count, item?.is_liked])
-
 	// 로그인 사용자 기준으로 다시 받은 값(내 좋아요·저장, 최신 수)을 화면 캐시에 반영한다.
 	// 미리 만든 공개 페이지의 값으로 처음 채워진 캐시는 그대로 두면 바뀌지 않는다.
 	useEffect(() => {
@@ -601,7 +579,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 								/>
 								{showHeartAnimation && (
 									<div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
-										<Heart className="h-16 w-16 animate-ping fill-[#D6453D] text-[#D6453D]" aria-hidden />
+										<Heart className="h-16 w-16 animate-ping fill-like text-like" aria-hidden />
 									</div>
 								)}
 							</div>
@@ -667,8 +645,8 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 									itemType={item.item_type}
 									authorId={item.user_id}
 									currentUserId={currentUser?.id}
-									initialLikesCount={cachedItem?.likes_count || localLikesCount}
-									initialHasLiked={cachedItem?.is_liked || localHasLiked}
+									initialLikesCount={cachedItem?.likes_count ?? item?.likes_count ?? 0}
+									initialHasLiked={cachedItem?.is_liked ?? item?.is_liked ?? false}
 									cachedItem={cachedItem}
 								/>
 								<a href="#comments" className="flex h-11 items-center gap-1.5 px-2" aria-label={`댓글 ${cachedItem?.comments_count || 0}개`}>
@@ -740,7 +718,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 						<h2 className="mb-3 text-lg font-bold text-ink">
 							댓글 {(cachedItem?.comments_count || 0) > 0 && <span className="font-medium tabular-nums text-ink-soft">{cachedItem?.comments_count}</span>}
 						</h2>
-						<SimplifiedCommentsSection currentUserId={currentUser?.id} itemId={stableItemId} onCommentsCountChange={undefined} cachedItem={cachedItem || item} />
+						<SimplifiedCommentsSection currentUserId={currentUser?.id} itemId={stableItemId} cachedItem={cachedItem || item} />
 					</div>
 				</div>
 			</article>
