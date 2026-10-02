@@ -18,10 +18,8 @@ export default function AppWrapper({ children }: { children: React.ReactNode }) 
 
 	const noBottomNav = (pathname.startsWith("/recipes/") && pathname !== "/recipes") || (pathname.startsWith("/posts/") && pathname !== "/posts")
 
-	const wrapperStyle = {
-		transform: `translateY(${pullDistance}px)`,
-		transition: 'transform 0.2s ease-out',
-	};
+	// 당기는 동안만 화면을 내린다. 평소에 transform을 두면 안쪽 fixed 요소의 기준이 바뀌고, 전환 효과는 손가락보다 늦게 따라온다
+	const wrapperStyle = pullDistance ? { transform: `translateY(${pullDistance}px)` } : undefined
 
 	return (
 		<div className={`relative flex flex-col min-h-screen w-full max-w-md mx-auto door-surface`}>
