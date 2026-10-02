@@ -10,7 +10,7 @@
  */
 
 import { mutate } from 'swr'
-import { revalidateStartingWith, updateStartingWith } from '@/lib/swr-cache'
+import { mutateMatching, revalidateStartingWith, updateStartingWith } from '@/lib/swr-cache'
 import { createSupabaseBrowserClient } from '@/lib/supabase-client'
 import { Item } from '@/types/item'
 
@@ -365,43 +365,14 @@ class UnifiedCacheManager {
 
 
 
-    // 팔로우/언팔로우 시 홈피드 캐시 즉시 무효화 (새로고침 없이 즉시 반영)
-    if (type === 'follow') {
-
-      
-      // 강력한 캐시 무효화: 홈피드 관련 모든 캐시를 완전히 삭제하고 재요청
-      const invalidatedKeys: string[] = []
-      
-      await mutate(
-        (key) => {
-          const isMatch = typeof key === 'string' && key.startsWith('items|')
-          if (isMatch) {
-            invalidatedKeys.push(key)
-          }
-
-          return isMatch
-        },
-        async () => {
-
-          return undefined // 강제로 캐시 삭제
-        },
-        { 
-          revalidate: true,           // 즉시 재요청
-          populateCache: true,        // 새 데이터로 캐시 채우기
-          optimisticData: undefined,  // 옵티미스틱 데이터 없음
-          rollbackOnError: false      // 에러 시 롤백 안함
-        }
-      )
-      
-
-      return // 팔로우 액션은 여기서 종료
-    }
+    // 팔로우는 피드 목록을 다시 받지 않는다: 팔로우 상태는 followStore가 들고, 카드는 그것을 따른다
+    if (type === 'follow') return
     
 
 
     // Debug: HomeFeedCache update started
 
-    await mutate(
+    await mutateMatching(
       (key) => typeof key === 'string' && key.startsWith('items|'),
       (cacheData: Item[][] | undefined) => {
         // Debug: Cache data checked
@@ -606,7 +577,7 @@ class UnifiedCacheManager {
     const { type, itemId, delta } = operation
     
     // SSA 표준: 검색 결과의 개별 아이템 실시간 업데이트
-    await mutate(
+    await mutateMatching(
       (key) => typeof key === 'string' && (
         key.startsWith('search_page|')                    // 검색 결과 (무한 스크롤). 탐색 목록의 카드는 글별 캐시(itemDetail|)를 따른다
       ),
@@ -647,7 +618,7 @@ class UnifiedCacheManager {
     )
     
     // 사용자 검색 결과는 개별 처리 (다른 구조)
-    await mutate(
+    await mutateMatching(
       (key) => typeof key === 'string' && key.startsWith('search_users|'),
       undefined,  // 사용자 검색은 무효화만 (구조가 다름)
       { revalidate: false }
@@ -661,7 +632,7 @@ class UnifiedCacheManager {
     const { itemId } = operation
     
     // 모든 북마크 관련 캐시 업데이트
-    await mutate(
+    await mutateMatching(
       (key) => typeof key === 'string' && (
         key.startsWith('bookmarks_') ||              // 사용자별 북마크 목록
         key.includes('bookmark_list') ||             // 북마크 리스트 뷰
@@ -693,50 +664,16 @@ class UnifiedCacheManager {
     
 
     
-    // 팔로우/언팔로우 시 "모두의 레시피" 캐시 즉시 무효화 (새로고침 없이 즉시 반영)
+    // "모두의 레시피"는 팔로우한 사람의 레시피라 팔로우가 바뀌면 내용이 바뀐다. 비우지 않고 다시 받기만 한다
     if (type === 'follow') {
-
-      
-      // 강력한 캐시 무효화: all_recipes 관련 모든 캐시를 완전히 삭제하고 재요청
-      const invalidatedKeys: string[] = []
-      
-      await mutate(
-        (key) => {
-          const isMatch = typeof key === 'string' && (
-            key.includes('all_recipes') ||                  // 모두의 레시피 탭
-            (key.startsWith('recipes||') && key.includes('all_recipes'))
-          )
-          if (isMatch) {
-            invalidatedKeys.push(key)
-          }
-
-          return isMatch
-        },
-        async () => {
-
-          return undefined // 강제로 캐시 삭제
-        },
-        { 
-          revalidate: true,           // 즉시 재요청
-          populateCache: true,        // 새 데이터로 캐시 채우기
-          optimisticData: undefined,  // 옵티미스틱 데이터 없음
-          rollbackOnError: false      // 에러 시 롤백 안함
-        }
-      )
-      
-
-      
-      // 추가: 직접적으로 recipes 페이지 데이터 새로고침 트리거
-
-      await mutate((key) => typeof key === 'string' && key.startsWith('recipes||'), undefined, { revalidate: true })
-      
-      return // 팔로우 액션은 여기서 종료
+      await revalidateStartingWith(['recipes||all_recipes'])
+      return
     }
     
 
     
     // 다른 액션들 (like, comment 등)에 대한 기존 캐시 업데이트 로직
-    await mutate(
+    await mutateMatching(
       (key) => typeof key === 'string' && (
         key.startsWith('recipes|') ||                     // 기존 패턴
         key.startsWith('recipes||') ||                    // 새로운 패턴 (나의/모두의 레시피)
