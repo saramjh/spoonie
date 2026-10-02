@@ -11,7 +11,7 @@ interface ColorLabelPickerProps {
 
 export function ColorLabelPicker({ value, onChange, className }: ColorLabelPickerProps) {
 	return (
-		<div className={cn("flex flex-wrap gap-1", className)}>
+		<div className={cn("flex flex-wrap", className)}>
 			{RECIPE_COLOR_OPTIONS.map((option) => {
 				const selected = value === option.value
 				return (
@@ -23,7 +23,7 @@ export function ColorLabelPicker({ value, onChange, className }: ColorLabelPicke
 						onClick={() => onChange(selected ? null : option.value)}
 						className="flex h-11 w-11 items-center justify-center"
 					>
-						<Magnet color={option.value} decorative className={selected ? "ring-2 ring-ink ring-offset-2 ring-offset-paper" : undefined} />
+						<Magnet color={option.value} size="lg" decorative className={selected ? "ring-2 ring-ink ring-offset-2 ring-offset-paper" : undefined} />
 					</button>
 				)
 			})}

@@ -71,7 +71,7 @@ export default function RecipeListCard({
   // 선택 모드에서는 누르면 선택되고(레시피로 가지 않는다), 평소에는 레시피로 간다
   const face = (
     <>
-      {showColor && <Magnet color={displayItem.color_label} size="sm" className="absolute -left-1.5 top-1/2 z-20 -translate-y-1/2" />}
+      {showColor && <Magnet color={displayItem.color_label} size="sm" className="absolute -left-2 top-1/2 z-20 -translate-y-1/2" />}
       <span className="relative block h-[72px] w-[72px] flex-shrink-0 overflow-hidden rounded-[2px] bg-muted">
         {thumbnail ? (
           <Photo src={thumbnail} sizes="72px" priority={priority} />

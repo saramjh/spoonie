@@ -51,7 +51,7 @@ export default function RecipeCard({ item, isSelectable, isSelected, onSelectCha
 	// 카드 한 장의 모양. 선택 모드에서는 누르면 선택되고(레시피로 가지 않는다), 평소에는 레시피로 간다
 	const face = (
 		<>
-			{showColor && <Magnet color={displayItem.color_label} size="md" className="absolute -top-2 left-3 z-20" />}
+			{showColor && <Magnet color={displayItem.color_label} size="md" className="absolute -top-2 left-3.5 z-20" />}
 			<span className="relative block aspect-[4/3] w-full overflow-hidden rounded-t-[3px] bg-muted">
 				{/* 선택 모드에서는 같은 자리에 선택 상자가 오므로 사진 장수는 감춘다 */}
 				{!isSelectable && <PhotoCount count={cachedItem.image_urls?.length || 0} />}
