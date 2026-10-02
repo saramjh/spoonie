@@ -102,8 +102,7 @@ export default function SignupPage() {
 										<FormControl>
 											<Input 
 												 
-												{...field} 
-												className="h-12 rounded-md border border-ink/40 bg-paper text-body focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0" 
+												{...field}  
 											/>
 										</FormControl>
 										<FormMessage />
@@ -120,8 +119,7 @@ export default function SignupPage() {
 											<Input 
 												type="password" 
 												placeholder="6자 이상" 
-												{...field} 
-												className="h-12 rounded-md border border-ink/40 bg-paper text-body focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0" 
+												{...field}  
 											/>
 										</FormControl>
 										<FormMessage />
@@ -138,8 +136,7 @@ export default function SignupPage() {
 											<Input 
 												type="password" 
 												 
-												{...field} 
-												className="h-12 rounded-md border border-ink/40 bg-paper text-body focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0" 
+												{...field}  
 											/>
 										</FormControl>
 										<FormMessage />

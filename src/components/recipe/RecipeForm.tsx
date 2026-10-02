@@ -635,7 +635,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 								<Label htmlFor="servings" className={fieldLabel}>
 									분량
 								</Label>
-								<div className="mt-1.5 flex h-11 items-center rounded-md border border-ink/40">
+								<div className="mt-1.5 flex h-11 items-center rounded-lg border border-ink/20">
 									<button
 										type="button"
 										aria-label="1인분 줄이기"
@@ -674,7 +674,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 								<Label htmlFor="cooking_time_minutes" className={fieldLabel}>
 									조리 시간
 								</Label>
-								<div className="mt-1.5 flex h-11 items-center rounded-md border border-ink/40 pr-3">
+								<div className="mt-1.5 flex h-11 items-center rounded-lg border border-ink/20 pr-3">
 									<Input
 										id="cooking_time_minutes"
 										type="number"

@@ -1,113 +1,99 @@
 "use client"
 
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter } from "@/components/ui/drawer"
+import { Check } from "lucide-react"
+import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "@/components/ui/drawer"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-
 import { useRecipeStore } from "@/store/recipeStore"
 import { ColorLabelPicker } from "@/components/kit"
+import { cn } from "@/lib/utils"
 
 interface FilterModalProps {
 	isOpen: boolean
 	onClose: () => void
 }
 
+// 정렬은 기준·순서 두 칸 대신, 사람이 실제로 고르는 순서 넷 중 하나
+const SORTS = [
+	{ key: "created_at:desc", label: "최근에 쓴 순" },
+	{ key: "created_at:asc", label: "오래전에 쓴 순" },
+	{ key: "updated_at:desc", label: "최근에 고친 순" },
+	{ key: "title:asc", label: "이름순" },
+] as const
+
+/**
+ * 나의 레시피 거르기·정렬. 고르면 바로 목록에 반영된다 (따로 "적용"을 누르지 않는다).
+ * 색상 라벨이 이 창의 주인공이라 맨 위에 둔다 (DESIGN.md Interface Grammar 3).
+ */
+export function hasActiveRecipeFilter(state: { sortBy: string; sortOrder: string; filterCategory: string; filterColorLabel: string }) {
+	return !!state.filterColorLabel || !!state.filterCategory || state.sortBy !== "created_at" || state.sortOrder !== "desc"
+}
+
 export default function FilterModal({ isOpen, onClose }: FilterModalProps) {
-	const { 
-		setSortBy, 
-		setSortOrder, 
-		setFilterCategory, 
-		setFilterColorLabel, 
-		resetCurrentTabFilters,
-		getCurrentTabState 
-	} = useRecipeStore()
+	const { setSortBy, setSortOrder, setFilterCategory, setFilterColorLabel, resetCurrentTabFilters, getCurrentTabState } = useRecipeStore()
+	const state = getCurrentTabState()
+	const sortKey = `${state.sortBy}:${state.sortOrder}`
+	const active = hasActiveRecipeFilter(state)
 
-	// 현재 탭의 상태를 가져옴
-	const currentTabState = getCurrentTabState()
-	const { sortBy, sortOrder, filterCategory, filterColorLabel } = currentTabState
-
-	const handleApply = () => {
-		onClose()
+	const chooseSort = (key: string) => {
+		const [by, order] = key.split(":")
+		setSortBy(by)
+		setSortOrder(order as "asc" | "desc")
 	}
 
-	const handleReset = () => {
-		resetCurrentTabFilters()
-	}
+	return (
+		<Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
+			<DrawerContent className="mx-auto max-w-md">
+				<div className="px-4 pb-4 pt-3">
+					<DrawerTitle className="px-1 text-title text-ink">거르기와 정렬</DrawerTitle>
+					<DrawerDescription className="sr-only">고르면 바로 목록에 반영돼요.</DrawerDescription>
 
-			return (
-			<Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
-				<DrawerContent className="sm:max-w-md sm:mx-auto">
-					<div className="mx-auto w-full p-4">
-					<DrawerHeader>
-						<DrawerTitle>레시피 필터 및 정렬</DrawerTitle>
-						<DrawerDescription>원하는 레시피를 찾기 위해 조건을 설정하세요.</DrawerDescription>
-					</DrawerHeader>
-					<div className="space-y-6 p-4">
-						{/* 태그 필터 */}
-						<div>
-							<label htmlFor="filter-category" className="block text-label font-medium text-ink mb-2">
-								태그 필터
-							</label>
-							<Input 
-								id="filter-category" 
-								type="text" 
-								placeholder="태그 입력 (예: 한식)" 
-								value={filterCategory} 
-								onChange={(e) => setFilterCategory(e.target.value)} 
-								className="w-full" 
-							/>
+					<section aria-labelledby="filter-color" className="mt-5">
+						<h3 id="filter-color" className="px-1 text-heading text-ink">
+							색상 라벨
+						</h3>
+						<ColorLabelPicker className="mt-1" value={state.filterColorLabel || null} onChange={(next) => setFilterColorLabel(next ?? "")} />
+					</section>
+
+					<section className="mt-5">
+						<label htmlFor="filter-tag" className="block px-1 text-heading text-ink">
+							태그
+						</label>
+						<Input id="filter-tag" className="mt-2" placeholder="예: 한식" value={state.filterCategory} onChange={(e) => setFilterCategory(e.target.value.trim())} />
+					</section>
+
+					<section aria-labelledby="filter-sort" className="mt-5">
+						<h3 id="filter-sort" className="px-1 text-heading text-ink">
+							정렬
+						</h3>
+						<div role="radiogroup" aria-labelledby="filter-sort" className="mt-1 divide-y divide-border">
+							{SORTS.map((sort) => {
+								const selected = sort.key === sortKey
+								return (
+									<button
+										key={sort.key}
+										type="button"
+										role="radio"
+										aria-checked={selected}
+										onClick={() => chooseSort(sort.key)}
+										className={cn("flex h-12 w-full items-center justify-between px-1 text-left text-body", selected ? "font-semibold text-ink" : "text-ink")}
+									>
+										{sort.label}
+										{selected && <Check className="h-5 w-5 text-ink" strokeWidth={2.5} aria-hidden />}
+									</button>
+								)
+							})}
 						</div>
+					</section>
 
-						{/* 색상 라벨 필터 */}
-						<div>
-							<p className="mb-1 block text-label font-medium text-ink">색상 라벨</p>
-							<ColorLabelPicker value={filterColorLabel || null} onChange={(next) => setFilterColorLabel(next ?? "")} />
-						</div>
-
-						{/* 정렬 기준 */}
-						<div className="grid grid-cols-2 gap-4">
-							<div>
-								<label htmlFor="sort-by" className="block text-label font-medium text-ink mb-2">
-									정렬 기준
-								</label>
-								<Select onValueChange={(value: string) => setSortBy(value)} defaultValue={sortBy}>
-									<SelectTrigger id="sort-by">
-										<SelectValue placeholder="정렬 기준" />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem value="created_at">생성일</SelectItem>
-										<SelectItem value="updated_at">수정일</SelectItem>
-										<SelectItem value="title">제목</SelectItem>
-									</SelectContent>
-								</Select>
-							</div>
-
-							{/* 정렬 순서 */}
-							<div>
-								<label htmlFor="sort-order" className="block text-label font-medium text-ink mb-2">
-									정렬 순서
-								</label>
-								<Select onValueChange={(value: "asc" | "desc") => setSortOrder(value)} defaultValue={sortOrder}>
-									<SelectTrigger id="sort-order">
-										<SelectValue placeholder="정렬 순서" />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem value="desc">내림차순</SelectItem>
-										<SelectItem value="asc">오름차순</SelectItem>
-									</SelectContent>
-								</Select>
-							</div>
-						</div>
+					<div className="mt-5 flex gap-2">
+						<Button variant="ghost" onClick={resetCurrentTabFilters} disabled={!active} className="flex-1">
+							처음대로
+						</Button>
+						<Button onClick={onClose} className="flex-1">
+							완료
+						</Button>
 					</div>
-					<DrawerFooter className="pt-4 flex-row gap-2">
-						<Button variant="outline" onClick={handleReset} className="flex-1">
-							초기화
-						</Button>
-						<Button onClick={handleApply} className="flex-1">
-							적용
-						</Button>
-					</DrawerFooter>
 				</div>
 			</DrawerContent>
 		</Drawer>

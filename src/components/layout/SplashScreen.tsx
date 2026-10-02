@@ -6,7 +6,7 @@ import SpoonieLogo from "@/components/brand/SpoonieLogo"
 // 앱의 콜드 스타트처럼 브라우저 세션당 한 번만 보인다 (layout의 인라인 스크립트가 첫 페인트 전에 splash-seen 표시).
 export default function SplashScreen() {
 	return (
-		<div data-splash className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-door" role="status" aria-label="스푸니를 여는 중">
+		<div data-splash className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-door" role="status" aria-label="Spoonie를 여는 중">
 			<SpoonieLogo motion="intro" className="h-[57px] w-[180px]" />
 			<p className="mt-5 text-heading text-ink-soft motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-500">요리의 즐거움, 한 스푼</p>
 		</div>

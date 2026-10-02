@@ -116,7 +116,7 @@ export default function PushNotificationSettings() {
   if (!isSupported) {
     return (
       <p className="rounded-[3px] bg-paper px-4 py-3 text-meta text-ink-soft shadow-sheet">
-        이 브라우저에서는 휴대폰 알림을 받을 수 없어요. 홈 화면에 스푸니를 추가하면 받을 수 있어요.
+        이 브라우저에서는 휴대폰 알림을 받을 수 없어요. 홈 화면에 Spoonie를 추가하면 받을 수 있어요.
       </p>
     )
   }

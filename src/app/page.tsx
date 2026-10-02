@@ -8,13 +8,13 @@ export const revalidate = 300
 
 // 홈페이지 SEO 최적화 (TBWA 가이드 적용)
 export const metadata: Metadata = {
-  title: "스푸니 - 레시피 공유 플랫폼 | 홈쿠킹 커뮤니티",
+  title: "Spoonie - 레시피 공유 플랫폼 | 홈쿠킹 커뮤니티",
   description: "맛있는 레시피와 요리 이야기를 공유하세요. 개인 레시피북 관리, 요리법 검색, 팔로우 기능으로 요리 커뮤니티에 참여하세요.",
   keywords: "레시피 공유, 요리 커뮤니티, 홈쿠킹, 요리법, 레시피북, 요리 레시피, 음식, 요리 일상, 레시피드",
   
   openGraph: {
-    siteName: '스푸니',
-    title: "스푸니 - 레시피 공유 플랫폼",
+    siteName: 'Spoonie',
+    title: "Spoonie - 레시피 공유 플랫폼",
     description: "맛있는 레시피와 요리 이야기를 공유하는 커뮤니티에 참여하세요.",
     url: process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr',
     type: 'website',
@@ -23,14 +23,14 @@ export const metadata: Metadata = {
         url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'}/og-default.png`,
         width: 1200,
         height: 630,
-        alt: "스푸니 - 레시피 공유 플랫폼",
+        alt: "Spoonie - 레시피 공유 플랫폼",
       },
     ],
   },
 
   twitter: {
     card: 'summary_large_image',
-    title: "스푸니 - 레시피 공유 플랫폼",
+    title: "Spoonie - 레시피 공유 플랫폼",
     description: "맛있는 레시피와 요리 이야기를 공유하는 커뮤니티",
     images: [`${process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'}/og-default.png`],
   },
@@ -46,8 +46,8 @@ import { serializeJsonLd } from "@/lib/json-ld"
 const websiteSchema = {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  name: "스푸니",
-  alternateName: ["Spoonie"],
+  name: "Spoonie",
+  alternateName: ["스푸니"], // 화면 표기는 Spoonie. 한국어로 검색한 사람도 찾도록 별칭만 둔다
   url: (process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr") + "/",
 }
 import PostCardSkeleton from "@/components/items/PostCardSkeleton"
@@ -66,7 +66,7 @@ export default async function HomePage() {
 
 	return (
 		<div className="min-h-screen">
-			<h1 className="sr-only">스푸니 - 레시피와 요리 이야기를 나누는 커뮤니티</h1>
+			<h1 className="sr-only">Spoonie - 레시피와 요리 이야기를 나누는 커뮤니티</h1>
 			{/* Google 검색 결과의 사이트 이름 */}
 			<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(websiteSchema) }} />
 			<Suspense fallback={<ItemListSkeleton />}>

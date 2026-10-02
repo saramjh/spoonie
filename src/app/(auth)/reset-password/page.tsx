@@ -67,7 +67,7 @@ export default function ResetPasswordPage() {
 					<div className="text-center mb-6">
 					<Link href="/" className="inline-block">
 						<div className="inline-block mb-4">
-							<Image src="/icon-only.svg" alt="스푸니" width={32} height={32} />
+							<Image src="/icon-only.svg" alt="Spoonie" width={32} height={32} />
 						</div>
 					</Link>
 					<h1 className="text-title text-ink mb-1">새 비밀번호 설정</h1>
@@ -89,8 +89,7 @@ export default function ResetPasswordPage() {
 											<Input 
 												type="password" 
 												placeholder="6자 이상" 
-												{...field} 
-												className="h-12 rounded-md border border-ink/40 bg-paper text-body focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0" 
+												{...field}  
 											/>
 										</FormControl>
 										<FormMessage />
@@ -107,8 +106,7 @@ export default function ResetPasswordPage() {
 											<Input 
 												type="password" 
 												 
-												{...field} 
-												className="h-12 rounded-md border border-ink/40 bg-paper text-body focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0" 
+												{...field}  
 											/>
 										</FormControl>
 										<FormMessage />

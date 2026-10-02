@@ -42,7 +42,7 @@ export default function CreateOptionsModal({ isOpen, onClose }: CreateOptionsMod
 						<button
 							type="button"
 							onClick={() => handleNavigation("/posts/new")}
-							className="flex w-full items-center gap-4 rounded-lg border border-ink/25 bg-paper px-4 py-4 text-left text-ink active:bg-muted"
+							className="flex w-full items-center gap-4 rounded-lg border border-ink/20 bg-paper px-4 py-4 text-left text-ink active:bg-muted"
 						>
 							<ImagePlus className="h-7 w-7 flex-shrink-0 text-ink-soft" aria-hidden />
 							<span>

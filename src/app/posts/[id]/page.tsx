@@ -47,8 +47,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     if (error || !post) {
       // 에러 시 기본 메타데이터 (기존 기능에 영향 없음)
       return { 
-        title: '레시피드 - 스푸니',
-        description: '요리와 관련된 이야기를 공유하는 스푸니입니다.',
+        title: '레시피드 - Spoonie',
+        description: '요리와 관련된 이야기를 공유하는 Spoonie입니다.',
         robots: { index: false, follow: true }, // 공개 글이 아니거나 없는 주소
       }
     }
@@ -75,7 +75,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     }
     
     // SEO 최적화된 제목 생성
-    const seoTitle = `${post.title} - ${authorName}님의 레시피드 | 스푸니`
+    const seoTitle = `${post.title} - ${authorName}님의 레시피드 | Spoonie`
     
     // 추가 키워드 생성
     const keywords = [
@@ -95,7 +95,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       
       // Open Graph 최적화 (소셜 공유)
       openGraph: {
-        title: `${post.title} - 스푸니`,
+        title: `${post.title} - Spoonie`,
         description: cleanDescription,
         images: [{ 
           url: imageUrl, 
@@ -107,7 +107,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         authors: [authorName],
         publishedTime: post.created_at,
         section: '레시피드',
-        siteName: '스푸니',
+        siteName: 'Spoonie',
       },
       
       // Twitter Cards 최적화
@@ -139,8 +139,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     // 에러 로깅 및 안전한 fallback
     console.error('❌ Post metadata generation failed:', error)
     return { 
-      title: '레시피드 - 스푸니',
-      description: '요리와 관련된 이야기를 공유하는 스푸니입니다.',
+      title: '레시피드 - Spoonie',
+      description: '요리와 관련된 이야기를 공유하는 Spoonie입니다.',
     }
   }
 }

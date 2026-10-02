@@ -102,10 +102,10 @@ export default function Header() {
 
   return (
     <header className="flex h-14 items-center justify-between border-b border-border bg-paper pl-4 pr-1.5">
-      <Link href="/" className="flex-shrink-0" aria-label="스푸니 홈">
+      <Link href="/" className="flex-shrink-0" aria-label="Spoonie 홈">
         <NextImage 
           src="/logo-full.svg" 
-          alt="스푸니" 
+          alt="Spoonie" 
           width={100} 
           height={32} 
           priority 

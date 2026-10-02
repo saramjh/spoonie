@@ -1,4 +1,4 @@
-// 스푸니 화면 키트: DESIGN.md의 Interface Grammar를 코드로 옮긴 기본 부품. 새 화면은 이 부품을 조합해 만든다
+// Spoonie 화면 키트: DESIGN.md의 Interface Grammar를 코드로 옮긴 기본 부품. 새 화면은 이 부품을 조합해 만든다
 export { Sheet } from "./Sheet"
 export { SectionHeading } from "./SectionHeading"
 export { StateSheet } from "./StateSheet"

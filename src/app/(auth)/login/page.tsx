@@ -127,8 +127,7 @@ export default function LoginPage() {
 											{/* 토스 스타일 입력필드 */}
 											<Input 
 												 
-												{...field} 
-												className="h-12 rounded-md border border-ink/40 bg-paper text-body focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0" 
+												{...field}  
 											/>
 										</FormControl>
 										<FormMessage />
@@ -145,8 +144,7 @@ export default function LoginPage() {
 											<Input 
 												type="password" 
 												 
-												{...field} 
-												className="h-12 rounded-md border border-ink/40 bg-paper text-body focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0" 
+												{...field}  
 											/>
 										</FormControl>
 										<FormMessage />

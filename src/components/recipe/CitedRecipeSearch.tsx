@@ -160,7 +160,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
       {/* 검색 영역 - 필요할 때만 표시 */}
       {(searchTerm || selectedRecipes.length > 0 || showSearch) && (
         <div className="relative">
-          <Command shouldFilter={false} className="rounded-md border border-ink/40">
+          <Command shouldFilter={false} className="rounded-lg border border-ink/20">
             <CommandInput 
               ref={inputRef}
               id="recipe-search-input"

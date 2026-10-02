@@ -444,7 +444,8 @@ export default function TossSeamlessProfileEditor({
     )
   }
 
-  const currentAvatarUrl = formData.avatarUrl || sessionProfile?.avatar_url || "/icon-only.svg"
+  // 사진이 없으면 다른 화면과 같이 이름 첫 글자 원 (로고를 기본 사진으로 쓰지 않는다)
+  const currentAvatarUrl = formData.avatarUrl || sessionProfile?.avatar_url || null
 
   const usernameChanged = formData.username !== (initialProfile?.username || "")
   // 프로필 편집: 사진, 이름, 소개 세 가지만. 미리보기·변경 요약 카드는 화면의 값이 곧 결과라 두지 않는다
@@ -458,10 +459,14 @@ export default function TossSeamlessProfileEditor({
         <Sheet className="space-y-6 px-4 pb-6 pt-6">
           <div className="flex items-center gap-4">
             <div className="relative h-[88px] w-[88px] flex-shrink-0 overflow-hidden rounded-full bg-border">
-              <Image src={currentAvatarUrl} alt="" width={88} height={88} priority className="h-full w-full object-cover" />
+              {currentAvatarUrl ? (
+                <Image src={currentAvatarUrl} alt="" width={88} height={88} priority className="h-full w-full object-cover" />
+              ) : (
+                <span className="flex h-full w-full items-center justify-center text-title text-ink-soft" aria-hidden>{(formData.username || sessionProfile?.username || "?").charAt(0)}</span>
+              )}
             </div>
             <div>
-              <label htmlFor="avatar-upload" className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg border border-ink/25 px-4 text-label font-medium text-ink">
+              <label htmlFor="avatar-upload" className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg border border-ink/20 px-4 text-label font-medium text-ink transition-colors hover:border-ink/35 hover:bg-muted">
                 <Camera className="h-4 w-4" aria-hidden />
                 사진 바꾸기
               </label>

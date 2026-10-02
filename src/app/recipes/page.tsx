@@ -14,7 +14,7 @@ import { useSWRConfig } from "swr"
 import { useRecipeStore } from "@/store/recipeStore"
 import RecipeCard from "@/components/recipe/RecipeCard"
 import RecipeCardSkeleton from "@/components/recipe/RecipeCardSkeleton"
-import FilterModal from "@/components/recipe/FilterModal"
+import FilterModal, { hasActiveRecipeFilter } from "@/components/recipe/FilterModal"
 import RecipeListCard from "@/components/recipe/RecipeListCard"
 import type { User } from "@supabase/supabase-js"
 import type { Item } from "@/types/item"
@@ -266,6 +266,7 @@ export default function RecipesPage() {
 	const { viewMode, setViewMode, setCurrentTab: setStoreCurrentTab, getCurrentTabState, setSearchTerm } = useRecipeStore()
 	const currentTabState = getCurrentTabState()
 	const { searchTerm, sortBy, sortOrder, filterCategory, filterColorLabel } = currentTabState
+	const filterActive = hasActiveRecipeFilter(currentTabState)
 	const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm)
 
 	// const { registerRefreshFunction, unregisterRefreshFunction } = useRefresh()
@@ -567,8 +568,10 @@ export default function RecipesPage() {
 								/>
 							</div>
 							{currentTab === "my_recipes" && (
-								<Button variant="ghost" size="icon" onClick={() => setIsFilterModalOpen(true)} aria-label="색상 라벨로 거르기">
+								<Button variant="ghost" size="icon" onClick={() => setIsFilterModalOpen(true)} aria-label={filterActive ? "거르기와 정렬 (켜짐)" : "거르기와 정렬"} className="relative">
 									<SlidersHorizontal className="!size-5" aria-hidden />
+									{/* 거르기·정렬이 켜져 있으면 점: 목록이 왜 줄었는지 알 수 있게 */}
+									{filterActive && <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-primary ring-2 ring-door" aria-hidden />}
 								</Button>
 							)}
 							<Button variant="ghost" size="icon" onClick={() => setViewMode(viewMode === "card" ? "list" : "card")} aria-label={viewMode === "card" ? "목록으로 보기" : "격자로 보기"}>

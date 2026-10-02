@@ -386,8 +386,6 @@ export default function NotificationsPage() {
   return (
     <div className="min-h-screen">
       <PageHeader
-        leading="none"
-        titleAlign="start"
         title="알림"
         trailing={
           notifications.length > 0 ? (
@@ -450,7 +448,7 @@ export default function NotificationsPage() {
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className={`block text-body ${unread ? "text-ink" : "text-ink-soft"}`}>
-                        <span className="font-semibold text-ink">{notification.from_profile?.username || "스푸니"}</span>{" "}
+                        <span className="font-semibold text-ink">{notification.from_profile?.username || "Spoonie"}</span>{" "}
                         {generateNotificationMessage(notification)}
                       </span>
                       <span className="mt-0.5 block text-meta text-ink-soft">

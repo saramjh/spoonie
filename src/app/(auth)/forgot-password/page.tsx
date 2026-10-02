@@ -60,7 +60,7 @@ export default function ForgotPasswordPage() {
 					<div className="text-center mb-6">
 					<Link href="/" className="inline-block">
 						<div className="inline-block mb-4">
-							<Image src="/icon-only.svg" alt="스푸니" width={32} height={32} />
+							<Image src="/icon-only.svg" alt="Spoonie" width={32} height={32} />
 						</div>
 					</Link>
 					<h1 className="text-title text-ink mb-1">비밀번호 찾기</h1>
@@ -81,8 +81,7 @@ export default function ForgotPasswordPage() {
 										<FormControl>
 											<Input 
 												 
-												{...field} 
-												className="h-12 rounded-md border border-ink/40 bg-paper text-body focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-0" 
+												{...field}  
 											/>
 										</FormControl>
 										<FormMessage />

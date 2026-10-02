@@ -4,7 +4,7 @@ import { useState, type ImgHTMLAttributes } from "react"
 import { hasVariants, srcSetFor } from "@/lib/image-variants"
 import { cn } from "@/lib/utils"
 
-// 스푸니 사진 한 장: 크기별 버전(srcset) 중 화면에 맞는 것 하나만 받는다 (DESIGN.md Interface Grammar 4).
+// Spoonie 사진 한 장: 크기별 버전(srcset) 중 화면에 맞는 것 하나만 받는다 (DESIGN.md Interface Grammar 4).
 // 프레임(비율·배경)은 감싸는 쪽이 정하고, 이 부품은 프레임을 채운다. 작은 버전이 없으면 원본으로 되돌아간다.
 interface PhotoProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, "src" | "srcSet"> {
 	src: string

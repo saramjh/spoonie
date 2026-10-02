@@ -50,8 +50,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     if (error || !recipe) {
       // 에러 시 기본 메타데이터 (기존 기능에 영향 없음)
       return { 
-        title: '레시피 - 스푸니',
-        description: '맛있는 레시피를 공유하는 스푸니입니다.',
+        title: '레시피 - Spoonie',
+        description: '맛있는 레시피를 공유하는 Spoonie입니다.',
         robots: { index: false, follow: true }, // 공개 글이 아니거나 없는 주소
       }
     }
@@ -71,7 +71,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     const cleanDescription = [intro, facts].filter(Boolean).join(' — ').slice(0, 160) || `${recipe.title} 레시피`
     
     // SEO 최적화된 제목 생성
-    const seoTitle = `${recipe.title} - ${authorName}님의 레시피 | 스푸니`
+    const seoTitle = `${recipe.title} - ${authorName}님의 레시피 | Spoonie`
     
     // 추가 키워드 생성
     const keywords = [
@@ -90,7 +90,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       
       // Open Graph 최적화 (소셜 공유)
       openGraph: {
-        title: `${recipe.title} - 스푸니`,
+        title: `${recipe.title} - Spoonie`,
         description: cleanDescription,
         images: [{ 
           url: imageUrl, 
@@ -102,7 +102,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         authors: [authorName],
         publishedTime: recipe.created_at,
         section: '레시피',
-        siteName: '스푸니',
+        siteName: 'Spoonie',
       },
       
       // Twitter Cards 최적화
@@ -140,8 +140,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     // 에러 로깅 및 안전한 fallback
     console.error('❌ Recipe metadata generation failed:', error)
     return { 
-      title: '레시피 - 스푸니',
-      description: '맛있는 레시피를 공유하는 스푸니입니다.',
+      title: '레시피 - Spoonie',
+      description: '맛있는 레시피를 공유하는 Spoonie입니다.',
     }
   }
 }

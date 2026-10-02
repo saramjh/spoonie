@@ -20,7 +20,7 @@ export default async function SearchPage() {
 	const initialExplore = await loadExplore()
 	return (
 		<>
-			<h1 className="sr-only">스푸니 레시피 찾기</h1>
+			<h1 className="sr-only">Spoonie 레시피 찾기</h1>
 			<SearchClient initialExplore={initialExplore} />
 		</>
 	)

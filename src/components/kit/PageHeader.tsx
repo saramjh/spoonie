@@ -17,20 +17,32 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, leading = "back", trailing, titleAlign = "center", className }: PageHeaderProps) {
 	const router = useRouter()
+	const back =
+		leading === "back" ? (
+			<Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="뒤로 가기">
+				<ArrowLeft className="!size-6" aria-hidden />
+			</Button>
+		) : leading === "cancel" ? (
+			<Button type="button" variant="ghost" onClick={() => router.back()} className="px-3">
+				취소
+			</Button>
+		) : null
+
+	// 가운데 제목은 양옆 폭과 상관없이 정확히 가운데 (3칸 격자)
+	if (titleAlign === "center") {
+		return (
+			<header className={cn("sticky top-0 z-40 grid h-14 grid-cols-[1fr_auto_1fr] items-center border-b border-border bg-paper px-1", className)}>
+				<div className="flex justify-start">{back}</div>
+				<h1 className="truncate text-heading text-ink">{title}</h1>
+				<div className="flex justify-end">{trailing}</div>
+			</header>
+		)
+	}
 	return (
-		<header className={cn("sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-paper", titleAlign === "start" ? "pl-4 pr-1" : "px-1", className)}>
-			{leading === "back" && (
-				<Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="뒤로 가기">
-					<ArrowLeft className="h-6 w-6" aria-hidden />
-				</Button>
-			)}
-			{leading === "cancel" && (
-				<Button type="button" variant="ghost" onClick={() => router.back()}>
-					취소
-				</Button>
-			)}
-			<h1 className={titleAlign === "start" ? "text-title text-ink" : "text-heading text-ink"}>{title}</h1>
-			{trailing ?? (titleAlign === "center" ? <span className={leading === "cancel" ? "w-16" : "w-11"} aria-hidden /> : null)}
+		<header className={cn("sticky top-0 z-40 flex h-14 items-center gap-1 border-b border-border bg-paper pr-1", back ? "pl-1" : "pl-4", className)}>
+			{back}
+			<h1 className="min-w-0 flex-1 truncate text-title text-ink">{title}</h1>
+			{trailing}
 		</header>
 	)
 }

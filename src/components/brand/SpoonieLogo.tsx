@@ -1,4 +1,4 @@
-// 스푸니 로고를 인라인 SVG로 그려 숟가락만 따로 움직일 수 있게 한다.
+// Spoonie 로고를 인라인 SVG로 그려 숟가락만 따로 움직일 수 있게 한다.
 // 움직임은 "한 스푼 뜨기": 숟가락이 손잡이 축(대각선)을 따라 들어갔다 나온다. 축을 따라 움직이므로 고리의 틈과 어긋나지 않는다.
 // 자바스크립트 없이 CSS만으로 움직이므로 정적 HTML의 스플래시에서도 바로 보인다. 동작 줄이기 설정에서는 멈춘다.
 
@@ -22,7 +22,7 @@ interface SpoonieLogoProps {
 	title?: string
 }
 
-export default function SpoonieLogo({ variant = "full", motion = "none", className, title = "스푸니" }: SpoonieLogoProps) {
+export default function SpoonieLogo({ variant = "full", motion = "none", className, title = "Spoonie" }: SpoonieLogoProps) {
 	const viewBox = variant === "full" ? "0 0 188.9 60.3" : "0 0 60.3 60.3"
 	return (
 		<svg viewBox={viewBox} className={className} role="img" aria-label={title} data-motion={motion}>

@@ -11,8 +11,8 @@ import { Suspense } from "react"
 
 
 export const metadata: Metadata = {
-	title: "스푸니 - 레시피 공유 플랫폼 | 요리법 검색, 나만의 레시피북",
-	description: "맛있는 레시피를 공유하고 요리 영감을 얻어보세요. 개인 레시피북 관리, 요리법 검색, 팔로우 기능으로 요리 커뮤니티에 참여하세요. 무료 레시피 공유 서비스 스푸니.",
+	title: "Spoonie - 레시피 공유 플랫폼 | 요리법 검색, 나만의 레시피북",
+	description: "맛있는 레시피를 공유하고 요리 영감을 얻어보세요. 개인 레시피북 관리, 요리법 검색, 팔로우 기능으로 요리 커뮤니티에 참여하세요. 무료 레시피 공유 서비스 Spoonie.",
 	keywords: "레시피, 요리법, 요리, 음식, 레시피 공유, 요리 커뮤니티, 레시피북, 요리 레시피, 한식, 양식, 중식, 일식, 홈쿠킹",
 	manifest: "/manifest.json",
 	icons: {
@@ -21,16 +21,16 @@ export const metadata: Metadata = {
 	},
 	// Open Graph 메타 태그 (소셜 공유 최적화)
 	openGraph: {
-		title: "스푸니 - 레시피 공유 플랫폼",
+		title: "Spoonie - 레시피 공유 플랫폼",
 		description: "맛있는 레시피를 공유하고 요리 영감을 얻어보세요. 개인 레시피북 관리와 요리 커뮤니티 참여.",
 		url: process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr',
-		siteName: "스푸니 (Spoonie)",
+		siteName: "Spoonie",
 		images: [
 			{
 				url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'}/og-default.png`,
 				width: 1200,
 				height: 630,
-				alt: "스푸니 - 레시피 공유 플랫폼",
+				alt: "Spoonie - 레시피 공유 플랫폼",
 			},
 		],
 		locale: "ko_KR",
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
 	// Twitter Cards 
 	twitter: {
 		card: "summary_large_image",
-		title: "스푸니 - 레시피 공유 플랫폼",
+		title: "Spoonie - 레시피 공유 플랫폼",
 		description: "맛있는 레시피를 공유하고 요리 영감을 얻어보세요.",
 		images: [`${process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'}/og-default.png`],
 	},

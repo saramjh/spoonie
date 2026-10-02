@@ -44,7 +44,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     if (error || !profile) {
       // 에러 시 기본 메타데이터 (기존 기능에 영향 없음)
       return { 
-        title: '프로필 - 스푸니',
+        title: '프로필 - Spoonie',
         description: '요리를 사랑하는 사람들의 프로필을 확인해보세요.',
         robots: { index: false, follow: true }, // 없는 프로필
       }
@@ -68,11 +68,11 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         .replace(/\n/g, ' ')
         .slice(0, 160)
     } else {
-      profileDescription = `${displayName}님의 스푸니 프로필입니다. 레시피와 요리 이야기를 확인해보세요.`
+      profileDescription = `${displayName}님의 Spoonie 프로필입니다. 레시피와 요리 이야기를 확인해보세요.`
     }
     
     // SEO 최적화된 제목 생성  
-    const seoTitle = `${displayName} (@${profile.username || profile.public_id}) - 스푸니`
+    const seoTitle = `${displayName} (@${profile.username || profile.public_id}) - Spoonie`
     
     // 키워드 생성
     const keywords = [
@@ -81,7 +81,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       '프로필',
       '요리',
       '레시피',
-      '스푸니',
+      'Spoonie',
       '요리 블로거'
     ].filter(Boolean).join(', ')
 
@@ -92,7 +92,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       
       // Open Graph 최적화 (소셜 공유)
       openGraph: {
-        title: `${displayName} - 스푸니`,
+        title: `${displayName} - Spoonie`,
         description: profileDescription,
         images: [{ 
           url: profileImageUrl, 
@@ -101,7 +101,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
           alt: `${displayName}님의 프로필 사진`
         }],
         type: 'profile',
-        siteName: '스푸니',
+        siteName: 'Spoonie',
       },
       
       // Twitter Cards 최적화
@@ -133,7 +133,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     // 에러 로깅 및 안전한 fallback
     console.error('❌ Profile metadata generation failed:', error)
     return { 
-      title: '프로필 - 스푸니',
+      title: '프로필 - Spoonie',
       description: '요리를 사랑하는 사람들의 프로필을 확인해보세요.',
     }
   }
