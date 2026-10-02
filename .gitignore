@@ -42,7 +42,6 @@ GEMINI.md
 # LOMC file
 SPOONIE.lomc
 
-/src/docs/
 
 /.gemini/settings.json
 # PWA build output (next-pwa가 빌드마다 생성)
