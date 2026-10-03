@@ -11,16 +11,11 @@
 import { useState, useEffect } from 'react';
 import { useHydrated } from '@/hooks/useHydrated';
 import { createSupabaseBrowserClient } from '@/lib/supabase-client';
+import type { PushSubscriptionData } from '@/features/notification/contracts';
+import { disablePushSubscription, savePushSubscription } from '@/features/notification/data/notification-repository';
 
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
 
-interface PushSubscriptionData {
-  endpoint: string;
-  keys: {
-    p256dh: string;
-    auth: string;
-  };
-}
 
 export function usePushNotification() {
   // 화면이 뜬 뒤 브라우저 기능으로 판단한다 (서버 렌더와 어긋나지 않게)
@@ -41,12 +36,7 @@ export function usePushNotification() {
     const supabase = createSupabaseBrowserClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      const { error } = await supabase
-        .from('user_push_settings')
-        .upsert(
-          { user_id: user.id, subscription_data: subscriptionData, enabled: true, updated_at: new Date().toISOString() },
-          { onConflict: 'user_id' }
-        );
+      const { error } = await savePushSubscription(supabase, user.id, subscriptionData);
       if (error) {
         console.error('❌ 구독 정보 저장 실패:', error);
         return false;
@@ -142,10 +132,7 @@ export function usePushNotification() {
       const supabase = createSupabaseBrowserClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        await supabase
-          .from('user_push_settings')
-          .update({ enabled: false })
-          .eq('user_id', user.id);
+        await disablePushSubscription(supabase, user.id);
       }
 
       setSubscription(null);

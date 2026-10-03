@@ -19,7 +19,7 @@ import CitedRecipeSearch from "@/components/recipe/CitedRecipeSearch"
 
 import { uploadImagesOptimized } from "@/lib/image-optimization"
 import { cacheManager } from "@/lib/unified-cache-manager"
-import { notificationService } from "@/lib/notification-service"
+import { notificationService } from "@/features/notification/data/notification-service"
 import { logEvent } from "@/lib/events"
 import { mutate as globalMutate } from "swr"
 import { PageHeader, SectionHeading, Sheet, SourceRow } from "@/components/kit"

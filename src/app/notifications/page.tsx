@@ -14,23 +14,10 @@ import { useRouter } from '@/lib/navigation'
 import PushNotificationSettings from '@/components/notifications/PushNotificationSettings'
 import { NOTIFICATION_RECEIVED_EVENT } from '@/lib/realtime-events';
 import { CheckBox, PageHeader, Sheet, StateSheet } from "@/components/kit"
+import type { Notification } from "@/features/notification/contracts"
+import { toNotifications } from "@/features/notification/domain/notification-rows"
+import { countNotifications, deleteNotifications, fetchNotificationRows, markAllNotificationsRead, markNotificationRead } from "@/features/notification/data/notification-repository"
 
-interface Notification {
-  id: string;
-  created_at: string;
-  type: 'like' | 'comment' | 'follow' | 'recipe_cited' | 'admin';
-  is_read: boolean;
-  item_id: string | null;
-  from_profile: {
-    public_id: string;
-    username: string;
-    avatar_url: string;
-  } | null;
-  related_item: {
-    item_type: 'recipe' | 'post';
-    creation_origin?: string | null;
-  } | null;
-}
 
 export default function NotificationsPage() {
   const supabase = createSupabaseBrowserClient();
@@ -64,49 +51,20 @@ export default function NotificationsPage() {
     setCurrentUser(user);
 
     // 서버 부담 최소화: 최신 알림 개수만 먼저 확인
-    const { count: newCount } = await supabase
-      .from('notifications')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id);
+    const newCount = await countNotifications(supabase, user.id);
 
     // 개수가 같으면 데이터 요청 생략 (서버 자원 절약)
     if (newCount === notifications.length && notifications.length > 0) {
       return;
     }
 
-    const { data, error } = await supabase
-      .from('notifications')
-      .select(`
-        id,
-        created_at,
-        type,
-        is_read,
-        item_id,
-        from_profile:profiles!notifications_from_user_id_fkey ( public_id, username, avatar_url ),
-        related_item:items!notifications_item_id_fkey ( item_type, creation_origin )
-      `)
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(50); // 최근 50개만 로드 (대역폭 절약)
+    const { rows, error } = await fetchNotificationRows(supabase, user.id); // 최근 50개만 로드 (대역폭 절약)
 
     if (error) {
       toast({ title: '알림 불러오기 실패', description: "알림을 불러오는 중 오류가 발생했습니다. " + error.message, variant: 'destructive' });
     } else {
       // 데이터 변환 처리
-      type NotificationRow = Omit<Notification, 'from_profile' | 'related_item'> & { from_profile: Notification['from_profile'] | Notification['from_profile'][]; related_item: Notification['related_item'] | Notification['related_item'][] }
-      const transformedData: Notification[] = ((data || []) as unknown as NotificationRow[]).map((item) => ({
-        id: item.id,
-        created_at: item.created_at,
-        type: item.type,
-        is_read: item.is_read,
-        item_id: item.item_id,
-        from_profile: Array.isArray(item.from_profile) 
-          ? item.from_profile[0] || null 
-          : item.from_profile,
-        related_item: Array.isArray(item.related_item) 
-          ? item.related_item[0] || null 
-          : item.related_item,
-      }));
+      const transformedData: Notification[] = toNotifications(rows);
       setNotifications(transformedData);
     }
   }, [supabase, toast, notifications.length]);
@@ -159,10 +117,7 @@ export default function NotificationsPage() {
 
   // 개별 알림 읽음 처리
   const markAsRead = async (id: string) => {
-    const { error } = await supabase
-      .from('notifications')
-      .update({ is_read: true })
-      .eq('id', id);
+    const { error } = await markNotificationRead(supabase, id);
 
     if (error) {
       toast({ title: '읽음 처리 실패', description: error.message, variant: 'destructive' });
@@ -198,11 +153,7 @@ export default function NotificationsPage() {
     mutate(`unread_notifications_count_${userId}`, remainingUnreadCount);
 
     try {
-      const { error } = await supabase
-        .from('notifications')
-        .delete({ count: 'exact' })
-        .in('id', idsToDelete)
-        .eq('user_id', userId);
+      const { error } = await deleteNotifications(supabase, idsToDelete, userId);
 
       if (error) {
         throw error;
@@ -259,11 +210,7 @@ export default function NotificationsPage() {
     const unreadNotifications = notifications.filter(notif => !notif.is_read);
     if (unreadNotifications.length === 0) return;
 
-    const { error } = await supabase
-      .from('notifications')
-      .update({ is_read: true })
-      .eq('user_id', userId)
-      .eq('is_read', false);
+    const { error } = await markAllNotificationsRead(supabase, userId);
 
     if (error) {
       console.error('❌ 모든 알림 읽음 처리 실패:', error);
