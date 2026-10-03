@@ -10,7 +10,7 @@
   - `push-dispatch`: 알림 저장 → DB 트리거 → 웹 푸시 발송
   - `send-push`: 알림 설정 화면의 테스트 발송
   - `sweep-orphan-images`: 매주(`@weekly`) 쓰지 않는 사진 정리
-  - `release-queued-recipes`: 매일 11:30·18:30(한국 시간) `release_queue` 맨 앞의 비공개 레시피 하나를 공개 (공개 시각을 작성 시각으로)
+  - `release-queued-recipes`: 매일 11:30·18:30(한국 시간) `release_queue` 맨 앞의 비공개 레시피 하나를 공개 (공개 시각을 작성 시각으로). 이어서 인스타그램 @spoonie.kitchen에 그 레시피 사진(최대 10장)과 캡션을 확인 없이 게시. 결과는 `release_queue.instagram_media_id`/`instagram_error`
 - `/api/*`는 Next.js가 처리한다 (리다이렉트를 두지 않는다).
 - 보안 헤더(CSP 포함)도 `netlify.toml`에 있다. 외부 스크립트·수집 주소를 늘리면 여기 `script-src`·`connect-src`도 같이 늘린다.
 
@@ -28,6 +28,7 @@
 | `NEXT_PUBLIC_GA_ID` | GA4 측정 ID (없으면 `G-16DKDXVQ9T`) | 아님 |
 | `NEXT_PUBLIC_ADSENSE_ID` | 애드센스 게시자 ID | 아님 |
 | `NEXT_PUBLIC_ADSENSE_ENABLED` | `true`일 때만 광고 스크립트를 싣는다. 지금은 꺼 둠(설정 안 함) | 아님 |
+| `INSTAGRAM_ACCESS_TOKEN` | 인스타그램 자동 게시 첫 토큰 (메타 개발자 앱의 장기 토큰). 30일마다 함수가 갱신해 DB `instagram_credentials`에 저장 | **비밀** |
 | `NEXT_PUBLIC_ENABLE_ANALYTICS_LOGS` | `true`면 GA를 싣지 않는다 (개발 환경용) | 아님 |
 
 로컬은 `.env.local`(git 제외), 운영은 Netlify 환경 변수. 비밀 값은 대화·문서·커밋에 적지 않는다.
