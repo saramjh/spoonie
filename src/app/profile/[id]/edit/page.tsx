@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { createSupabaseBrowserClient } from "@/shared/infra/supabase"
+import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { useRouter } from "@/shared/lib/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { User } from "@supabase/supabase-js"

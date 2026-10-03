@@ -39,7 +39,7 @@ src/
 - 화면·훅에서 `supabase.from(...)`을 직접 쓰지 않는다. 필요한 조회·쓰기는 그 기능의 `data/`에 함수로 만든다 (서버 라우트 `app/api`, `app/auth`는 예외).
 - 판단 로직(폼 기본값, 저장 값 만들기, 상태 계산)은 `domain/`에 두고 테스트를 붙인다: `npm test`(vitest).
 - 새 폴더를 만들면 `tailwind.config.ts`의 `content`에 들어가는지 확인한다 (`src/features`, `src/shared`는 들어 있다).
-- 알려진 문제: 브라우저 Supabase 클라이언트가 두 개다(`shared/infra/supabase.ts` 기본 설정, `supabase-client.ts` PKCE 설정).
+- 브라우저 Supabase 클라이언트는 `shared/infra/supabase-client.ts` 하나다. @supabase/ssr이 브라우저에서 쿠키 저장·PKCE·토큰 갱신을 늘 자기 값으로 정하고, 클라이언트 하나를 모든 화면이 함께 쓴다.
 
 ## 데이터 (Supabase)
 

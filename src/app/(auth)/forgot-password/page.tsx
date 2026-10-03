@@ -8,7 +8,7 @@ import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { createSupabaseBrowserClient } from "@/shared/infra/supabase"
+import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { useToast } from "@/hooks/use-toast"
 import { Sheet } from "@/components/kit"
 

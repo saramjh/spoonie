@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import type { User } from '@supabase/supabase-js';
 import Image from 'next/image'
-import { createSupabaseBrowserClient } from '@/shared/infra/supabase'
+import { createSupabaseBrowserClient } from '@/shared/infra/supabase-client'
 import { useToast } from '@/hooks/use-toast'
 import { mutate } from 'swr'
 import { formatDistanceToNowStrict } from 'date-fns'

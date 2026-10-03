@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "@/shared/lib/navigation"
 import { Button } from "@/components/ui/button";
 import { Bell, Bookmark } from "lucide-react";
-import { createSupabaseBrowserClient } from "@/shared/infra/supabase";
+import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client";
 import useSWR from 'swr';
 import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
 import { NOTIFICATION_RECEIVED_EVENT } from '@/shared/infra/realtime-events';
