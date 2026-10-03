@@ -30,6 +30,7 @@ import { mutate as globalMutate } from "swr"
 import { ColorLabelPicker, PageHeader, SectionHeading, Sheet, SourceRow } from "@/components/kit"
 import { revalidateItemPage } from "@/lib/revalidate-item"
 import { removeDroppedImages } from "@/lib/item-images"
+import { attachInstructionImages, buildRecipeItemPayload, editDefaults, forkDefaults, reorderIngredients, toIngredientRows, toInstructionRows } from "@/features/recipe/domain/recipe-form"
 
 // Zod 스키마 업데이트
 const recipeSchema = z.object({
@@ -144,23 +145,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 
 	useEffect(() => {
 		if (isEditMode && initialData) {
-			form.reset({
-				title: initialData.title || "",
-				description: initialData.description || "",
-				servings: initialData.servings || 1,
-				cooking_time_minutes: initialData.cooking_time_minutes || 1,
-				is_public: initialData.is_public !== undefined ? initialData.is_public : true,
-				ingredients: (initialData.ingredients && initialData.ingredients.length > 0) 
-					? initialData.ingredients
-						.sort((a, b) => (a.order_index || 0) - (b.order_index || 0)) // order_index로 정렬
-						.map((i) => ({ name: i.name, amount: i.amount, unit: i.unit || "개" })) 
-					: [{ name: "", amount: 1, unit: "개" }],
-				instructions: (initialData.instructions && initialData.instructions.length > 0) ? initialData.instructions.map((i) => ({ description: i.description, image_url: i.image_url || "" })) : [{ description: "", image_url: "" }],
-				color_label: initialData.color_label,
-				// @ts-expect-error - tags 타입 변환 처리
-				tags: initialData.tags?.join(", ") || "",
-				cited_recipe_ids: initialData.cited_recipe_ids || [],
-			})
+			form.reset(editDefaults(initialData) as unknown as RecipeFormValues)
 
 			if (initialData.image_urls && initialData.image_urls.length > 0) {
 				const fetchedImages = initialData.image_urls.map((url) => ({
@@ -239,24 +224,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 	// fork: 사진과 색상 라벨은 가져오지 않는다 (내가 만든 요리의 사진, 내 정리 기준을 쓴다)
 	useEffect(() => {
 		if (isEditMode || !forkFrom) return
-		form.reset({
-			title: "",
-			description: "",
-			servings: forkFrom.servings || 1,
-			cooking_time_minutes: forkFrom.cooking_time_minutes || 1,
-			is_public: true,
-			ingredients:
-				forkFrom.ingredients && forkFrom.ingredients.length > 0
-					? forkFrom.ingredients.map((ing) => ({ name: ing.name, amount: ing.amount, unit: ing.unit }))
-					: [{ name: "", amount: 1, unit: "" }],
-			instructions:
-				forkFrom.instructions && forkFrom.instructions.length > 0
-					? forkFrom.instructions.map((inst) => ({ description: inst.description, image_url: "" }))
-					: [{ description: "", image_url: "" }],
-			color_label: null,
-			tags: forkFrom.tags?.join(", ") || "",
-			cited_recipe_ids: [forkFrom.id],
-		} as unknown as RecipeFormValues)
+		form.reset(forkDefaults(forkFrom) as unknown as RecipeFormValues)
 		setSelectedCitedRecipes([{ ...forkFrom, item_id: forkFrom.id } as Item])
 	}, [isEditMode, forkFrom, form])
 
@@ -271,24 +239,8 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 		const currentValues = form.getValues("ingredients")
 
 		
-		// newIngredients 순서에 맞게 currentValues 재정렬
-		const reorderedValues = newIngredients.map((item) => {
-			// field.id로 원래 인덱스 찾기
-			const originalIndex = ingredients.findIndex(field => field.id === item.id)
-			if (originalIndex !== -1) {
-				const originalValue = currentValues[originalIndex]
-	
-				return originalValue
-			}
-			
-			// 매핑 실패 시 기본값 반환
-
-			return {
-				name: item.name || "",
-				amount: item.amount || 0,
-				unit: item.unit || ""
-			}
-		})
+		// newIngredients 순서에 맞게 currentValues 재정렬 (칸 id로 원래 값을 찾는다)
+		const reorderedValues = reorderIngredients(newIngredients, ingredients.map((field) => field.id), currentValues)
 		
 
 		
@@ -387,38 +339,17 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 				})
 			)
 
-			const instructionsWithImages = values.instructions.map((inst, index) => ({
-				...inst,
-				image_url: uploadedInstructionImageUrls[index] || undefined,
-			}))
+			const instructionsWithImages = attachInstructionImages(values.instructions, uploadedInstructionImageUrls)
 
 
 
-			const itemPayload = {
-				user_id: user.id,
-				item_type: "recipe" as const,
-				title: values.title,
-				description: values.description,
-				servings: values.servings,
-				cooking_time_minutes: values.cooking_time_minutes,
-				is_public: values.is_public,
-				image_urls: finalImageUrls,
-				color_label: values.color_label,
-				tags: values.tags,
-				cited_recipe_ids: values.cited_recipe_ids,
-				thumbnail_index: thumbnailIndex, // 썸네일 인덱스 저장
-				// 작성 경로: fork로 시작해 원본을 그대로 인용하면 fork(이어진 레시피 - 고친 버전), 직접 고른 인용은 manual
-				...(isEditMode
-					? {}
-					: {
-							creation_origin:
-								forkFrom && values.cited_recipe_ids?.includes(forkFrom.id)
-									? ("fork" as const)
-									: values.cited_recipe_ids && values.cited_recipe_ids.length > 0
-										? ("manual" as const)
-										: null,
-						}),
-			}
+			const itemPayload = buildRecipeItemPayload(values, {
+				userId: user.id,
+				imageUrls: finalImageUrls,
+				thumbnailIndex, // 썸네일 인덱스 저장
+				isEditMode,
+				forkFromId: forkFrom?.id,
+			})
 
 			let itemId: string
 
@@ -440,15 +371,11 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 			}
 
 			// 재료 순서 정보 포함하여 저장 (드래그앤드롭 순서 유지)
-			const ingredientsToInsert = values.ingredients.map((ing, index) => ({ 
-				...ing, 
-				item_id: itemId,
-				order_index: index + 1 // 순서 정보 추가 (1부터 시작)
-			}))
+			const ingredientsToInsert = toIngredientRows(values.ingredients, itemId)
 			
 			await supabase.from("ingredients").insert(ingredientsToInsert)
 
-			const instructionsToInsert = instructionsWithImages.map((inst, index) => ({ ...inst, item_id: itemId, step_number: index + 1 }))
+			const instructionsToInsert = toInstructionRows(instructionsWithImages, itemId)
 			await supabase.from("instructions").insert(instructionsToInsert)
 
 			// SSA 기반: 통합 캐시 관리로 최신 데이터 보장 (thumbnail_index 포함)

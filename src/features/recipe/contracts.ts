@@ -47,6 +47,9 @@ export interface RecipeDraft {
 	cited_recipe_ids?: string[]
 }
 
+// 폼에 채워 넣는 값: tags만 쉼표로 이은 문자열이다 (zod가 제출 때 배열로 바꾼다)
+export type RecipeFormInput = Omit<RecipeDraft, "tags"> & { tags: string }
+
 // ── 저장 명령: domain이 만들고 data가 실행한다 ──
 export type CreationOrigin = NonNullable<Item["creation_origin"]>
 
