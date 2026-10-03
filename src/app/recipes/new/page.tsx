@@ -7,7 +7,7 @@ import RecipeForm from "@/components/recipe/RecipeForm"
 import { PageLoading } from "@/components/kit"
 import CreateContentAuthPrompt from "@/components/auth/CreateContentAuthPrompt"
 import { useNavigation } from "@/hooks/useNavigation"
-import { fetchItemDetail } from "@/lib/item-detail"
+import { fetchItemDetail } from "@/features/feed/data/item-detail"
 import type { ItemDetail } from "@/types/item"
 
 export default function NewRecipePage() {

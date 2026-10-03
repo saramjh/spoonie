@@ -2,9 +2,9 @@
 
 import useSWR from "swr"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
-import { fetchExplore, type ExploreData } from "@/lib/explore"
+import { fetchExplore, type ExploreData } from "@/features/feed/data/explore"
 
-export type { ExploreData, MadeRecord } from "@/lib/explore"
+export type { ExploreData, MadeRecord } from "@/features/feed/data/explore"
 
 /**
  * 탐색 화면(검색어 없음)의 두 묶음 (DESIGN.md Interface Grammar 1, docs/discovery-and-behavior.md)

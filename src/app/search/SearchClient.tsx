@@ -12,7 +12,7 @@ import RecipeListCard from '@/components/recipe/RecipeListCard';
 import { useExplore, type ExploreData } from '@/hooks/useExplore';
 import UserCard from '@/components/search/UserCard';
 import type { Item } from '@/types/item';
-import { getPopularKeywordsCached, optimizedSearch, searchUsers, type UserSearchResult } from '@/lib/search-optimization';
+import { getPopularKeywordsCached, optimizedSearch, searchUsers, type UserSearchResult } from '@/features/feed/data/search-optimization';
 import { useFollowStore } from '@/store/followStore';
 import { SectionHeading, StateSheet, UnderlineTabs } from "@/components/kit"
 

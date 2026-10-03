@@ -12,7 +12,7 @@
 import { Metadata } from 'next'
 import { createSupabasePublicClient } from '@/lib/supabase-public'
 import { notFound } from 'next/navigation'
-import { fetchItemDetail, ItemNotFoundError } from '@/lib/item-detail'
+import { fetchItemDetail, ItemNotFoundError } from '@/features/feed/data/item-detail'
 import PostDetailClient from './PostDetailClient'
 import PostSchema from '@/components/ai-search-optimization/PostSchema'
 import BreadcrumbSchema, { createBreadcrumbs } from '@/components/ai-search-optimization/BreadcrumbSchema'

@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import SeamlessItemList from "@/components/items/SeamlessItemList"
-import { getPublicFeedData } from "@/lib/server-data"
+import { getPublicFeedData } from "@/features/feed/data/server-data"
 
 // 홈 HTML은 공개 피드로 정적 생성해 CDN에서 바로 보낸다 (스플래시가 즉시 보이도록).
 // 5분마다 다시 만든다(엣지 캐시가 오래 남아 첫 접속이 빠르다). 새 글과 로그인 사용자 정보는 클라이언트가 스플래시 동안 채운다.

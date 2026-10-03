@@ -4,7 +4,7 @@ import { useEffect } from "react"
 import useSWR from "swr"
 import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import type { ItemDetail } from "@/types/item"
-import { fetchItemDetail } from "@/lib/item-detail"
+import { fetchItemDetail } from "@/features/feed/data/item-detail"
 
 const itemDetailFetcher = (key: string): Promise<ItemDetail> =>
 	fetchItemDetail(createSupabaseBrowserClient(), key.replace('item_details_', ''))

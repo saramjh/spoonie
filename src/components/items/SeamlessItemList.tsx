@@ -12,7 +12,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import type { User } from "@supabase/supabase-js"
-import type { ServerFeedData } from "@/lib/server-data"
+import type { ServerFeedData } from "@/features/feed/data/server-data"
 import { usePageVisibility } from "@/hooks/usePageVisibility"
 interface SeamlessItemListProps {
   /**
