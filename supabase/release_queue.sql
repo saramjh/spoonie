@@ -24,3 +24,6 @@ create table if not exists public.instagram_credentials (
   refreshed_at timestamptz not null default now()
 );
 alter table public.instagram_credentials enable row level security;
+
+-- 인스타그램 게시를 두 번에 나눠 할 수 있게: 만든 묶음(컨테이너) id를 남겨 두고, 시간 안에 못 올리면 다음 실행 때 올린다
+alter table public.release_queue add column if not exists instagram_container_id text;

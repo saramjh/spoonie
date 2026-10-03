@@ -8,6 +8,9 @@
  *
  * 공개한 뒤 인스타그램(@spoonie.kitchen)에 같은 레시피의 사진(대표 + 단계, 최대 10장)과 캡션을 올린다 (운영자 승인, 2026-10-03).
  * - 토큰이 없으면 건너뛴다. 인스타그램이 실패해도 레시피 공개는 그대로 두고, 오류만 release_queue.instagram_error에 남긴다.
+ * - 예약 함수는 30초 안에 끝나야 한다: 사진은 한꺼번에 올리고, 만든 묶음 id를 남겨 시간 안에 못 올리면 다음 실행 때 마저 올린다.
+ * - 실행마다 "공개됐지만 아직 안 올라간" 가장 오래된 하나를 올린다 (밀린 것이 있으면 그것부터).
+ * - 재시도로 두 번 공개하지 않게, 마지막 공개 50분 안에는 새로 공개하지 않는다.
  * - 장기 토큰은 60일 만료라 30일이 지나면 갱신해 instagram_credentials 표에 저장한다.
  *
  * 필요한 환경변수: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SECRET_KEY
@@ -70,63 +73,108 @@ function caption(item, ingredients) {
   ].filter((line, i, all) => !(line === '' && all[i - 1] === '')).join('\n').trim();
 }
 
-async function waitUntilReady(id, token) {
-  for (let i = 0; i < 10; i++) {
-    const { status_code } = await ig('GET', `/${id}`, { fields: 'status_code', access_token: token });
-    if (status_code === 'FINISHED') return;
-    if (status_code === 'ERROR' || status_code === 'EXPIRED') throw new Error(`instagram container ${status_code}`);
-    await new Promise((r) => setTimeout(r, 2000));
-  }
-  throw new Error('instagram container not ready');
+// 컨테이너가 준비됐는지 (FINISHED). 준비 중이면 false, 실패면 던진다
+async function isReady(id, token) {
+  const { status_code } = await ig('GET', `/${id}`, { fields: 'status_code', access_token: token });
+  if (status_code === 'ERROR' || status_code === 'EXPIRED') throw new Error(`instagram container ${status_code}`);
+  return status_code === 'FINISHED';
 }
 
-async function postToInstagram(itemId) {
-  const token = await instagramToken();
-  if (!token) return { skipped: 'no token' };
+async function waitUntilReady(ids, token, tries) {
+  for (let i = 0; i < tries; i++) {
+    const ready = await Promise.all(ids.map((id) => isReady(id, token)));
+    if (ready.every(Boolean)) return true;
+    await new Promise((r) => setTimeout(r, 1500));
+  }
+  return false;
+}
+
+// 게시 묶음(컨테이너)을 만든다. 사진은 한꺼번에 올려 시간을 줄인다 (예약 함수는 30초 안에 끝나야 한다)
+async function createContainer(itemId, token) {
   const [item] = await call('GET', `items?select=title,description,tags,servings,cooking_time_minutes,image_urls,thumbnail_index&id=eq.${itemId}`);
   const ingredients = await call('GET', `ingredients?select=name&item_id=eq.${itemId}&order=order_index`);
   const steps = await call('GET', `instructions?select=image_url&item_id=eq.${itemId}&image_url=not.is.null&order=step_number`);
   const covers = item.image_urls || [];
   const first = covers[item.thumbnail_index || 0];
   const photos = [first, ...covers.filter((u) => u !== first), ...steps.map((s) => s.image_url)].filter(Boolean).slice(0, 10);
-  if (!photos.length) return { skipped: 'no photos' };
+  if (!photos.length) return null;
   const { user_id: igUserId } = await ig('GET', '/me', { fields: 'user_id', access_token: token });
   const text = caption(item, ingredients);
-  let creationId;
-  if (photos.length === 1) {
-    creationId = (await ig('POST', `/${igUserId}/media`, { image_url: photos[0], caption: text, access_token: token })).id;
-  } else {
-    const children = [];
-    for (const url of photos) children.push((await ig('POST', `/${igUserId}/media`, { image_url: url, is_carousel_item: 'true', access_token: token })).id);
-    for (const id of children) await waitUntilReady(id, token);
-    creationId = (await ig('POST', `/${igUserId}/media`, { media_type: 'CAROUSEL', children: children.join(','), caption: text, access_token: token })).id;
-  }
-  await waitUntilReady(creationId, token);
-  const published = await ig('POST', `/${igUserId}/media_publish`, { creation_id: creationId, access_token: token });
-  return { mediaId: published.id };
+  if (photos.length === 1) return (await ig('POST', `/${igUserId}/media`, { image_url: photos[0], caption: text, access_token: token })).id;
+  const children = await Promise.all(photos.map((url) => ig('POST', `/${igUserId}/media`, { image_url: url, is_carousel_item: 'true', access_token: token }).then((r) => r.id)));
+  if (!(await waitUntilReady(children, token, 4))) return 'PENDING'; // 사진 처리가 늦으면 다음 실행 때 다시 만든다
+  return (await ig('POST', `/${igUserId}/media`, { media_type: 'CAROUSEL', children: children.join(','), caption: text, access_token: token })).id;
 }
 
-exports.handler = async () => {
-  try {
-    const [next] = await call('GET', 'release_queue?select=item_id&released_at=is.null&order=release_order.asc&limit=1');
-    if (!next) return { statusCode: 200, body: 'queue empty' };
-    const now = new Date().toISOString();
-    const [item] = await call('PATCH', `items?id=eq.${next.item_id}`, { is_public: true, created_at: now, updated_at: now });
-    await call('PATCH', `release_queue?item_id=eq.${next.item_id}`, { released_at: now });
-    console.log('released', next.item_id, item && item.title);
+// 준비된 컨테이너를 게시한다. 아직 준비 중이면 null (다음 실행 때 다시)
+async function publishContainer(containerId, token) {
+  if (!(await waitUntilReady([containerId], token, 3))) return null;
+  const { user_id: igUserId } = await ig('GET', '/me', { fields: 'user_id', access_token: token });
+  return (await ig('POST', `/${igUserId}/media_publish`, { creation_id: containerId, access_token: token })).id;
+}
 
-    // 인스타그램: 실패해도 공개는 되돌리지 않는다
-    try {
-      const result = await postToInstagram(next.item_id);
-      if (result.mediaId) await call('PATCH', `release_queue?item_id=eq.${next.item_id}`, { instagram_media_id: result.mediaId, instagram_error: null });
-      console.log('instagram', JSON.stringify(result));
-    } catch (error) {
-      console.error('instagram failed', error);
-      await call('PATCH', `release_queue?item_id=eq.${next.item_id}`, { instagram_error: String(error).slice(0, 500) });
+// 공개됐지만 인스타그램에 아직 안 올라간 레시피 하나를 올린다 (만들다 만 컨테이너가 있으면 그것부터)
+async function postPendingToInstagram(token) {
+  const [row] = await call('GET', 'release_queue?select=item_id,instagram_container_id&released_at=not.is.null&instagram_media_id=is.null&instagram_error=is.null&order=release_order.asc&limit=1');
+  if (!row) return { skipped: 'nothing pending' };
+  try {
+    let containerId = row.instagram_container_id;
+    if (!containerId) {
+      containerId = await createContainer(row.item_id, token);
+      if (!containerId) {
+        await call('PATCH', `release_queue?item_id=eq.${row.item_id}`, { instagram_error: 'no photos' });
+        return { skipped: 'no photos' };
+      }
+      if (containerId === 'PENDING') return { pending: row.item_id };
+      await call('PATCH', `release_queue?item_id=eq.${row.item_id}`, { instagram_container_id: containerId });
     }
-    return { statusCode: 200, body: `released ${next.item_id}` };
+    const mediaId = await publishContainer(containerId, token);
+    if (!mediaId) return { pending: row.item_id };
+    await call('PATCH', `release_queue?item_id=eq.${row.item_id}`, { instagram_media_id: mediaId });
+    return { mediaId, itemId: row.item_id };
+  } catch (error) {
+    console.error('instagram failed', error);
+    await call('PATCH', `release_queue?item_id=eq.${row.item_id}`, { instagram_error: String(error).slice(0, 500) });
+    return { error: String(error) };
+  }
+}
+
+// 같은 예약이 재시도돼 두 번 공개하지 않게: 마지막 공개가 50분 안이면 이번 공개는 건너뛴다
+const MIN_GAP_MS = 50 * 60 * 1000;
+
+exports.handler = async () => {
+  const startedAt = Date.now();
+  try {
+    const [last] = await call('GET', 'release_queue?select=released_at&released_at=not.is.null&order=released_at.desc&limit=1');
+    const recentlyReleased = last && Date.now() - new Date(last.released_at).getTime() < MIN_GAP_MS;
+    const [next] = recentlyReleased ? [] : await call('GET', 'release_queue?select=item_id&released_at=is.null&order=release_order.asc&limit=1');
+    if (next) {
+      const now = new Date().toISOString();
+      const [item] = await call('PATCH', `items?id=eq.${next.item_id}`, { is_public: true, created_at: now, updated_at: now });
+      await call('PATCH', `release_queue?item_id=eq.${next.item_id}`, { released_at: now });
+      console.log('released', next.item_id, item && item.title);
+    } else {
+      console.log(recentlyReleased ? 'skip release: released less than 50 minutes ago' : 'queue empty');
+    }
+
+    // 인스타그램: 공개됐지만 아직 안 올라간 것 하나 (실패해도 공개는 되돌리지 않는다)
+    // 밀린 것이 있으면 시간이 허락하는 만큼(최대 2개) 올린다
+    const token = await instagramToken();
+    const results = [];
+    if (!token) results.push({ skipped: 'no token' });
+    while (token && results.length < 2 && Date.now() - startedAt < 12000) {
+      const result = await postPendingToInstagram(token);
+      results.push(result);
+      if (!result.mediaId) break;
+    }
+    console.log('instagram', JSON.stringify(results));
+    return { statusCode: 200, body: JSON.stringify({ released: next ? next.item_id : null, instagram: results }) };
   } catch (error) {
     console.error('release failed', error);
     return { statusCode: 500, body: String(error) };
   }
 };
+
+// 로컬 점검용 (실행하지 않음)
+exports._postPendingToInstagram = postPendingToInstagram;
+exports._instagramToken = instagramToken;
