@@ -21,7 +21,7 @@ import { OptimizedImage } from "@/lib/image-utils"
 import { useToast } from "@/hooks/use-toast"
 
 
-import type { Item, ItemDetail } from "@/types/item"
+import type { Item } from "@/types/item"
 import { uploadImagesOptimized } from "@/lib/image-optimization"
 import { cacheManager } from "@/lib/unified-cache-manager"
 import { notificationService } from "@/features/notification/data/notification-service"
@@ -32,6 +32,7 @@ import { revalidateItemPage } from "@/lib/revalidate-item"
 import { removeDroppedImages } from "@/lib/item-images"
 import { attachInstructionImages, buildRecipeItemPayload, editDefaults, forkDefaults, reorderIngredients } from "@/features/recipe/domain/recipe-form"
 import { fetchCitedRecipes, saveRecipeRows, uploadInstructionImages } from "@/features/recipe/data/recipe-repository"
+import type { RecipeFormProps } from "@/features/recipe/contracts"
 
 // Zod 스키마 업데이트
 const recipeSchema = z.object({
@@ -74,13 +75,6 @@ const recipeSchema = z.object({
 })
 
 export type RecipeFormValues = z.infer<typeof recipeSchema>
-
-interface RecipeFormProps {
-	initialData?: Item | null
-	// "참고해서 내 레시피 만들기": 원본의 분량·재료·단계를 미리 채우고 출처를 자동으로 남긴다
-	forkFrom?: ItemDetail | null
-	onNavigateBack?: (itemId?: string, options?: { replace?: boolean }) => void // 스마트 네비게이션 콜백
-}
 
 export default function RecipeForm({ initialData, onNavigateBack, forkFrom = null }: RecipeFormProps) {
 	const router = useRouter()

@@ -11,6 +11,7 @@ import { useSessionStore } from "@/store/sessionStore"
 import { useFollowStore } from "@/store/followStore" // 업계 표준: 팔로우 상태 관리
 import { startAuthorCacheCleanup } from "@/lib/author-cache"
 import { captureInstallPrompt } from "@/lib/install"
+import { fetchProfileSummary } from "@/features/profile/data/profile-repository"
 
 // 크롬의 "설치할 수 있음" 신호는 화면이 그려지기 전에 올 수 있어 모듈을 읽을 때 바로 듣는다
 captureInstallPrompt()
@@ -152,7 +153,7 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
       // 이벤트 처리기 안에서 Supabase를 다시 부르면 막힐 수 있어 다음 차례로 미룬다
       setTimeout(async () => {
         void initializeFollowState(user.id).catch((error) => console.error("❌ Follow state initialization failed:", error))
-        const { data: profile } = await supabase.from("profiles").select("id, username, display_name, avatar_url, public_id").eq("id", user.id).maybeSingle()
+        const profile = await fetchProfileSummary(supabase, user.id)
         setProfile(profile ?? null)
       }, 0)
     })

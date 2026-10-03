@@ -260,3 +260,9 @@ export const updateProfileRow = async (supabase: SupabaseClient, userId: string,
 	const { error } = await supabase.from("profiles").update(updateData).eq("id", userId)
 	if (error) throw error
 }
+
+// 로그인한 사람의 프로필 요약 (화면 머리·세션 상태용). 없으면 null
+export const fetchProfileSummary = async (supabase: SupabaseClient, userId: string) => {
+	const { data } = await supabase.from("profiles").select("id, username, display_name, avatar_url, public_id").eq("id", userId).maybeSingle()
+	return data
+}

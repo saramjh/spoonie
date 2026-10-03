@@ -24,8 +24,3 @@ export interface PostFormProps {
 	sourceRecipeId?: string | null
 	sourceOrigin?: PostSourceOrigin | null
 }
-
-// 저장소 포트
-export interface PostRepository {
-	save(args: { existingId: string | null; itemPayload: object }): Promise<{ itemId: string }>
-}

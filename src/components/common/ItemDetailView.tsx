@@ -36,6 +36,8 @@ import { revalidateItemPage } from "@/lib/revalidate-item"
 import { logEvent } from "@/lib/events"
 import { cameFrom } from "@/lib/surface"
 import { collectItemImageUrls, removeItemImages } from "@/lib/item-images"
+import { deleteOwnItem, fetchCitedRecipeTitle } from "@/features/feed/data/item-detail"
+import { fetchProfileSummary } from "@/features/profile/data/profile-repository"
 
 interface ItemDetailViewProps {
 	item: ItemDetail | null | undefined
@@ -52,9 +54,7 @@ const fetcher = async (key: string) => {
 	const [type, id] = key.split(":")
 
 	if (type === "recipeTitle") {
-		const { data, error } = await supabase.from("recipes").select(`id, title, user_id, profiles(username, display_name)`).eq("id", id).single()
-		if (error) throw error
-		return data
+		return fetchCitedRecipeTitle(supabase, id)
 	}
 	return null
 }
@@ -187,7 +187,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 				data: { user },
 			} = await supabase.auth.getUser()
 			if (user) {
-				const { data: profile } = await supabase.from("profiles").select("id, avatar_url, display_name, username, public_id").eq("id", user.id).maybeSingle()
+				const profile = await fetchProfileSummary(supabase, user.id)
 				setCurrentUser({
 					id: user.id,
 					avatar_url: profile?.avatar_url || null,
@@ -308,11 +308,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 			// 2. 실제 데이터베이스에서 삭제
 			// 글이 지워지면 사진 목록도 사라지므로 먼저 모아 둔다
 			const imageUrls = await collectItemImageUrls(supabase, [item.item_id])
-			const { error } = await supabase
-				.from("items")
-				.delete()
-				.eq("id", item.item_id)
-				.eq("user_id", currentUser.id) // 보안 검증
+			const { error } = await deleteOwnItem(supabase, item.item_id, currentUser.id) // 보안 검증
 			
 			if (error) throw error
 			revalidateItemPage(item.item_id) // 지운 글의 미리 만든 페이지를 바로 내린다

@@ -166,3 +166,27 @@ export async function fetchItemDetail(supabase: SupabaseClient, itemId: string, 
 		throw error
 	}
 }
+
+// ── 글 지우기 (레시피북 선택 삭제, 상세 화면 삭제에서 옮김. 사진 정리·캐시는 부르는 쪽) ──
+
+type BrowserDb = ReturnType<typeof import("@/lib/supabase-client").createSupabaseBrowserClient>
+
+// 여러 글을 한 번에 지운다 (레시피북 선택 삭제)
+export async function deleteItemsByIds(supabase: BrowserDb, ids: string[]) {
+	const { error } = await supabase.from("items").delete().in("id", ids)
+	return { error }
+}
+
+// 내 글 하나를 지운다 (작성자 확인을 쿼리에도 건다)
+export async function deleteOwnItem(supabase: BrowserDb, itemId: string, userId: string) {
+	const { error } = await supabase.from("items").delete().eq("id", itemId).eq("user_id", userId)
+	return { error }
+}
+
+// 레시피드 상세의 "참고한 레시피" 제목 조회.
+// 알려진 문제: 없는 표(recipes)를 조회해 늘 실패한다 (리팩토링에서는 동작을 그대로 옮김, 고칠지는 따로 정한다)
+export async function fetchCitedRecipeTitle(supabase: BrowserDb, id: string) {
+	const { data, error } = await supabase.from("recipes").select(`id, title, user_id, profiles(username, display_name)`).eq("id", id).single()
+	if (error) throw error
+	return data
+}

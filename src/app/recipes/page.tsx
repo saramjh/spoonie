@@ -24,6 +24,7 @@ import { cacheManager } from "@/lib/unified-cache-manager"
 import { revalidateItemPage } from "@/lib/revalidate-item"
 import { collectItemImageUrls, removeItemImages } from "@/lib/item-images"
 import { RECIPE_BOOK_PAGE_SIZE, fetchRecipeBookPage } from "@/features/feed/data/recipe-book-repository"
+import { deleteItemsByIds } from "@/features/feed/data/item-detail"
 
 type Tab = "my_recipes" | "all_recipes"
 
@@ -158,7 +159,7 @@ export default function RecipesPage() {
 			// 3. 실제 데이터베이스에서 레시피 삭제
 			// 글이 지워지면 사진 목록도 사라지므로 먼저 모아 둔다
 			const imageUrls = await collectItemImageUrls(supabase, selectedRecipes)
-			const { error } = await supabase.from("items").delete().in("id", selectedRecipes)
+			const { error } = await deleteItemsByIds(supabase, selectedRecipes)
 
 			if (error) throw error
 			selectedRecipes.forEach(revalidateItemPage) // 지운 레시피의 미리 만든 페이지를 바로 내린다

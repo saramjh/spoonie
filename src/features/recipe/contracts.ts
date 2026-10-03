@@ -3,7 +3,7 @@
  *
  * 계층 규칙
  * - domain: 이 파일의 입력 타입을 받아 저장 명령을 만드는 순수 함수 (React·Supabase 모름)
- * - data:   RecipeRepository를 구현해 DB를 읽고 쓴다 (database.ts의 행 타입은 여기서만)
+ * - data:   DB·저장소를 읽고 쓴다 (data/recipe-repository.ts)
  * - components: 폼 값 → domain → data 순서로 부른다
  *
  * 앱 타입(types/item.ts)과 DB가 어긋나는 곳이 있다. 지금 동작을 바꾸지 않으려고 그대로 두고 여기 적어 둔다.
@@ -11,16 +11,7 @@
  * - Item.thumbnail_index: 앱은 number|null, DB는 number (기본값 0)
  */
 
-import type { Tables, TablesInsert } from "@/types/database"
 import type { Item, ItemDetail } from "@/types/item"
-
-// ── DB 행 (저장소 계층만 쓴다) ──
-export type ItemRow = Tables<"items">
-export type IngredientRow = Tables<"ingredients">
-export type InstructionRow = Tables<"instructions">
-export type ItemInsert = TablesInsert<"items">
-export type IngredientInsert = TablesInsert<"ingredients">
-export type InstructionInsert = TablesInsert<"instructions">
 
 // ── 폼 입력: RecipeForm의 zod 스키마(recipeSchema) 결과와 같은 모양 ──
 export interface RecipeIngredientInput {
@@ -50,22 +41,6 @@ export interface RecipeDraft {
 // 폼에 채워 넣는 값: tags만 쉼표로 이은 문자열이다 (zod가 제출 때 배열로 바꾼다)
 export type RecipeFormInput = Omit<RecipeDraft, "tags"> & { tags: string }
 
-// ── 저장 명령: domain이 만들고 data가 실행한다 ──
-export type CreationOrigin = NonNullable<Item["creation_origin"]>
-
-export interface SaveRecipeCommand {
-	mode: "create" | "update"
-	itemId?: string // update일 때만
-	userId: string
-	item: Omit<ItemInsert, "id" | "user_id" | "item_type">
-	ingredients: Omit<IngredientInsert, "item_id">[]
-	instructions: Omit<InstructionInsert, "item_id">[]
-}
-
-export interface SaveRecipeResult {
-	itemId: string
-}
-
 // ── 화면 계약: RecipeForm의 Props (지금 컴포넌트 안의 선언과 같다) ──
 export interface RecipeFormProps {
 	initialData?: Item | null
@@ -78,11 +53,3 @@ export interface RecipeFormProps {
 export type RecipeActivity =
 	| { role: "owner"; viewers: number; saves: number; cook_starts: number; cook_completes: number; made: number; profile_visits: number }
 	| { role: "viewer"; last_cook_start: string | null; recorded: boolean; remind?: boolean }
-
-// ── 저장소 포트 (3단계에서 구현한다) ──
-export interface RecipeRepository {
-	getDetail(itemId: string): Promise<ItemDetail | null>
-	save(command: SaveRecipeCommand): Promise<SaveRecipeResult>
-	remove(itemIds: string[]): Promise<void>
-	getActivity(recipeId: string): Promise<RecipeActivity | null>
-}
