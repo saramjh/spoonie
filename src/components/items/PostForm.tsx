@@ -25,15 +25,10 @@ import { mutate as globalMutate } from "swr"
 import { PageHeader, SectionHeading, Sheet, SourceRow } from "@/components/kit"
 import { revalidateItemPage } from "@/lib/revalidate-item"
 import { removeDroppedImages } from "@/lib/item-images"
+import type { PostFormProps } from "@/features/post/contracts"
+import { buildPostItemPayload, citedIdsFromRecipes, postFormDefaults, returnToSourcePath } from "@/features/post/domain/post-form"
+import { loadCitedRecipesForPost, savePostRow } from "@/features/post/data/post-repository"
 
-interface PostFormProps {
-	isEditMode?: boolean
-	initialData?: Item
-	onNavigateBack?: (itemId?: string, options?: { replace?: boolean }) => void // 스마트 네비게이션 콜백
-	// 레시피 화면이나 요리 모드에서 "만들었어요"로 들어온 경우: 출처 레시피와 작성 경로
-	sourceRecipeId?: string | null
-	sourceOrigin?: "recipe_detail" | "cook_mode" | null
-}
 
 const postSchema = z.object({
 	// 레시피드는 사진과 글이 주인공이라 제목은 선택이다 (DESIGN.md Interface Grammar 1)
@@ -80,39 +75,12 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 	const form = useForm<PostFormValues>({
 		resolver: zodResolver(postSchema),
 		mode: "onChange",
-		defaultValues: {
-			title: editing?.title || "",
-			content: editing?.content || "",
-			is_public: editing?.is_public ?? true, // 레시피드 기본값은 공개
-			tags: editing?.tags || [],
-			cited_recipe_ids: Array.isArray(editing?.cited_recipe_ids) ? editing.cited_recipe_ids.map(String).filter(Boolean) : [],
-		},
+		defaultValues: postFormDefaults(editing),
 	})
 
 	// 참고 레시피의 표시 정보(제목, 작성자) 조회
 	const loadCitedRecipes = useCallback(
-		async (ids: string[]): Promise<Item[]> => {
-			const { data, error } = await supabase
-				.from("items")
-				.select("id, title, item_type, image_urls, user_id, created_at, author:profiles!items_user_id_fkey(display_name, username, public_id, avatar_url)")
-				.in("id", ids)
-				.eq("item_type", "recipe")
-			if (error) {
-				console.error("Error fetching cited recipes", error)
-				return []
-			}
-			return data.map((recipe) => {
-				const authorProfile = Array.isArray(recipe.author) ? recipe.author[0] : recipe.author
-				return {
-					...recipe,
-					item_id: recipe.id,
-					display_name: authorProfile?.username,
-					username: authorProfile?.username,
-					avatar_url: authorProfile?.avatar_url,
-					user_public_id: authorProfile?.public_id,
-				}
-			}) as unknown as Item[]
-		},
+		async (ids: string[]): Promise<Item[]> => loadCitedRecipesForPost(supabase, ids),
 		[supabase]
 	)
 
@@ -229,48 +197,18 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 
 
 
-			const itemPayload = {
-				user_id: user.id,
-				item_type: "post" as const,
-				title: values.title?.trim() || null,
-				content: values.content,
-				image_urls: uploadedImageUrls,
-				tags: values.tags,
-				cited_recipe_ids: values.cited_recipe_ids,
-				is_public: values.is_public, // 사용자가 설정한 공개/비공개 값
-				thumbnail_index: thumbnailIndex, // 썸네일 인덱스 저장
-				// 작성 경로: 출처 레시피가 그대로 연결돼 있으면 그 경로, 직접 고른 인용이면 manual (관계 종류를 정한다)
-				...(isEditMode
-					? {}
-					: {
-							creation_origin:
-								sourceRecipeId && sourceOrigin && values.cited_recipe_ids?.includes(sourceRecipeId)
-									? sourceOrigin
-									: values.cited_recipe_ids && values.cited_recipe_ids.length > 0
-										? ("manual" as const)
-										: null,
-						}),
-			}
+			const itemPayload = buildPostItemPayload(values, {
+				userId: user.id,
+				imageUrls: uploadedImageUrls,
+				thumbnailIndex, // 썸네일 인덱스 저장
+				isEditMode,
+				sourceRecipeId,
+				sourceOrigin,
+			})
 			
 			// SSA 기반: 간단하고 안정적인 제출 프로세스
 
-			let itemId: string
-
-			if (isEditMode && initialData) {
-				const { data: updatedItem, error: itemError } = await supabase.from("items").update(itemPayload).eq("id", initialData.id).select("*").single()
-
-				if (itemError) throw new Error(`레시피드 수정 실패: ${itemError.message}`)
-				itemId = updatedItem.id
-				
-
-			} else {
-				const { data: newItem, error: itemError } = await supabase.from("items").insert(itemPayload).select("*").single()
-
-				if (itemError) throw new Error(`레시피드 생성 실패: ${itemError.message}`)
-				itemId = newItem.id
-				
-
-			}
+			const { itemId } = await savePostRow(supabase, { existingId: isEditMode && initialData ? initialData.id : null, itemPayload })
 
 			// SSA 기반: 통합 캐시 매니저를 통한 완전 자동 동기화
 
@@ -347,8 +285,9 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 			}
 			
 			// 레시피에서 나온 기록은 그 레시피로 돌아가 "만들어 본 기록"에 붙은 것을 보여 준다
-			if (!isEditMode && sourceRecipeId && values.cited_recipe_ids?.includes(sourceRecipeId)) {
-				router.replace(`/recipes/${sourceRecipeId}#made-heading`)
+			const backToSource = returnToSourcePath(isEditMode, sourceRecipeId, values.cited_recipe_ids)
+			if (backToSource) {
+				router.replace(backToSource)
 				return
 			}
 
@@ -378,7 +317,7 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 	const errorText = "mt-1 text-meta text-destructive"
 	const handleCitedChange = (recipes: Item[]) => {
 		setSelectedCitedRecipes(recipes)
-		const recipeIds = recipes.map((r: Item) => String(r.id || r.item_id || "")).filter((id) => id !== "")
+		const recipeIds = citedIdsFromRecipes(recipes)
 		form.setValue("cited_recipe_ids", recipeIds)
 	}
 
