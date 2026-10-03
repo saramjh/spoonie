@@ -1,6 +1,7 @@
 # 촬영 원본 폴더의 사진으로 레시피를 비공개로 올린다 (프레마몽 촬영 자료 이전용).
-# 사용: <pillow가 있는 python> scripts/import-photo-recipes.py <drafts.json> <사진목록폴더> <user_id>
-#   drafts.json: [{sheet, cover:[번호…], title, description, servings, cooking_time_minutes, tags, ingredients:[[이름,양,단위]…], steps:[[번호,설명]…]}]
+# 사용: <pillow가 있는 python> scripts/import-photo-recipes.py <drafts.json> <사진목록폴더> <user_id> [--queue]
+#   --queue: 만든 글을 release_queue 맨 뒤에 넣는다 (netlify/functions/release-queued-recipes.js가 하루 두 번 하나씩 공개)
+#   drafts.json: [{sheet, cover:[번호…], title, description, servings, cooking_time_minutes, tags, ingredients:[[이름,양,단위]…], steps:[[번호 또는 null,설명]…]}]
 #   사진목록폴더/<sheet>.jpg.txt: "번호\t원본경로" 줄 (콘택트 시트를 만들 때 나온 목록)
 # 사진은 앱과 같은 규격(긴 변 1280px + .w800.jpg + .w400.jpg)으로 올린다. 글은 is_public=false로 만든다.
 # 만든 글 id는 <drafts.json>.created.json에 남긴다 (되돌릴 때 쓴다).
@@ -37,6 +38,9 @@ def upload(path, uid):
     return f'{U}/storage/v1/object/public/{BUCKET}/{name}'
 
 drafts_path, sheets_dir, uid = sys.argv[1:4]
+queue = '--queue' in sys.argv[4:]
+last = get('release_queue?select=release_order&order=release_order.desc&limit=1') if queue else []
+next_order = (last[0]['release_order'] + 1) if last else 1
 created = []
 for d in json.load(open(drafts_path)):
     photos = dict(l.rstrip('\n').split('\t', 1) for l in open(os.path.join(sheets_dir, d['sheet'] + '.jpg.txt')))
@@ -53,7 +57,10 @@ for d in json.load(open(drafts_path)):
     if not (found and item['ingredients'][0]['count']):
         rest('ingredients', [{'item_id': item['id'], 'name': n, 'amount': a, 'unit': u, 'order_index': i} for i, (n, a, u) in enumerate(d['ingredients'])], 'return=minimal')
     if not (found and item['instructions'][0]['count']):
-        rest('instructions', [{'item_id': item['id'], 'step_number': i + 1, 'description': text, 'image_url': upload(photos[str(p)], uid)} for i, (p, text) in enumerate(d['steps'])], 'return=minimal')
+        rest('instructions', [{'item_id': item['id'], 'step_number': i + 1, 'description': text, 'image_url': upload(photos[str(p)], uid) if p is not None else None} for i, (p, text) in enumerate(d['steps'])], 'return=minimal')
+    if queue and not get(f"release_queue?select=item_id&item_id=eq.{item['id']}"):
+        rest('release_queue', {'item_id': item['id'], 'release_order': next_order}, 'return=minimal')
+        next_order += 1
     created.append({'id': item['id'], 'title': d['title']})
     print('created', item['id'], d['title'])
 json.dump(created, open(drafts_path + '.created.json', 'w'), ensure_ascii=False, indent=1)
