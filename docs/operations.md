@@ -10,6 +10,7 @@
   - `push-dispatch`: 알림 저장 → DB 트리거 → 웹 푸시 발송
   - `send-push`: 알림 설정 화면의 테스트 발송
   - `sweep-orphan-images`: 매주(`@weekly`) 쓰지 않는 사진 정리
+  - `release-queued-recipes`: 매일 11:30·18:30(한국 시간) `release_queue` 맨 앞의 비공개 레시피 하나를 공개 (공개 시각을 작성 시각으로)
 - `/api/*`는 Next.js가 처리한다 (리다이렉트를 두지 않는다).
 - 보안 헤더(CSP 포함)도 `netlify.toml`에 있다. 외부 스크립트·수집 주소를 늘리면 여기 `script-src`·`connect-src`도 같이 늘린다.
 
@@ -62,7 +63,7 @@
 ## DB 변경
 
 - 스키마·함수·정책은 `supabase/*.sql`에 파일로 남기고, Supabase MCP의 마이그레이션으로 적용한다. 파일과 적용 내용이 같아야 한다.
-- 주요 파일: `optimized_feed_view.sql`(피드 뷰), `growth_graph.sql`(관계·행동 기록), `discovery_and_behavior.sql`(탐색 순위·레시피 활동), `storage_owner_policies.sql`, `security_hardening.sql`.
+- 주요 파일: `release_queue.sql`(나눠서 공개할 순서), `optimized_feed_view.sql`(피드 뷰), `growth_graph.sql`(관계·행동 기록), `discovery_and_behavior.sql`(탐색 순위·레시피 활동), `storage_owner_policies.sql`, `security_hardening.sql`.
 - 점검 쿼리: `supabase/queries/growth_loop.sql`.
 
 ## 관리 스크립트 (`scripts/`)

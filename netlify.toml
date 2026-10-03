@@ -72,3 +72,7 @@
 # 쓰지 않는 사진 파일 정리 (매주 일요일 새벽, 안전망)
 [functions."sweep-orphan-images"]
   schedule = "@weekly"
+
+# 나눠서 공개하기: 매일 11:30·18:30 (한국 시간) 대기열의 레시피 하나씩
+[functions."release-queued-recipes"]
+  schedule = "30 2,9 * * *"
