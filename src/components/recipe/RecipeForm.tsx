@@ -22,7 +22,7 @@ import { useToast } from "@/hooks/use-toast"
 
 
 import type { Item, ItemDetail } from "@/types/item"
-import { uploadImagesOptimized, uploadVariants } from "@/lib/image-optimization"
+import { uploadImagesOptimized } from "@/lib/image-optimization"
 import { cacheManager } from "@/lib/unified-cache-manager"
 import { notificationService } from "@/lib/notification-service"
 import { logEvent } from "@/lib/events"
@@ -30,7 +30,8 @@ import { mutate as globalMutate } from "swr"
 import { ColorLabelPicker, PageHeader, SectionHeading, Sheet, SourceRow } from "@/components/kit"
 import { revalidateItemPage } from "@/lib/revalidate-item"
 import { removeDroppedImages } from "@/lib/item-images"
-import { attachInstructionImages, buildRecipeItemPayload, editDefaults, forkDefaults, reorderIngredients, toIngredientRows, toInstructionRows } from "@/features/recipe/domain/recipe-form"
+import { attachInstructionImages, buildRecipeItemPayload, editDefaults, forkDefaults, reorderIngredients } from "@/features/recipe/domain/recipe-form"
+import { fetchCitedRecipes, saveRecipeRows, uploadInstructionImages } from "@/features/recipe/data/recipe-repository"
 
 // Zod 스키마 업데이트
 const recipeSchema = z.object({
@@ -176,47 +177,11 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 			}
 			// Fetch cited recipes details if in edit mode
 			if (initialData.cited_recipe_ids && initialData.cited_recipe_ids.length > 0) {
-				const fetchCitedRecipes = async () => {
-					const { data, error } = await supabase
-						.from("items")
-						.select(
-							`
-							id, 
-							title, 
-							item_type, 
-							image_urls, 
-							user_id, 
-							created_at,
-							author:profiles!items_user_id_fkey(
-								display_name, 
-								username, 
-								public_id, 
-								avatar_url
-							)
-						`
-						)
-						.in("id", initialData.cited_recipe_ids!)
-						.eq("item_type", "recipe")
-
-					if (error) {
-						console.error("Error fetching cited recipes", error)
-					} else {
-						// 데이터 구조를 CitedRecipeSearch가 기대하는 형태로 변환
-						const formattedRecipes = data.map((recipe) => {
-							const authorProfile = Array.isArray(recipe.author) ? recipe.author[0] : recipe.author
-							return {
-								...recipe,
-								item_id: recipe.id, // item_id 필드 추가
-								        display_name: authorProfile?.username,
-								username: authorProfile?.username,
-								avatar_url: authorProfile?.avatar_url,
-								user_public_id: authorProfile?.public_id,
-							}
-						})
-						setSelectedCitedRecipes(formattedRecipes as unknown as Item[])
-					}
+				const loadCitedRecipes = async () => {
+					const recipes = await fetchCitedRecipes(supabase, initialData.cited_recipe_ids!)
+					if (recipes) setSelectedCitedRecipes(recipes)
 				}
-				fetchCitedRecipes()
+				loadCitedRecipes()
 			}
 		}
 	}, [initialData, isEditMode, form, supabase])
@@ -322,22 +287,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 			const finalImageUrls = [...existingImageUrls, ...uploadedImageUrls]
 
 			// Instruction images upload
-			const uploadedInstructionImageUrls = await Promise.all(
-				instructionImages.map(async (image, index) => {
-					if (image && image.file.size > 0) {
-						const fileName = `${user.id}/${Date.now()}-instruction-${index}-${Math.random().toString(36).slice(2, 10)}.jpg`
-						const { error: uploadError } = await supabase.storage.from(bucketId).upload(fileName, image.file, { cacheControl: "31536000", contentType: "image/jpeg" })
-						if (uploadError) throw new Error(`조리법 이미지 업로드 실패: ${uploadError.message}`)
-						await uploadVariants(bucketId, fileName, image.file)
-						const { data: publicUrlData } = supabase.storage.from(bucketId).getPublicUrl(fileName)
-						return publicUrlData.publicUrl
-					} else if (image) {
-						return image.preview
-					} else {
-						return null
-					}
-				})
-			)
+			const uploadedInstructionImageUrls = await uploadInstructionImages(supabase, bucketId, user.id, instructionImages)
 
 			const instructionsWithImages = attachInstructionImages(values.instructions, uploadedInstructionImageUrls)
 
@@ -351,32 +301,12 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 				forkFromId: forkFrom?.id,
 			})
 
-			let itemId: string
-
-			if (isEditMode && initialData) {
-				
-				const { data: updatedItem, error: itemError } = await supabase.from("items").update(itemPayload).eq("id", initialData.id).select("id").single() // initialData.item_id -> initialData.id로 변경
-				if (itemError) throw new Error(`레시피 수정 실패: ${itemError.message}`)
-				itemId = updatedItem.id
-				
-
-				await supabase.from("ingredients").delete().eq("item_id", itemId)
-				await supabase.from("instructions").delete().eq("item_id", itemId)
-			} else {
-				
-				const { data: newItem, error: itemError } = await supabase.from("items").insert(itemPayload).select("id").single()
-				if (itemError) throw new Error(`레시피 생성 실패: ${itemError.message}`)
-				itemId = newItem.id
-				
-			}
-
-			// 재료 순서 정보 포함하여 저장 (드래그앤드롭 순서 유지)
-			const ingredientsToInsert = toIngredientRows(values.ingredients, itemId)
-			
-			await supabase.from("ingredients").insert(ingredientsToInsert)
-
-			const instructionsToInsert = toInstructionRows(instructionsWithImages, itemId)
-			await supabase.from("instructions").insert(instructionsToInsert)
+			const { itemId, ingredientsToInsert } = await saveRecipeRows(supabase, {
+				existingId: isEditMode && initialData ? initialData.id : null,
+				itemPayload,
+				ingredients: values.ingredients,
+				instructions: instructionsWithImages,
+			})
 
 			// SSA 기반: 통합 캐시 관리로 최신 데이터 보장 (thumbnail_index 포함)
 			if (isEditMode) {

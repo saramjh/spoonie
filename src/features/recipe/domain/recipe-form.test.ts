@@ -83,3 +83,14 @@ describe("저장 행 만들기", () => {
 		expect(toInstructionRows(withImages, "it")[1]).toEqual({ description: "s2", image_url: undefined, item_id: "it", step_number: 2 })
 	})
 })
+
+import { markRemind } from "./recipe-activity"
+describe("markRemind", () => {
+	const day = 24 * 60 * 60 * 1000, now = Date.UTC(2026, 9, 3)
+	it("30일 안에 시작했고 기록 없음 → 권함", () => expect(markRemind({ role: "viewer", last_cook_start: new Date(now - 5 * day).toISOString(), recorded: false }, now)).toMatchObject({ remind: true }))
+	it("30일 넘음 → 안 권함", () => expect(markRemind({ role: "viewer", last_cook_start: new Date(now - 40 * day).toISOString(), recorded: false }, now)).toMatchObject({ remind: false }))
+	it("기록 있음·작성자·null은 손대지 않음", () => {
+		expect(markRemind({ role: "viewer", last_cook_start: new Date(now).toISOString(), recorded: true }, now)).not.toHaveProperty("remind")
+		expect(markRemind(null, now)).toBeNull()
+	})
+})
