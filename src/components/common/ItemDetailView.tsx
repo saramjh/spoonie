@@ -23,7 +23,7 @@ import { useShare } from "@/hooks/useShare"
 import { useNavigation } from "@/hooks/useNavigation"
 import { useToast } from "@/hooks/use-toast"
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
-import useSWR, { useSWRConfig } from "swr"
+import { useSWRConfig } from "swr"
 import { Item, ItemDetail } from "@/types/item"
 import Link from "next/link"
 
@@ -36,7 +36,7 @@ import { revalidateItemPage } from "@/shared/infra/revalidate-item"
 import { logEvent } from "@/shared/infra/events"
 import { cameFrom } from "@/shared/lib/surface"
 import { collectItemImageUrls, removeItemImages } from "@/shared/infra/item-images"
-import { deleteOwnItem, fetchCitedRecipeTitle } from "@/features/feed/data/item-detail"
+import { deleteOwnItem } from "@/features/feed/data/item-detail"
 import { fetchProfileSummary } from "@/features/profile/data/profile-repository"
 
 interface ItemDetailViewProps {
@@ -49,15 +49,6 @@ interface CurrentUser {
 	display_name: string
 }
 
-const fetcher = async (key: string) => {
-	const supabase = createSupabaseBrowserClient()
-	const [type, id] = key.split(":")
-
-	if (type === "recipeTitle") {
-		return fetchCitedRecipeTitle(supabase, id)
-	}
-	return null
-}
 
 // cited_recipe_ids는 useCitedRecipes 훅에서 처리됨
 
@@ -133,7 +124,6 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	const orderedImages = orderImagesForDisplay(cachedItem?.image_urls || item?.image_urls, cachedItem?.thumbnail_index ?? item?.thumbnail_index)
 
 	// SWR 호출 - 조건부 렌더링 전에 호출
-	const { data: citedRecipe } = useSWR(item?.item_type === "post" && item?.recipe_id ? `recipeTitle:${item.recipe_id}` : null, fetcher)
 
 	// cited_recipe_ids 처리 - 캐싱된 훅 사용
 	const { citedRecipes, isLoading: citedRecipesLoading } = useCitedRecipes(item?.cited_recipe_ids)
@@ -558,14 +548,6 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 										</li>
 									))}
 								</ul>
-							)}
-
-							{/* 기존 recipe_id 기반 참고 레시피 (하위호환) */}
-							{!isRecipe && item.recipe_id && citedRecipe && (
-								<IntentLink href={`/recipes/${citedRecipe.id}`} className="mt-4 block text-label text-ink underline underline-offset-4">
-									{/* @ts-expect-error - profiles relation can be array or object */}
-									참고한 레시피: {citedRecipe.profiles?.username || "익명"}의 {citedRecipe.title}
-								</IntentLink>
 							)}
 
 							{!isRecipe && (

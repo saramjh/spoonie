@@ -182,11 +182,3 @@ export async function deleteOwnItem(supabase: BrowserDb, itemId: string, userId:
 	const { error } = await supabase.from("items").delete().eq("id", itemId).eq("user_id", userId)
 	return { error }
 }
-
-// 레시피드 상세의 "참고한 레시피" 제목 조회.
-// 알려진 문제: 없는 표(recipes)를 조회해 늘 실패한다 (리팩토링에서는 동작을 그대로 옮김, 고칠지는 따로 정한다)
-export async function fetchCitedRecipeTitle(supabase: BrowserDb, id: string) {
-	const { data, error } = await supabase.from("recipes").select(`id, title, user_id, profiles(username, display_name)`).eq("id", id).single()
-	if (error) throw error
-	return data
-}
