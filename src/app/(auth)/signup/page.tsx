@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useRouter } from "@/lib/navigation"
+import { useRouter } from "@/shared/lib/navigation"
 import { useState } from "react"
 import { Loader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
@@ -10,11 +10,11 @@ import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { createSupabaseBrowserClient } from "@/lib/supabase"
+import { createSupabaseBrowserClient } from "@/shared/infra/supabase"
 import { useToast } from "@/hooks/use-toast"
-import { safeNextPath } from "@/lib/safe-next-path"
+import { safeNextPath } from "@/shared/lib/safe-next-path"
 
-import { generateUniqueUsername } from "@/lib/username-generator"
+import { generateUniqueUsername } from "@/features/profile/data/username-generator"
 import { Sheet } from "@/components/kit"
 
 const formSchema = z

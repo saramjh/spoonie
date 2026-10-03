@@ -3,7 +3,7 @@
  * hooks/useCitedRecipes.ts에서 쿼리·변환을 바꾸지 않고 옮겨 왔다 (훅은 SWR만 맡는다).
  */
 
-import { createSupabaseBrowserClient } from "@/lib/supabase-client"
+import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import type { Item, Profile } from "@/types/item"
 
 // 참고 레시피 fetcher - SWR용

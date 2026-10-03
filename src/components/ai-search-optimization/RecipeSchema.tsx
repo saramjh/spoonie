@@ -1,6 +1,6 @@
-import { serializeJsonLd } from "@/lib/json-ld"
+import { serializeJsonLd } from "@/shared/lib/json-ld"
 import type { ItemDetail } from "@/types/item"
-import { formatAmount } from "@/lib/recipe-amount"
+import { formatAmount } from "@/features/recipe/domain/recipe-amount"
 
 /**
  * schema.org Recipe 구조화 데이터.

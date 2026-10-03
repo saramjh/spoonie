@@ -4,7 +4,7 @@
 import ItemDetailView from "@/components/common/ItemDetailView"
 import DetailStateMessage from "@/components/common/DetailStateMessage"
 import PostCardSkeleton from "@/components/items/PostCardSkeleton"
-import { useItemDetail } from "@/hooks/useItemDetail"
+import { useItemDetail } from "@/features/feed/hooks/useItemDetail"
 import type { ItemDetail } from "@/types/item"
 
 interface PostDetailClientProps {

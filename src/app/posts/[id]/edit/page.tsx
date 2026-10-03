@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation"
 import PostForm from "@/components/items/PostForm"
-import { useEditInitialData } from "@/hooks/useEditInitialData"
+import { useEditInitialData } from "@/features/recipe/hooks/useEditInitialData"
 import { useNavigation } from "@/hooks/useNavigation"
 import { PageLoading } from "@/components/kit"
 import DetailStateMessage from "@/components/common/DetailStateMessage"

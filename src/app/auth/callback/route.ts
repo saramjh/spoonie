@@ -1,8 +1,8 @@
-import { createSupabaseRouteHandlerClient } from "@/lib/supabase-server"
+import { createSupabaseRouteHandlerClient } from "@/shared/infra/supabase-server"
 import { NextResponse } from "next/server"
-import { generateUniqueUsername } from "@/lib/username-generator"
-import { generateUniquePublicId } from "@/lib/public-id-generator"
-import { safeNextPath } from "@/lib/safe-next-path"
+import { generateUniqueUsername } from "@/features/profile/data/username-generator"
+import { generateUniquePublicId } from "@/features/profile/data/public-id-generator"
+import { safeNextPath } from "@/shared/lib/safe-next-path"
 
 // 오픈 리다이렉트 방지: 같은 사이트 내부의 절대 경로만 허용한다.
 // "@evil.com", ".evil.com", "//evil.com", "/\\evil.com" 같은 값은 도메인 뒤에 붙으면 외부로 이동하므로 거부한다.

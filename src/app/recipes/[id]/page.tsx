@@ -10,9 +10,9 @@
  */
 
 import { Metadata } from 'next'
-import { createSupabasePublicClient } from '@/lib/supabase-public'
+import { createSupabasePublicClient } from '@/shared/infra/supabase-public'
 import { notFound } from 'next/navigation'
-import { formatCookingTime } from '@/lib/recipe-amount'
+import { formatCookingTime } from '@/features/recipe/domain/recipe-amount'
 import { fetchItemDetail, ItemNotFoundError } from '@/features/feed/data/item-detail'
 import RecipeDetailClient from './RecipeDetailClient'
 import RecipeSchema from '@/components/ai-search-optimization/RecipeSchema'

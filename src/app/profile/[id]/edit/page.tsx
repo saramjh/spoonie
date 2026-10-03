@@ -1,15 +1,15 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { createSupabaseBrowserClient } from "@/lib/supabase"
-import { useRouter } from "@/lib/navigation"
+import { createSupabaseBrowserClient } from "@/shared/infra/supabase"
+import { useRouter } from "@/shared/lib/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { User } from "@supabase/supabase-js"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { LogOut, Trash2 } from "lucide-react"
-import ProfileEditor from "@/components/profile/ProfileEditor"
+import ProfileEditor from "@/features/profile/components/ProfileEditor"
 import { InstallAppRow } from "@/components/install/InstallApp"
 import { PageHeader, SectionHeading, Sheet } from "@/components/kit"
 // useSessionStore removed - using local state instead

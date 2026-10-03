@@ -1,7 +1,7 @@
 # 발견과 행동 유도 규칙
 
 스푸니의 탐색 순위, 행동 계기(CTA), 작성자 피드백을 정하는 규칙. 코드가 이 문서를 따르고, 규칙을 바꾸면 이 문서부터 고친다.
-구현 위치: `supabase/discovery_and_behavior.sql`(get_explore, get_recipe_activity), `src/lib/surface.ts`, `src/lib/events.ts`, `src/components/recipe/RecipeActivity.tsx`, `src/hooks/useExplore.ts`.
+구현 위치: `supabase/discovery_and_behavior.sql`(get_explore, get_recipe_activity), `src/shared/lib/surface.ts`, `src/shared/infra/events.ts`, `src/components/recipe/RecipeActivity.tsx`, `src/hooks/useExplore.ts`.
 
 ## 헌법
 

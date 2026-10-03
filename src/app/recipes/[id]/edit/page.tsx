@@ -1,8 +1,8 @@
 "use client"
 
 import { useParams } from "next/navigation"
-import RecipeForm from "@/components/recipe/RecipeForm"
-import { useEditInitialData } from "@/hooks/useEditInitialData"
+import RecipeForm from "@/features/recipe/components/RecipeForm"
+import { useEditInitialData } from "@/features/recipe/hooks/useEditInitialData"
 import { useNavigation } from "@/hooks/useNavigation"
 import { PageLoading } from "@/components/kit"
 import DetailStateMessage from "@/components/common/DetailStateMessage"

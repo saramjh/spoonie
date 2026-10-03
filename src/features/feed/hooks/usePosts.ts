@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import useSWRInfinite from "swr/infinite"
-import { createSupabaseBrowserClient } from "@/lib/supabase-client"
+import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import type { User } from "@supabase/supabase-js"
 import type { Item } from "@/types/item" // 통합된 타입 정의를 가져옵니다.
 import type { ServerFeedData } from "@/features/feed/data/server-data"

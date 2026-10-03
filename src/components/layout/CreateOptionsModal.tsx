@@ -1,6 +1,6 @@
 "use client"
 
-import { useRouter } from "@/lib/navigation"
+import { useRouter } from "@/shared/lib/navigation"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { Button } from "@/components/ui/button"
 import { BookPlus, ImagePlus } from "lucide-react"

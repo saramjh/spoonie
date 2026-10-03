@@ -1,4 +1,4 @@
-import { serializeJsonLd } from "@/lib/json-ld"
+import { serializeJsonLd } from "@/shared/lib/json-ld"
 /**
  * BreadcrumbList Schema 컴포넌트 
  * AI 검색 최적화를 위한 사이트 네비게이션 구조화 데이터

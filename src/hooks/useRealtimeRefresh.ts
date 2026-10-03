@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { createSupabaseBrowserClient } from "@/lib/supabase-client"
+import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 
 /**
  * 필터를 건 Supabase Realtime 구독. 조건에 맞는 행이 바뀔 때만 onChange를 호출한다.

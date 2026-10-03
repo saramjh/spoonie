@@ -2,7 +2,7 @@
 
 import { ChefHat } from "lucide-react"
 import { CheckBox, IntentLink, Magnet, Photo, RelativeTime } from "@/components/kit"
-import { formatCookingTime } from "@/lib/recipe-amount"
+import { formatCookingTime } from "@/features/recipe/domain/recipe-amount"
 import { useItemCache } from "@/hooks/useItemCache"
 import { useNavigation } from "@/hooks/useNavigation"
 import type { Item } from "@/types/item"

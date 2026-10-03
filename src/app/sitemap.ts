@@ -5,7 +5,7 @@
  */
 
 import { MetadataRoute } from 'next'
-import { createSupabasePublicClient } from '@/lib/supabase-public'
+import { createSupabasePublicClient } from '@/shared/infra/supabase-public'
 
 export const revalidate = 3600
 

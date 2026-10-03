@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import { revalidateStartingWith } from "@/lib/swr-cache"
+import { revalidateStartingWith } from "@/shared/infra/swr-cache"
 
 /**
  * 탭으로 돌아오면(다른 앱·탭에 있다가 다시 볼 때) 지정한 목록을 다시 받는다.

@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createSupabaseBrowserClient } from '@/lib/supabase-client'
+import { createSupabaseBrowserClient } from '@/shared/infra/supabase-client'
 import { User } from '@supabase/supabase-js'
-import RecipeForm from "@/components/recipe/RecipeForm"
+import RecipeForm from "@/features/recipe/components/RecipeForm"
 import { PageLoading } from "@/components/kit"
 import CreateContentAuthPrompt from "@/components/auth/CreateContentAuthPrompt"
 import { useNavigation } from "@/hooks/useNavigation"

@@ -4,7 +4,7 @@ import type { ReactNode } from "react"
 import { cn } from "@/lib/utils"
 import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useRouter } from "@/lib/navigation"
+import { useRouter } from "@/shared/lib/navigation"
 
 // 하위 화면의 머리 막대: 왼쪽 되돌아가기(뒤로/취소), 가운데 제목, 오른쪽 행동 하나
 interface PageHeaderProps {

@@ -1,6 +1,6 @@
 import { ChevronRight } from "lucide-react"
 import type { Item } from "@/types/item"
-import { withRo } from "@/lib/josa"
+import { withRo } from "@/shared/lib/josa"
 import { cn } from "@/lib/utils"
 import { IntentLink } from "./IntentLink"
 import { Photo } from "./Photo"

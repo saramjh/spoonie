@@ -10,7 +10,7 @@
 
 import { useState, useEffect } from 'react';
 import { useHydrated } from '@/hooks/useHydrated';
-import { createSupabaseBrowserClient } from '@/lib/supabase-client';
+import { createSupabaseBrowserClient } from '@/shared/infra/supabase-client';
 import type { PushSubscriptionData } from '@/features/notification/contracts';
 import { disablePushSubscription, savePushSubscription } from '@/features/notification/data/notification-repository';
 

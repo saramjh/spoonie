@@ -174,7 +174,7 @@ components:
 - 색의 유일한 출처는 `src/app/globals.css`의 `:root` RGB 변수다. `tailwind.config.ts`는 그 변수만 가리키고, 컴포넌트는 hex나 Tailwind 기본 팔레트(gray-500 등)를 쓰지 않는다.
 - 팔레트 이름(door, paper, ink, ink-soft, orange-ink, changed-mark, like)과 shadcn 역할 이름(primary, muted, accent, border, ring, destructive)은 같은 변수를 가리킨다. 역할 이름: muted·accent·secondary = paper-tint, border·input = rule-line, ring = orange-ink, destructive = danger.
 - 그 밖의 색: **좋아요** (like) #d6453d, 채운 하트와 하트 hover. **지우기·오류** (danger) #c8382d, 종이 위 5:1.
-- 그림자 색도 `rgb(var(--ink) / a)`로 쓴다. 자석 색은 `src/lib/color-options.ts` 한 곳에 있다.
+- 그림자 색도 `rgb(var(--ink) / a)`로 쓴다. 자석 색은 `src/features/recipe/domain/color-options.ts` 한 곳에 있다.
 
 ### Named Rules
 **The 주황은 신호 Rule.** 주황은 면이 아니라 신호다. 로고, 숫자 배지, 진행 막대, 켜짐 점, 주황 잉크 글자·아이콘에만 쓰고 버튼 면에는 칠하지 않는다. 작은 주황 면 위의 글자는 ink다(흰 글자는 대비가 모자라다).
@@ -344,7 +344,7 @@ components:
 - **Do** 상세·요리 화면의 바닥을 door로 칠하고, 내용은 그 위에 놓인 paper 종이에만 올린다.
 - **Do** 모든 종이에 같은 종이 그림자(`--sheet-shadow`)와 3px 모서리를 쓴다.
 - **Do** 주황 면 위 글자는 ink로, 종이 위 주황 글자·아이콘은 orange-ink로 쓴다.
-- **Do** 숫자는 tabular로, 세는 분량은 부엌 분수로 쓴다(`src/lib/recipe-amount.ts`의 formatAmount).
+- **Do** 숫자는 tabular로, 세는 분량은 부엌 분수로 쓴다(`src/features/recipe/domain/recipe-amount.ts`의 formatAmount).
 - **Do** 누르는 곳은 44px, 재료·목록 줄은 48px 이상으로 만들고 아이콘 버튼마다 aria-label을 단다.
 - **Do** 바뀐 값은 changed-mark로 잠시 표시를 유지하고, 감속 동작 설정에서는 전환을 끈다.
 - **Do** 아직 옮기지 않은 화면(피드, 레시피북, 프로필, 인증, 폼)을 새로 손볼 때 이 문서를 따르고, 그 화면의 gray/orange-500 모습을 근거로 삼지 않는다.

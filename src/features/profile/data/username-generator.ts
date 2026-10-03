@@ -1,4 +1,4 @@
-import { createSupabaseBrowserClient } from "./supabase-client"
+import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 
 // 형용사 배열 (한국 요리 관련)
 const ADJECTIVES = [

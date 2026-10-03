@@ -41,7 +41,7 @@ export const metadata: Metadata = {
 }
 
 import { Suspense } from "react"
-import { serializeJsonLd } from "@/lib/json-ld"
+import { serializeJsonLd } from "@/shared/lib/json-ld"
 
 const websiteSchema = {
   "@context": "https://schema.org",

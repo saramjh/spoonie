@@ -3,16 +3,16 @@
 import { useEffect, useState, useCallback } from 'react'
 import type { User } from '@supabase/supabase-js';
 import Image from 'next/image'
-import { createSupabaseBrowserClient } from '@/lib/supabase'
+import { createSupabaseBrowserClient } from '@/shared/infra/supabase'
 import { useToast } from '@/hooks/use-toast'
 import { mutate } from 'swr'
 import { formatDistanceToNowStrict } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useRouter } from '@/lib/navigation'
-import PushNotificationSettings from '@/components/notifications/PushNotificationSettings'
-import { NOTIFICATION_RECEIVED_EVENT } from '@/lib/realtime-events';
+import { useRouter } from '@/shared/lib/navigation'
+import PushNotificationSettings from '@/features/notification/components/PushNotificationSettings'
+import { NOTIFICATION_RECEIVED_EVENT } from '@/shared/infra/realtime-events';
 import { CheckBox, PageHeader, Sheet, StateSheet } from "@/components/kit"
 import type { Notification } from "@/features/notification/contracts"
 import { toNotifications } from "@/features/notification/domain/notification-rows"

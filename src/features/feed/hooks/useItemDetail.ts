@@ -2,7 +2,7 @@
 
 import { useEffect } from "react"
 import useSWR from "swr"
-import { createSupabaseBrowserClient } from "@/lib/supabase-client"
+import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import type { ItemDetail } from "@/types/item"
 import { fetchItemDetail } from "@/features/feed/data/item-detail"
 

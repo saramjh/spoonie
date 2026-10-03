@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { usePathname, useSearchParams } from "next/navigation"
-import { NAVIGATION_START_EVENT } from "@/lib/navigation"
+import { NAVIGATION_START_EVENT } from "@/shared/lib/navigation"
 
 // 이동이 끝나지 않는 경우(같은 주소로 이동, 오류 등)에도 막대가 남지 않도록 하는 상한
 const MAX_VISIBLE_MS = 10000

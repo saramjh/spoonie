@@ -3,7 +3,7 @@
  * app/recipes/page.tsx의 SWR fetcher를 내용 그대로 옮겼다. 키 모양: recipes||탭||페이지||정렬||순서||검색어||분류||색||사용자
  */
 
-import { createSupabaseBrowserClient } from "@/lib/supabase-client"
+import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import type { Item, Profile } from "@/types/item"
 
 export const RECIPE_BOOK_PAGE_SIZE = 12

@@ -1,16 +1,16 @@
 "use client"
 
 import { useEffect, useState, ReactNode } from "react"
-import { revalidateStartingWith } from "@/lib/swr-cache"
+import { revalidateStartingWith } from "@/shared/infra/swr-cache"
 import { usePathname } from "next/navigation"
-import { rememberPath } from "@/lib/surface"
+import { rememberPath } from "@/shared/lib/surface"
 import SplashScreen from "./SplashScreen"
 import AppWrapper from "./AppWrapper"
-import { createSupabaseBrowserClient } from "@/lib/supabase-client"
+import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { useSessionStore } from "@/store/sessionStore"
-import { useFollowStore } from "@/store/followStore" // 업계 표준: 팔로우 상태 관리
-import { startAuthorCacheCleanup } from "@/lib/author-cache"
-import { captureInstallPrompt } from "@/lib/install"
+import { useFollowStore } from "@/features/social/store/followStore" // 업계 표준: 팔로우 상태 관리
+import { startAuthorCacheCleanup } from "@/shared/infra/author-cache"
+import { captureInstallPrompt } from "@/shared/lib/install"
 import { fetchProfileSummary } from "@/features/profile/data/profile-repository"
 
 // 크롬의 "설치할 수 있음" 신호는 화면이 그려지기 전에 올 수 있어 모듈을 읽을 때 바로 듣는다

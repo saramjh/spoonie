@@ -1,4 +1,4 @@
-import { createSupabaseBrowserClient } from "./supabase-client"
+import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 
 /**
  * 안전한 Public ID 생성 (8자리 영문+숫자 조합)

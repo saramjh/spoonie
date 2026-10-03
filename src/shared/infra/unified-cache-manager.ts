@@ -11,7 +11,7 @@
  */
 
 import { mutate } from "swr"
-import { revalidateStartingWith, updateStartingWith } from "@/lib/swr-cache"
+import { revalidateStartingWith, updateStartingWith } from "@/shared/infra/swr-cache"
 import { setBookmarked, setLiked, shiftCount, type Patch } from "@/features/social/domain/social-state"
 import { fetchLikeServerState, writeBookmark, writeFollow, writeLike } from "@/features/social/data/social-repository"
 import type { Item } from "@/types/item"

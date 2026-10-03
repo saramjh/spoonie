@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createSupabaseBrowserClient } from '@/lib/supabase-client'
+import { createSupabaseBrowserClient } from '@/shared/infra/supabase-client'
 import { User } from '@supabase/supabase-js'
 import PostForm from "@/components/items/PostForm"
 import { PageLoading } from "@/components/kit"

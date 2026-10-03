@@ -6,9 +6,9 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { usePushNotification } from '@/hooks/usePushNotification';
+import { usePushNotification } from '@/features/notification/hooks/usePushNotification';
 import { useToast } from '@/hooks/use-toast';
-import { createSupabaseBrowserClient } from '@/lib/supabase-client';
+import { createSupabaseBrowserClient } from '@/shared/infra/supabase-client';
 import { Sheet } from "@/components/kit"
 
 export default function PushNotificationSettings() {

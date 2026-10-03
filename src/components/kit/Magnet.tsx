@@ -1,4 +1,4 @@
-import { getMagnet } from "@/lib/color-options"
+import { getMagnet } from "@/features/recipe/domain/color-options"
 import { cn } from "@/lib/utils"
 
 // 색상 라벨 자석: 주인의 정리 표시 (DESIGN.md Interface Grammar 3). 라벨이 없으면 아무것도 그리지 않는다.

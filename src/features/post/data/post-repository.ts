@@ -2,7 +2,7 @@
  * 레시피드 저장소. PostForm.tsx에서 호출 순서·오류 문구를 바꾸지 않고 옮겨 왔다.
  */
 
-import type { createSupabaseBrowserClient } from "@/lib/supabase-client"
+import type { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import type { Item } from "@/types/item"
 import { fetchCitedRecipes } from "@/features/recipe/data/recipe-repository"
 

@@ -1,4 +1,4 @@
-import { createSupabaseRouteHandlerClient } from "@/lib/supabase-server"
+import { createSupabaseRouteHandlerClient } from "@/shared/infra/supabase-server"
 import { NextResponse } from "next/server"
 
 export async function POST(request: Request) {

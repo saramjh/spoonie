@@ -1,14 +1,14 @@
 "use client"
 
 import { useRef, useCallback, useEffect, useState } from "react"
-import { usePosts } from "@/hooks/usePosts"
+import { usePosts } from "@/features/feed/hooks/usePosts"
 import PostCard from "./PostCard"
-import { feedPeriod } from "@/lib/feed-period"
+import { feedPeriod } from "@/features/feed/domain/feed-period"
 import { useHydrated } from "@/hooks/useHydrated"
 import PostCardSkeleton from "./PostCardSkeleton"
 
 
-import { createSupabaseBrowserClient } from "@/lib/supabase-client"
+import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import type { User } from "@supabase/supabase-js"

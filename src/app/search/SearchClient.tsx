@@ -6,14 +6,14 @@ import { Search as SearchIcon, X } from 'lucide-react';
 import useSWR from 'swr';
 import useSWRInfinite from 'swr/infinite';
 
-import PopularKeywords from '@/components/search/PopularKeywords';
-import MadeRecordTile from '@/components/search/MadeRecordTile';
-import RecipeListCard from '@/components/recipe/RecipeListCard';
-import { useExplore, type ExploreData } from '@/hooks/useExplore';
-import UserCard from '@/components/search/UserCard';
+import PopularKeywords from '@/features/feed/components/PopularKeywords';
+import MadeRecordTile from '@/features/feed/components/MadeRecordTile';
+import RecipeListCard from '@/features/recipe/components/RecipeListCard';
+import { useExplore, type ExploreData } from '@/features/feed/hooks/useExplore';
+import UserCard from '@/features/feed/components/UserCard';
 import type { Item } from '@/types/item';
 import { getPopularKeywordsCached, optimizedSearch, searchUsers, type UserSearchResult } from '@/features/feed/data/search-optimization';
-import { useFollowStore } from '@/store/followStore';
+import { useFollowStore } from '@/features/social/store/followStore';
 import { SectionHeading, StateSheet, UnderlineTabs } from "@/components/kit"
 
 // 서버 부담 최소화를 위한 페이지 크기

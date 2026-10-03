@@ -5,9 +5,9 @@
  * Supabase 클라이언트는 부르는 쪽에서 받는다 (화면이 쓰던 같은 클라이언트로 동작하게).
  */
 
-import type { createSupabaseBrowserClient } from "@/lib/supabase-client"
-import { uploadVariants } from "@/lib/image-optimization"
-import type { OptimizedImage } from "@/lib/image-utils"
+import type { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
+import { uploadVariants } from "@/shared/infra/image-optimization"
+import type { OptimizedImage } from "@/shared/infra/image-utils"
 import type { Item } from "@/types/item"
 import type { RecipeActivity } from "../contracts"
 import { toIngredientRows, toInstructionRows } from "../domain/recipe-form"

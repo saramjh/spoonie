@@ -1,4 +1,4 @@
-import { RECIPE_COLOR_OPTIONS } from "@/lib/color-options"
+import { RECIPE_COLOR_OPTIONS } from "@/features/recipe/domain/color-options"
 import { cn } from "@/lib/utils"
 import { Magnet } from "./Magnet"
 

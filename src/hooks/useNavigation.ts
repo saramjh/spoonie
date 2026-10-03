@@ -2,8 +2,8 @@
 
 import { useCallback } from "react"
 import { usePathname } from "next/navigation"
-import { useRouter } from "@/lib/navigation"
-import { previousPath } from "@/lib/surface"
+import { useRouter } from "@/shared/lib/navigation"
+import { previousPath } from "@/shared/lib/surface"
 
 /**
  * 작성·수정 화면을 마친 뒤 돌아갈 곳과, 상세로 가는 링크에 "어디서 왔는지"를 붙이는 일.

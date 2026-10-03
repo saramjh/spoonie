@@ -3,7 +3,7 @@
 import { useState, useSyncExternalStore } from "react"
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { chromeIntentUrl, installPath, isSamsungInternet, isStandalone, onInstallChange, promptInstall, type InstallPath } from "@/lib/install"
+import { chromeIntentUrl, installPath, isSamsungInternet, isStandalone, onInstallChange, promptInstall, type InstallPath } from "@/shared/lib/install"
 
 // 서버 렌더에서는 브라우저를 모르므로 null
 const useInstallPath = () => useSyncExternalStore<InstallPath | null>(onInstallChange, installPath, () => null)

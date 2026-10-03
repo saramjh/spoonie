@@ -1,7 +1,7 @@
 "use client"
 
 import useSWR from "swr"
-import { createSupabaseBrowserClient } from "@/lib/supabase-client"
+import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { fetchExplore, type ExploreData } from "@/features/feed/data/explore"
 
 export type { ExploreData, MadeRecord } from "@/features/feed/data/explore"

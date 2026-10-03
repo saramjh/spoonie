@@ -1,13 +1,13 @@
 'use client'
 
 import Link from "next/link";
-import { useRouter } from "@/lib/navigation"
+import { useRouter } from "@/shared/lib/navigation"
 import { Button } from "@/components/ui/button";
 import { Bell, Bookmark } from "lucide-react";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { createSupabaseBrowserClient } from "@/shared/infra/supabase";
 import useSWR from 'swr';
 import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
-import { NOTIFICATION_RECEIVED_EVENT } from '@/lib/realtime-events';
+import { NOTIFICATION_RECEIVED_EVENT } from '@/shared/infra/realtime-events';
 import { useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { default as NextImage } from 'next/image';

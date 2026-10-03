@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useItemDetail } from "@/hooks/useItemDetail"
+import { useItemDetail } from "@/features/feed/hooks/useItemDetail"
 import { useItemCache } from "@/hooks/useItemCache"
 import type { Item, ItemDetail } from "@/types/item"
 

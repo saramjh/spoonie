@@ -7,7 +7,7 @@
  * DB 정책상 본인 명의의 recipe_cited 알림만 만들 수 있다.
  */
 
-import { createSupabaseBrowserClient } from '@/lib/supabase-client'
+import { createSupabaseBrowserClient } from '@/shared/infra/supabase-client'
 
 class NotificationService {
   async notifyRecipeCited(newItemId: string, citedRecipeIds: string[], actorUserId: string, isPublic: boolean): Promise<void> {

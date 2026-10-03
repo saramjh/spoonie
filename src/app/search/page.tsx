@@ -1,5 +1,5 @@
 import SearchClient from "./SearchClient"
-import { createSupabasePublicClient } from "@/lib/supabase-public"
+import { createSupabasePublicClient } from "@/shared/infra/supabase-public"
 import { fetchExplore, type ExploreData } from "@/features/feed/data/explore"
 
 // 검색어가 없을 때의 탐색 목록을 공개 데이터로 미리 그려 CDN에 둔다 (10분마다 갱신).

@@ -4,7 +4,7 @@ import { Check } from "lucide-react"
 import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "@/components/ui/drawer"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useRecipeStore } from "@/store/recipeStore"
+import { useRecipeStore } from "@/features/recipe/store/recipeStore"
 import { ColorLabelPicker } from "@/components/kit"
 import { cn } from "@/lib/utils"
 

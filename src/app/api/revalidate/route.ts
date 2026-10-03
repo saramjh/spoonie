@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { revalidatePath } from "next/cache"
-import { createSupabaseRouteHandlerClient } from "@/lib/supabase-server"
+import { createSupabaseRouteHandlerClient } from "@/shared/infra/supabase-server"
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 

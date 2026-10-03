@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
-import { useRouter } from "@/lib/navigation"
-import { createSupabaseBrowserClient } from "@/lib/supabase-client"
+import { useRouter } from "@/shared/lib/navigation"
+import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import type { User } from "@supabase/supabase-js"
 import { Button } from "@/components/ui/button"
 
@@ -11,15 +11,15 @@ import { MoreVertical, Edit, LogOut } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import FollowButton from "@/components/items/FollowButton"
 import Link from "next/link"
-import RecipeCard from "@/components/recipe/RecipeCard"
-import RecipeCardSkeleton from "@/components/recipe/RecipeCardSkeleton"
+import RecipeCard from "@/features/recipe/components/RecipeCard"
+import RecipeCardSkeleton from "@/features/recipe/components/RecipeCardSkeleton"
 import { Skeleton } from "@/components/ui/skeleton"
-import FollowListModal, { type FollowDirection } from "@/components/profile/FollowListModal"
+import FollowListModal, { type FollowDirection } from "@/features/profile/components/FollowListModal"
 
 import { useSessionStore } from "@/store/sessionStore"
-import { useFollowStore } from "@/store/followStore" // 업계 표준: 글로벌 팔로우 상태
-import { logEvent } from "@/lib/events"
-import { cameFrom } from "@/lib/surface"
+import { useFollowStore } from "@/features/social/store/followStore" // 업계 표준: 글로벌 팔로우 상태
+import { logEvent } from "@/shared/infra/events"
+import { cameFrom } from "@/shared/lib/surface"
 import useSWR from "swr"
 import { fetchProfile, fetchUserItems, fetchFollowCounts, fetchFollowStatus, fetchLineageCounts, type UserProfile } from "@/features/profile/data/profile-repository"
 import { IntentLink, Photo, PhotoCount, StateSheet, UnderlineTabs } from "@/components/kit"

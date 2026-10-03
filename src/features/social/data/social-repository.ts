@@ -3,7 +3,7 @@
  * 쿼리·오류 처리를 바꾸지 않고 옮겨 왔다.
  */
 
-import { createSupabaseBrowserClient } from "@/lib/supabase-client"
+import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import type { Profile } from "@/types/item"
 import type { FollowDirection, FollowPerson, LikerProfile, LikeServerState, WriteResult } from "../contracts"
 

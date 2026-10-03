@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, type ImgHTMLAttributes } from "react"
-import { hasVariants, srcSetFor } from "@/lib/image-variants"
+import { hasVariants, srcSetFor } from "@/shared/infra/image-variants"
 import { cn } from "@/lib/utils"
 
 // Spoonie 사진 한 장: 크기별 버전(srcset) 중 화면에 맞는 것 하나만 받는다 (DESIGN.md Interface Grammar 4).

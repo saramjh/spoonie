@@ -1,6 +1,6 @@
 import { create } from 'zustand'
-import { createSupabaseBrowserClient } from '@/lib/supabase-client'
-import { cacheManager } from '@/lib/unified-cache-manager'
+import { createSupabaseBrowserClient } from '@/shared/infra/supabase-client'
+import { cacheManager } from '@/shared/infra/unified-cache-manager'
 
 interface FollowStore {
   followingUsers: Set<string>

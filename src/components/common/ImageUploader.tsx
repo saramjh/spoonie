@@ -5,7 +5,7 @@ import Image from "next/image"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ImagePlus, X, Camera } from "lucide-react"
-import { optimizeImages, isValidImageType, isValidFileSize, OptimizedImage } from "@/lib/image-utils"
+import { optimizeImages, isValidImageType, isValidFileSize, OptimizedImage } from "@/shared/infra/image-utils"
 import { useToast } from "@/hooks/use-toast"
 
 interface ImageUploaderProps {

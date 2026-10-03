@@ -3,7 +3,7 @@
 import useSWR from "swr"
 import { Button } from "@/components/ui/button"
 import { IntentLink, RelativeTime } from "@/components/kit"
-import { createSupabaseBrowserClient } from "@/lib/supabase-client"
+import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { fetchRecipeActivity } from "@/features/recipe/data/recipe-repository"
 import { markRemind } from "@/features/recipe/domain/recipe-activity"
 

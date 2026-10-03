@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
 
 import { X, ChefHat, Search } from "lucide-react";
-import { createSupabaseBrowserClient } from '@/lib/supabase-client';
+import { createSupabaseBrowserClient } from '@/shared/infra/supabase-client';
 import type { Item } from '@/types/item';
 import { format } from 'date-fns'; // 날짜 포맷팅을 위해 date-fns 임포트
 import { Photo } from "@/components/kit"

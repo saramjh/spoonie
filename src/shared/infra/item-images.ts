@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
-import { createSupabaseBrowserClient } from "@/lib/supabase-client"
-import { VARIANT_WIDTHS, variantPath } from "@/lib/image-variants"
+import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
+import { VARIANT_WIDTHS, variantPath } from "@/shared/infra/image-variants"
 
 // 글에서 빠진 사진 파일을 저장소에서 지운다 (원본과 크기별 버전).
 // 저장소 정책상 본인 폴더의 파일만 지워지므로 다른 사람의 사진은 건드릴 수 없다.

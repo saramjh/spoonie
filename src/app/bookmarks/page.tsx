@@ -1,12 +1,12 @@
 "use client"
 
 // React hooks removed - not used in this component
-import { useRouter } from "@/lib/navigation"
+import { useRouter } from "@/shared/lib/navigation"
 import { Bookmark } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import PostCard from "@/components/items/PostCard"
 import PostCardSkeleton from "@/components/items/PostCardSkeleton"
-import { createSupabaseBrowserClient } from "@/lib/supabase-client"
+import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { useSessionStore } from "@/store/sessionStore"
 import type { Item, Profile } from "@/types/item"
 import useSWR from "swr"

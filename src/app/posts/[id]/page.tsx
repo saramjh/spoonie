@@ -10,7 +10,7 @@
  */
 
 import { Metadata } from 'next'
-import { createSupabasePublicClient } from '@/lib/supabase-public'
+import { createSupabasePublicClient } from '@/shared/infra/supabase-public'
 import { notFound } from 'next/navigation'
 import { fetchItemDetail, ItemNotFoundError } from '@/features/feed/data/item-detail'
 import PostDetailClient from './PostDetailClient'

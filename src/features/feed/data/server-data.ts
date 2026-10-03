@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
-import { createSupabasePublicClient } from "@/lib/supabase-public"
+import { createSupabasePublicClient } from "@/shared/infra/supabase-public"
 import type { Item } from "@/types/item"
 import type { User } from "@supabase/supabase-js"
 

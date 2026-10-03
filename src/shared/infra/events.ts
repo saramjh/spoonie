@@ -1,4 +1,4 @@
-import { createSupabaseBrowserClient } from "@/lib/supabase-client"
+import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 
 // 레시피가 실제로 쓰였는지 보는 행동 기록. 로그인 사용자만 남기고, 실패해도 화면 동작에 영향을 주지 않는다.
 // 읽기는 관리자(서비스 키)만 가능하다 (events RLS).

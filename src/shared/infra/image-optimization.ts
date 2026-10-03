@@ -1,6 +1,6 @@
-import { createSupabaseBrowserClient } from "@/lib/supabase-client"
-import { OptimizedImage, optimizeImages } from "@/lib/image-utils"
-import { VARIANT_WIDTHS, variantPath } from "@/lib/image-variants"
+import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
+import { OptimizedImage, optimizeImages } from "@/shared/infra/image-utils"
+import { VARIANT_WIDTHS, variantPath } from "@/shared/infra/image-variants"
 
 /**
  * 이미지 업로드 최적화 유틸리티

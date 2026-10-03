@@ -3,9 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Check, Minus, Plus } from "lucide-react"
 import { Ingredient, RecipeStep } from "@/types/item"
-import { formatAmount } from "@/lib/recipe-amount"
+import { formatAmount } from "@/features/recipe/domain/recipe-amount"
 import { cn } from "@/lib/utils"
-import StepMode from "@/components/recipe/StepMode"
+import StepMode from "@/features/recipe/components/StepMode"
 import { CheckBox, Photo, SectionHeading } from "@/components/kit"
 
 interface RecipeContentViewProps {

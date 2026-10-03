@@ -1,4 +1,4 @@
-import { createSupabaseBrowserClient } from "@/lib/supabase-client"
+import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 
 /**
  * 동시성 안전한 댓글 카운트 조회

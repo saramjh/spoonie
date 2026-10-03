@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { revalidateStartingWith } from '@/lib/swr-cache';
+import { revalidateStartingWith } from '@/shared/infra/swr-cache';
 import SpoonieLogo from "@/components/brand/SpoonieLogo";
 
 const PULL_THRESHOLD = 80; // 놓으면 새로고침되는 거리 (px)

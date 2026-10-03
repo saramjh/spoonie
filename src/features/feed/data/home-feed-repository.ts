@@ -2,7 +2,7 @@
  * 홈 피드 저장소. hooks/usePosts.ts의 SWR fetcher를 내용 그대로 옮겼다. 키 모양: items|페이지|사용자
  */
 
-import { createSupabaseBrowserClient } from "@/lib/supabase-client"
+import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import type { Item } from "@/types/item"
 
 export const HOME_FEED_PAGE_SIZE = 10

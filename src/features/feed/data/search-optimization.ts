@@ -1,4 +1,4 @@
-import { createSupabaseBrowserClient } from "@/lib/supabase-client"
+import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 
 /**
  * 검색 기능 최적화 유틸리티

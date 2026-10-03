@@ -1,4 +1,4 @@
-import { serializeJsonLd } from "@/lib/json-ld"
+import { serializeJsonLd } from "@/shared/lib/json-ld"
 import type { ItemDetail } from "@/types/item"
 
 /**

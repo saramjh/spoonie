@@ -169,7 +169,7 @@ export async function fetchItemDetail(supabase: SupabaseClient, itemId: string, 
 
 // ── 글 지우기 (레시피북 선택 삭제, 상세 화면 삭제에서 옮김. 사진 정리·캐시는 부르는 쪽) ──
 
-type BrowserDb = ReturnType<typeof import("@/lib/supabase-client").createSupabaseBrowserClient>
+type BrowserDb = ReturnType<typeof import("@/shared/infra/supabase-client").createSupabaseBrowserClient>
 
 // 여러 글을 한 번에 지운다 (레시피북 선택 삭제)
 export async function deleteItemsByIds(supabase: BrowserDb, ids: string[]) {
