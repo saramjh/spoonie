@@ -238,3 +238,25 @@ export const fetchLineageCounts = async (userId: string): Promise<LineageCounts>
 		referenced: Number(row.referenced_count) || 0,
 	}
 }
+
+// ── 프로필 수정 화면 (ProfileEditor.tsx에서 순서·오류 처리를 바꾸지 않고 옮김) ──
+
+// 수정 화면이 쓰는 내 프로필 값. 오류는 그대로 돌려준다 (없는 프로필 PGRST116을 화면이 따로 다룬다)
+export const fetchEditableProfile = async (supabase: SupabaseClient, userId: string) =>
+	supabase.from("profiles").select("username, avatar_url, profile_message, username_changed_count").eq("id", userId).single()
+
+// 프로필 사진: 320px JPEG로 줄인 파일을 {userId}.jpg에 덮어쓰고, 캐시를 피하려 시각을 붙인 주소를 돌려준다
+export const uploadAvatar = async (supabase: SupabaseClient, userId: string, resizedFile: File): Promise<string> => {
+	const filePath = `${userId}.jpg`
+	const { error: uploadError } = await supabase.storage.from("avatars").upload(filePath, resizedFile, { upsert: true, contentType: "image/jpeg" })
+	if (uploadError) throw uploadError
+	const {
+		data: { publicUrl },
+	} = supabase.storage.from("avatars").getPublicUrl(filePath)
+	return `${publicUrl}?t=${new Date().getTime()}`
+}
+
+export const updateProfileRow = async (supabase: SupabaseClient, userId: string, updateData: Record<string, string | number | null>) => {
+	const { error } = await supabase.from("profiles").update(updateData).eq("id", userId)
+	if (error) throw error
+}

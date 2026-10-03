@@ -16,6 +16,8 @@ import { useSessionStore } from "@/store/sessionStore"
 import { optimizeImages } from "@/lib/image-utils"
 import { PageHeader, PageLoading, Sheet } from "@/components/kit"
 import { revalidateMyProfilePage } from "@/lib/revalidate-item"
+import { fetchEditableProfile, updateProfileRow, uploadAvatar } from "@/features/profile/data/profile-repository"
+import { buildProfileUpdate } from "@/features/profile/domain/profile-update"
 
 interface Profile {
   username: string | null
@@ -254,42 +256,11 @@ export default function ProfileEditor({
     if (formData.avatarFile) {
       // 프로필 사진은 36~80px로 보이므로 320px JPEG로 줄여 올린다
       const [resized] = await optimizeImages([formData.avatarFile], 320, 0.85)
-      const filePath = `${user.id}.jpg`
-      
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(filePath, resized.file, { upsert: true, contentType: "image/jpeg" })
-      
-      if (uploadError) throw uploadError
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(filePath)
-      
-      finalAvatarUrl = `${publicUrl}?t=${new Date().getTime()}`
+      finalAvatarUrl = await uploadAvatar(supabase, user.id, resized.file)
     }
 
-    // 유저명 변경 여부 확인
-    const usernameChanged = formData.username !== (initialProfile?.username || "")
-
-    // 프로필 업데이트 데이터 준비
-    const updateData: Record<string, string | number | null> = {
-      username: formData.username,
-      profile_message: formData.profileMessage,
-      avatar_url: finalAvatarUrl || null,
-    }
-
-    // 유저명이 변경된 경우에만 카운트 증가
-    if (usernameChanged) {
-      updateData.username_changed_count = (initialProfile?.username_changed_count || 0) + 1
-    }
-
-    const { error } = await supabase
-      .from("profiles")
-      .update(updateData)
-      .eq("id", user.id)
-
-    if (error) throw error
+    // 프로필 저장 (유저명이 바뀐 경우에만 변경 횟수를 올린다)
+    await updateProfileRow(supabase, user.id, buildProfileUpdate(formData, initialProfile, finalAvatarUrl))
   }
 
   // 유저명 변경 시 실시간 검증
@@ -326,11 +297,7 @@ export default function ProfileEditor({
 
         setUser(session.user)
 
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("username, avatar_url, profile_message, username_changed_count")
-          .eq("id", session.user.id)
-          .single()
+        const { data, error } = await fetchEditableProfile(supabase, session.user.id)
 
         if (error) {
           // 프로필이 존재하지 않는 경우 기본값으로 초기화

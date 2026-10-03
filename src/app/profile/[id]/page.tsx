@@ -13,7 +13,7 @@ import { Metadata } from 'next'
 import { createSupabasePublicClient } from '@/lib/supabase-public'
 import { notFound } from 'next/navigation'
 import ProfilePageClient from './ProfilePageClient'
-import { fetchUserItems, fetchFollowCounts, PUBLIC_PROFILE_COLUMNS, type UserProfile } from '@/lib/profile-data'
+import { fetchUserItems, fetchFollowCounts, PUBLIC_PROFILE_COLUMNS, type UserProfile } from '@/features/profile/data/profile-repository'
 import BreadcrumbSchema, { createBreadcrumbs } from '@/components/ai-search-optimization/BreadcrumbSchema'
 
 interface Props {

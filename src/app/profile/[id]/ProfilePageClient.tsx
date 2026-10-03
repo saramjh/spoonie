@@ -21,7 +21,7 @@ import { useFollowStore } from "@/store/followStore" // 업계 표준: 글로벌
 import { logEvent } from "@/lib/events"
 import { cameFrom } from "@/lib/surface"
 import useSWR from "swr"
-import { fetchProfile, fetchUserItems, fetchFollowCounts, fetchFollowStatus, fetchLineageCounts, type UserProfile } from "@/lib/profile-data"
+import { fetchProfile, fetchUserItems, fetchFollowCounts, fetchFollowStatus, fetchLineageCounts, type UserProfile } from "@/features/profile/data/profile-repository"
 import { IntentLink, Photo, PhotoCount, StateSheet, UnderlineTabs } from "@/components/kit"
 
 interface ProfilePageClientProps {
