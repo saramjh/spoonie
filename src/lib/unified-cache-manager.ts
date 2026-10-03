@@ -12,15 +12,14 @@
 
 import { mutate } from "swr"
 import { revalidateStartingWith, updateStartingWith } from "@/lib/swr-cache"
-import { createSupabaseBrowserClient } from "@/lib/supabase-client"
+import { setBookmarked, setLiked, shiftCount, type Patch } from "@/features/social/domain/social-state"
+import { fetchLikeServerState, writeBookmark, writeFollow, writeLike } from "@/features/social/data/social-repository"
 import type { Item } from "@/types/item"
 
 // 글 목록을 담는 캐시 키
 const LIST_KEY_PREFIXES = ["items|", "recipes||", "search_page|", "bookmarks_", "user_items_", "explore|"]
 // 새 글을 맨 위에 끼워 넣는 목록 (홈 피드, 레시피북)
 const NEWEST_FIRST_LISTS = ["items|", "recipes||"]
-
-type Patch = (item: Item) => Partial<Item>
 
 const sameItem = (row: unknown, itemId: string) => {
 	const r = row as { id?: string; item_id?: string; item?: { id?: string } } | null
@@ -71,20 +70,10 @@ function inOrder<T>(key: string, task: () => Promise<T>): Promise<T> {
 	return next
 }
 
-const setLiked =
-	(liked: boolean): Patch =>
-	(item) =>
-		!!item.is_liked === liked ? {} : { is_liked: liked, likes_count: Math.max(0, (item.likes_count || 0) + (liked ? 1 : -1)) }
-
-const setBookmarked =
-	(bookmarked: boolean): Patch =>
-	(item) =>
-		!!item.is_bookmarked === bookmarked ? {} : { is_bookmarked: bookmarked, bookmarks_count: Math.max(0, (item.bookmarks_count || 0) + (bookmarked ? 1 : -1)) }
-
 const changeFollowCounts = (userId: string, field: "followers" | "following", by: number) =>
 	mutate(
 		`follow_counts_${userId}`,
-		(current: { followers: number; following: number } | undefined) => (current ? { ...current, [field]: Math.max(0, current[field] + by) } : current),
+		(current: { followers: number; following: number } | undefined) => (current ? shiftCount(current, field, by) : current),
 		{ revalidate: false }
 	)
 
@@ -93,10 +82,7 @@ export const cacheManager = {
 	like: (itemId: string, userId: string, liked: boolean, seed?: Partial<Item>) =>
 		inOrder(`like|${itemId}`, async () => {
 			await patchItem(itemId, setLiked(liked), seed)
-			const supabase = createSupabaseBrowserClient()
-			const { error } = liked
-				? await supabase.from("likes").upsert({ item_id: itemId, user_id: userId }, { onConflict: "user_id,item_id" })
-				: await supabase.from("likes").delete().eq("item_id", itemId).eq("user_id", userId)
+			const { error } = await writeLike(itemId, userId, liked)
 			if (error) {
 				await patchItem(itemId, setLiked(!liked))
 				throw error
@@ -108,10 +94,7 @@ export const cacheManager = {
 	bookmark: (itemId: string, userId: string, bookmarked: boolean, seed?: Partial<Item>) =>
 		inOrder(`bookmark|${itemId}`, async () => {
 			await patchItem(itemId, setBookmarked(bookmarked), seed)
-			const supabase = createSupabaseBrowserClient()
-			const { error } = bookmarked
-				? await supabase.from("bookmarks").upsert({ item_id: itemId, user_id: userId }, { onConflict: "user_id,item_id" })
-				: await supabase.from("bookmarks").delete().eq("item_id", itemId).eq("user_id", userId)
+			const { error } = await writeBookmark(itemId, userId, bookmarked)
 			if (error) {
 				await patchItem(itemId, setBookmarked(!bookmarked))
 				throw error
@@ -132,10 +115,7 @@ export const cacheManager = {
 		inOrder(`follow|${targetUserId}`, async () => {
 			const by = isFollow ? 1 : -1
 			await Promise.all([changeFollowCounts(targetUserId, "followers", by), changeFollowCounts(currentUserId, "following", by)])
-			const supabase = createSupabaseBrowserClient()
-			const { error } = isFollow
-				? await supabase.from("follows").upsert({ follower_id: currentUserId, following_id: targetUserId }, { onConflict: "follower_id,following_id" })
-				: await supabase.from("follows").delete().eq("follower_id", currentUserId).eq("following_id", targetUserId)
+			const { error } = await writeFollow(currentUserId, targetUserId, isFollow)
 			if (error) {
 				await Promise.all([changeFollowCounts(targetUserId, "followers", -by), changeFollowCounts(currentUserId, "following", -by)])
 				throw error
@@ -194,11 +174,7 @@ export const cacheManager = {
 
 // 좋아요 수와 내가 눌렀는지를 서버 값으로 덮는다 (몇 번 실행돼도 결과가 같다)
 async function syncLikesFromServer(itemId: string, userId: string) {
-	const supabase = createSupabaseBrowserClient()
-	const [countResult, mineResult] = await Promise.all([
-		supabase.from("likes").select("item_id", { count: "exact", head: true }).eq("item_id", itemId),
-		supabase.from("likes").select("user_id").eq("item_id", itemId).eq("user_id", userId).maybeSingle(),
-	])
-	if (countResult.error || mineResult.error) return
-	await patchItem(itemId, () => ({ likes_count: countResult.count ?? 0, is_liked: !!mineResult.data }))
+	const state = await fetchLikeServerState(itemId, userId)
+	if (!state) return
+	await patchItem(itemId, () => state)
 }

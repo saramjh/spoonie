@@ -94,3 +94,17 @@ describe("markRemind", () => {
 		expect(markRemind(null, now)).toBeNull()
 	})
 })
+
+import { setBookmarked, setLiked, shiftCount } from "@/features/social/domain/social-state"
+describe("social-state", () => {
+	const base = { is_liked: false, likes_count: 3, is_bookmarked: true, bookmarks_count: 1 } as unknown as Item
+	it("좋아요: 절대 상태, 같은 상태면 그대로", () => {
+		expect(setLiked(true)(base)).toEqual({ is_liked: true, likes_count: 4 })
+		expect(setLiked(false)(base)).toEqual({})
+	})
+	it("저장 취소, 0 아래로 안 내려감", () => {
+		expect(setBookmarked(false)(base)).toEqual({ is_bookmarked: false, bookmarks_count: 0 })
+		expect(setBookmarked(false)({ ...base, bookmarks_count: 0 } as Item)).toEqual({ is_bookmarked: false, bookmarks_count: 0 })
+	})
+	it("팔로우 수", () => expect(shiftCount({ followers: 0, following: 2 }, "followers", -1)).toEqual({ followers: 0, following: 2 }))
+})

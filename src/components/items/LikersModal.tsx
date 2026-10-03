@@ -1,24 +1,15 @@
 "use client"
 
 import useSWR from "swr"
-import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Heart, Clock } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { ko } from "date-fns/locale"
-import type { Profile } from "@/types/item"
 import { IntentLink } from "@/components/kit"
+import { fetchLikers } from "@/features/social/data/social-repository"
 
-interface LikerProfile {
-	id: string
-	username: string
-	display_name: string | null
-	avatar_url: string | null
-	public_id: string | null
-	liked_at: string
-}
 
 interface LikersModalProps {
 	isOpen: boolean
@@ -28,27 +19,6 @@ interface LikersModalProps {
 	currentUserId?: string | null
 }
 
-// 좋아요한 사람 최근 50명
-async function fetchLikers(itemId: string): Promise<LikerProfile[]> {
-	const { data, error } = await createSupabaseBrowserClient()
-		.from("likes")
-		.select("user_id, created_at, profiles!user_id (id, username, display_name, avatar_url, public_id)")
-		.eq("item_id", itemId)
-		.order("created_at", { ascending: false })
-		.limit(50)
-	if (error) throw error
-	return (data || []).map((like: { user_id: string; created_at: string; profiles: Profile | Profile[] }) => {
-		const profile = Array.isArray(like.profiles) ? like.profiles[0] : like.profiles
-		return {
-			id: profile?.id || like.user_id,
-			username: profile?.username || "익명",
-			display_name: profile?.username ?? null,
-			avatar_url: profile?.avatar_url ?? null,
-			public_id: profile?.public_id ?? null,
-			liked_at: like.created_at,
-		}
-	})
-}
 
 export default function LikersModal({ isOpen, onClose, itemId, itemType, currentUserId }: LikersModalProps) {
 	// 창이 열렸을 때만 받는다

@@ -2,70 +2,21 @@
 
 import useSWR from "swr"
 import { Users } from "lucide-react"
-import { createSupabaseBrowserClient } from "@/lib/supabase-client"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import FollowButton from "@/components/items/FollowButton"
 import { IntentLink, RelativeTime } from "@/components/kit"
+import type { FollowDirection } from "@/features/social/contracts"
+import { fetchFollowList } from "@/features/social/data/social-repository"
 
-export type FollowDirection = "followers" | "following"
-
-interface FollowPerson {
-	id: string
-	username: string
-	avatar_url: string | null
-	public_id: string | null
-	followed_at: string
-	// 보는 사람(로그인 사용자)이 이 사람을 팔로우하는지
-	viewer_follows: boolean
-}
+export type { FollowDirection } from "@/features/social/contracts"
 
 const COPY: Record<FollowDirection, { title: string; description: string; empty: string }> = {
 	followers: { title: "팔로워", description: "이 사용자를 팔로우하는 사람들", empty: "아직 팔로워가 없어요." },
 	following: { title: "팔로잉", description: "이 사용자가 팔로우하는 사람들", empty: "아직 팔로우하는 사람이 없어요." },
 }
 
-type ProfileRow = { id: string; username: string; avatar_url: string | null; public_id: string | null }
-
-async function fetchFollowList(direction: FollowDirection, userId: string, viewerId: string | null): Promise<FollowPerson[]> {
-	const supabase = createSupabaseBrowserClient()
-	// 팔로워: 이 사람을 팔로우하는 쪽(follower), 팔로잉: 이 사람이 팔로우하는 쪽(following)
-	const query =
-		direction === "followers"
-			? supabase.from("follows").select("created_at, person:profiles!follows_follower_id_fkey (id, username, avatar_url, public_id)").eq("following_id", userId)
-			: supabase.from("follows").select("created_at, person:profiles!follows_following_id_fkey (id, username, avatar_url, public_id)").eq("follower_id", userId)
-	const { data, error } = await query.order("created_at", { ascending: false })
-	if (error) throw error
-
-	const people = (data || [])
-		.map((row) => ({ person: (Array.isArray(row.person) ? row.person[0] : row.person) as ProfileRow | null, created_at: row.created_at as string }))
-		.filter((row): row is { person: ProfileRow; created_at: string } => !!row.person)
-
-	// 보는 사람의 팔로우 상태는 한 번에 확인한다
-	let viewerFollows = new Set<string>()
-	if (viewerId && people.length > 0) {
-		if (direction === "following" && viewerId === userId) {
-			viewerFollows = new Set(people.map((p) => p.person.id))
-		} else {
-			const { data: mine } = await supabase
-				.from("follows")
-				.select("following_id")
-				.eq("follower_id", viewerId)
-				.in("following_id", people.map((p) => p.person.id))
-			viewerFollows = new Set((mine || []).map((f) => f.following_id as string))
-		}
-	}
-
-	return people.map(({ person, created_at }) => ({
-		id: person.id,
-		username: person.username,
-		avatar_url: person.avatar_url,
-		public_id: person.public_id,
-		followed_at: created_at,
-		viewer_follows: viewerFollows.has(person.id),
-	}))
-}
 
 interface FollowListModalProps {
 	direction: FollowDirection
