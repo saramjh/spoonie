@@ -108,3 +108,8 @@ src/
 
 - 홈에서 드물게 "int64" 페이지 오류가 잡힌다(재현 안 됨). 홈에만 있는 외부 스크립트(애드센스)로 보이지만 확인 전이다.
 
+
+
+## Growth measurement operations
+
+Instagram promotion is measured outside the user-facing event stream. `release_queue` owns publication/retry/checkpoint state, while server-only `instagram_media_insights` stores one immutable 24h and 72h performance snapshot per published media. The collector records the actual observation age and marks missed windows instead of backfilling late cumulative metrics as if they were on-time measurements. This data is measurement input only; it does not affect feed ranking.

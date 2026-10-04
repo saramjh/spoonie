@@ -40,3 +40,36 @@ create index if not exists release_queue_instagram_retry_idx
   where released_at is not null
     and instagram_media_id is null
     and instagram_terminal_error = false;
+
+
+-- Growth OS: Instagram 게시 성과를 24h/72h에 한 번씩 관측한다.
+alter table public.release_queue
+  add column if not exists instagram_published_at timestamptz,
+  add column if not exists instagram_insights_24h_status text not null default 'pending'
+    check (instagram_insights_24h_status in ('pending', 'captured', 'missed')),
+  add column if not exists instagram_insights_72h_status text not null default 'pending'
+    check (instagram_insights_72h_status in ('pending', 'captured', 'missed'));
+
+create table if not exists public.instagram_media_insights (
+  item_id uuid not null references public.items(id) on delete cascade,
+  instagram_media_id text not null,
+  checkpoint_hours smallint not null check (checkpoint_hours in (24, 72)),
+  published_at timestamptz not null,
+  observed_at timestamptz not null default now(),
+  observed_age_minutes integer not null check (observed_age_minutes >= 0),
+  media_type text,
+  permalink text,
+  account_followers integer,
+  reach integer not null default 0,
+  likes integer not null default 0,
+  comments integer not null default 0,
+  saved integer not null default 0,
+  shares integer not null default 0,
+  total_interactions integer not null default 0,
+  primary key (instagram_media_id, checkpoint_hours)
+);
+
+create index if not exists instagram_media_insights_item_idx
+  on public.instagram_media_insights (item_id, checkpoint_hours);
+
+alter table public.instagram_media_insights enable row level security;

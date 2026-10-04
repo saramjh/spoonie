@@ -226,6 +226,7 @@ async function postPendingToInstagram(token) {
     if (!mediaId) return { pending: row.item_id };
     await call('PATCH', `release_queue?item_id=eq.${row.item_id}`, {
       instagram_media_id: mediaId,
+      instagram_published_at: new Date().toISOString(),
       instagram_error: null,
       instagram_terminal_error: false,
       instagram_next_retry_at: null,
@@ -305,3 +306,5 @@ exports._instagramFailurePlan = instagramFailurePlan;
 exports._serializeInstagramError = serializeInstagramError;
 exports._InstagramApiError = InstagramApiError;
 exports._instagramPendingPath = instagramPendingPath;
+exports._call = call;
+exports._ig = ig;

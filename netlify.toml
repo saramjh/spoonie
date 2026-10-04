@@ -80,3 +80,8 @@
 # 인스타그램 게시 실패 재시도: 공개 시간 뒤 두 번씩 (13:00·15:00·20:00·22:00 한국 시간)
 [functions."retry-instagram-posts"]
   schedule = "0 4,6,11,13 * * *"
+
+
+# Growth OS: 게시 후 24h/72h Instagram 성과 snapshot을 시간당 한 번 확인한다.
+[functions."collect-instagram-insights"]
+  schedule = "10 * * * *"
