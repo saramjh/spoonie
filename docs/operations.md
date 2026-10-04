@@ -10,7 +10,8 @@
   - `push-dispatch`: 알림 저장 → DB 트리거 → 웹 푸시 발송
   - `send-push`: 알림 설정 화면의 테스트 발송
   - `sweep-orphan-images`: 매주(`@weekly`) 쓰지 않는 사진 정리
-  - `release-queued-recipes`: 매일 11:30·18:30(한국 시간) `release_queue` 맨 앞의 비공개 레시피 하나를 공개 (공개 시각을 작성 시각으로). 이어서 인스타그램 @spoonie.kitchen에 그 레시피 사진(최대 10장)과 캡션을 확인 없이 게시. 결과는 `release_queue.instagram_media_id`/`instagram_error`
+  - `release-queued-recipes`: 매일 11:30·18:30(한국 시간) `release_queue` 맨 앞의 비공개 레시피 하나를 공개 (공개 시각을 작성 시각으로). 이어서 인스타그램 @spoonie.kitchen에 그 레시피 사진(최대 10장)과 캡션을 확인 없이 게시.
+  - `retry-instagram-posts`: 13:00·15:00·20:00·22:00(한국 시간) 공개는 건드리지 않고 실패한 인스타그램 게시만 재시도한다. 알 수 없는/일시 오류는 15분→1시간→6시간→24시간 간격으로 최대 5회 재시도한다. 인증·권한 오류와 `media_publish` 전송 결과가 불명확한 경우는 중복 게시 방지를 위해 terminal 상태로 남겨 수동 확인한다. 상태는 `instagram_media_id`, `instagram_error`, `instagram_attempt_count`, `instagram_next_retry_at`, `instagram_terminal_error`에 기록한다.
 - `/api/*`는 Next.js가 처리한다 (리다이렉트를 두지 않는다).
 - 보안 헤더(CSP 포함)도 `netlify.toml`에 있다. 외부 스크립트·수집 주소를 늘리면 여기 `script-src`·`connect-src`도 같이 늘린다.
 

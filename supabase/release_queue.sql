@@ -27,3 +27,16 @@ alter table public.instagram_credentials enable row level security;
 
 -- 인스타그램 게시를 두 번에 나눠 할 수 있게: 만든 묶음(컨테이너) id를 남겨 두고, 시간 안에 못 올리면 다음 실행 때 올린다
 alter table public.release_queue add column if not exists instagram_container_id text;
+
+-- 인스타그램 실패는 영구 탈락시키지 않는다. 재시도 시각/횟수와 수동 확인이 필요한 terminal 상태를 별도로 보관한다.
+alter table public.release_queue
+  add column if not exists instagram_attempt_count integer not null default 0,
+  add column if not exists instagram_last_attempt_at timestamptz,
+  add column if not exists instagram_next_retry_at timestamptz,
+  add column if not exists instagram_terminal_error boolean not null default false;
+
+create index if not exists release_queue_instagram_retry_idx
+  on public.release_queue (instagram_next_retry_at, release_order)
+  where released_at is not null
+    and instagram_media_id is null
+    and instagram_terminal_error = false;

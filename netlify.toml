@@ -76,3 +76,7 @@
 # 나눠서 공개하기: 매일 11:30·18:30 (한국 시간) 대기열의 레시피 하나씩
 [functions."release-queued-recipes"]
   schedule = "30 2,9 * * *"
+
+# 인스타그램 게시 실패 재시도: 공개 시간 뒤 두 번씩 (13:00·15:00·20:00·22:00 한국 시간)
+[functions."retry-instagram-posts"]
+  schedule = "0 4,6,11,13 * * *"
