@@ -37,7 +37,8 @@ export function usePosts(initialData?: ServerFeedData | null) {
     fetcher,
     {
       revalidateFirstPage: false,
-      revalidateOnFocus: true,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: true,
       dedupingInterval: 5000,
       fallbackData: initialData?.items ? [initialData.items] : undefined,
     }
@@ -56,26 +57,11 @@ export function usePosts(initialData?: ServerFeedData | null) {
 
   const customMutate = useCallback(() => mutate(), [mutate])
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      mutate(undefined, { revalidate: false })
-    }, 30000)
-    return () => clearInterval(interval)
-  }, [mutate])
-
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden) mutate(undefined, { revalidate: true })
-    }
-    const handleFocus = () => mutate(undefined, { revalidate: true })
-
-    document.addEventListener("visibilitychange", handleVisibilityChange)
-    window.addEventListener("focus", handleFocus)
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange)
-      window.removeEventListener("focus", handleFocus)
-    }
-  }, [mutate])
+  // 새 글 보기는 offset이 밀린 이전 페이지를 버리고 최신 첫 페이지부터 다시 시작한다.
+  const refreshLatest = useCallback(async () => {
+    await setSize(1)
+    await mutate()
+  }, [setSize, mutate])
 
   return {
     feedItems,
@@ -85,5 +71,6 @@ export function usePosts(initialData?: ServerFeedData | null) {
     setSize,
     isReachingEnd,
     mutate: customMutate,
+    refreshLatest,
   }
 }

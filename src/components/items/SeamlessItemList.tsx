@@ -14,6 +14,9 @@ import Link from "next/link"
 import type { User } from "@supabase/supabase-js"
 import type { ServerFeedData } from "@/features/feed/data/server-data"
 import { usePageVisibility } from "@/hooks/usePageVisibility"
+import { shouldSignalNewFeedItem } from "@/features/feed/domain/feed-realtime"
+import { scrollHomeToTop } from "@/shared/lib/home-scroll"
+
 interface SeamlessItemListProps {
   // null이면 브라우저가 첫 페이지를 조회한다.
   initialData?: ServerFeedData | null
@@ -22,15 +25,76 @@ interface SeamlessItemListProps {
 export default function SeamlessItemList({ initialData }: SeamlessItemListProps) {
   // 시간 덩어리 이름의 "오늘"은 화면이 뜬 뒤 기준으로 (미리 만든 홈과의 불일치 방지)
   const now = useHydrated() ? new Date() : null
-  const { feedItems, isLoading, isError, size, setSize, isReachingEnd, mutate: swrMutate } = usePosts(initialData)
+  const { feedItems, isLoading, isError, size, setSize, isReachingEnd, mutate: swrMutate, refreshLatest } = usePosts(initialData)
   const observerElem = useRef<HTMLDivElement>(null)
+  const newestKnownCreatedAt = useRef<string | null>(feedItems[0]?.created_at ?? null)
+  const [hasNewItems, setHasNewItems] = useState(false)
+  const [isRefreshingLatest, setIsRefreshingLatest] = useState(false)
 
   const supabase = createSupabaseBrowserClient()
 
-
-  // 피드 갱신: 탭으로 돌아올 때(여기), 뒤로 가기로 홈에 돌아올 때(ClientLayoutWrapper).
-  // 테이블 전체를 구독하는 실시간 채널은 모든 방문자에게 사이트 전체 변경을 보내 부담이 커지므로 쓰지 않는다.
+  // 탭으로 돌아오면 기존 SWR 피드를 다시 받아 놓는다. Realtime은 화면을 보고 있을 때
+  // "새 글이 생겼다"는 신호만 전달하고 실제 피드 데이터는 계속 이 조회 경로가 소유한다.
   usePageVisibility({ revalidateKeys: ['items|', 'comments_'] })
+
+  useEffect(() => {
+    newestKnownCreatedAt.current = feedItems[0]?.created_at ?? null
+  }, [feedItems])
+
+  useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null
+
+    const subscribe = () => {
+      if (document.hidden || channel) return
+
+      channel = supabase
+        .channel("home-feed:new-items")
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "items", filter: "is_public=eq.true" },
+          (payload) => {
+            if (shouldSignalNewFeedItem("INSERT", payload.new, newestKnownCreatedAt.current)) {
+              setHasNewItems(true)
+            }
+          }
+        )
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "items", filter: "is_public=eq.true" },
+          (payload) => {
+            if (shouldSignalNewFeedItem("UPDATE", payload.new, newestKnownCreatedAt.current)) {
+              setHasNewItems(true)
+            }
+          }
+        )
+        .subscribe()
+    }
+
+    const unsubscribe = () => {
+      if (!channel) return
+      void supabase.removeChannel(channel)
+      channel = null
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        unsubscribe()
+        return
+      }
+
+      // usePageVisibility가 같은 시점에 최신 피드를 다시 받으므로 오래된 신호는 버린다.
+      setHasNewItems(false)
+      subscribe()
+    }
+
+    subscribe()
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
+      unsubscribe()
+    }
+  }, [supabase])
 
 
   // 사용자 상태. 가입은 스크롤 도중이 아니라 좋아요·기록처럼 행동하는 순간에만 권한다 (PRODUCT.md 비회원 정책)
@@ -45,6 +109,21 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
     }
     checkUser()
   }, [supabase, initialData])
+
+  const handleShowNewItems = useCallback(async () => {
+    if (isRefreshingLatest) return
+
+    setIsRefreshingLatest(true)
+    try {
+      await refreshLatest()
+      setHasNewItems(false)
+      scrollHomeToTop()
+    } catch (error) {
+      console.error("❌ Home feed: failed to load latest items:", error)
+    } finally {
+      setIsRefreshingLatest(false)
+    }
+  }, [isRefreshingLatest, refreshLatest])
 
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
@@ -95,7 +174,23 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
 
   return (
     <div className="w-full">
+      <div className="sr-only" aria-live="polite">{hasNewItems ? "새 글이 있습니다." : ""}</div>
 
+      {hasNewItems && (
+        <div className="sticky top-3 z-40 flex h-0 justify-center px-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="translate-y-3 bg-paper shadow-sm"
+            onClick={handleShowNewItems}
+            disabled={isRefreshingLatest}
+            aria-label="새 글이 있습니다. 최신 글 보기"
+          >
+            {isRefreshingLatest ? "새 글 불러오는 중" : "새 글 보기"}
+          </Button>
+        </div>
+      )}
 
       <div className="space-y-3 px-3 py-3">
         {feedItems.map((item, index) => {
