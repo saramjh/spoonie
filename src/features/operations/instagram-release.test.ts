@@ -6,6 +6,7 @@ const {
   _InstagramApiError: InstagramApiError,
   _instagramFailurePlan: instagramFailurePlan,
   _instagramPendingPath: instagramPendingPath,
+  _instagramPostGap: instagramPostGap,
   _serializeInstagramError: serializeInstagramError,
 } = require("../../../netlify/functions/release-queued-recipes.js")
 
@@ -60,5 +61,26 @@ describe("Instagram scheduled publishing retries", () => {
     expect(text).toContain("code=2")
     expect(text).toContain("subcode=99")
     expect(text).toContain("transient=true")
+  })
+})
+
+
+describe("Instagram publishing cadence", () => {
+  it("blocks another successful post inside the three-hour gap", () => {
+    expect(
+      instagramPostGap("2026-10-04T09:00:00.000Z", new Date("2026-10-04T11:59:00.000Z"))
+    ).toEqual({
+      blocked: true,
+      nextEligibleAt: "2026-10-04T12:00:00.000Z",
+    })
+  })
+
+  it("allows posting once the minimum gap has elapsed", () => {
+    expect(
+      instagramPostGap("2026-10-04T09:00:00.000Z", new Date("2026-10-04T12:00:00.000Z"))
+    ).toEqual({
+      blocked: false,
+      nextEligibleAt: "2026-10-04T12:00:00.000Z",
+    })
   })
 })

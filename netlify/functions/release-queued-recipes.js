@@ -24,6 +24,7 @@ const REFRESH_AFTER_MS = 30 * 24 * 60 * 60 * 1000;
 const INSTAGRAM_MAX_ATTEMPTS = 5;
 const INSTAGRAM_RETRY_DELAYS_MS = [15 * 60 * 1000, 60 * 60 * 1000, 6 * 60 * 60 * 1000, 24 * 60 * 60 * 1000];
 const INSTAGRAM_PERMANENT_CODES = new Set([10, 190, 200]);
+const INSTAGRAM_MIN_POST_GAP_MS = 3 * 60 * 60 * 1000;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr';
 const headers = { apikey: SECRET_KEY, Authorization: `Bearer ${SECRET_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=representation' };
 
@@ -184,6 +185,17 @@ async function publishContainer(containerId, token) {
   return (await ig('POST', `/${igUserId}/media_publish`, { creation_id: containerId, access_token: token })).id;
 }
 
+function instagramPostGap(lastPublishedAt, now = new Date()) {
+  if (!lastPublishedAt) return { blocked: false, nextEligibleAt: null };
+  const lastMs = new Date(lastPublishedAt).getTime();
+  if (!Number.isFinite(lastMs)) return { blocked: false, nextEligibleAt: null };
+  const nextMs = lastMs + INSTAGRAM_MIN_POST_GAP_MS;
+  return {
+    blocked: now.getTime() < nextMs,
+    nextEligibleAt: new Date(nextMs).toISOString(),
+  };
+}
+
 function instagramPendingPath(now = new Date()) {
   const due = encodeURIComponent(now.toISOString());
   return `release_queue?select=item_id,instagram_container_id,instagram_attempt_count` +
@@ -197,6 +209,13 @@ function instagramPendingPath(now = new Date()) {
 // 공개됐지만 인스타그램에 아직 안 올라간 레시피 하나를 올린다 (만들다 만 컨테이너가 있으면 그것부터)
 async function postPendingToInstagram(token) {
   const now = new Date();
+  const [lastPublished] = await call(
+    'GET',
+    'release_queue?select=instagram_published_at&instagram_published_at=not.is.null&order=instagram_published_at.desc&limit=1'
+  );
+  const gap = instagramPostGap(lastPublished?.instagram_published_at, now);
+  if (gap.blocked) return { skipped: 'post gap', nextEligibleAt: gap.nextEligibleAt };
+
   const [row] = await call('GET', instagramPendingPath(now));
   if (!row) return { skipped: 'nothing pending' };
 
@@ -288,8 +307,8 @@ exports.handler = async () => {
     }
 
     // 인스타그램: 공개됐지만 아직 안 올라간 것 하나 (실패해도 공개는 되돌리지 않는다)
-    // 밀린 것이 있으면 시간이 허락하는 만큼(최대 2개) 올린다
-    const results = await drainInstagramQueue(startedAt, 2);
+    // 한 번에 하나만 올려 backlog가 연속 게시되지 않게 한다.
+    const results = await drainInstagramQueue(startedAt, 1);
     console.log('instagram', JSON.stringify(results));
     return { statusCode: 200, body: JSON.stringify({ released: next ? next.item_id : null, instagram: results }) };
   } catch (error) {
@@ -306,5 +325,6 @@ exports._instagramFailurePlan = instagramFailurePlan;
 exports._serializeInstagramError = serializeInstagramError;
 exports._InstagramApiError = InstagramApiError;
 exports._instagramPendingPath = instagramPendingPath;
+exports._instagramPostGap = instagramPostGap;
 exports._call = call;
 exports._ig = ig;

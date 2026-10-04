@@ -3,7 +3,7 @@ const { _drainInstagramQueue } = require('./release-queued-recipes');
 
 exports.handler = async () => {
   try {
-    const instagram = await _drainInstagramQueue(Date.now(), 2);
+    const instagram = await _drainInstagramQueue(Date.now(), 1);
     console.log('instagram retry', JSON.stringify(instagram));
     return { statusCode: 200, body: JSON.stringify({ instagram }) };
   } catch (error) {
