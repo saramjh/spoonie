@@ -36,12 +36,20 @@ function chunks<T>(items: T[], size: number): T[][] {
 async function getProfiles(supabase: SupabaseServerClient, authorIds: string[]): Promise<ProfileRow[]> {
 	const rows: ProfileRow[] = []
 	for (const ids of chunks(authorIds, 200)) {
-		const { data, error } = await supabase
-			.from("profiles")
-			.select("id, public_id, display_name, username, is_profile_public, updated_at")
-			.in("id", ids)
-		if (error) throw error
-		rows.push(...((data ?? []) as ProfileRow[]))
+		let from = 0
+		while (true) {
+			const { data, error } = await supabase
+				.from("profiles")
+				.select("id, public_id, display_name, username, is_profile_public, updated_at")
+				.in("id", ids)
+				.order("id", { ascending: true })
+				.range(from, from + 199)
+			if (error) throw error
+			const batch = (data ?? []) as ProfileRow[]
+			if (!batch.length) break
+			rows.push(...batch)
+			from += batch.length
+		}
 	}
 	return rows
 }
@@ -49,22 +57,25 @@ async function getProfiles(supabase: SupabaseServerClient, authorIds: string[]):
 async function getInstructionImages(supabase: SupabaseServerClient, recipeIds: string[]): Promise<Map<string, string[]>> {
 	const byRecipe = new Map<string, string[]>()
 	for (const ids of chunks(recipeIds, 200)) {
-		for (let from = 0; ; from += 1000) {
+		let from = 0
+		while (true) {
 			const { data, error } = await supabase
 				.from("instructions")
 				.select("item_id, image_url")
 				.in("item_id", ids)
 				.not("image_url", "is", null)
+				.order("id", { ascending: true })
 				.range(from, from + 999)
 			if (error) throw error
 			const batch = (data ?? []) as InstructionImageRow[]
+			if (!batch.length) break
 			for (const row of batch) {
 				if (!row.image_url) continue
 				const images = byRecipe.get(row.item_id) ?? []
 				images.push(row.image_url)
 				byRecipe.set(row.item_id, images)
 			}
-			if (batch.length < 1000) break
+			from += batch.length
 		}
 	}
 	return byRecipe
@@ -150,6 +161,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 		]
 	} catch (error) {
 		console.error("❌ Sitemap generation error:", error)
-		return staticPages
+		// ISR 재생성 실패는 기존 목록을 유지한다. 빈 목록으로 정상 캐시를 덮지 않는다.
+		throw error
 	}
 }

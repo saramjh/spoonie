@@ -14,22 +14,26 @@ export type PublicDiscoveryItem = {
 	thumbnail_index: number | null
 	tags: string[] | null
 	cited_recipe_ids: string[] | null
+	servings?: number | null
+	cooking_time_minutes?: number | null
 }
 
 const PAGE_SIZE = 500
-const COLUMNS = "id, user_id, item_type, created_at, updated_at, title, description, content, image_urls, thumbnail_index, tags, cited_recipe_ids"
+const COLUMNS = "id, user_id, item_type, created_at, updated_at, title, description, content, image_urls, thumbnail_index, tags, cited_recipe_ids, servings, cooking_time_minutes"
 
 export async function fetchAllPublicDiscoveryItems(
 	filters: { itemType?: "recipe" | "post"; tag?: string; userId?: string } = {},
 	supabase: SupabaseClient = createSupabasePublicClient()
 ): Promise<PublicDiscoveryItem[]> {
 	const rows: PublicDiscoveryItem[] = []
-	for (let from = 0; ; from += PAGE_SIZE) {
+	let from = 0
+	while (true) {
 		let query = supabase
 			.from("items")
 			.select(COLUMNS)
 			.eq("is_public", true)
 			.order("created_at", { ascending: false })
+			.order("id", { ascending: false })
 			.range(from, from + PAGE_SIZE - 1)
 
 		if (filters.itemType) query = query.eq("item_type", filters.itemType)
@@ -39,8 +43,10 @@ export async function fetchAllPublicDiscoveryItems(
 		const { data, error } = await query
 		if (error) throw error
 		const batch = (data ?? []) as unknown as PublicDiscoveryItem[]
+		if (!batch.length) break
 		rows.push(...batch)
-		if (batch.length < PAGE_SIZE) break
+		// DB의 응답 상한이 PAGE_SIZE보다 작아도 다음 행부터 계속 읽는다.
+		from += batch.length
 	}
 	return rows
 }

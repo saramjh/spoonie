@@ -3,16 +3,13 @@
  * Google 검색 랭킹용 파일이 아니며, 실제 공개 데이터만 싣는다.
  */
 
-import { createSupabasePublicClient } from "@/shared/infra/supabase-public"
 import { isSearchIndexableRecipeed, isSearchIndexableTopic, isTopicContributingRecipeed } from "@/features/discovery/domain/search-exposure"
 import { fetchAllPublicDiscoveryItems } from "@/features/discovery/data/public-assets"
 import { normalizeTags, topicHref } from "@/shared/lib/topics"
 
 export const revalidate = 3600
+export const dynamic = "force-static"
 const MAX_PER_TYPE = 200
-
-type RecipeRow = { id: string; user_id: string; title: string | null; description: string | null; servings: number | null; cooking_time_minutes: number | null; tags: string[] | null }
-type PostRow = { id: string; user_id: string; title: string | null; content: string | null; tags: string[] | null; image_urls: string[] | null; cited_recipe_ids: string[] | null }
 
 function oneLine(text: string | null, max = 120) {
 	const t = (text || "").replace(/\s+/g, " ").trim()
@@ -21,21 +18,10 @@ function oneLine(text: string | null, max = 120) {
 
 export async function GET() {
 	const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
-	let recipes: RecipeRow[] = []
-	let posts: PostRow[] = []
-	try {
-		const supabase = createSupabasePublicClient()
-		const [recipeResult, postResult] = await Promise.all([
-			supabase.from("items").select("id, user_id, title, description, servings, cooking_time_minutes, tags").eq("is_public", true).eq("item_type", "recipe").order("created_at", { ascending: false }).limit(MAX_PER_TYPE),
-			supabase.from("items").select("id, user_id, title, content, tags, image_urls, cited_recipe_ids").eq("is_public", true).eq("item_type", "post").order("created_at", { ascending: false }).limit(MAX_PER_TYPE),
-		])
-		if (!recipeResult.error && recipeResult.data) recipes = recipeResult.data as RecipeRow[]
-		if (!postResult.error && postResult.data) posts = (postResult.data as PostRow[]).filter(isSearchIndexableRecipeed)
-	} catch {
-		// 공개 목록 조회가 실패해도 서비스 설명은 제공한다.
-	}
+	const allPublicItems = await fetchAllPublicDiscoveryItems()
+	const recipes = allPublicItems.filter((item) => item.item_type === "recipe").slice(0, MAX_PER_TYPE)
+	const posts = allPublicItems.filter((item) => item.item_type === "post" && isSearchIndexableRecipeed(item)).slice(0, MAX_PER_TYPE)
 
-	const allPublicItems = await fetchAllPublicDiscoveryItems().catch(() => [])
 	const topicAssets = allPublicItems.filter((item) => item.item_type === "recipe" || isTopicContributingRecipeed(item))
 	const topicStats = new Map<string, { count: number; authors: Set<string> }>()
 	for (const item of topicAssets) {
@@ -81,7 +67,7 @@ export async function GET() {
 		"",
 		"## 주제",
 		"",
-		...topics.map(([tag, stats]) => `- [#${tag}](${baseUrl}${topicHref(tag)}): 공개 검색 자산 ${stats.count}개`),
+		...topics.map(([tag, stats]) => `- [#${tag}](${baseUrl}${topicHref(tag)}): 주제 기여 자산 ${stats.count}개`),
 		"",
 	]
 

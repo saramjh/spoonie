@@ -53,6 +53,7 @@ const loadTopicPage = cache(async (tag: string, page: number) => {
 		.eq("is_public", true)
 		.contains("tags", [tag])
 		.order("created_at", { ascending: false })
+		.order("id", { ascending: false })
 		.range(from, from + PAGE_SIZE - 1)
 	if (error) throw error
 	return (data ?? []) as unknown as TopicRow[]
