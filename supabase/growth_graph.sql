@@ -77,8 +77,7 @@ create table if not exists public.events (
   user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
   item_id uuid references public.items(id) on delete cascade,
   type text not null check (type in (
-    'detail_open', 'cook_start', 'cook_complete', 'save', 'recipeed_create', 'derived_create', 'profile_open',
-    'feed_impression', 'follow', 'unfollow', 'share', 'recipeed_start', 'related_open'
+    'detail_open', 'cook_start', 'cook_complete', 'save', 'recipeed_create', 'derived_create', 'profile_open', 'follow', 'unfollow', 'share', 'recipeed_start', 'related_open'
   )),
   origin text,
   created_at timestamptz not null default now()

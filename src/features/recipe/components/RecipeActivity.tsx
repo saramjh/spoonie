@@ -6,6 +6,8 @@ import { IntentLink, RelativeTime } from "@/components/kit"
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { fetchRecipeActivity } from "@/features/recipe/data/recipe-repository"
 import { markRemind } from "@/features/recipe/domain/recipe-activity"
+import { postSourceHref } from "@/features/post/domain/post-form"
+import { logEvent } from "@/shared/infra/events"
 
 // 레시피 상세의 사람별 한 줄 (docs/discovery-and-behavior.md)
 // - 작성자: 내 레시피가 다른 사람에게 실제로 어떻게 쓰였는지. 정보형 피드백이라 비교·순위는 보이지 않는다
@@ -48,7 +50,7 @@ export function RecipeActivity({ recipeId, userId }: { recipeId: string; userId?
 				</span>
 			</p>
 			<Button asChild size="sm" className="flex-shrink-0">
-				<IntentLink href={`/posts/new?source=${recipeId}&origin=cook_mode`}>사진으로 남기기</IntentLink>
+				<IntentLink href={postSourceHref(recipeId, "cook_mode")} onClick={() => logEvent("recipeed_start", recipeId, "cook_mode")}>사진으로 남기기</IntentLink>
 			</Button>
 		</div>
 	)

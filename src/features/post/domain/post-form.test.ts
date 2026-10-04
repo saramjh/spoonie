@@ -1,7 +1,7 @@
 // 지금 동작을 기록하는 테스트: PostForm에서 옮기기 전과 같은 결과
 import { describe, expect, it } from "vitest"
 import type { Item } from "@/types/item"
-import { buildPostItemPayload, citedIdsFromRecipes, postCreationOriginField, postFormDefaults, returnToSourcePath } from "./post-form"
+import { buildPostItemPayload, citedIdsFromRecipes, postCreationOriginField, postFormDefaults, postSourceHref, readPostSource, returnToSourcePath } from "./post-form"
 
 describe("postFormDefaults", () => {
 	it("새 글은 빈 값·공개", () => expect(postFormDefaults(null)).toEqual({ title: "", content: "", is_public: true, tags: [], cited_recipe_ids: [] }))
@@ -29,5 +29,20 @@ describe("기타", () => {
 		expect(returnToSourcePath(false, "s", ["s"])).toBe("/recipes/s#made-heading")
 		expect(returnToSourcePath(true, "s", ["s"])).toBeNull()
 		expect(returnToSourcePath(false, "s", ["x"])).toBeNull()
+	})
+})
+
+
+describe("post source contract", () => {
+	const id = "49204ad9-d6bb-4541-a59d-9a9ef72ed56b"
+
+	it("작성 URL과 파싱 규칙이 같은 계약을 쓴다", () => {
+		const href = postSourceHref(id, "cook_mode")
+		expect(href).toBe(`/posts/new?source=${id}&origin=cook_mode`)
+		expect(readPostSource(href.split("?")[1] ?? "")).toEqual({ id, origin: "cook_mode" })
+	})
+
+	it("잘못된 source/origin은 버린다", () => {
+		expect(readPostSource("?source=nope&origin=other")).toEqual({ id: null, origin: null })
 	})
 })

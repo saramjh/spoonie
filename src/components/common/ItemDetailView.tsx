@@ -40,6 +40,7 @@ import { collectItemImageUrls, removeItemImages } from "@/shared/infra/item-imag
 import { deleteOwnItem } from "@/features/feed/data/item-detail"
 import { topicHref } from "@/shared/lib/topics"
 import { fetchProfileSummary } from "@/features/profile/data/profile-repository"
+import { postSourceHref } from "@/features/post/domain/post-form"
 
 interface ItemDetailViewProps {
 	item: ItemDetail | null | undefined
@@ -416,7 +417,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 					</ul>
 				)}
 				<Button asChild variant="outline" className="mt-3 w-full">
-					<IntentLink href={requireLogin(`/posts/new?source=${stableItemId}&origin=recipe_detail`)} onClick={() => logEvent("recipeed_start", stableItemId, "recipe_detail")}>이 레시피로 만들었어요</IntentLink>
+					<IntentLink href={requireLogin(postSourceHref(stableItemId, "recipe_detail"))} onClick={() => logEvent("recipeed_start", stableItemId, "recipe_detail")}>이 레시피로 만들었어요</IntentLink>
 				</Button>
 
 				{relations.continued.length > 0 && (

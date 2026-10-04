@@ -10,6 +10,7 @@ import { logEvent } from "@/shared/infra/events"
 import { useRouter } from "@/shared/lib/navigation"
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { Photo, Sheet } from "@/components/kit"
+import { postSourceHref } from "@/features/post/domain/post-form"
 
 interface StepModeProps {
 	steps: RecipeStep[]
@@ -196,7 +197,8 @@ export default function StepMode({ steps, ingredients, servingsLabel, startAt, r
 					type="button"
 					onClick={async () => {
 						// 요리한 경험을 나누려 할 때 가입을 권한다: 비로그인이면 로그인 후 바로 작성 화면으로 이어진다
-						const target = `/posts/new?source=${recipeId}&origin=cook_mode`
+						if (!recipeId) return
+						const target = postSourceHref(recipeId, "cook_mode")
 						logEvent("recipeed_start", recipeId, "cook_mode")
 						const { data } = await createSupabaseBrowserClient().auth.getSession()
 						router.push(data.session ? target : `/login?next=${encodeURIComponent(target)}`)

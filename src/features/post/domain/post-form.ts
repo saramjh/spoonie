@@ -6,6 +6,27 @@ import type { Item } from "@/types/item"
 import type { PostDraft, PostSourceOrigin } from "../contracts"
 import { normalizeTags } from "@/shared/lib/topics"
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+function isPostSourceOrigin(value: string | null): value is PostSourceOrigin {
+	return value === "recipe_detail" || value === "cook_mode"
+}
+
+export function postSourceHref(recipeId: string, origin: PostSourceOrigin): string {
+	const params = new URLSearchParams({ source: recipeId, origin })
+	return `/posts/new?${params.toString()}`
+}
+
+export function readPostSource(search: string): { id: string | null; origin: PostSourceOrigin | null } {
+	const params = new URLSearchParams(search)
+	const sourceId = params.get("source")
+	const origin = params.get("origin")
+	return {
+		id: sourceId && UUID_PATTERN.test(sourceId) ? sourceId : null,
+		origin: isPostSourceOrigin(origin) ? origin : null,
+	}
+}
+
 // 폼 처음 값: 수정이면 저장된 값, 아니면 빈 값 (레시피드 기본값은 공개)
 export function postFormDefaults(editing: Item | null): Required<Omit<PostDraft, "title">> & { title: string } {
 	return {
