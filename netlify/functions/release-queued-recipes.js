@@ -20,6 +20,8 @@
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
 const IG = 'https://graph.instagram.com/v21.0';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { compileInstagramContent } = require('./instagram-content');
 const REFRESH_AFTER_MS = 30 * 24 * 60 * 60 * 1000;
 const INSTAGRAM_MAX_ATTEMPTS = 5;
 const INSTAGRAM_RETRY_DELAYS_MS = [15 * 60 * 1000, 60 * 60 * 1000, 6 * 60 * 60 * 1000, 24 * 60 * 60 * 1000];
@@ -127,23 +129,6 @@ async function instagramToken() {
   }
 }
 
-function caption(item, ingredients) {
-  const names = ingredients.map((i) => i.name).slice(0, 6);
-  const tags = ['집밥', '레시피', 'Spoonie', ...(item.tags || [])].map((t) => '#' + String(t).replace(/\s+/g, '')).filter((t, i, all) => all.indexOf(t) === i).slice(0, 10);
-  const meta = [item.servings ? `${item.servings}인분` : '', item.cooking_time_minutes ? `${item.cooking_time_minutes}분` : ''].filter(Boolean).join(' · ');
-  return [
-    item.title,
-    '',
-    item.description || '',
-    '',
-    names.length ? `재료: ${names.join(', ')}${ingredients.length > names.length ? ' 외' : ''}` : '',
-    meta,
-    '',
-    '분량과 순서, 단계별 사진은 Spoonie에서 볼 수 있어요. 프로필 링크 → spoonie.kr',
-    '',
-    tags.join(' '),
-  ].filter((line, i, all) => !(line === '' && all[i - 1] === '')).join('\n').trim();
-}
 
 // 컨테이너가 준비됐는지 (FINISHED). 준비 중이면 false, 실패면 던진다
 async function isReady(id, token) {
@@ -162,20 +147,30 @@ async function waitUntilReady(ids, token, tries) {
 }
 
 // 게시 묶음(컨테이너)을 만든다. 사진은 한꺼번에 올려 시간을 줄인다 (예약 함수는 30초 안에 끝나야 한다)
-async function createContainer(itemId, token) {
+async function createContainer(itemId, token, releaseOrder) {
   const [item] = await call('GET', `items?select=title,description,tags,servings,cooking_time_minutes,image_urls,thumbnail_index&id=eq.${itemId}`);
   const ingredients = await call('GET', `ingredients?select=name&item_id=eq.${itemId}&order=order_index`);
   const steps = await call('GET', `instructions?select=image_url&item_id=eq.${itemId}&image_url=not.is.null&order=step_number`);
-  const covers = item.image_urls || [];
-  const first = covers[item.thumbnail_index || 0];
-  const photos = [first, ...covers.filter((u) => u !== first), ...steps.map((s) => s.image_url)].filter(Boolean).slice(0, 10);
-  if (!photos.length) return null;
+  const content = compileInstagramContent(item, ingredients, steps, releaseOrder);
+  if (!content.photos.length) return null;
   const { user_id: igUserId } = await ig('GET', '/me', { fields: 'user_id', access_token: token });
-  const text = caption(item, ingredients);
-  if (photos.length === 1) return (await ig('POST', `/${igUserId}/media`, { image_url: photos[0], caption: text, access_token: token })).id;
-  const children = await Promise.all(photos.map((url) => ig('POST', `/${igUserId}/media`, { image_url: url, is_carousel_item: 'true', access_token: token }).then((r) => r.id)));
+  if (content.photos.length === 1) {
+    const id = (await ig('POST', `/${igUserId}/media`, {
+      image_url: content.photos[0],
+      caption: content.caption,
+      access_token: token,
+    })).id;
+    return { id, experiment: content.experiment };
+  }
+  const children = await Promise.all(content.photos.map((url) => ig('POST', `/${igUserId}/media`, { image_url: url, is_carousel_item: 'true', access_token: token }).then((r) => r.id)));
   if (!(await waitUntilReady(children, token, 4))) return 'PENDING'; // 사진 처리가 늦으면 다음 실행 때 다시 만든다
-  return (await ig('POST', `/${igUserId}/media`, { media_type: 'CAROUSEL', children: children.join(','), caption: text, access_token: token })).id;
+  const id = (await ig('POST', `/${igUserId}/media`, {
+    media_type: 'CAROUSEL',
+    children: children.join(','),
+    caption: content.caption,
+    access_token: token,
+  })).id;
+  return { id, experiment: content.experiment };
 }
 
 // 준비된 컨테이너를 게시한다. 아직 준비 중이면 null (다음 실행 때 다시)
@@ -198,7 +193,7 @@ function instagramPostGap(lastPublishedAt, now = new Date()) {
 
 function instagramPendingPath(now = new Date()) {
   const due = encodeURIComponent(now.toISOString());
-  return `release_queue?select=item_id,instagram_container_id,instagram_attempt_count` +
+  return `release_queue?select=item_id,release_order,instagram_container_id,instagram_attempt_count,instagram_experiment_version,instagram_cta_variant,instagram_hook_variant,instagram_slide_strategy,instagram_content_format,instagram_slide_count` +
     '&released_at=not.is.null' +
     '&instagram_media_id=is.null' +
     '&instagram_terminal_error=eq.false' +
@@ -229,8 +224,8 @@ async function postPendingToInstagram(token) {
   try {
     let containerId = row.instagram_container_id;
     if (!containerId) {
-      containerId = await createContainer(row.item_id, token);
-      if (!containerId) {
+      const created = await createContainer(row.item_id, token, row.release_order);
+      if (!created) {
         await call('PATCH', `release_queue?item_id=eq.${row.item_id}`, {
           instagram_error: 'no photos',
           instagram_terminal_error: true,
@@ -238,8 +233,17 @@ async function postPendingToInstagram(token) {
         });
         return { skipped: 'no photos', terminal: true, itemId: row.item_id };
       }
-      if (containerId === 'PENDING') return { pending: row.item_id };
-      await call('PATCH', `release_queue?item_id=eq.${row.item_id}`, { instagram_container_id: containerId });
+      if (created === 'PENDING') return { pending: row.item_id };
+      containerId = created.id;
+      await call('PATCH', `release_queue?item_id=eq.${row.item_id}`, {
+        instagram_container_id: containerId,
+        instagram_experiment_version: created.experiment.version,
+        instagram_cta_variant: created.experiment.ctaVariant,
+        instagram_hook_variant: created.experiment.hookVariant,
+        instagram_slide_strategy: created.experiment.slideStrategy,
+        instagram_content_format: created.experiment.contentFormat,
+        instagram_slide_count: created.experiment.slideCount,
+      });
     }
     const mediaId = await publishContainer(containerId, token);
     if (!mediaId) return { pending: row.item_id };

@@ -12,7 +12,8 @@
   - `sweep-orphan-images`: 매주(`@weekly`) 쓰지 않는 사진 정리
   - `release-queued-recipes`: 매일 11:30·18:30(한국 시간) `release_queue` 맨 앞의 비공개 레시피 하나를 공개 (공개 시각을 작성 시각으로). 이어서 인스타그램 @spoonie.kitchen에 그 레시피 사진(최대 10장)과 캡션을 확인 없이 게시.
   - `retry-instagram-posts`: 13:00·15:00·20:00·22:00(한국 시간) 공개는 건드리지 않고 실패한 인스타그램 게시만 재시도한다. 알 수 없는/일시 오류는 15분→1시간→6시간→24시간 간격으로 최대 5회 재시도한다. 성공 게시 사이에는 최소 3시간 간격을 두고 실행당 최대 1건만 게시해 backlog가 연속 노출되지 않게 한다. 인증·권한 오류와 `media_publish` 전송 결과가 불명확한 경우는 중복 게시 방지를 위해 terminal 상태로 남겨 수동 확인한다. 상태는 `instagram_media_id`, `instagram_error`, `instagram_attempt_count`, `instagram_next_retry_at`, `instagram_terminal_error`에 기록한다.
-  - `collect-instagram-insights`: 매시 10분에 Instagram 게시 성과를 확인한다. 실제 게시 후 24~30시간, 72~78시간 구간에서만 `reach/likes/comments/saved/shares/total_interactions`를 한 번씩 저장하며 당시 팔로워 수와 실제 관측 나이(분)도 함께 남긴다. 구간을 놓친 경우 늦은 누적값을 24h/72h처럼 저장하지 않고 `missed`로 표시한다.
+  - `collect-instagram-insights`: 매시 10분에 Instagram 게시 성과를 확인한다. 실제 게시 후 24~30시간, 72~78시간 구간에서만 `reach/likes/comments/saved/shares/total_interactions/profile_activity/profile_visits/follows`를 한 번씩 저장하며 당시 팔로워 수와 실제 관측 나이(분)도 함께 남긴다. 구간을 놓친 경우 늦은 누적값을 24h/72h처럼 저장하지 않고 `missed`로 표시한다.
+  - 새 Instagram 게시물은 `cta_v1` 실험으로 기록한다. release order 짝수는 `save`, 홀수는 `site` CTA를 사용한다. hook은 `recipe_title_v1`, slide 전략은 `hero_gallery_steps_v1`로 고정해 첫 실험에서는 CTA만 바꾼다. 기존 게시물은 `baseline_v0/site`로 구분한다.
 - `/api/*`는 Next.js가 처리한다 (리다이렉트를 두지 않는다).
 - 보안 헤더(CSP 포함)도 `netlify.toml`에 있다. 외부 스크립트·수집 주소를 늘리면 여기 `script-src`·`connect-src`도 같이 늘린다.
 

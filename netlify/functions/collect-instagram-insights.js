@@ -3,7 +3,7 @@ const { _call: call, _ig: ig, _instagramToken: instagramToken } = require('./rel
 
 const CHECKPOINTS = [24, 72];
 const WINDOW_MS = 6 * 60 * 60 * 1000;
-const METRICS = ['reach', 'likes', 'comments', 'saved', 'shares', 'total_interactions'];
+const METRICS = ['reach', 'likes', 'comments', 'saved', 'shares', 'total_interactions', 'profile_activity', 'profile_visits', 'follows'];
 
 function checkpointState(publishedAt, status24, status72, now = new Date()) {
   const publishedMs = new Date(publishedAt).getTime();

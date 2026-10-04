@@ -66,6 +66,9 @@ create table if not exists public.instagram_media_insights (
   saved integer not null default 0,
   shares integer not null default 0,
   total_interactions integer not null default 0,
+  profile_activity integer,
+  profile_visits integer,
+  follows integer,
   primary key (instagram_media_id, checkpoint_hours)
 );
 
@@ -73,3 +76,30 @@ create index if not exists instagram_media_insights_item_idx
   on public.instagram_media_insights (item_id, checkpoint_hours);
 
 alter table public.instagram_media_insights enable row level security;
+
+
+-- Growth OS Phase 2: 각 Instagram 게시의 실험 조건을 게시 레코드에 고정한다.
+alter table public.release_queue
+  add column if not exists instagram_experiment_version text,
+  add column if not exists instagram_cta_variant text
+    check (instagram_cta_variant is null or instagram_cta_variant in ('site', 'save')),
+  add column if not exists instagram_hook_variant text,
+  add column if not exists instagram_slide_strategy text,
+  add column if not exists instagram_content_format text
+    check (instagram_content_format is null or instagram_content_format in ('single', 'carousel')),
+  add column if not exists instagram_slide_count smallint
+    check (instagram_slide_count is null or instagram_slide_count between 1 and 10);
+
+update public.release_queue
+set instagram_experiment_version = 'baseline_v0',
+    instagram_cta_variant = 'site',
+    instagram_hook_variant = 'recipe_title_v0',
+    instagram_slide_strategy = 'hero_gallery_steps_v0'
+where instagram_media_id is not null
+  and instagram_experiment_version is null;
+
+
+alter table public.instagram_media_insights
+  add column if not exists profile_activity integer,
+  add column if not exists profile_visits integer,
+  add column if not exists follows integer;

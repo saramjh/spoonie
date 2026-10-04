@@ -47,6 +47,8 @@ describe("Instagram insight metrics", () => {
         { name: "reach", values: [{ value: 51 }] },
         { name: "likes", values: [{ value: 2 }] },
         { name: "total_interactions", total_value: { value: 3 } },
+        { name: "profile_visits", values: [{ value: 4 }] },
+        { name: "follows", values: [{ value: 1 }] },
       ])
     ).toEqual({
       reach: 51,
@@ -55,6 +57,9 @@ describe("Instagram insight metrics", () => {
       saved: 0,
       shares: 0,
       total_interactions: 3,
+      profile_activity: 0,
+      profile_visits: 4,
+      follows: 1,
     })
   })
 })

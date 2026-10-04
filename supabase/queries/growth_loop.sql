@@ -68,3 +68,51 @@ where type in ('follow', 'unfollow', 'share', 'related_open', 'recipeed_start')
   and created_at > now() - interval '30 days'
 group by type, origin
 order by type, events desc;
+
+
+-- 6) Instagram CTA 실험: 같은 checkpoint에서 variant별 평균 성과 비교.
+-- 표본이 적을 때는 결론을 내리지 않고 raw count와 관측 수를 함께 본다.
+select
+  rq.instagram_experiment_version,
+  rq.instagram_cta_variant,
+  s.checkpoint_hours,
+  count(*) as observations,
+  round(avg(s.reach)::numeric, 1) as avg_reach,
+  round(avg(s.saved)::numeric, 1) as avg_saved,
+  round(avg(s.shares)::numeric, 1) as avg_shares,
+  round(avg(s.profile_visits)::numeric, 1) as avg_profile_visits,
+  round(avg(s.follows)::numeric, 1) as avg_follows,
+  round(avg(s.total_interactions)::numeric, 1) as avg_total_interactions
+from instagram_media_insights s
+join release_queue rq
+  on rq.instagram_media_id = s.instagram_media_id
+where rq.instagram_experiment_version is not null
+group by rq.instagram_experiment_version, rq.instagram_cta_variant, s.checkpoint_hours
+order by s.checkpoint_hours, rq.instagram_experiment_version, rq.instagram_cta_variant;
+
+-- 7) 개별 Instagram 게시물의 실험 조건과 24h/72h 결과.
+select
+  rq.release_order,
+  i.title,
+  rq.instagram_experiment_version,
+  rq.instagram_cta_variant,
+  rq.instagram_hook_variant,
+  rq.instagram_slide_strategy,
+  rq.instagram_content_format,
+  rq.instagram_slide_count,
+  s.checkpoint_hours,
+  s.observed_age_minutes,
+  s.account_followers,
+  s.reach,
+  s.saved,
+  s.shares,
+  s.profile_activity,
+  s.profile_visits,
+  s.follows,
+  s.total_interactions
+from instagram_media_insights s
+join release_queue rq
+  on rq.instagram_media_id = s.instagram_media_id
+join items i
+  on i.id = rq.item_id
+order by rq.release_order, s.checkpoint_hours;

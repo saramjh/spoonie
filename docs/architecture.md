@@ -113,3 +113,8 @@ src/
 ## Growth measurement operations
 
 Instagram promotion is measured outside the user-facing event stream. `release_queue` owns publication/retry/checkpoint state, while server-only `instagram_media_insights` stores one immutable 24h and 72h performance snapshot per published media. The collector records the actual observation age and marks missed windows instead of backfilling late cumulative metrics as if they were on-time measurements. This data is measurement input only; it does not affect feed ranking.
+
+
+### Instagram Content Compiler
+
+Instagram publishing uses `netlify/functions/instagram-content.js` as the single owner for caption assembly, hashtag normalization, slide ordering, and experiment assignment. The first controlled experiment is `cta_v1`: release-order parity deterministically assigns either `save` or `site`, while the hook (`recipe_title_v1`) and slide strategy (`hero_gallery_steps_v1`) remain fixed. This keeps retries stable and changes only one experimental variable at a time. The compiler only uses stored Recipe fields and never invents taste, health, popularity, or testimonial claims.
