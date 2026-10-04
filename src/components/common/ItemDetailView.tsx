@@ -14,6 +14,7 @@ import FollowButton from "@/components/items/FollowButton"
 import CommentsSection from "@/components/items/CommentsSection"
 import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
 import ImageCarousel from "@/components/common/ImageCarousel"
+import { publicContentTitle } from "@/features/discovery/domain/search-exposure"
 import RecipeContentView from "@/features/recipe/components/RecipeContentView"
 import { RecipeActivity } from "@/features/recipe/components/RecipeActivity"
 import RecipeCard from "@/features/recipe/components/RecipeCard"
@@ -500,8 +501,9 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 							<div className="relative overflow-hidden rounded-t-[3px]">
 								<ImageCarousel
 									images={orderedImages}
-									alt={isRecipe ? item.title || "레시피 사진" : `${authorName}님의 레시피드 사진`}
+									alt={isRecipe ? item.title || "레시피 사진" : `${publicContentTitle(item)} — ${authorName}님의 레시피드 사진`}
 									frame={isRecipe ? "recipe" : "recipeed"}
+									discoverAll
 									priority
 									onDoubleClick={handleDoubleTapLike}
 								/>

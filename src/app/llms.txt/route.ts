@@ -4,7 +4,8 @@
  */
 
 import { createSupabasePublicClient } from "@/shared/infra/supabase-public"
-import { isSearchIndexableRecipeed, isSearchIndexableTopic } from "@/features/discovery/domain/search-exposure"
+import { isSearchIndexableRecipeed, isSearchIndexableTopic, isTopicContributingRecipeed } from "@/features/discovery/domain/search-exposure"
+import { fetchAllPublicDiscoveryItems } from "@/features/discovery/data/public-assets"
 import { normalizeTags, topicHref } from "@/shared/lib/topics"
 
 export const revalidate = 3600
@@ -34,8 +35,10 @@ export async function GET() {
 		// 공개 목록 조회가 실패해도 서비스 설명은 제공한다.
 	}
 
+	const allPublicItems = await fetchAllPublicDiscoveryItems().catch(() => [])
+	const topicAssets = allPublicItems.filter((item) => item.item_type === "recipe" || isTopicContributingRecipeed(item))
 	const topicStats = new Map<string, { count: number; authors: Set<string> }>()
-	for (const item of [...recipes, ...posts]) {
+	for (const item of topicAssets) {
 		for (const tag of normalizeTags(item.tags)) {
 			const stats = topicStats.get(tag) ?? { count: 0, authors: new Set<string>() }
 			stats.count += 1
@@ -55,7 +58,7 @@ export async function GET() {
 		"",
 		"레시피는 재료·분량·조리 단계·사진을 갖춘 구조화된 요리법이며 schema.org Recipe로 표시한다.",
 		"레시피드는 사진과 글 중심의 음식·요리·주방·식생활 기록이다. 특정 레시피를 참고해 만들 수도 있지만, 일반적인 요리 일상·후기·도구·재료 경험처럼 독립적인 이야기일 수도 있다.",
-		"공개 레시피드 중 검색자가 독립적으로 읽을 정보와 주제 맥락이 충분한 글은 SocialMediaPosting으로 검색에 노출하고, 짧은 소셜 업데이트는 공개 상태를 유지하되 검색 색인에서는 제외한다. 이 구분은 게시물마다 수동 설정하지 않고 같은 자동 정책으로 판정한다.",
+		"정상적인 공개 레시피드는 길이·사진 장수로 선별하지 않고 검색 후보로 둔다. 빈 글·테스트 placeholder·반복/링크 스팸처럼 명백한 제외 사유만 공통 자동 정책으로 걸러낸다.",
 		"레시피와 레시피드는 태그 주제 페이지에서 함께 연결되며, 참고 레시피 관계가 있는 경우에는 그 관계도 별도로 표시한다.",
 		"",
 		"## 주요 페이지",
@@ -64,7 +67,7 @@ export async function GET() {
 		`- [검색](${baseUrl}/search): 레시피·레시피드·사용자 검색`,
 		`- [사이트맵](${baseUrl}/sitemap.xml): 검색에 노출할 레시피, 레시피드, 주제, 작성자 프로필`,
 		"",
-		`## 레시피 (최근 공개 ${recipes.length}개)`,
+		`## 레시피 (최근 공개 최대 ${MAX_PER_TYPE}개 중 ${recipes.length}개)`,
 		"",
 		...recipes.map((r) => {
 			const meta = [r.servings ? `${r.servings}인분` : "", r.cooking_time_minutes ? `${r.cooking_time_minutes}분` : ""].filter(Boolean).join(", ")
@@ -72,7 +75,7 @@ export async function GET() {
 			return `- [${oneLine(r.title, 60) || "레시피"}](${baseUrl}/recipes/${r.id})${meta ? ` (${meta})` : ""}${summary ? `: ${summary}` : ""}`
 		}),
 		"",
-		`## 레시피드 (검색 노출 정책을 통과한 최근 공개 ${posts.length}개)`,
+		`## 레시피드 (정상 공개 자산 중 최근 최대 ${MAX_PER_TYPE}개, 현재 ${posts.length}개)`,
 		"",
 		...posts.map((p) => `- [${oneLine(p.title, 60) || oneLine(p.content, 40) || "레시피드"}](${baseUrl}/posts/${p.id})${p.content ? `: ${oneLine(p.content)}` : ""}`),
 		"",

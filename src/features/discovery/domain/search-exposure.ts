@@ -26,7 +26,7 @@ const LOW_INFORMATION_TOPIC_TAGS = new Set([
 	"저녁",
 ])
 
-function plainText(value: string | null | undefined): string {
+export function publicContentText(value: string | null | undefined): string {
 	return (value || "")
 		.replace(/<[^>]*>/g, " ")
 		.replace(/https?:\/\/\S+/gi, " ")
@@ -35,14 +35,12 @@ function plainText(value: string | null | undefined): string {
 }
 
 function plainTextLength(value: string | null | undefined): number {
-	return plainText(value).length
+	return publicContentText(value).length
 }
 
 function looksLowInformation(value: string | null | undefined): boolean {
-	const text = plainText(value)
+	const text = publicContentText(value)
 	if (!text) return true
-	const meaningful = text.toLocaleLowerCase("ko-KR").replace(/[^0-9a-z가-힣]/gi, "")
-	if (meaningful.length >= 20 && new Set(meaningful).size < 8) return true
 	const tokens = text.toLocaleLowerCase("ko-KR").split(/\s+/).filter((token) => token.length >= 2)
 	if (tokens.length >= 6) {
 		const counts = new Map<string, number>()
@@ -59,11 +57,25 @@ function hasLinkSpamPattern(value: string | null | undefined): boolean {
 	return links >= 3 && plainTextLength(raw) < 120
 }
 
-/**
- * 공개 레시피드를 검색 랜딩으로 보낼지 정하는 자동 정책.
- * 인기(좋아요·팔로워)는 쓰지 않는다. 글 자체의 정보량과 주제 신호만 사용한다.
- */
+const PLACEHOLDER_TEXT = /^(?:test(?:ing)?|테스트|임시|asdf|ㅇㅇ|ㅋㅋ|ㅎㅎ|1234)(?:\s*\d+)?[.!?\s]*$/i
+
+/** 정상 공개 활동의 최소 조건. 길이·제목·태그·사진 장수·인용은 필수가 아니다. */
+export function isNormalPublicRecipeed(item: RecipeedSearchSignals): boolean {
+	const texts = [item.title, item.content].map(publicContentText).filter(Boolean)
+	if (!texts.length && !item.image_urls?.some((url) => url.trim())) return false
+	if (texts.length && texts.every((text) => PLACEHOLDER_TEXT.test(text))) return false
+	if (hasLinkSpamPattern(item.content) || hasLinkSpamPattern(item.title)) return false
+	if (texts.some((text) => text.length >= 20 && looksLowInformation(text))) return false
+	return true
+}
+
 export function isSearchIndexableRecipeed(item: RecipeedSearchSignals): boolean {
+	return isNormalPublicRecipeed(item)
+}
+
+/** 색인 가능한 단일 글과, 주제 묶음에 정보를 보태는 글은 별도로 판정한다. */
+export function isTopicContributingRecipeed(item: RecipeedSearchSignals): boolean {
+	if (!isNormalPublicRecipeed(item)) return false
 	const titleLength = plainTextLength(item.title)
 	const contentLength = plainTextLength(item.content)
 	const tagCount = normalizeTags(item.tags).length
@@ -109,4 +121,25 @@ export function isSearchIndexableTopic(signals: TopicSearchSignals): boolean {
 
 export function hasSearchIndexableProfileContent(publicRecipeCount: number, searchableRecipeedCount: number): boolean {
 	return publicRecipeCount > 0 || searchableRecipeedCount > 0
+}
+
+export interface PublicAuthorSignals {
+	public_id?: string | null
+	display_name?: string | null
+	username?: string | null
+	is_profile_public?: boolean | null
+}
+
+/** 식별 가능한 작성자의 실제 공개 활동. 실명·소개·아바타·팔로워 수는 요구하지 않는다. */
+export function isSearchIndexableProfile(profile: PublicAuthorSignals, publicRecipeCount: number, normalPublicPostCount: number): boolean {
+	return profile.is_profile_public !== false
+		&& Boolean(profile.public_id?.trim() && (profile.display_name?.trim() || profile.username?.trim()))
+		&& hasSearchIndexableProfileContent(publicRecipeCount, normalPublicPostCount)
+}
+
+export function publicContentTitle(item: RecipeedSearchSignals, fallback = "레시피드"): string {
+	const text = publicContentText(item.title) || publicContentText(item.content)
+	if (text) return text.slice(0, 60)
+	const tag = normalizeTags(item.tags)[0]
+	return tag ? `${tag} 레시피드` : fallback
 }

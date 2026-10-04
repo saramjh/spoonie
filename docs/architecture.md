@@ -42,6 +42,8 @@ src/
 - 브라우저 Supabase 클라이언트는 `shared/infra/supabase-client.ts` 하나다. @supabase/ssr이 브라우저에서 쿠키 저장·PKCE·토큰 갱신을 늘 자기 값으로 정하고, 클라이언트 하나를 모든 화면이 함께 쓴다.
 - 레시피 저장은 `save_recipe_atomic` RPC 하나로 `items`·`ingredients`·`instructions`를 같은 DB 트랜잭션에서 처리한다. 일반 사용자 호출은 SECURITY INVOKER로 기존 RLS를 그대로 따르고, service-role 운영 importer도 같은 함수의 제한된 ingest 경로를 쓴다. 자식 행 저장이 실패하면 본체 변경도 rollback된다.
 - 새 이미지 게시 전 원본과 400/800px responsive variant를 모두 만든다. variant는 최대 3번 재시도하고 끝내 실패하면 해당 원본/부분 variant를 지운 뒤 게시를 실패시켜 불완전 이미지 자산을 남기지 않는다.
+- 홈 피드 캐러셀은 초기 대역폭을 위해 첫 사진만 마운트하지만, 상세 페이지는 모든 사진을 초기 HTML에 두고 lazy-load한다. sitemap은 적격 콘텐츠의 실제 이미지 URL(Recipe 단계 사진 포함)을 image sitemap으로 함께 제공한다.
+- 공개 검색 인벤토리는 `features/discovery/data/public-assets.ts`가 500개 단위로 끝까지 읽는다. 원본 Recipeed index, Topic 기여, Profile index 판정은 `features/discovery/domain/search-exposure.ts`에서 분리한다.
 
 ## 데이터 (Supabase)
 

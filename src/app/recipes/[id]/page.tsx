@@ -59,9 +59,10 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
     const profileData = Array.isArray(recipe.profiles) ? recipe.profiles[0] : recipe.profiles
     const authorName = profileData?.username || '익명'
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'
     // 공유 이미지: 작성자가 고른 대표 사진. 사진이 없으면 1200×630 기본 이미지
     const coverUrl = recipe.image_urls?.[recipe.thumbnail_index ?? 0] || recipe.image_urls?.[0]
-    const imageUrl = coverUrl || `${process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'}/og-default.png`
+    const imageUrl = coverUrl || `${baseUrl}/og-default.png`
     // 검색 결과 설명: 작성자의 소개 다음에 인분·조리 시간·재료 (레시피라는 정보가 한 줄에 보이게)
     const ingredientNames = [...(recipe.ingredients || [])].sort((a, b) => a.order_index - b.order_index).map((i) => i.name)
     const cookingTime = formatCookingTime(recipe.cooking_time_minutes)
@@ -129,7 +130,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       
       // 정규 URL 설정
       alternates: {
-        canonical: `${process.env.NEXT_PUBLIC_APP_URL}/recipes/${params.id}`,
+        canonical: `${baseUrl}/recipes/${params.id}`,
       },
       
       // 구조화 데이터 힌트

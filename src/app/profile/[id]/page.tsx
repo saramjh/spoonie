@@ -16,7 +16,8 @@ import { notFound } from 'next/navigation'
 import ProfilePageClient from './ProfilePageClient'
 import { fetchUserItems, fetchFollowCounts, PUBLIC_PROFILE_COLUMNS, type UserProfile } from '@/features/profile/data/profile-repository'
 import BreadcrumbSchema, { createBreadcrumbs } from '@/components/ai-search-optimization/BreadcrumbSchema'
-import { hasSearchIndexableProfileContent, isSearchIndexableRecipeed } from '@/features/discovery/domain/search-exposure'
+import { isNormalPublicRecipeed, isSearchIndexableProfile } from '@/features/discovery/domain/search-exposure'
+import { fetchAllPublicDiscoveryItems } from '@/features/discovery/data/public-assets'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -38,6 +39,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         username,
         avatar_url,
         profile_message,
+        is_profile_public,
         created_at
       `)
       .eq('public_id', params.id)
@@ -52,29 +54,26 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       }
     }
 
-    // 프로필은 레시피 또는 검색 가치가 있는 레시피드가 하나라도 있을 때 검색 자산이 된다.
-    // 레시피드는 수동 플래그가 아니라 전 사이트 공통 자동 정책으로 판정한다.
-    const [recipeCountResult, postCountResult, postsResult] = await Promise.all([
-      supabase.from('items').select('id', { count: 'exact', head: true }).eq('user_id', profile.id).eq('item_type', 'recipe').eq('is_public', true),
-      supabase.from('items').select('id', { count: 'exact', head: true }).eq('user_id', profile.id).eq('item_type', 'post').eq('is_public', true),
-      supabase.from('items').select('title, content, tags, image_urls, cited_recipe_ids').eq('user_id', profile.id).eq('item_type', 'post').eq('is_public', true).limit(1000),
-    ])
-    const publicRecipes = recipeCountResult.count ?? 0
-    const publicPosts = postCountResult.count ?? 0
-    const searchablePosts = (postsResult.data ?? []).filter(isSearchIndexableRecipeed).length
-    const hasSearchContent = hasSearchIndexableProfileContent(publicRecipes, searchablePosts)
+    // Profile 자체의 identity + 정상 공개 활동을 판정한다.
+    // Recipeed의 index boolean을 그대로 승계하지 않아 두 정책이 독립적으로 조정될 수 있다.
+    const publicItems = await fetchAllPublicDiscoveryItems({ userId: profile.id }, supabase)
+    const publicRecipes = publicItems.filter((item) => item.item_type === 'recipe').length
+    const publicPosts = publicItems.filter((item) => item.item_type === 'post')
+    const normalPublicPosts = publicPosts.filter(isNormalPublicRecipeed).length
+    const hasSearchContent = isSearchIndexableProfile(profile, publicRecipes, normalPublicPosts)
 
     // 표시 이름이 있으면 그것을 (공식 계정 "Spoonie 주방"), 없으면 사용자 이름
     const displayName = profile.display_name || profile.username || '익명'
-    const profileImageUrl = profile.avatar_url || `${process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'}/og-default.png`
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'
+    const profileImageUrl = profile.avatar_url || `${baseUrl}/og-default.png`
     
     // 프로필 설명 생성 (profile_message 우선, 없으면 통계 기반)
     let profileDescription = ''
     const intro = profile.profile_message
     if (intro) {
-      profileDescription = `${intro.replace(/\n/g, ' ').slice(0, 120)} — 공개 레시피 ${publicRecipes}개 · 레시피드 ${publicPosts}개`
+      profileDescription = `${intro.replace(/\n/g, ' ').slice(0, 120)} — 공개 레시피 ${publicRecipes}개 · 레시피드 ${publicPosts.length}개`
     } else {
-      profileDescription = `${displayName}님이 Spoonie에 올린 공개 레시피 ${publicRecipes}개와 레시피드 ${publicPosts}개. 요리법과 음식·주방의 경험 기록을 볼 수 있어요.`
+      profileDescription = `${displayName}님이 Spoonie에 올린 공개 레시피 ${publicRecipes}개와 레시피드 ${publicPosts.length}개. 요리법과 음식·주방의 경험 기록을 볼 수 있어요.`
     }
     
     // SEO 최적화된 제목 생성  
@@ -127,7 +126,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       
       // 정규 URL 설정
       alternates: {
-        canonical: `${process.env.NEXT_PUBLIC_APP_URL}/profile/${params.id}`,
+        canonical: `${baseUrl}/profile/${params.id}`,
       },
       
       // 추가 프로필 정보

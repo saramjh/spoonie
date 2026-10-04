@@ -2,7 +2,8 @@ import { cache } from "react"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { createSupabasePublicClient } from "@/shared/infra/supabase-public"
-import { isSearchIndexableRecipeed, isSearchIndexableTopic } from "@/features/discovery/domain/search-exposure"
+import { fetchAllPublicDiscoveryItems, type PublicDiscoveryItem } from "@/features/discovery/data/public-assets"
+import { isSearchIndexableTopic, isTopicContributingRecipeed } from "@/features/discovery/domain/search-exposure"
 import { normalizeTopicTag, topicHref } from "@/shared/lib/topics"
 import { serializeJsonLd } from "@/shared/lib/json-ld"
 import { IntentLink, PageHeader, Photo, RelativeTime, SectionHeading, Sheet } from "@/components/kit"
@@ -22,6 +23,8 @@ type TopicRow = {
 	profiles: { public_id: string | null; display_name: string | null; username: string | null } | { public_id: string | null; display_name: string | null; username: string | null }[] | null
 }
 
+const PAGE_SIZE = 50
+
 function routeTag(value: string): string {
 	try {
 		return normalizeTopicTag(decodeURIComponent(value))
@@ -30,22 +33,38 @@ function routeTag(value: string): string {
 	}
 }
 
-const loadTopic = cache(async (tag: string) => {
+function pageNumber(value: string | string[] | undefined): number {
+	const raw = Array.isArray(value) ? value[0] : value
+	const parsed = Number.parseInt(raw || "1", 10)
+	return Number.isFinite(parsed) && parsed > 0 ? parsed : 1
+}
+
+const loadTopicAssets = cache(async (tag: string): Promise<PublicDiscoveryItem[]> => {
+	if (!tag) return []
+	return fetchAllPublicDiscoveryItems({ tag })
+})
+
+const loadTopicPage = cache(async (tag: string, page: number) => {
 	if (!tag) return [] as TopicRow[]
+	const from = (page - 1) * PAGE_SIZE
 	const { data, error } = await createSupabasePublicClient()
 		.from("items")
 		.select("id, user_id, item_type, title, description, content, image_urls, thumbnail_index, tags, cited_recipe_ids, created_at, profiles!user_id(public_id, display_name, username)")
 		.eq("is_public", true)
 		.contains("tags", [tag])
 		.order("created_at", { ascending: false })
-		.limit(100)
+		.range(from, from + PAGE_SIZE - 1)
 	if (error) throw error
 	return (data ?? []) as unknown as TopicRow[]
 })
 
-function topicSearchSignals(tag: string, items: TopicRow[]) {
-	const assets = items.filter((item) => item.item_type === "recipe" || isSearchIndexableRecipeed(item))
-	return { tag, searchAssetCount: assets.length, distinctAuthorCount: new Set(assets.map((item) => item.user_id)).size }
+function topicSearchSignals(tag: string, items: PublicDiscoveryItem[]) {
+	const assets = items.filter((item) => item.item_type === "recipe" || isTopicContributingRecipeed(item))
+	return {
+		tag,
+		searchAssetCount: assets.length,
+		distinctAuthorCount: new Set(assets.map((item) => item.user_id)).size,
+	}
 }
 
 function authorName(item: TopicRow): string {
@@ -61,19 +80,26 @@ function itemTitle(item: TopicRow): string {
 
 export const revalidate = 600
 
-export async function generateMetadata({ params }: { params: Promise<{ tag: string }> }): Promise<Metadata> {
+type TopicProps = {
+	params: Promise<{ tag: string }>
+	searchParams?: Promise<{ page?: string | string[] }>
+}
+
+export async function generateMetadata({ params, searchParams }: TopicProps): Promise<Metadata> {
 	const { tag: rawTag } = await params
 	const tag = routeTag(rawTag)
+	const page = pageNumber((await searchParams)?.page)
 	if (!tag) return { title: "주제 - Spoonie", robots: { index: false, follow: true } }
+
 	try {
-		const items = await loadTopic(tag)
+		const items = await loadTopicAssets(tag)
 		const recipes = items.filter((item) => item.item_type === "recipe").length
 		const posts = items.length - recipes
-		const indexable = isSearchIndexableTopic(topicSearchSignals(tag, items))
+		const indexable = page === 1 && isSearchIndexableTopic(topicSearchSignals(tag, items))
 		const description = `${tag}에 관한 공개 레시피 ${recipes}개와 레시피드 ${posts}개를 함께 봅니다. 요리법과 실제 음식·주방 경험을 한 주제에서 연결합니다.`
 		const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
 		return {
-			title: `${tag} 요리·레시피 이야기 - Spoonie`,
+			title: page === 1 ? `${tag} 요리·레시피 이야기 - Spoonie` : `${tag} 요리·레시피 이야기 ${page}페이지 - Spoonie`,
 			description,
 			alternates: { canonical: `${baseUrl}${topicHref(tag)}` },
 			robots: indexable
@@ -113,14 +139,20 @@ function TopicRows({ items }: { items: TopicRow[] }) {
 	)
 }
 
-export default async function TopicPage({ params }: { params: Promise<{ tag: string }> }) {
+export default async function TopicPage({ params, searchParams }: TopicProps) {
 	const { tag: rawTag } = await params
 	const tag = routeTag(rawTag)
+	const page = pageNumber((await searchParams)?.page)
 	if (!tag) notFound()
-	const items = await loadTopic(tag)
-	if (items.length === 0) notFound()
+
+	const [allItems, items] = await Promise.all([loadTopicAssets(tag), loadTopicPage(tag, page)])
+	if (allItems.length === 0 || (page > 1 && items.length === 0)) notFound()
+
 	const recipes = items.filter((item) => item.item_type === "recipe")
 	const posts = items.filter((item) => item.item_type === "post")
+	const totalRecipes = allItems.filter((item) => item.item_type === "recipe").length
+	const totalPosts = allItems.length - totalRecipes
+	const totalPages = Math.max(1, Math.ceil(allItems.length / PAGE_SIZE))
 	const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
 	const schema = {
 		"@context": "https://schema.org",
@@ -130,9 +162,9 @@ export default async function TopicPage({ params }: { params: Promise<{ tag: str
 		about: { "@type": "Thing", name: tag },
 		mainEntity: {
 			"@type": "ItemList",
-			itemListElement: items.slice(0, 50).map((item, index) => ({
+			itemListElement: items.map((item, index) => ({
 				"@type": "ListItem",
-				position: index + 1,
+				position: (page - 1) * PAGE_SIZE + index + 1,
 				url: `${baseUrl}/${item.item_type === "recipe" ? "recipes" : "posts"}/${item.id}`,
 				name: itemTitle(item),
 			})),
@@ -147,8 +179,15 @@ export default async function TopicPage({ params }: { params: Promise<{ tag: str
 					<p className="text-body text-ink">#{tag}에 관한 레시피와 레시피드를 함께 모았습니다.</p>
 					<p className="mt-1 text-meta text-ink-soft">레시피는 만드는 방법을, 레시피드는 음식·주방·요리 일상의 실제 기록을 보여 줍니다.</p>
 				</Sheet>
-				{recipes.length > 0 && <Sheet pad="md"><SectionHeading count={recipes.length}>레시피</SectionHeading><TopicRows items={recipes} /></Sheet>}
-				{posts.length > 0 && <Sheet pad="md"><SectionHeading count={posts.length}>레시피드</SectionHeading><TopicRows items={posts} /></Sheet>}
+				{recipes.length > 0 && <Sheet pad="md"><SectionHeading count={totalRecipes}>레시피</SectionHeading><TopicRows items={recipes} /></Sheet>}
+				{posts.length > 0 && <Sheet pad="md"><SectionHeading count={totalPosts}>레시피드</SectionHeading><TopicRows items={posts} /></Sheet>}
+				{totalPages > 1 && (
+					<nav className="flex min-h-11 items-center justify-between px-1 text-label" aria-label="주제 페이지 이동">
+						{page > 1 ? <IntentLink href={page === 2 ? topicHref(tag) : `${topicHref(tag)}?page=${page - 1}`}>이전</IntentLink> : <span />}
+						<span className="text-meta text-ink-soft">{page}/{totalPages}</span>
+						{page < totalPages ? <IntentLink href={`${topicHref(tag)}?page=${page + 1}`}>다음</IntentLink> : <span />}
+					</nav>
+				)}
 			</main>
 			<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(schema) }} />
 		</>

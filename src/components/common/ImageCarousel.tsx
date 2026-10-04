@@ -10,6 +10,8 @@ interface ImageCarouselProps {
   images: string[]
   alt: string
   priority?: boolean
+  // 상세 페이지에서는 모든 사진을 초기 HTML에 남겨 검색엔진이 발견할 수 있게 한다.
+  discoverAll?: boolean
   // 더블탭 좋아요 지원
   onDoubleClick?: () => void
   onSingleClick?: () => void
@@ -21,6 +23,7 @@ export default function ImageCarousel({
   images, 
   alt, 
   priority = false, 
+  discoverAll = false,
   onDoubleClick, 
   onSingleClick,
   frame = "recipeed",
@@ -116,7 +119,7 @@ export default function ImageCarousel({
       <div className="flex">
         {images.map((src, index) => (
           <div className={cn("relative w-full flex-none bg-muted", frame === "recipe" ? "aspect-[4/3]" : "aspect-square")} key={index}>
-            {loadedIndexes.has(index) && (
+            {(discoverAll || loadedIndexes.has(index)) && (
               <Photo
                 src={src}
                 alt={`${alt} ${index + 1}`}

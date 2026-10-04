@@ -16,7 +16,7 @@ import { fetchItemDetail, ItemNotFoundError } from '@/features/feed/data/item-de
 import PostDetailClient from './PostDetailClient'
 import PostSchema from '@/components/ai-search-optimization/PostSchema'
 import BreadcrumbSchema, { createBreadcrumbs } from '@/components/ai-search-optimization/BreadcrumbSchema'
-import { isSearchIndexableRecipeed } from '@/features/discovery/domain/search-exposure'
+import { isSearchIndexableRecipeed, publicContentText, publicContentTitle } from '@/features/discovery/domain/search-exposure'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -58,34 +58,25 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
     const profileData = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles
     const indexable = isSearchIndexableRecipeed(post)
-    const authorName = profileData?.username || '익명'
+    const authorName = profileData?.display_name || profileData?.username || '사용자'
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'
+    const postTitle = publicContentTitle(post)
     // 공유 이미지: 작성자가 고른 대표 사진. 사진이 없으면 1200×630 기본 이미지
     const coverUrl = post.image_urls?.[post.thumbnail_index ?? 0] || post.image_urls?.[0]
-    const imageUrl = coverUrl || `${process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'}/og-default.png`
+    const imageUrl = coverUrl || `${baseUrl}/og-default.png`
     
-    // 설명 생성 (description 우선, 없으면 content에서 추출)
-    let cleanDescription = ''
-    if (post.description) {
-      cleanDescription = post.description.replace(/\n/g, ' ').slice(0, 160)
-    } else if (post.content) {
-      // content에서 텍스트만 추출하여 설명 생성
-      cleanDescription = post.content
-        .replace(/<[^>]*>/g, '') // HTML 태그 제거
-        .replace(/\n/g, ' ')     // 줄바꿈을 공백으로
-        .trim()
-        .slice(0, 160)
-    }
-    
-    if (!cleanDescription) {
-      cleanDescription = '요리와 관련된 흥미로운 이야기입니다.'
-    }
-    
-    // SEO 최적화된 제목 생성
-    const seoTitle = `${post.title} - ${authorName}님의 레시피드 | Spoonie`
+    const cleanDescription = (
+      publicContentText(post.description)
+      || publicContentText(post.content)
+      || (post.tags?.length ? `${post.tags.slice(0, 3).join(', ')}에 관한 사진·요리 기록` : '')
+      || 'Spoonie에 공개된 음식·요리 기록입니다.'
+    ).slice(0, 160)
+
+    const seoTitle = `${postTitle} - ${authorName}님의 레시피드 | Spoonie`
     
     // 추가 키워드 생성
     const keywords = [
-      post.title,
+      postTitle,
       ...(post.tags || []),
       '레시피드',
       '요리 이야기',
@@ -101,13 +92,13 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       
       // Open Graph 최적화 (소셜 공유)
       openGraph: {
-        title: `${post.title} - Spoonie`,
+        title: `${postTitle} - Spoonie`,
         description: cleanDescription,
         images: [{ 
           url: imageUrl,
           // 실제 사진 크기는 제각각이라, 크기를 아는 기본 이미지일 때만 적는다
           ...(coverUrl ? {} : { width: 1200, height: 630 }),
-          alt: `${post.title} - ${authorName}님의 레시피드`
+          alt: `${postTitle} - ${authorName}님의 레시피드`
         }],
         type: 'article',
         authors: [authorName],
@@ -132,7 +123,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       
       // 정규 URL 설정
       alternates: {
-        canonical: `${process.env.NEXT_PUBLIC_APP_URL}/posts/${params.id}`,
+        canonical: `${baseUrl}/posts/${params.id}`,
       },
       
       // Article Schema 힌트
