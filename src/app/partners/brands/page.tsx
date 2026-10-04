@@ -1,12 +1,14 @@
 import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowRight, BookOpen, CookingPot, GitBranch, Package, SearchCheck, Soup, UsersRound } from "lucide-react"
+import { BookOpen, CookingPot, GitBranch, Package, SearchCheck, Soup, UsersRound } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
+import PartnerActionLink from "../partner-action-link"
 import PartnerFlow from "../partner-flow"
+import PartnerInquiryForm from "../partner-inquiry-form"
+import PartnerProof from "../partner-proof"
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
-
 export const metadata: Metadata = {
   title: "주방·식품 브랜드 파트너 | Spoonie",
   description:
@@ -92,6 +94,8 @@ export default function BrandPartnersPage() {
           signals={brandSignals}
         />
 
+        <PartnerProof segment="brand" />
+
         <section className="border-t border-border px-4 py-6" aria-labelledby="brand-pilot">
           <div className="flex items-center gap-2">
             <CookingPot className="h-5 w-5 text-ink" aria-hidden />
@@ -121,18 +125,28 @@ export default function BrandPartnersPage() {
         </section>
 
         <section className="border-t border-border px-4 py-6">
-          <p className="text-heading text-ink">서비스를 먼저 확인해 보세요</p>
+          <p className="text-heading text-ink">제품 하나부터 파일럿을 논의할 수 있습니다</p>
           <p className="mt-2 text-meta text-ink-soft">
-            제안 메일을 받고 오셨다면 제품이나 파일럿 범위에 대한 질문은 해당 메일에 그대로 회신해 주세요.
+            제안 메일을 받고 오셨다면 그대로 회신하셔도 됩니다. 처음 방문하셨다면 아래에서 제품과 실제로 검증해보고
+            싶은 조리 맥락을 알려주세요.
           </p>
-          <div className="mt-5 grid gap-2">
-            <Link href="/" className={buttonVariants({ variant: "default", size: "lg" })}>
-              Spoonie 둘러보기 <ArrowRight aria-hidden />
-            </Link>
-            <Link href="/partners" className={buttonVariants({ variant: "outline", size: "lg" })}>
-              파트너 안내로 돌아가기
-            </Link>
+          <PartnerInquiryForm segment="brand" />
+          <div className="mt-5">
+            <PartnerActionLink
+              href="/"
+              segment="brand"
+              action="site_open"
+              className={buttonVariants({ variant: "outline", size: "lg", className: "w-full" })}
+            >
+              Spoonie 둘러보기
+            </PartnerActionLink>
           </div>
+          <p className="mt-4 text-center text-meta text-ink-soft">
+            다른 파트너 유형을 찾는다면{" "}
+            <PartnerActionLink href="/partners" segment="brand" action="hub_open" className="underline underline-offset-2">
+              파트너 안내
+            </PartnerActionLink>
+          </p>
         </section>
       </article>
     </div>

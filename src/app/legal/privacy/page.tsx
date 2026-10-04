@@ -11,7 +11,7 @@ export default function PrivacyPolicyPage() {
             홈으로
           </Link>
           <h1 className="text-title text-ink">개인정보처리방침</h1>
-          <p className="text-ink-soft">최종 업데이트: 2025년 8월 7일</p>
+          <p className="text-ink-soft">최종 업데이트: 2026년 10월 5일</p>
         </div>
 
         {/* 내용 */}
@@ -29,6 +29,7 @@ export default function PrivacyPolicyPage() {
                 <li>커뮤니티 기능 제공 (댓글, 좋아요, 팔로우)</li>
                 <li>서비스 개선 및 맞춤형 서비스 제공</li>
                 <li>고객 상담 및 불만 처리</li>
+                <li>파트너·제휴 문의 접수, 회신 및 후속 협의</li>
                 <li>서비스 이용 통계 분석</li>
               </ul>
             </section>
@@ -42,6 +43,16 @@ export default function PrivacyPolicyPage() {
                   <li>이메일 주소</li>
                   <li>닉네임</li>
                   <li>프로필 사진 (선택)</li>
+                </ul>
+              </div>
+
+              <div className="mb-4">
+                <h3 className="text-heading text-ink mb-2">파트너·제휴 문의 시 수집 항목</h3>
+                <ul className="list-disc pl-6 text-ink space-y-1">
+                  <li>이름 또는 활동명, 답변 받을 이메일</li>
+                  <li>소속·채널·브랜드 정보 (입력한 경우)</li>
+                  <li>프로필·제품 URL (입력한 경우)</li>
+                  <li>문의 내용</li>
                 </ul>
               </div>
 
@@ -72,6 +83,7 @@ export default function PrivacyPolicyPage() {
                 <li><strong>회원 정보:</strong> 회원 탈퇴 시까지</li>
                 <li><strong>사용자 생성 콘텐츠:</strong> 콘텐츠 삭제 요청 시까지</li>
                 <li><strong>접속 로그:</strong> 1년</li>
+                <li><strong>파트너·제휴 문의:</strong> 문의 처리 및 후속 협의 목적 달성 시까지</li>
                 <li><strong>법정 보존 의무 정보:</strong> 관련 법령에 따른 보존 기간</li>
               </ul>
             </section>

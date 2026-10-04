@@ -1,8 +1,10 @@
 import type { Metadata } from "next"
+import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight, CookingPot, Users } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import LegacyPartnerHashRedirect from "./legacy-hash-redirect"
+import PartnerActionLink from "./partner-action-link"
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
 
@@ -25,8 +27,11 @@ export default function PartnersPage() {
     <div className="min-h-screen bg-door px-3 py-4">
       <LegacyPartnerHashRedirect />
       <article className="mx-auto overflow-hidden rounded-[3px] bg-paper shadow-sm">
-        <section className="px-4 pb-6 pt-7">
-          <p className="text-meta text-ink-soft">Spoonie Partner Pilot</p>
+        <section className="px-4 pb-6 pt-6">
+          <Link href="/" className="inline-flex" aria-label="Spoonie 홈">
+            <Image src="/logo-full.svg" alt="Spoonie" width={100} height={32} priority />
+          </Link>
+          <p className="mt-5 text-meta text-ink-soft">Spoonie Partner Pilot</p>
           <h1 className="mt-2 text-display text-ink">어떤 파트너이신가요?</h1>
           <p className="mt-4 text-body text-ink-soft">
             같은 Recipe 그래프라도 크리에이터와 브랜드가 얻는 가치는 다릅니다. 해당하는 안내에서 현재 Spoonie로
@@ -43,12 +48,14 @@ export default function PartnersPage() {
             SNS의 요리 콘텐츠를 검색 가능한 Recipe로 남기고, 팬이 실제로 만들어 본 기록과 참고·파생 Recipe를
             원 콘텐츠에 이어 붙이는 구조를 검증합니다.
           </p>
-          <Link
+          <PartnerActionLink
             href="/partners/creators"
+            segment="hub"
+            action="creator_segment_open"
             className={buttonVariants({ variant: "default", size: "lg", className: "mt-5 w-full" })}
           >
             크리에이터 안내 보기 <ArrowRight aria-hidden />
-          </Link>
+          </PartnerActionLink>
         </section>
 
         <section id="brands" className="scroll-mt-16 border-t border-border px-4 py-6">
@@ -60,12 +67,14 @@ export default function PartnersPage() {
             제품 노출 한 번으로 끝내지 않고, 제품이 실제로 쓰인 Recipe와 크리에이터·사용자의 조리 경험이 이어지는
             파일럿을 검증합니다.
           </p>
-          <Link
+          <PartnerActionLink
             href="/partners/brands"
+            segment="hub"
+            action="brand_segment_open"
             className={buttonVariants({ variant: "default", size: "lg", className: "mt-5 w-full" })}
           >
             브랜드 안내 보기 <ArrowRight aria-hidden />
-          </Link>
+          </PartnerActionLink>
         </section>
 
         <section className="border-t border-border px-4 py-5">

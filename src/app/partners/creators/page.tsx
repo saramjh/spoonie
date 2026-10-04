@@ -1,12 +1,14 @@
 import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowRight, BookOpen, GitBranch, GitFork, Search, Soup, UserRoundCheck, UsersRound } from "lucide-react"
+import { BookOpen, GitBranch, GitFork, Search, Soup, UserRoundCheck, UsersRound } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
+import PartnerActionLink from "../partner-action-link"
 import PartnerFlow from "../partner-flow"
+import PartnerInquiryForm from "../partner-inquiry-form"
+import PartnerProof from "../partner-proof"
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
-
 export const metadata: Metadata = {
   title: "요리 크리에이터 파트너 | Spoonie",
   description:
@@ -92,6 +94,8 @@ export default function CreatorPartnersPage() {
           signals={creatorSignals}
         />
 
+        <PartnerProof segment="creator" />
+
         <section className="border-t border-border px-4 py-6" aria-labelledby="creator-value">
           <div className="flex items-center gap-2">
             <UserRoundCheck className="h-5 w-5 text-ink" aria-hidden />
@@ -121,18 +125,28 @@ export default function CreatorPartnersPage() {
         </section>
 
         <section className="border-t border-border px-4 py-6">
-          <p className="text-heading text-ink">먼저 제품을 확인해 보세요</p>
+          <p className="text-heading text-ink">몇 개의 Recipe부터 같이 확인해 보세요</p>
           <p className="mt-2 text-meta text-ink-soft">
-            제안 메일을 받고 오셨다면 궁금한 점이나 파일럿 의향은 해당 메일에 그대로 회신해 주세요.
+            제안 메일을 받고 오셨다면 그대로 회신하셔도 됩니다. 처음 방문하셨다면 아래에서 채널과 검증해보고 싶은
+            Recipe를 알려주세요.
           </p>
-          <div className="mt-5 grid gap-2">
-            <Link href="/" className={buttonVariants({ variant: "default", size: "lg" })}>
-              Spoonie 둘러보기 <ArrowRight aria-hidden />
-            </Link>
-            <Link href="/signup" className={buttonVariants({ variant: "outline", size: "lg" })}>
-              프로필 만들기
-            </Link>
+          <PartnerInquiryForm segment="creator" />
+          <div className="mt-5">
+            <PartnerActionLink
+              href="/"
+              segment="creator"
+              action="site_open"
+              className={buttonVariants({ variant: "outline", size: "lg", className: "w-full" })}
+            >
+              Spoonie 둘러보기
+            </PartnerActionLink>
           </div>
+          <p className="mt-4 text-center text-meta text-ink-soft">
+            직접 시작하고 싶다면{" "}
+            <PartnerActionLink href="/signup" segment="creator" action="signup_open" className="underline underline-offset-2">
+              프로필 만들기
+            </PartnerActionLink>
+          </p>
         </section>
       </article>
     </div>
