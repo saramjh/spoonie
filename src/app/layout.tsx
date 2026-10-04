@@ -19,7 +19,6 @@ export const metadata: Metadata = {
 		icon: "/favicon-32x32.png",
 		apple: "/apple-touch-icon.png",
 	},
-	// Open Graph 메타 태그 (소셜 공유 최적화)
 	openGraph: {
 		title: "Spoonie - 레시피 공유 플랫폼",
 		description: "맛있는 레시피를 공유하고 요리 영감을 얻어보세요. 개인 레시피북 관리와 요리 커뮤니티 참여.",
@@ -49,7 +48,6 @@ export const metadata: Metadata = {
 			"naver-site-verification": "0626924727da0c005739ca94edae9591d26a53bc",
 		},
 	},
-	// 검색엔진 최적화
 	robots: {
 		index: true,
 		follow: true,

@@ -16,7 +16,6 @@ const ToastViewport = React.forwardRef<
   <ToastPrimitives.Viewport
     ref={ref}
     className={cn(
-      // 토스식 모바일 퍼스트 디자인: 일관된 상단 배치
       "fixed top-4 left-4 right-4 z-[100] flex max-h-screen flex-col gap-2 md:left-auto md:right-4 md:max-w-[420px]",
       className
     )}
@@ -53,7 +52,6 @@ const Toast = React.forwardRef<
       ref={ref}
       className={cn(toastVariants({ variant }), "cursor-pointer", className)}
       onClick={(e) => {
-        // 토스식 터치 상호작용: 토스트 영역 클릭으로 닫기
         const target = e.target as HTMLElement
         const isCloseButton = target.closest('[toast-close]')
         const isActionButton = target.closest('[data-radix-toast-action]')
@@ -109,7 +107,6 @@ const ToastTitle = React.forwardRef<
   <ToastPrimitives.Title
     ref={ref}
     className={cn(
-      // 토스식 타이틀: 명확하고 읽기 쉬운 폰트
       "text-label font-semibold leading-5 tracking-tight",
       className
     )}
@@ -125,7 +122,6 @@ const ToastDescription = React.forwardRef<
   <ToastPrimitives.Description
     ref={ref}
     className={cn(
-      // 토스식 설명: 적절한 대비와 간격
       "text-label leading-5 opacity-85 mt-1",
       className
     )}

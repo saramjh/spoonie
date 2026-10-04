@@ -102,7 +102,6 @@ export default function RecipesPage() {
 
 	const { data, size, setSize, isLoading } = useSWRInfinite(getKey, fetcher, { revalidateFirstPage: false })
 
-	// 업계 표준: 팔로우 스토어에서 자동으로 캐시 무효화 처리하므로 이벤트 리스너 불필요
 
 	const recipes = data ? ([] as Item[]).concat(...data) : []
 	const isLoadingMore = isLoading || (size > 0 && data && typeof data[size - 1] === "undefined")
@@ -219,7 +218,6 @@ export default function RecipesPage() {
 					]}
 				/>
 
-			{/* 반응형 최적화: 컨테이너 최대 너비 + 패딩 조정 */}
 			<main className="flex-1 overflow-y-auto px-3 py-3 max-w-7xl mx-auto w-full">
 				{/* 도구 줄: 검색 / 거르기 / 보기 방식 / 선택. 고르는 동안에는 같은 높이·같은 자리에서 "고른 수 · 지우기 · 완료"로 바뀐다
 				    (줄 높이가 같아 켜고 끌 때 아래 목록이 움직이지 않는다. "선택"과 "완료"는 같은 오른쪽 끝) */}

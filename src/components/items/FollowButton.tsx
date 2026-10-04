@@ -12,7 +12,7 @@ import { logEvent } from "@/shared/infra/events"
 
 interface FollowButtonProps {
 	userId: string
-	initialIsFollowing?: boolean // 업계 표준: 초기값으로만 사용, 이후 글로벌 상태 우선
+	initialIsFollowing?: boolean // store 초기화 전 표시할 fallback
 	className?: string
 	// icon: 카드·목록 머리의 아이콘 버튼(사람+ / 사람✓, 상태는 aria-label로). primary: 프로필처럼 그 화면의 주요 동작일 때(아이콘 + 글자)
 	appearance?: "icon" | "primary"
@@ -23,20 +23,17 @@ export default function FollowButton({ userId, initialIsFollowing, className, ap
 	const { toast } = useToast()
 	const { session } = useSessionStore()
 	
-	// 업계 표준: 글로벌 상태에서 팔로우 상태 참조 (Single Source of Truth)
 	const { isFollowing: globalIsFollowing, follow, unfollow, isLoading: storeLoading } = useFollowStore()
 	const [isProcessing, setIsProcessing] = useState(false)
 	const [showLoginPrompt, setShowLoginPrompt] = useState(false)
 	
-	// 업계 표준: 글로벌 상태 우선, Store가 로딩중이면 초기값 사용
+	// store 초기화 전에는 서버에서 받은 값을 사용한다.
 	const globalFollowState = globalIsFollowing(userId)
 	const isFollowing = storeLoading ? (initialIsFollowing || false) : globalFollowState
 	
-	// SSA 표준: 비로그인 사용자 처리 + 모든 상태 관리를 cacheManager에 위임
 	const handleFollowToggle = async () => {
 		if (isProcessing) return
 		
-		// 비로그인 사용자 회원가입 유도 (토스 UX 스타일 - 바텀시트)
 		if (!session?.id) {
 			setShowLoginPrompt(true)
 			return
@@ -48,7 +45,6 @@ export default function FollowButton({ userId, initialIsFollowing, className, ap
 			let success: boolean
 			
 			if (isFollowing) {
-				// SSA 표준: Unfollow
 				success = await unfollow(userId)
 				
 				if (success) {
@@ -59,7 +55,6 @@ export default function FollowButton({ userId, initialIsFollowing, className, ap
 					})
 				}
 			} else {
-				// SSA 표준: Follow
 				success = await follow(userId)
 				
 				if (success) {
@@ -120,7 +115,6 @@ export default function FollowButton({ userId, initialIsFollowing, className, ap
 				</Button>
 			)}
 
-			{/* 토스 스타일 로그인 유도 바텀시트 */}
 			<LoginPromptSheet
 				isOpen={showLoginPrompt}
 				onClose={() => setShowLoginPrompt(false)}

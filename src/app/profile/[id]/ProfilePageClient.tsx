@@ -17,7 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import FollowListModal, { type FollowDirection } from "@/features/profile/components/FollowListModal"
 
 import { useSessionStore } from "@/store/sessionStore"
-import { useFollowStore } from "@/features/social/store/followStore" // 업계 표준: 글로벌 팔로우 상태
+import { useFollowStore } from "@/features/social/store/followStore"
 import { logEvent } from "@/shared/infra/events"
 import { cameFrom } from "@/shared/lib/surface"
 import useSWR from "swr"
@@ -44,10 +44,9 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 
 	// Zustand store에서 프로필 정보 가져오기
 	const { profile: sessionProfile } = useSessionStore()
-	const { setFollowing, isFollowing: getIsFollowing } = useFollowStore() // 업계 표준: 글로벌 팔로우 상태
+	const { setFollowing, isFollowing: getIsFollowing } = useFollowStore()
 
 	const [profile, setProfile] = useState<UserProfile | null>(initialProfile ?? null)
-	// 업계 표준: SWR로 사용자 아이템 관리 (DataManager 연동)
 	const { data: userItems } = useSWR(
 		// 보는 사람이 바뀌면(로그인 확인 후 본인으로 판명) 비공개 글까지 다시 가져온다
 		profile ? `user_items_${profile.id}_${sessionUser?.id ?? "guest"}` : null,
@@ -60,7 +59,7 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 			revalidateOnMount: !initialItems || !!sessionUser,
 		}
 	)
-	// SSA 표준: 팔로우 수도 SWR로 관리하여 실시간 캐시 무효화 지원
+	// 팔로우 mutation 뒤 같은 key를 무효화할 수 있도록 SWR에 둔다.
 	const { data: followCounts } = useSWR(
 		profile ? `follow_counts_${profile.id}` : null,
 		() => fetchFollowCounts(profile!.id),
@@ -77,7 +76,6 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 	})
 	const [isLoading, setIsLoading] = useState(!initialProfile)
 	const [profileError, setProfileError] = useState<Error | null>(null)
-	// 업계 표준: 지역 상태 제거, 글로벌 상태만 사용
 	
 	// 모달 상태들
 	const [followList, setFollowList] = useState<FollowDirection | null>(null)
@@ -106,7 +104,7 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 
 				const followStatusData = await fetchFollowStatus(user?.id || "", profileData.id) // 글로벌 팔로우 스토어 동기화용
 				
-				// 업계 표준: 글로벌 팔로우 스토어와 동기화
+				// 상세 조회 결과와 전역 팔로우 상태를 맞춘다.
 				if (user?.id && user.id !== profileData.id) {
 					setFollowing(profileData.id, followStatusData)
 				}

@@ -48,12 +48,11 @@ export const fetchProfile = async (identifier: string, supabase: SupabaseClient 
 
 export const fetchUserItems = async (userId: string, currentUserId?: string, supabase: SupabaseClient = createSupabaseBrowserClient()) => {
 
-	// 업계표준 Privacy Logic: 본인/타인 구분하여 다른 데이터 소스 사용
+	// 본인만 비공개 글을 볼 수 있으므로 조회 경로를 분리한다.
 	let query
 	
 	if (currentUserId === userId) {
-		// 본인 프로필: items 테이블 직접 사용하여 비공개 게시물도 포함
-		// 홈 피드와 동일한 정확한 댓글 수 계산 방식 사용
+		// 본인은 비공개 글도 포함한다.
 		query = supabase
 			.from("items")
 			.select(`
@@ -70,7 +69,7 @@ export const fetchUserItems = async (userId: string, currentUserId?: string, sup
 			.in("item_type", ["recipe", "post"])
 			.order("created_at", { ascending: false })
 	} else {
-		// 타인 프로필: optimized_feed_view 사용 (공개 게시물만)
+		// 타인은 공개 view만 조회한다.
 		query = supabase
 			.from("optimized_feed_view")
 			.select(`
@@ -84,7 +83,7 @@ export const fetchUserItems = async (userId: string, currentUserId?: string, sup
 			`)
 			.eq("user_id", userId)
 			.in("item_type", ["recipe", "post"])
-			.eq("is_public", true) // 타인에게는 공개 게시물만
+			.eq("is_public", true)
 			.order("created_at", { ascending: false })
 	}
 
@@ -92,7 +91,7 @@ export const fetchUserItems = async (userId: string, currentUserId?: string, sup
 	if (error) throw new Error(error.message)
 	if (!items || items.length === 0) return []
 
-	// 정확한 댓글 수 계산 (본인 프로필의 경우에만)
+	// 직접 items를 읽는 본인 프로필만 댓글 수를 별도로 보정한다.
 	const itemsWithAccurateComments = currentUserId === userId 
 		? await Promise.all(items.map(async (item) => {
 			const accurateCommentsCount = await getCommentCountConcurrencySafe(item.id)
@@ -100,7 +99,6 @@ export const fetchUserItems = async (userId: string, currentUserId?: string, sup
 		}))
 		: items
 
-	// 홈화면과 동일한 좋아요/팔로우 상태 확인
 	const itemIds = itemsWithAccurateComments.map((item) => item.id)
 	const userLikesMap = new Map<string, boolean>()
 	const userFollowsMap = new Map<string, boolean>()
@@ -169,7 +167,6 @@ export const fetchUserItems = async (userId: string, currentUserId?: string, sup
 			made_thumbs: item.made_thumbs || [],
 			ingredient_count: item.ingredient_count || 0,
 			key_ingredients: item.key_ingredients || [],
-					// 홈 피드와 동일한 정확한 좋아요/댓글 수 처리
 		likes_count: currentUserId === userId 
 			? (item.likes_count?.[0]?.count ?? 0)   // 본인 프로필: items 테이블 집계 결과
 			: (item.likes_count || 0),              // 타인 프로필: optimized_feed_view 결과

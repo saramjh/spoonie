@@ -31,16 +31,6 @@ import { logEvent } from "@/shared/infra/events"
 
 const loggedFeedImpressions = new Set<string>()
 
-/**
- * 검증된 홈 피드 게시물 카드 컴포넌트
- * 업계 표준 방식으로 단순하고 안정적인 구현
- * 
- * 특징:
- * - 제로 에러 설계
- * - 예측 가능한 동작
- * - 최소한의 상태 관리
- * - 검증된 패턴 사용
- */
 export default function PostCard({ 
   item, 
   currentUser, 
@@ -99,7 +89,6 @@ export default function PostCard({
     is_liked: item.is_liked || false
   }), [item])
 
-  // 썸네일 관리 - SSA 캐시된 데이터 사용 (캐시 데이터를 먼저 가져옴)
   const cachedItem = useItemCache(stableItemId, stableFallbackData)
   // 표시용 값: 수정 직후 즉시 갱신되는 개별 항목 캐시를 우선하고, 캐시에 없는 값만 목록 데이터를 쓴다.
   // (홈 피드 목록 캐시는 새로고침 전까지 갱신되지 않아 수정한 제목, 본문 등이 이전 값으로 남던 문제 방지)
@@ -129,7 +118,6 @@ export default function PostCard({
 	const [showHeartAnimation, setShowHeartAnimation] = useState(false)
 	const [showLoginPrompt, setShowLoginPrompt] = useState(false)
 
-  // SSA: 캐시된 좋아요 데이터 사용
   const likesCount = cachedItem.likes_count
   const hasLiked = cachedItem.is_liked
   
@@ -148,9 +136,8 @@ export default function PostCard({
     }
   }, [item.user_id, item.username, item.display_name, item.avatar_url, item.user_public_id])
 
-  // 더블탭 좋아요 핸들러 (프로필 그리드와 동일한 SSA 기반 로직)
+  // 이미지 더블탭도 같은 좋아요 mutation을 사용한다.
   const handleDoubleTapLike = async () => {
-    // 비로그인 사용자 회원가입 유도 (토스 UX 스타일 - 바텀시트)
     if (!currentUser?.id) {
       setShowLoginPrompt(true)
       return
@@ -160,7 +147,6 @@ export default function PostCard({
       const newHasLiked = !cachedItem.is_liked
       await cacheManager.like(stableItemId, currentUser.id, newHasLiked, cachedItem)
       
-      // 토스식 마이크로 인터랙션 (React 상태 기반 안전한 애니메이션)
       if (newHasLiked) {
         setShowHeartAnimation(true)
         setTimeout(() => setShowHeartAnimation(false), 600)
@@ -175,7 +161,7 @@ export default function PostCard({
     }
   }
 
-  // SSA 기반 삭제 처리 (즉시 홈화면에서 사라짐)
+  // 화면에서는 먼저 제거하고 DB 삭제가 실패하면 캐시를 복원한다.
   const handleDelete = async () => {
     if (!isOwnItem || isDeleting) return
 
@@ -186,7 +172,6 @@ export default function PostCard({
       // 1. 모든 목록·상세 캐시에서 바로 뺀다. 실패하면 rollback이 목록을 다시 받는다
       const rollback = await cacheManager.deleteItems([item.item_id || item.id])
       
-      // SSA STEP 2: 백그라운드 DB 삭제
       try {
         // 글이 지워지면 사진 목록도 사라지므로 먼저 모아 둔다
         const imageUrls = await collectItemImageUrls(supabase, [item.item_id || item.id])

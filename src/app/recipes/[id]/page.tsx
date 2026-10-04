@@ -1,14 +1,3 @@
-/**
- * 레시피 상세 페이지 - 하이브리드 래퍼 패턴
- * 
- * 구조:
- * - 서버 컴포넌트: SEO 최적화된 메타데이터 생성
- * - 클라이언트 컴포넌트: 기존 SSA 아키텍처 완전 보존
- * 
- * 기존 기능 보호:
- * - SWR 캐싱, UnifiedCacheManager, 실시간 동기화 모두 유지
- */
-
 import { Metadata } from 'next'
 import { createSupabasePublicClient } from '@/shared/infra/supabase-public'
 import { notFound } from 'next/navigation'
@@ -22,13 +11,11 @@ interface Props {
   params: Promise<{ id: string }>
 }
 
-// 동적 메타데이터 생성 (기존 기능에 영향 없음)
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
   try {
     const supabase = createSupabasePublicClient()
     
-    // 최소한의 데이터만 가져와서 메타데이터 생성 (성능 최적화)
     const { data: recipe, error } = await supabase
       .from('items')
       .select(`
@@ -49,7 +36,6 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       .single()
 
     if (error || !recipe) {
-      // 에러 시 기본 메타데이터 (기존 기능에 영향 없음)
       return { 
         title: '레시피 - Spoonie',
         description: '맛있는 레시피를 공유하는 Spoonie입니다.',
@@ -74,10 +60,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     const intro = recipe.description?.replace(/\n/g, ' ').trim()
     const cleanDescription = [intro, facts].filter(Boolean).join(' — ').slice(0, 160) || `${recipe.title} 레시피`
     
-    // SEO 최적화된 제목 생성
     const seoTitle = `${recipe.title} - ${authorName}님의 레시피 | Spoonie`
     
-    // 추가 키워드 생성
     const keywords = [
       recipe.title,
       ...(recipe.tags || []),
@@ -92,7 +76,6 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       description: cleanDescription,
       keywords,
       
-      // Open Graph 최적화 (소셜 공유)
       openGraph: {
         title: `${recipe.title} - Spoonie`,
         description: cleanDescription,
@@ -109,7 +92,6 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         siteName: 'Spoonie',
       },
       
-      // Twitter Cards 최적화
       twitter: {
         card: 'summary_large_image',
         title: seoTitle,
@@ -117,7 +99,6 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         images: [imageUrl],
       },
       
-      // 검색 엔진 최적화
       robots: {
         index: true,
         follow: true,

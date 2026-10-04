@@ -29,7 +29,6 @@ export default function RecipeListCard({
 }: RecipeListCardProps) {
   const { createLinkWithOrigin } = useNavigation()
   
-  // SSA 기반 캐시 연동 (이미지 포함)
   const fallbackItem = {
     ...item,
     likes_count: item.likes_count || 0,

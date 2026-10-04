@@ -6,7 +6,6 @@ import { getPublicFeedData } from "@/features/feed/data/server-data"
 // 5분마다 다시 만든다(엣지 캐시가 오래 남아 첫 접속이 빠르다). 새 글과 로그인 사용자 정보는 클라이언트가 스플래시 동안 채운다.
 export const revalidate = 300
 
-// 홈페이지 SEO 최적화 (TBWA 가이드 적용)
 export const metadata: Metadata = {
   title: "Spoonie - 레시피 공유 플랫폼 | 홈쿠킹 커뮤니티",
   description: "맛있는 레시피와 요리 이야기를 공유하세요. 개인 레시피북 관리, 요리법 검색, 팔로우 기능으로 요리 커뮤니티에 참여하세요.",
@@ -66,11 +65,6 @@ const organizationSchema = {
 }
 import PostCardSkeleton from "@/components/items/PostCardSkeleton"
 
-/**
- * 홈 페이지 (Server Component + 실시간 동기화)
- * 서버에서 초기 피드 데이터를 미리 로딩하고 실시간 동기화로 심리스한 경험 제공
- * 레시피(recipe)와 레시피드(post)를 통합한 피드를 표시합니다
- */
 export default async function HomePage() {
 	// 서버에서 공개 피드 첫 페이지를 받아 HTML에 넣는다. 실패하면 브라우저가 이어서 받는다
 	const initialData = await getPublicFeedData().catch((error) => {
@@ -81,7 +75,6 @@ export default async function HomePage() {
 	return (
 		<div className="min-h-screen">
 			<h1 className="sr-only">Spoonie - 레시피와 요리 이야기를 나누는 커뮤니티</h1>
-			{/* Google 검색 결과의 사이트 이름 */}
 			<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(websiteSchema) }} />
 			<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(organizationSchema) }} />
 			<Suspense fallback={<ItemListSkeleton />}>

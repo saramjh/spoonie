@@ -246,7 +246,7 @@ export default function SearchClient({ initialExplore }: { initialExplore?: Expl
     return convertUserSearchResults(userSearchResults);
   }, [userSearchResults]);
 
-  // 업계 표준: 검색 결과의 팔로우 상태를 글로벌 상태와 동기화 (무한 루프 방지)
+  // 검색 결과와 전역 팔로우 상태를 맞추되 값이 달라질 때만 갱신한다.
   useEffect(() => {
     if (searchResults.length > 0) {
       searchResults.forEach((item: Item) => {

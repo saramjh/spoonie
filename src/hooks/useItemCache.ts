@@ -12,7 +12,7 @@ export function useItemCache(itemId: string, fallbackData: Item) {
     revalidateOnReconnect: false,
   })
 
-  // SSA 수정: 캐시가 비어있거나 이미지가 손실되면 fallbackData로 복원 (이미지 보존)
+  // 개별 캐시가 비었을 때 목록 데이터로 복원해 이미지 등 원본 필드를 잃지 않는다.
   useEffect(() => {
     if (!cachedItem && fallbackData) {
       // 캐시가 완전히 비어있는 경우

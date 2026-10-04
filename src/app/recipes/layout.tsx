@@ -1,6 +1,3 @@
-/**
- * 레시피북 페이지 SEO 최적화
- */
 
 import { Metadata } from 'next'
 import { Suspense } from 'react'

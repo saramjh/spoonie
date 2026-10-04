@@ -1,8 +1,3 @@
-/**
- * 검색 페이지 SEO 최적화
- * TBWA 가이드: 검색 의도 기반 메타데이터
- */
-
 import { Metadata } from 'next'
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'

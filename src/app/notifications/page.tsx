@@ -136,7 +136,6 @@ export default function NotificationsPage() {
     }
   };
 
-  // 복수 선택 삭제 (업계표준 방식)
   const deleteBatchNotifications = useCallback(async () => {
     if (!userId || selectedIds.size === 0) return;
 
@@ -271,7 +270,6 @@ export default function NotificationsPage() {
     }
   };
 
-  // 토스 스타일 알림 타입별 아이콘과 색상
   // 알림 타입에 따른 올바른 링크 생성
   const getNotificationLink = (notification: Notification): string => {
     // 팔로우 알림: 팔로우한 사용자의 프로필로 이동
@@ -308,7 +306,6 @@ export default function NotificationsPage() {
           </div>
         </div>
         
-        {/* 토스 스타일 스켈레톤 */}
         <div className="px-4 pb-6">
           <div className="space-y-1 mt-4">
             {[...Array(6)].map((_, i) => (

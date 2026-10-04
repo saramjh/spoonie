@@ -46,7 +46,6 @@ export default function ProfileEditor({
   const [user, setUser] = useState<User | null>(null)
   const [initialProfile, setInitialProfile] = useState<Profile | null>(null)
   
-  // 토스식 상태 관리 - 즉시 반응형
   const [formData, setFormData] = useState({
     username: "",
     profileMessage: "",
@@ -114,9 +113,7 @@ export default function ProfileEditor({
     [initialProfile, user]
   )
 
-  /**
-   * 토스식 스마트 유저명 생성
-   */
+  // 충돌을 피하도록 서버의 username 생성 규칙을 사용한다.
   const generateSmartUsername = async () => {
     setValidation(prev => ({ ...prev, isGenerating: true }))
     
@@ -158,9 +155,7 @@ export default function ProfileEditor({
     }
   }, [])
 
-  /**
-   * Optimistic Profile Update (0ms 응답)
-   */
+  // 저장 요청 전에 화면 상태를 갱신하고 실패하면 이전 프로필로 복원한다.
   const handleOptimisticSave = async () => {
     if (!user) return
 
@@ -168,7 +163,7 @@ export default function ProfileEditor({
     setOptimisticUpdates(prev => new Set(prev).add(updateId))
 
     try {
-      // STEP 1: 즉시 SessionStore 업데이트 (0ms)
+      // 화면에는 먼저 반영하고 서버 저장 실패 시 이전 값으로 복원한다.
       if (sessionProfile) {
         const optimisticProfile = {
           ...sessionProfile,
@@ -178,7 +173,7 @@ export default function ProfileEditor({
         setSessionProfile(optimisticProfile)
       }
 
-      // STEP 2: 실제 DB 업데이트 (화면의 내 이름·사진은 위에서 세션에 먼저 반영했다)
+      // 화면 상태를 먼저 반영한 뒤 DB에 저장한다.
       await performActualProfileUpdate()
       revalidateMyProfilePage() // 미리 만든 프로필 페이지를 바뀐 내용으로 바로 갱신
 
@@ -189,7 +184,6 @@ export default function ProfileEditor({
         return newSet
       })
 
-      // 토스식 성공 피드백
       toast({
         title: "프로필을 저장했습니다",
         description: "변경사항이 즉시 반영되었어요",

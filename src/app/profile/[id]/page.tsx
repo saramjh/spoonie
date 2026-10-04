@@ -1,14 +1,3 @@
-/**
- * 프로필 페이지 - 하이브리드 래퍼 패턴
- * 
- * 구조:
- * - 서버 컴포넌트: SEO 최적화된 메타데이터 생성  
- * - 클라이언트 컴포넌트: 기존 복잡한 프로필 로직 완전 보존
- * 
- * 기존 기능 보호:
- * - SSA, SWR 캐싱, 팔로우 시스템, 복잡한 상태 관리 모두 유지
- */
-
 import { serializeJsonLd } from "@/shared/lib/json-ld"
 import { Metadata } from 'next'
 import { createSupabasePublicClient } from '@/shared/infra/supabase-public'
@@ -23,13 +12,11 @@ interface Props {
   params: Promise<{ id: string }>
 }
 
-// 동적 메타데이터 생성 (기존 기능에 영향 없음)
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
   try {
     const supabase = createSupabasePublicClient()
     
-    // 최소한의 데이터만 가져와서 메타데이터 생성 (성능 최적화)
     const { data: profile, error } = await supabase
       .from('profiles')
       .select(`
@@ -46,7 +33,6 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       .single()
 
     if (error || !profile) {
-      // 에러 시 기본 메타데이터 (기존 기능에 영향 없음)
       return { 
         title: '프로필 - Spoonie',
         description: '요리를 사랑하는 사람들의 프로필을 확인해보세요.',
@@ -76,13 +62,11 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       profileDescription = `${displayName}님이 Spoonie에 올린 공개 레시피 ${publicRecipes}개와 레시피드 ${publicPosts.length}개. 요리법과 음식·주방의 경험 기록을 볼 수 있어요.`
     }
     
-    // SEO 최적화된 제목 생성  
     // 같은 이름을 두 번 쓰지 않는다: 표시 이름이 사용자 이름과 다를 때만 @사용자이름을 붙인다
     const seoTitle = profile.display_name && profile.display_name !== profile.username
       ? `${profile.display_name} (@${profile.username}) - Spoonie`
       : `${displayName}님의 요리 기록 - Spoonie`
     
-    // 키워드 생성
     const keywords = [
       displayName,
       profile.username,
@@ -99,7 +83,6 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       description: profileDescription,
       keywords,
       
-      // Open Graph 최적화 (소셜 공유)
       openGraph: {
         title: `${displayName} - Spoonie`,
         description: profileDescription,
@@ -111,7 +94,6 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         siteName: 'Spoonie',
       },
       
-      // Twitter Cards 최적화
       twitter: {
         card: 'summary',
         title: seoTitle,
@@ -119,12 +101,10 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         images: [profileImageUrl],
       },
       
-      // 검색 엔진 최적화
       robots: hasSearchContent
         ? { index: true, follow: true, googleBot: { 'max-image-preview': 'large', 'max-snippet': -1 } }
         : { index: false, follow: true },
       
-      // 정규 URL 설정
       alternates: {
         canonical: `${baseUrl}/profile/${params.id}`,
       },
@@ -153,7 +133,7 @@ export async function generateStaticParams() {
   return []
 }
 
-// 존재하지 않는 프로필은 "not_found", 그 밖의 오류는 null(클라이언트에서 기존 방식으로 조회).
+// 존재하지 않는 프로필만 "not_found"로 구분하고, 일시 오류는 클라이언트 재조회에 맡긴다.
 async function loadInitialProfileData(identifier: string) {
   try {
     const supabase = createSupabasePublicClient()

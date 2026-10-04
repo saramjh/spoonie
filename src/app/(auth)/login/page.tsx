@@ -104,7 +104,6 @@ export default function LoginPage() {
 
 				return (
 					<div className="min-h-screen flex flex-col items-center justify-start p-4">
-			{/* 토스 스타일 그라디언트 배경 */}
 			{/* 상단 여백 + 카드 컨테이너 */}
 			<main className="w-full max-w-sm mx-auto pt-8">
 				{/* 컴팩트한 브랜드 영역 */}
@@ -124,7 +123,6 @@ export default function LoginPage() {
 									<FormItem className="space-y-1.5">
 										<FormLabel className="text-label font-medium text-ink">이메일</FormLabel>
 										<FormControl>
-											{/* 토스 스타일 입력필드 */}
 											<Input 
 												 
 												{...field}  
@@ -151,7 +149,6 @@ export default function LoginPage() {
 									</FormItem>
 								)}
 							/>
-							{/* 토스 스타일 로그인 버튼 */}
 							<Button 
 								type="submit" 
 								disabled={form.formState.isSubmitting || isRedirecting}

@@ -21,7 +21,7 @@ export function Toaster() {
             <div className="flex-1 grid gap-1 pr-8">
               {title && (
                 <ToastTitle>
-                  {/* 토스식 접근성: 스크린리더용 설명 추가 */}
+                  {/* 아이콘만으로 의미를 전달하지 않도록 스크린리더 설명을 제공한다. */}
                   <span className="sr-only">알림: </span>
                   {title}
                 </ToastTitle>

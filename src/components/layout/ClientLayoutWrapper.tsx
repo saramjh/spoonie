@@ -8,7 +8,7 @@ import SplashScreen from "./SplashScreen"
 import AppWrapper from "./AppWrapper"
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { useSessionStore } from "@/store/sessionStore"
-import { useFollowStore } from "@/features/social/store/followStore" // 업계 표준: 팔로우 상태 관리
+import { useFollowStore } from "@/features/social/store/followStore"
 import { startAuthorCacheCleanup } from "@/shared/infra/author-cache"
 import { captureInstallPrompt } from "@/shared/lib/install"
 import { fetchProfileSummary } from "@/features/profile/data/profile-repository"
@@ -25,7 +25,7 @@ interface ClientLayoutWrapperProps {
 
 export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperProps) {
   const { isInitialLoad, setSession, setProfile, setInitialLoad: setStoreInitialLoad } = useSessionStore()
-  const { initializeFollowState } = useFollowStore() // 업계 표준: 팔로우 상태 초기화
+  const { initializeFollowState } = useFollowStore()
 
   const pathname = usePathname()
   // 스플래시는 홈으로 들어올 때만 보여 준다. 공유 링크로 상세에 들어오면 이미 그려진 본문을 가리지 않는다.
@@ -85,7 +85,7 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
 
             setSession(user)
             
-            // 업계 표준: 팔로우 상태 초기화 (Instagram/Twitter 방식)
+            // 로그인 직후 전역 팔로우 상태를 한 번 채운다.
             try {
               await initializeFollowState(user.id)
 

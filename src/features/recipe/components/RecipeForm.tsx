@@ -89,7 +89,6 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 	const [mainImages, setMainImages] = useState<OptimizedImage[]>([])
 	const [thumbnailIndex, setThumbnailIndex] = useState(0)
 	
-	// SSA: 섬네일 변경 시 즉시 캐시 업데이트를 위한 wrapper 함수
 	const handleThumbnailChange = useCallback(async (newIndex: number) => {
 
 		setThumbnailIndex(newIndex)
@@ -150,7 +149,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 					height: 600, // 기본값 설정
 				}))
 				setMainImages(fetchedImages)
-				// 업계 표준: 저장된 썸네일 인덱스 복원 또는 기본값(0) 사용
+				// 저장된 대표 이미지가 범위를 벗어나면 첫 이미지로 제한한다.
 				const savedThumbnailIndex = initialData.thumbnail_index ?? 0
 				setThumbnailIndex(Math.min(savedThumbnailIndex, fetchedImages.length - 1))
 				
@@ -190,7 +189,6 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 	const { fields: ingredients, append: appendIngredient, remove: removeIngredient } = useFieldArray({ control: form.control, name: "ingredients" })
 	const { fields: instructions, append: appendInstruction, remove: removeInstruction } = useFieldArray({ control: form.control, name: "instructions" })
 
-	// 토스 스타일 드래그앤드롭: 재료 순서 변경 핸들러 (직접 setValue 사용)
 	const handleIngredientsReorder = (newIngredients: DraggableIngredient[]) => {
 	
 		
@@ -246,8 +244,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 				throw new Error("Supabase storage bucket ID is not configured.")
 			}
 
-					// 최적화된 메인 이미지 병렬 업로드 (기존: 순차 → 새로운: 병렬 + 캐싱)
-		// 업계 표준: 원본 순서 유지 + 썸네일 인덱스 정보 저장 (개선된 Instagram/Facebook 방식)
+		// image_urls 순서와 thumbnail_index는 함께 저장되어야 한다.
 		
 
 		const newImageFiles = mainImages.filter((img) => img.file.size > 0)
@@ -302,15 +299,13 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 				instructions: instructionsWithImages,
 			})
 
-			// SSA 기반: 통합 캐시 관리로 최신 데이터 보장 (thumbnail_index 포함)
 			if (isEditMode) {
 				
-				// SSA: 아이템 업데이트 - 홈화면에 즉시 반영!
 				const fullItemPayload = {
 					...itemPayload,
 					id: itemId,
 					item_id: itemId,
-					// order_index 포함한 완전한 재료 데이터 사용
+					// 정렬 순서를 보존하려고 order_index도 함께 넘긴다.
 					ingredients: ingredientsToInsert.map((item) => {
 						// eslint-disable-next-line @typescript-eslint/no-unused-vars
 						const { item_id, ...ing } = item
@@ -350,7 +345,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 					...itemPayload,
 					id: itemId,
 					item_id: itemId,
-					// order_index 포함한 완전한 재료 데이터 사용
+					// 정렬 순서를 보존하려고 order_index도 함께 넘긴다.
 					ingredients: ingredientsToInsert.map((item) => {
 						// eslint-disable-next-line @typescript-eslint/no-unused-vars
 						const { item_id, ...ing } = item
@@ -380,7 +375,6 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 					is_following: false,
 					created_at: new Date().toISOString(),
 				}
-				// SSA: 새로운 레시피 추가 - 홈피드 맨 위에 즉시 표시!
 				await cacheManager.addNewItem(fullItemPayload as Item)
 			}
 
@@ -423,9 +417,8 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 			return
 		}
 
-		// 스마트 네비게이션: 사용자가 온 곳으로 적절히 돌아가기
+		// 수정 폼은 history에 남기지 않고, 작성자는 원래 진입 경로로 돌려보낸다.
 		if (onNavigateBack) {
-			// 업계 표준: 수정 완료 후 History Replace로 수정폼 제거
 			onNavigateBack(itemId, { replace: isEditMode })
 		} else {
 			// 폴백: 홈화면으로 이동 (새로운 아이템이 이미 캐시에 추가됨)

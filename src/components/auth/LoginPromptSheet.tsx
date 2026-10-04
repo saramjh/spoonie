@@ -81,7 +81,7 @@ export default function LoginPromptSheet({
 					}
 				}
 				
-				// 바텀시트 애니메이션 완전 종료 후 포커스 복원 (500ms로 증가)
+				// 닫힘 애니메이션이 끝난 뒤 원래 요소에 포커스를 돌린다.
 				restoreFocus()
 			}, 500) // 100ms → 500ms로 대폭 증가
 			

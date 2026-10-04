@@ -48,7 +48,6 @@ export default function ImageCarousel({
     if (selectedIndex + 1 < images.length) ensureLoaded(selectedIndex + 1)
   }, [ensureLoaded, images.length, selectedIndex])
   
-  // 토스식 더블탭 좋아요 상태 관리
   const [clickTimer, setClickTimer] = React.useState<NodeJS.Timeout | null>(null)
   const [isTouching, setIsTouching] = React.useState(false)
 
@@ -78,7 +77,6 @@ export default function ImageCarousel({
     }
   }, [clickTimer])
 
-  // 토스식 더블탭 핸들러 (프로필 그리드와 동일한 로직)
   const handleImageClick = React.useCallback((e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -137,7 +135,6 @@ export default function ImageCarousel({
                   <div className="absolute inset-0 bg-ink/10 z-10" />
                 )}
                 
-                {/* 토스 철학: 스마트 클릭 처리 */}
                 <div 
                   className="absolute inset-0 z-20 cursor-pointer select-none"
                   onTouchStart={() => setIsTouching(true)}

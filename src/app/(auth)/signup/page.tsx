@@ -80,7 +80,6 @@ export default function SignupPage() {
 
 				return (
 					<div className="min-h-screen flex flex-col items-center justify-start p-4">
-			{/* 토스 스타일 그라디언트 배경 */}
 			{/* 상단 여백 + 카드 컨테이너 */}
 			<main className="w-full max-w-sm mx-auto pt-8">
 				{/* 컴팩트한 브랜드 영역 */}

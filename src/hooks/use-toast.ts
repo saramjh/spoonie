@@ -3,8 +3,8 @@ import * as React from "react"
 
 import type { ToastActionElement, ToastProps } from "@/components/ui/toast"
 
-const TOAST_LIMIT = 3  // 토스식 개선: 최대 3개 토스트 동시 표시
-const TOAST_REMOVE_DELAY = 4000  // 토스식 타이밍: 4초 자동 해제 (적절한 읽기 시간)
+const TOAST_LIMIT = 3
+const TOAST_REMOVE_DELAY = 4000
 
 type ToasterToast = ToastProps & {
   id: string
@@ -144,7 +144,6 @@ function toast(props: Toast) {
   }
 }
 
-// 토스식 헬퍼 함수들: 빠른 알림 생성
 toast.success = (props: Omit<Toast, "variant">) => toast({ ...props, variant: "success" })
 toast.error = (props: Omit<Toast, "variant">) => toast({ ...props, variant: "destructive" })
 toast.warning = (props: Omit<Toast, "variant">) => toast({ ...props, variant: "warning" })

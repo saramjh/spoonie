@@ -1,7 +1,3 @@
-/**
- * 간단화된 CommentsSection - 업계 표준 방식
- * 통합 캐시 매니저 사용으로 복잡한 캐시 로직 제거
- */
 
 "use client"
 
@@ -114,11 +110,11 @@ export default function CommentsSection({
     setIsSubmitting(true)
     setNewComment("")
 
-    // SSA 표준: 즉시 UI 업데이트 + 모든 캐시 동기화 (0ms)
+    // 댓글 수는 먼저 올리고 mutation 실패 시 rollback한다.
     const rollback = await cacheManager.comment(itemId, currentUserId, 1, cachedItem)
 
     try {
-      // STEP 2: 백그라운드 DB 업데이트
+      // DB mutation은 화면 반영 뒤 수행한다.
       const { error } = await supabase.from('comments').insert({
         item_id: itemId,
         user_id: currentUserId,
@@ -137,7 +133,7 @@ export default function CommentsSection({
       toast({ title: "댓글이 추가되었습니다." })
 
     } catch (error) {
-      // STEP 3: 에러 시 자동 롤백
+      // 실패하면 앞서 반영한 댓글 수를 되돌린다.
       console.error(`❌ Comment error for ${itemId}:`, error)
       
       setNewComment(commentContent) // 입력 내용 복원
@@ -169,11 +165,11 @@ export default function CommentsSection({
 
     setIsSubmittingReply({ ...isSubmittingReply, [parentCommentId]: true })
 
-    // STEP 1: 즉시 UI 업데이트 + 모든 캐시 동기화 (0ms)
+    // 댓글 수는 먼저 반영하고 mutation 실패 시 rollback한다.
     const rollback = await cacheManager.comment(itemId, currentUserId, 1, cachedItem)
 
     try {
-      // STEP 2: 백그라운드 DB 업데이트
+      // DB mutation은 화면 반영 뒤 수행한다.
       const { error } = await supabase.from('comments').insert({
         item_id: itemId,
         user_id: currentUserId,
@@ -213,11 +209,11 @@ export default function CommentsSection({
   const handleDeleteComment = async (commentId: string) => {
     if (!currentUserId) return
 
-    // STEP 1: 즉시 UI 업데이트 + 모든 캐시 동기화 (0ms)
+    // 댓글 수는 먼저 반영하고 mutation 실패 시 rollback한다.
     const rollback = await cacheManager.comment(itemId, currentUserId, -1, cachedItem)
 
     try {
-      // STEP 2: 백그라운드 DB 업데이트
+      // DB mutation은 화면 반영 뒤 수행한다.
       const { error } = await supabase
         .from('comments')
         .update({ is_deleted: true })
@@ -233,7 +229,7 @@ export default function CommentsSection({
       toast({ title: "댓글이 삭제되었습니다." })
 
     } catch (error) {
-      // STEP 3: 에러 시 자동 롤백
+      // 실패하면 앞서 반영한 댓글 수를 되돌린다.
       console.error(`❌ Delete comment error for ${itemId}:`, error)
       
       rollback() // 모든 캐시 자동 롤백 (UI 자동 되돌림)

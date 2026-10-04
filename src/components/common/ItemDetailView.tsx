@@ -74,14 +74,13 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 			return null
 		}
 		return id
-		// 의도적 최적화: item 전체가 아닌 ID 속성만 감시
+		// item 객체가 재생성돼도 ID가 같으면 stableItemId를 유지한다.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [item?.item_id, item?.id])
 	
-	// SSA 표준: items 테이블 데이터에 실시간 상태 기본값 추가
 	const stableFallbackData = useMemo(() => {
 		if (!item || !stableItemId) {
-			// 타입 안전성: 완전한 Item 타입 기본 fallback 데이터 제공
+			// item이 없을 때도 hook 호출 순서를 유지할 fallback을 제공한다.
 			return {
 				id: stableItemId || 'unknown',
 				item_id: stableItemId || 'unknown',
@@ -120,10 +119,9 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		}
 	}, [item, stableItemId])
 
-	// SSA 발전: 실시간 캐시 업데이트 구독 (홈화면과 동일) - hooks를 조건부 렌더링 전에 호출
+	// 캐시 구독 hook은 early return보다 먼저 호출해야 한다.
 	const cachedItem = useItemCache(stableItemId || 'null', stableFallbackData)
 	
-	// 썸네일 관리 - 캐시된 아이템의 최신 thumbnail_index 사용
 	const orderedImages = orderImagesForDisplay(cachedItem?.image_urls || item?.image_urls, cachedItem?.thumbnail_index ?? item?.thumbnail_index)
 
 	// SWR 호출 - 조건부 렌더링 전에 호출
@@ -136,8 +134,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	// 작성자의 다른 레시피 (작성자 발견)
 	const authorRecipes = useAuthorRecipes(item?.user_id, item?.item_id || item?.id)
 
-	// SSA 표준: 상태 관리 - 조건부 렌더링 전에 호출
-	// commentsCount는 캐시에서 직접 사용 (실시간 동기화)
+	// 댓글 수는 mutation 직후 갱신되는 개별 캐시 값을 사용한다.
 	const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
 	const [isAuthLoading, setIsAuthLoading] = useState(true)
 	const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -212,9 +209,8 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	}, [comments])
 
 	
-	// 더블탭 좋아요 핸들러 (프로필 그리드와 동일한 SSA 기반 로직)
+	// 이미지 더블탭도 같은 좋아요 mutation을 사용한다.
 	const handleDoubleTapLike = async () => {
-		// 비로그인 사용자 회원가입 유도 (토스 UX 스타일 - 바텀시트)
 		if (!currentUser?.id) {
 			setShowLoginPrompt(true)
 			return
@@ -226,7 +222,6 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 			const newHasLiked = !cachedItem.is_liked
 			await cacheManager.like(stableItemId, currentUser.id, newHasLiked, cachedItem)
 			
-			// 토스식 마이크로 인터랙션 (React 상태 기반 안전한 애니메이션)
 			if (newHasLiked) {
 				setShowHeartAnimation(true)
 				setTimeout(() => setShowHeartAnimation(false), 600)
@@ -285,7 +280,6 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		router.push(editPath)
 	}
 	
-	// 업계 표준: 삭제 확인 핸들러 (PostCard와 완전히 동일한 방식)
 	const handleDeleteConfirm = async () => {
 		if (!currentUser || !isOwnItem) return
 		
@@ -331,7 +325,6 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		}
 	}
 
-	// cited_recipe_ids는 useCitedRecipes 훅에서 자동으로 관리됨
 
 	// Optimistic Updates 시스템에서는 복잡한 구독/등록 로직 불필요
 	// 모든 상태는 optimisticLikeUpdate, optimisticCommentUpdate에서 즉시 처리됨
@@ -669,7 +662,6 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 				</AlertDialogContent>
 			</AlertDialog>
 			
-			{/* 토스 스타일 로그인 유도 바텀시트 */}
 			<LoginPromptSheet
 				isOpen={showLoginPrompt}
 				onClose={() => setShowLoginPrompt(false)}

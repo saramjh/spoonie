@@ -21,7 +21,7 @@ export const fetchHomeFeedPage = async (key: string): Promise<Item[]> => {
   const pageIndex = parseInt(pageIndexStr, 10)
   const offset = pageIndex * PAGE_SIZE
 
-  // 최적화된 뷰에서 레시피(recipe)와 레시피드(post) 데이터 조회 - RLS가 권한 자동 처리
+  // 공개 범위는 view/RLS가 결정하므로 클라이언트에서 별도 필터를 복제하지 않는다.
   const { data: items, error } = await supabase
     .from("optimized_feed_view")
     .select(`
@@ -99,7 +99,7 @@ export const fetchHomeFeedPage = async (key: string): Promise<Item[]> => {
 			item_type: item.item_type as "post" | "recipe", // "recipe": 요리법, "post": 일반 피드
       created_at: item.created_at,
       is_public: item.is_public,
-      // 안정적인 작성자 정보 처리 - profiles에서 가져온 데이터 우선 사용
+      // relation으로 받은 profile 값을 view의 평면 필드보다 우선한다.
       display_name: profileData?.display_name || item.display_name || null,
       username: profileData?.username || item.username || null,
       avatar_url: profileData?.avatar_url || item.avatar_url || null,

@@ -15,20 +15,10 @@ import type { User } from "@supabase/supabase-js"
 import type { ServerFeedData } from "@/features/feed/data/server-data"
 import { usePageVisibility } from "@/hooks/usePageVisibility"
 interface SeamlessItemListProps {
-  /**
-   * 서버에서 미리 로딩된 초기 데이터 (SSR 최적화용)
-   * null인 경우 클라이언트에서 데이터 페칭
-   */
+  // null이면 브라우저가 첫 페이지를 조회한다.
   initialData?: ServerFeedData | null
 }
 
-/**
- * 심리스한 실시간 아이템 리스트 컴포넌트 (SSR + 실시간 동기화)
- * 레시피/레시피드 변경사항을 즉시 반영하여 완벽한 사용자 경험 제공
- * 
- * @param initialData - 서버에서 미리 로딩된 데이터 (성능 최적화)
- * @returns 실시간 동기화가 적용된 무한 스크롤 아이템 리스트
- */
 export default function SeamlessItemList({ initialData }: SeamlessItemListProps) {
   // 시간 덩어리 이름의 "오늘"은 화면이 뜬 뒤 기준으로 (미리 만든 홈과의 불일치 방지)
   const now = useHydrated() ? new Date() : null
@@ -56,7 +46,6 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
     checkUser()
   }, [supabase, initialData])
 
-  // 무한 스크롤 Intersection Observer
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
       const target = entries[0]
@@ -78,7 +67,6 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
     return () => observer.disconnect()
   }, [handleObserver])
 
-  // 에러 상태 처리
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
@@ -94,7 +82,7 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
     )
   }
 
-  // 초기 로딩 상태 (SSR 데이터가 있으면 스킵)
+  // SSR 데이터가 없을 때만 초기 skeleton을 보여준다.
   if (isLoading && feedItems.length === 0 && !initialData) {
     return (
       <div className="space-y-4 p-4">
@@ -109,10 +97,9 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
     <div className="w-full">
 
 
-      {/* 아이템 목록 */}
       <div className="space-y-3 px-3 py-3">
         {feedItems.map((item, index) => {
-          // LCP 최적화: 실제 첫 화면 LCP 후보 한 장만 high priority. 여러 카드에 high를 주면 초기 대역폭을 서로 경쟁한다.
+          // 첫 카드 한 장만 high priority로 두어 초기 이미지끼리 대역폭을 경쟁하지 않게 한다.
           const isPriorityPost = index === 0
           // 시간 덩어리가 바뀌는 곳에 이름을 달아 피드에 리듬을 준다 (오늘 / 어제 / 이번 주 / 이번 달 / 년월)
           const period = feedPeriod(item.created_at, now)
@@ -125,7 +112,7 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
                 item={item} 
                 currentUser={currentUser}
                 priority={isPriorityPost}
-                onItemUpdate={() => { swrMutate(); }} // 삭제시 즉시 업데이트를 위한 mutate 함수 전달
+                onItemUpdate={() => { swrMutate(); }}
               />
             </div>
           )

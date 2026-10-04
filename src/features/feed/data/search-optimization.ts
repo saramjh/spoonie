@@ -1,10 +1,5 @@
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 
-/**
- * 검색 기능 최적화 유틸리티
- * 서버 부담을 대폭 줄이는 효율적인 검색 구현
- */
-
 interface SearchResult {
 	id: string
 	title: string
@@ -14,12 +9,12 @@ interface SearchResult {
 	display_name?: string
 	username?: string
 	avatar_url?: string
-	image_urls?: string[]  // 추가: 썸네일을 위한 이미지 URLs
-	likes_count?: number   // 추가: 좋아요 수
-	comments_count?: number // 추가: 댓글 수
-	user_id?: string       // 추가: 사용자 ID
-	is_following?: boolean // 추가: 팔로우 상태
-	is_liked?: boolean     // SSA 원칙: 좋아요 상태
+	image_urls?: string[]
+	likes_count?: number
+	comments_count?: number
+	user_id?: string
+	is_following?: boolean
+	is_liked?: boolean
 }
 
 interface CachedSearchResults {
@@ -39,7 +34,6 @@ export async function getPopularKeywordsCached(): Promise<Array<{ keyword: strin
 	const cacheKey = 'popular_keywords'
 	const cached = searchCache.get(cacheKey)
 	
-	// 캐시 히트 체크
 	if (cached && Date.now() - cached.lastUpdated < cached.ttl) {
 
 		return cached.popularKeywords
@@ -49,7 +43,7 @@ export async function getPopularKeywordsCached(): Promise<Array<{ keyword: strin
 	const supabase = createSupabaseBrowserClient()
 
 	try {
-		// 서버 사이드 집계로 최적화 (PostgreSQL 네이티브 함수 사용)
+		// 태그 집계는 DB 함수에서 수행해 원본 행 전체를 브라우저로 가져오지 않는다.
 		const { data, error } = await supabase.rpc('get_popular_tags', { 
 			limit_count: 10 
 		})
@@ -61,7 +55,6 @@ export async function getPopularKeywordsCached(): Promise<Array<{ keyword: strin
 
 		const result = data || []
 		
-		// 캐시 업데이트
 		searchCache.set(cacheKey, {
 			popularKeywords: result,
 			lastUpdated: Date.now(),

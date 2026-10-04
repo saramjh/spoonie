@@ -17,7 +17,6 @@ export const fetchRecipeBookPage = async (key: string): Promise<Item[]> => {
 		const from = parseInt(pageIndex) * PAGE_SIZE
 		const to = from + PAGE_SIZE - 1
 
-		// SSA 원칙: 모든 곳에서 정확한 댓글 수 계산
 		let query
 		if (tab === "my_recipes") {
 			// 나의 레시피: 정확한 댓글 수 계산 RPC 함수 사용 (optimized_feed_view와 동일한 로직)
@@ -136,8 +135,7 @@ export const fetchRecipeBookPage = async (key: string): Promise<Item[]> => {
 		return []
 	}
 
-	// SSA 기반: 사용자별 좋아요/팔로우 상태 조회 (프로필 페이지와 동일한 방식)
-	// SSA 원칙: 홈 피드와 동일한 사용자 상호작용 데이터 처리
+	// 목록 행에 현재 사용자의 좋아요·팔로우 상태를 합친다.
 	const itemIds = data.map((item: Item) => item.id)
 	const userLikesMap = new Map<string, boolean>()
 	const userFollowsMap = new Map<string, boolean>()
@@ -167,7 +165,6 @@ export const fetchRecipeBookPage = async (key: string): Promise<Item[]> => {
 		})
 	}
 
-	// SSA 기반: 홈 피드와 동일한 데이터 변환 로직 적용
 	return data.map((item: Item & { profiles?: Profile | Profile[] | null }) => {
 		// 나의 레시피(RPC)는 이미 평면화된 데이터, 모두의 레시피는 profiles 관계 데이터
 		const profileData: Partial<Profile> | null | undefined = tab === "my_recipes"
@@ -203,9 +200,8 @@ export const fetchRecipeBookPage = async (key: string): Promise<Item[]> => {
 			cooking_time_minutes: item.cooking_time_minutes,
 			recipe_id: item.recipe_id,
 			cited_recipe_ids: item.cited_recipe_ids,
-			// SSA 원칙: 모든 곳에서 정확한 좋아요/댓글 수 사용
 			likes_count: item.likes_count || 0,
-			comments_count: item.comments_count || 0,  // 이제 삭제된 댓글 제외된 정확한 값
+			comments_count: item.comments_count || 0,
 			is_liked: tab === "my_recipes" 
 				? (item.is_liked || false)  // RPC 함수에서 이미 계산됨
 				: isLikedValue,             // 별도 계산 필요

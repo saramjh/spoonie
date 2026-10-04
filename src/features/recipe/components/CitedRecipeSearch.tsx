@@ -208,7 +208,6 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
         </div>
       )}
 
-      {/* 선택된 레시피들 - 토스 스타일 카드 */}
       {selectedRecipes.length > 0 && (
         <div className="space-y-2">
           <ul className="divide-y divide-border">

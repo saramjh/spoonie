@@ -3,15 +3,13 @@
 import useSWR from "swr"
 import { fetchAuthorPublicRecipes, fetchCitedRecipeCards, fetchRecipeRelations } from "@/features/recipe/data/related-recipes"
 
-// 최적화된 참고 레시피 캐싱 훅 (스마트 캐시 전략)
 export function useCitedRecipes(citedRecipeIds: string[] | null | undefined) {
 	// citedRecipeIds가 없거나 빈 배열이면 null을 key로 사용하여 fetch 안함
 	const cacheKey = citedRecipeIds && citedRecipeIds.length > 0 ? `cited-recipes:${[...citedRecipeIds].sort().join(",")}` : null
 
 	const { data, error, isLoading, mutate } = useSWR(cacheKey, () => fetchCitedRecipeCards(citedRecipeIds!), {
-		// 스마트 캐싱 최적화 설정
-		revalidateOnFocus: false, // 포커스 시 재검증 안함
-		revalidateOnReconnect: true, // 재연결 시에는 재검증 (네트워크 문제 대응)
+		revalidateOnFocus: false,
+		revalidateOnReconnect: true,
 		dedupingInterval: 15 * 60 * 1000, // 15분 동안 중복 요청 방지 (1시간→15분으로 단축)
 		focusThrottleInterval: 30 * 60 * 1000, // 30분 동안 포커스 throttle (균형)
 		errorRetryCount: 1, // 에러 시 최대 1번 재시도 (서버 부담 감소)

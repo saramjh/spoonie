@@ -139,7 +139,6 @@ export default function Header() {
         </Button>
       </div>
 
-      {/* 토스 스타일 로그인 유도 바텀시트들 */}
       <LoginPromptSheet
         isOpen={showBookmarkPrompt}
         onClose={() => setShowBookmarkPrompt(false)}

@@ -21,7 +21,7 @@ export const useFollowStore = create<FollowStore>((set, get) => ({
   followingUsers: new Set(),
   isLoading: false,
   
-  // SSA 표준: 초기 팔로우 상태 한 번만 로드
+  // 같은 세션에서 전체 팔로우 목록을 반복 조회하지 않는다.
   initializeFollowState: async (currentUserId: string) => {
     const supabase = createSupabaseBrowserClient()
     set({ isLoading: true })
@@ -45,7 +45,6 @@ export const useFollowStore = create<FollowStore>((set, get) => ({
     }
   },
   
-  // SSA 표준: 모든 로직을 cacheManager에 위임
   follow: async (targetUserId: string) => {
     
     const supabase = createSupabaseBrowserClient()
@@ -64,13 +63,13 @@ export const useFollowStore = create<FollowStore>((set, get) => ({
       newFollowingUsers.add(targetUserId)
       set({ followingUsers: newFollowingUsers })
       
-      // 2. SSA 표준: cacheManager가 모든 것을 처리 (DB 연산 + 캐시 관리 + 자동 롤백)
+      // DB mutation과 관련 캐시 무효화는 cacheManager가 맡는다.
       await cacheManager.follow(user.id, targetUserId, true)
       return true
     } catch (error) {
       console.error('❌ FollowStore: Follow failed:', error)
       
-      // 3. 실패 시 롤백 (SSA가 캐시는 알아서 롤백함)
+      // store의 optimistic 상태만 원래대로 되돌린다.
       const state = get()
       const rollbackUsers = new Set(state.followingUsers)
       rollbackUsers.delete(targetUserId)
@@ -80,7 +79,6 @@ export const useFollowStore = create<FollowStore>((set, get) => ({
     }
   },
   
-  // SSA 표준: 모든 로직을 cacheManager에 위임
   unfollow: async (targetUserId: string) => {
     
     const supabase = createSupabaseBrowserClient()
@@ -99,13 +97,13 @@ export const useFollowStore = create<FollowStore>((set, get) => ({
       newFollowingUsers.delete(targetUserId)
       set({ followingUsers: newFollowingUsers })
       
-      // 2. SSA 표준: cacheManager가 모든 것을 처리 (DB 연산 + 캐시 관리 + 자동 롤백)
+      // DB mutation과 관련 캐시 무효화는 cacheManager가 맡는다.
       await cacheManager.follow(user.id, targetUserId, false)
       return true
     } catch (error) {
       console.error('❌ FollowStore: Unfollow failed:', error)
       
-      // 3. 실패 시 롤백 (SSA가 캐시는 알아서 롤백함)
+      // store의 optimistic 상태만 원래대로 되돌린다.
       const state = get()
       const rollbackUsers = new Set(state.followingUsers)
       rollbackUsers.add(targetUserId)

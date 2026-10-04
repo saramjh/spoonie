@@ -108,7 +108,6 @@ function SortableIngredientItem({
           <DragHandle />
         </div>
 
-        {/* 모바일 최적화 재료 입력 영역 */}
         <div className="flex-1 space-y-2">
           {/* 1행: 재료명 (전체 너비) */}
           <Input 

@@ -17,7 +17,6 @@ export default function NewRecipePage() {
 	const [forkFrom, setForkFrom] = useState<ItemDetail | null>(null)
 	const supabase = createSupabaseBrowserClient()
 
-	// 스마트 네비게이션 (이전 경로 추적)
 	const { navigateBack } = useNavigation()
 
 	useEffect(() => {

@@ -1,8 +1,3 @@
-/**
- * BookmarkButton - SSA 표준 북마크 토글 버튼
- * LikeButton과 동일한 SSA 패턴 적용
- */
-
 "use client"
 
 import { useState, forwardRef, useRef, useCallback } from "react"
@@ -27,7 +22,7 @@ interface BookmarkButtonProps {
   className?: string
   size?: "sm" | "icon" | "default"
   variant?: "ghost" | "outline" | "default"
-  cachedItem?: Item // SSA 캐시된 완전한 아이템 데이터 (이미지 보존용)
+  cachedItem?: Item // 부분 갱신 시 이미지 등 기존 필드를 보존할 fallback
 }
 
 export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>(({
@@ -45,9 +40,8 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
 }, ref) => {
 
   
-  // SSA 업계표준: 이미지 데이터 완전 보존 + 부분 업데이트
+  // 부분 상태만 바꿀 때 이미지 등 기존 필드는 유지한다.
   const fallbackItem: Item = providedCachedItem ? {
-    // 기존 데이터 모두 보존 (특히 이미지!)
     ...providedCachedItem,
     // 북마크/좋아요 상태만 보완 (덮어쓰지 않고 보완만)
     bookmarks_count: providedCachedItem.bookmarks_count ?? initialBookmarksCount,
@@ -97,15 +91,14 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
   const isProcessingRef = useRef(false)
   const lastClickTimeRef = useRef(0)
 
-  // SSA 표준: 완전한 Single Source of Truth
   const handleBookmark = useCallback(async (e?: React.MouseEvent) => {
-    // 이벤트 전파 방지 - 상위 링크 클릭 방지
+    // 카드 링크로 클릭이 전파되지 않게 한다.
     if (e) {
       e.preventDefault()
       e.stopPropagation()
     }
     
-    // 비로그인 사용자 회원가입 유도 (토스 UX 스타일 - 바텀시트)
+    // 비로그인은 로그인 유도만 열고 원래 화면을 유지한다.
     if (!currentUserId) {
       setShowLoginPrompt(true)
       return
@@ -128,14 +121,12 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
     setIsLoading(true)
 
     try {
-      // SSA 표준: 캐시만 업데이트, UI는 자동 동기화
       const newIsBookmarked = !isBookmarked
       
-      // SSA 기반: 완전한 Seamless Sync Architecture 패턴 유지
-      // 이미지 정보 보존하면서 Request Deduplication + Batch Processing 유지
+      // 캐시 매니저가 optimistic update와 실패 롤백을 담당한다.
       await cacheManager.bookmark(itemId, currentUserId, newIsBookmarked, cachedItem)
       
-      // 북마크 페이지 실시간 동기화 (Optimistic Update)
+      // 북마크 목록도 같은 optimistic 상태를 반영한다.
       if (currentUserId) {
         const bookmarksCacheKey = `bookmarks_${currentUserId}`
         
@@ -164,13 +155,13 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
     } catch (error: unknown) {
       console.error(`❌ BookmarkButton: Error for ${itemId}:`, error)
       
-      // 북마크 페이지 캐시도 롤백 (에러 시 정확한 데이터 다시 fetch)
+      // 실패하면 북마크 목록 key도 다시 검증한다.
       if (currentUserId) {
         const bookmarksCacheKey = `bookmarks_${currentUserId}`
         await mutate(bookmarksCacheKey)
       }
       
-      // SSA 표준: 간단한 에러 처리 (캐시 매니저가 롤백 처리)
+      // 캐시 매니저가 실패한 optimistic update를 롤백한다.
       toast({
         title: "북마크 처리 실패",
         description: "네트워크 오류입니다. 잠시 후 다시 시도해주세요.",
@@ -205,7 +196,6 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
         />
       </Button>
 
-      {/* 토스 스타일 로그인 유도 바텀시트 */}
       <LoginPromptSheet
         isOpen={showLoginPrompt}
         onClose={() => setShowLoginPrompt(false)}

@@ -135,10 +135,9 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 				throw new Error("Storage bucket ID가 설정되지 않았습니다.")
 			}
 
-		// 업계 표준: 원본 순서 유지 + 썸네일 인덱스 정보 저장 (개선된 Instagram/Facebook 방식)
+		// image_urls 순서와 thumbnail_index는 함께 저장되어야 한다.
 		
 
-		// 최적화된 병렬 이미지 업로드 (기존: 순차 → 새로운: 병렬 + 캐싱)
 		let uploadedImageUrls: string[] = []
 
 		if (isEditMode && initialData) {
@@ -206,11 +205,9 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 				sourceOrigin,
 			})
 			
-			// SSA 기반: 간단하고 안정적인 제출 프로세스
 
 			const { itemId } = await savePostRow(supabase, { existingId: isEditMode && initialData ? initialData.id : null, itemPayload })
 
-			// SSA 기반: 통합 캐시 매니저를 통한 완전 자동 동기화
 
 			
 			const fullItemPayload = {
@@ -231,11 +228,10 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 			}
 			
 			if (isEditMode) {
-				// SSA: 아이템 업데이트 - 모든 캐시 자동 동기화
 
 				await cacheManager.updateItem(itemId, fullItemPayload)
 				
-				// Smart Fallback: 필요시에만 부분 무효화 (성능 개선)
+				// 개별 item 갱신 뒤 홈 목록 key도 한 번 재검증한다.
 				setTimeout(async () => {
 
 					await cacheManager.revalidateHomeFeed()
@@ -243,7 +239,6 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 				
 
 			} else {
-				// SSA: 새로운 아이템 추가 - 홈피드 맨 위에 즉시 표시!
 				await cacheManager.addNewItem(fullItemPayload as Item)
 			}
 			
@@ -294,9 +289,8 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 				return
 			}
 
-			// 스마트 네비게이션: 사용자가 온 곳으로 적절히 돌아가기
+			// 수정 폼은 history에 남기지 않고, 작성자는 원래 진입 경로로 돌려보낸다.
 			if (onNavigateBack) {
-				// 업계 표준: 수정 완료 후 History Replace로 수정폼 제거
 				onNavigateBack(itemId, { replace: isEditMode })
 			} else {
 				// 폴백: 홈화면으로 이동 (새로운 아이템이 이미 캐시에 추가됨)

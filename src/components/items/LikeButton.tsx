@@ -1,9 +1,3 @@
-/**
- * 간단화된 LikeButton - 업계 표준 방식
- * 기존 400줄 → 50줄로 대폭 간소화
- * 통합 캐시 매니저 사용으로 완벽한 데이터 일관성 보장
- */
-
 "use client"
 
 import { useState, forwardRef, useRef, useCallback } from "react"
@@ -24,7 +18,7 @@ interface LikeButtonProps {
   initialLikesCount?: number
   initialHasLiked?: boolean
   isAuthLoading?: boolean
-  	cachedItem?: Item // SSA 캐시된 완전한 아이템 데이터 (이미지 보존용)
+  cachedItem?: Item // 부분 갱신 시 이미지 등 기존 필드를 보존할 fallback
 }
 
 export const LikeButton = forwardRef<HTMLButtonElement, LikeButtonProps>(({
@@ -36,12 +30,8 @@ export const LikeButton = forwardRef<HTMLButtonElement, LikeButtonProps>(({
   isAuthLoading = false,
   cachedItem: providedCachedItem,
 }, ref) => {
-  // SSA 표준: 완전한 아이템 데이터를 fallback으로 사용 (이미지 보존)
-
-  
-  // SSA 업계표준: 이미지 데이터 완전 보존 + 부분 업데이트
+  // 부분 상태만 바꿀 때 이미지 등 기존 필드는 유지한다.
   const fallbackItem: Item = providedCachedItem ? {
-    // 기존 데이터 모두 보존 (특히 이미지!)
     ...providedCachedItem,
     // 좋아요/북마크 상태만 보완 (덮어쓰지 않고 보완만)
     likes_count: providedCachedItem.likes_count ?? initialLikesCount,
@@ -79,7 +69,6 @@ export const LikeButton = forwardRef<HTMLButtonElement, LikeButtonProps>(({
   
 
   
-  // SSA 업계표준: 캐시만이 Single Source of Truth (소셜미디어 표준)
   const likesCount = cachedItem.likes_count
   const hasLiked = cachedItem.is_liked
 
@@ -90,21 +79,19 @@ export const LikeButton = forwardRef<HTMLButtonElement, LikeButtonProps>(({
   const isProcessingRef = useRef(false)
   const lastClickTimeRef = useRef(0)
 
-  // Instagram 방식: 좋아요한 사람들 모달 상태
+  // 좋아요한 사람 목록 모달
   const [showLikersModal, setShowLikersModal] = useState(false)
   
-  // 토스 스타일 로그인 유도 바텀시트 상태
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
 
-  // 업계 표준: 완전한 Single Source of Truth
   const handleLike = useCallback(async (e?: React.MouseEvent) => {
-    // 이벤트 전파 방지 - 상위 링크 클릭 방지
+    // 카드 링크로 클릭이 전파되지 않게 한다.
     if (e) {
       e.preventDefault()
       e.stopPropagation()
     }
     
-    // 비로그인 사용자 회원가입 유도 (토스 UX 스타일 - 바텀시트)
+    // 비로그인은 로그인 유도만 열고 원래 화면을 유지한다.
     if (!currentUserId) {
       setShowLoginPrompt(true)
       return
@@ -127,16 +114,14 @@ export const LikeButton = forwardRef<HTMLButtonElement, LikeButtonProps>(({
     setIsLoading(true)
 
     try {
-      // 업계 표준: 캐시만 업데이트, UI는 자동 동기화
       const newHasLiked = !hasLiked
       
-      // SSA 기반: 완전한 Seamless Sync Architecture 패턴 유지
-      // 이미지 정보 보존하면서 Request Deduplication + Batch Processing 유지
+      // 캐시 매니저가 optimistic update와 실패 롤백을 담당한다.
       await cacheManager.like(itemId, currentUserId, newHasLiked, cachedItem)
       
       // 좋아요 알림과 푸시는 DB 트리거가 서버에서 처리한다
       
-      // 부모 컴포넌트에게 알림 (캐시 매니저가 업데이트한 후의 정확한 값 전달)
+      // callback에는 캐시에 반영된 다음 상태를 넘긴다.
 
     } catch (error: unknown) {
       console.error(`❌ LikeButton: Error for ${itemId}:`, error)
@@ -155,9 +140,7 @@ export const LikeButton = forwardRef<HTMLButtonElement, LikeButtonProps>(({
 
   return (
     <>
-      {/* Instagram 방식: 하트 + 숫자 분리 */}
       <div className="flex items-center">
-        {/* 하트 아이콘 버튼 - 좋아요 토글 */}
         <Button
           ref={ref}
           variant="ghost"
@@ -178,7 +161,7 @@ export const LikeButton = forwardRef<HTMLButtonElement, LikeButtonProps>(({
           />
         </Button>
 
-        {/* 숫자 버튼 - 좋아요한 사람들 모달 (Instagram 방식) */}
+        {/* 숫자는 좋아요한 사람 목록을 연다. */}
         <Button
           variant="ghost"
           size="sm"
@@ -204,7 +187,6 @@ export const LikeButton = forwardRef<HTMLButtonElement, LikeButtonProps>(({
         currentUserId={currentUserId}
       />
       
-      {/* 토스 스타일 로그인 유도 바텀시트 */}
       <LoginPromptSheet
         isOpen={showLoginPrompt}
         onClose={() => setShowLoginPrompt(false)}
