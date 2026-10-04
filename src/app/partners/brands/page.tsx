@@ -1,10 +1,9 @@
 import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
-import { BookOpen, CookingPot, GitBranch, Package, Search, ShieldCheck, Soup } from "lucide-react"
+import { BookOpen, Search, ShieldCheck } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import PartnerActionLink from "../partner-action-link"
-import PartnerFlow from "../partner-flow"
 import PartnerInquiryForm from "../partner-inquiry-form"
 import PartnerProof from "../partner-proof"
 
@@ -12,12 +11,11 @@ const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
 
 export const metadata: Metadata = {
   title: "식품·주방 브랜드 이용 안내 | Spoonie",
-  description:
-    "식품·주방 브랜드가 자사 제품을 실제로 활용하는 Recipe를 Spoonie에 직접 게시하는 방법과 콘텐츠 기준.",
+  description: "자사 제품을 실제 요리에 활용하는 Recipe를 브랜드가 직접 Spoonie에 게시하는 방법.",
   alternates: { canonical: `${baseUrl}/partners/brands` },
   openGraph: {
     title: "식품·주방 브랜드 이용 안내 | Spoonie",
-    description: "자사 제품을 실제 요리에 쓰는 Recipe를 브랜드가 직접 올릴 수 있습니다.",
+    description: "제품 광고가 아니라 실제 활용 Recipe를 직접 남겨보세요.",
     url: `${baseUrl}/partners/brands`,
     siteName: "Spoonie",
     type: "website",
@@ -25,39 +23,22 @@ export const metadata: Metadata = {
   },
 }
 
-const brandFlow = [
+const values = [
   {
-    label: "자사 제품",
-    description: "식재료·소스·조리도구처럼 실제 요리 과정에서 쓰이는 제품을 고릅니다.",
-    icon: Package,
-  },
-  {
-    label: "브랜드가 직접 Recipe 작성",
-    description: "제품 설명이 아니라 재료·분량·단계가 있는 실제 조리 가능한 Recipe로 올립니다.",
+    title: "실제 활용법을 Recipe로",
+    description: "제품 소개가 아니라 재료·분량·조리 단계가 있는 요리로 보여줍니다.",
     icon: BookOpen,
   },
   {
-    label: "공개 Recipe",
-    description: "다른 공개 Recipe와 같은 검색·프로필·공유 경로에서 노출될 수 있습니다.",
+    title: "일반 Recipe처럼 발견",
+    description: "공개하면 다른 Recipe와 같은 검색·프로필·공유 경로를 사용합니다.",
     icon: Search,
   },
   {
-    label: "만들어 본 기록",
-    description: "누군가 실제로 요리해 Recipeed를 남기면 원 Recipe와 연결될 수 있습니다.",
-    icon: Soup,
+    title: "관계는 투명하게",
+    description: "자사 제품이거나 협찬·제공받은 제품이면 프로필이나 본문에 그 관계를 밝힙니다.",
+    icon: ShieldCheck,
   },
-  {
-    label: "참고·파생 Recipe",
-    description: "다른 Recipe가 참고 관계를 남기면 제품의 실제 사용 맥락도 함께 이어질 수 있습니다.",
-    icon: GitBranch,
-  },
-]
-
-const brandSignals = [
-  { label: "브랜드가 직접 게시", icon: CookingPot },
-  { label: "실제 조리 가능한 Recipe", icon: BookOpen },
-  { label: "제품 관계를 투명하게 표시", icon: ShieldCheck },
-  { label: "일반 콘텐츠와 같은 발견 규칙", icon: Search },
 ]
 
 export default function BrandPartnersPage() {
@@ -69,59 +50,9 @@ export default function BrandPartnersPage() {
             <Image src="/logo-full.svg" alt="Spoonie" width={100} height={32} priority />
           </Link>
           <p className="mt-5 text-meta text-ink-soft">For Food & Kitchen Brands</p>
-          <h1 className="mt-2 text-display text-ink">
-            자사 제품으로 만든
-            <br />
-            Recipe를 직접 올려도 됩니다
-          </h1>
+          <h1 className="mt-2 text-display text-ink">제품을 파는 글보다<br />제품으로 만드는 Recipe</h1>
           <p className="mt-4 text-body text-ink-soft">
-            Creator가 모일 때까지 기다릴 필요는 없습니다. 식품·소스·조리도구 브랜드도 직접 가입해 자사 제품을 실제로
-            활용하는 Recipe를 게시할 수 있습니다.
-          </p>
-        </section>
-
-        <section className="border-t border-border px-4 py-6" aria-labelledby="brand-rule">
-          <h2 id="brand-rule" className="text-heading text-ink">광고판이 아니라 요리 콘텐츠로</h2>
-          <p className="mt-3 text-body text-ink-soft">
-            제품 구매를 유도하는 카탈로그 글보다, 그 제품으로 실제 무엇을 어떻게 만들 수 있는지가 먼저여야 합니다.
-            자사 제품이거나 제품을 제공·협찬받은 관계라면 프로필 또는 본문에서 그 관계를 분명히 밝혀주세요.
-          </p>
-        </section>
-
-        <PartnerFlow
-          title="지금 바로 가능한 흐름"
-          summary="브랜드가 직접 Recipe를 만드는 데 Creator 매칭은 필요하지 않습니다. 이후 사용자 활동은 실제로 발생할 때만 관계가 이어집니다."
-          steps={brandFlow}
-          signals={brandSignals}
-        />
-
-        <PartnerProof segment="brand" />
-
-        <section className="border-t border-border px-4 py-6" aria-labelledby="brand-standard">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5 text-ink" aria-hidden />
-            <h2 id="brand-standard" className="text-heading text-ink">브랜드 Recipe 기준</h2>
-          </div>
-          <div className="mt-4 border-y border-border">
-            <p className="py-3 text-label text-ink">재료·분량·조리 단계가 있어 실제로 따라 만들 수 있어야 합니다.</p>
-            <p className="border-t border-border py-3 text-label text-ink">브랜드가 권리를 가진 사진과 내용을 사용해야 합니다.</p>
-            <p className="border-t border-border py-3 text-label text-ink">자사 제품·협찬·제공 관계를 숨기지 않습니다.</p>
-            <p className="border-t border-border py-3 text-label text-ink">같은 제품 광고를 반복하거나 과장된 효능을 주장하는 글은 허용하지 않습니다.</p>
-          </div>
-        </section>
-
-        <section className="border-t border-border px-4 py-6">
-          <p className="text-heading text-ink">현재 제공하지 않는 것</p>
-          <p className="mt-3 text-body text-ink-soft">
-            Spoonie는 아직 Creator 매칭, 유료 캠페인 운영, 도달·판매 성과 보장 서비스를 제공하지 않습니다.
-            브랜드와 Creator를 연결하는 중개 모델은 실제 사용자 활동이 충분히 생긴 뒤 별도로 검토할 수 있습니다.
-          </p>
-        </section>
-
-        <section className="border-t border-border px-4 py-6">
-          <p className="text-heading text-ink">브랜드 계정으로 직접 시작해 보세요</p>
-          <p className="mt-2 text-meta text-ink-soft">
-            가입 후 Recipe 작성 화면으로 바로 이어집니다. 첫 게시물은 제품 하나를 실제로 활용하는 Recipe 하나면 충분합니다.
+            식품·소스·조리도구 브랜드도 직접 가입해 자사 제품을 실제로 활용하는 Recipe를 올릴 수 있습니다.
           </p>
           <PartnerActionLink
             href="/signup?next=%2Frecipes%2Fnew"
@@ -129,19 +60,38 @@ export default function BrandPartnersPage() {
             action="signup_to_recipe"
             className={buttonVariants({ variant: "default", size: "lg", className: "mt-5 w-full" })}
           >
-            가입하고 브랜드 Recipe 올리기
+            브랜드 Recipe 올리기
           </PartnerActionLink>
         </section>
 
-        <section className="border-t border-border px-4 py-6">
-          <div className="flex items-center gap-2">
-            <CookingPot className="h-5 w-5 text-ink" aria-hidden />
-            <p className="text-heading text-ink">운영 기준이 궁금하다면</p>
+        <section className="border-t border-border px-4 py-6" aria-labelledby="brand-value">
+          <h2 id="brand-value" className="text-heading text-ink">이렇게 쓰면 됩니다</h2>
+          <div className="mt-4 divide-y divide-border border-y border-border">
+            {values.map(({ title, description, icon: Icon }) => (
+              <div key={title} className="flex gap-3 py-4">
+                <Icon className="mt-0.5 h-5 w-5 shrink-0 text-orange-ink" strokeWidth={1.75} aria-hidden />
+                <div className="min-w-0">
+                  <p className="text-label text-ink">{title}</p>
+                  <p className="mt-1 text-meta text-ink-soft">{description}</p>
+                </div>
+              </div>
+            ))}
           </div>
-          <p className="mt-2 text-meta text-ink-soft">
-            올리려는 제품과 Recipe 맥락을 남겨주세요. 기존 제안 메일을 받았다면 그 메일에 그대로 회신해도 됩니다.
+          <p className="mt-4 text-meta text-ink-soft">
+            상품 카탈로그, 반복 구매 유도, 과장된 효능 주장은 Recipe로 보지 않습니다.
           </p>
-          <PartnerInquiryForm segment="brand" />
+        </section>
+
+        <PartnerProof segment="brand" />
+
+        <section className="border-t border-border px-4 py-5">
+          <details>
+            <summary className="cursor-pointer text-label text-ink">게시 전에 확인할 게 있나요?</summary>
+            <p className="mt-3 text-meta text-ink-soft">
+              올리려는 제품과 Recipe 아이디어를 남겨주세요. 크리에이터 매칭이나 캠페인 운영은 현재 제공 기능이 아닙니다.
+            </p>
+            <PartnerInquiryForm segment="brand" />
+          </details>
         </section>
       </article>
     </div>

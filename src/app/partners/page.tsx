@@ -10,11 +10,11 @@ const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
 
 export const metadata: Metadata = {
   title: "크리에이터·브랜드 안내 | Spoonie",
-  description: "요리 크리에이터와 식품·주방 브랜드가 Spoonie에서 직접 Recipe를 만들고 공유하는 방법.",
+  description: "요리 크리에이터와 식품·주방 브랜드가 Spoonie에 Recipe를 직접 올리는 방법.",
   alternates: { canonical: `${baseUrl}/partners` },
   openGraph: {
     title: "크리에이터·브랜드 안내 | Spoonie",
-    description: "요리를 만드는 사람과 브랜드 모두 Spoonie에서 직접 Recipe를 남길 수 있습니다.",
+    description: "만들어 둔 요리를 Recipe로 남기고 다시 쓰세요.",
     url: `${baseUrl}/partners`,
     siteName: "Spoonie",
     type: "website",
@@ -31,11 +31,9 @@ export default function PartnersPage() {
           <Link href="/" className="inline-flex" aria-label="Spoonie 홈">
             <Image src="/logo-full.svg" alt="Spoonie" width={100} height={32} priority />
           </Link>
-          <p className="mt-5 text-meta text-ink-soft">Create on Spoonie</p>
-          <h1 className="mt-2 text-display text-ink">요리를 만드는 사람이라면</h1>
+          <h1 className="mt-5 text-display text-ink">만들어 둔 요리를<br />Recipe로 남겨보세요</h1>
           <p className="mt-4 text-body text-ink-soft">
-            Spoonie는 아직 작은 서비스입니다. 크리에이터도, 식품·주방 브랜드도 별도 제휴 계약 없이 직접 가입해
-            실제로 다시 만들 수 있는 Recipe를 공개할 수 있습니다.
+            Spoonie는 재료·분량·조리 과정을 다시 꺼내 쓸 수 있게 남기고, 다른 요리 기록과 이어주는 서비스입니다.
           </p>
         </section>
 
@@ -44,17 +42,16 @@ export default function PartnersPage() {
             <Users className="h-5 w-5 text-ink" aria-hidden />
             <h2 className="text-heading text-ink">요리 크리에이터</h2>
           </div>
-          <p className="mt-3 text-body text-ink-soft">
-            이미 SNS나 블로그에 올린 요리가 있다면 몇 개만 Recipe로 옮겨보세요. 재료·분량·과정을 구조화하고,
-            이후 누군가 직접 만든 기록이나 참고 Recipe가 생기면 원 Recipe와 이어집니다.
+          <p className="mt-2 text-body text-ink-soft">
+            SNS·블로그에 이미 있는 레시피 몇 개부터 Spoonie에 정리해 보세요.
           </p>
           <PartnerActionLink
             href="/partners/creators"
             segment="hub"
             action="creator_segment_open"
-            className={buttonVariants({ variant: "default", size: "lg", className: "mt-5 w-full" })}
+            className={buttonVariants({ variant: "default", size: "lg", className: "mt-4 w-full" })}
           >
-            크리에이터 이용 안내 <ArrowRight aria-hidden />
+            크리에이터 안내 <ArrowRight aria-hidden />
           </PartnerActionLink>
         </section>
 
@@ -63,25 +60,17 @@ export default function PartnersPage() {
             <CookingPot className="h-5 w-5 text-ink" aria-hidden />
             <h2 className="text-heading text-ink">식품·주방 브랜드</h2>
           </div>
-          <p className="mt-3 text-body text-ink-soft">
-            자사 식재료나 조리도구를 실제로 활용하는 Recipe를 브랜드가 직접 올려도 됩니다. 제품 카탈로그가 아니라
-            재료·분량·조리 과정이 있는 요리 콘텐츠여야 하고, 자사 제품이라는 관계는 투명하게 밝혀주세요.
+          <p className="mt-2 text-body text-ink-soft">
+            자사 제품을 실제로 활용하는 조리 가능한 Recipe를 브랜드가 직접 올릴 수 있습니다.
           </p>
           <PartnerActionLink
             href="/partners/brands"
             segment="hub"
             action="brand_segment_open"
-            className={buttonVariants({ variant: "default", size: "lg", className: "mt-5 w-full" })}
+            className={buttonVariants({ variant: "outline", size: "lg", className: "mt-4 w-full" })}
           >
-            브랜드 이용 안내 <ArrowRight aria-hidden />
+            브랜드 안내 <ArrowRight aria-hidden />
           </PartnerActionLink>
-        </section>
-
-        <section className="border-t border-border px-4 py-5">
-          <p className="text-meta text-ink-soft">
-            Spoonie는 현재 Creator 매칭이나 광고 캠페인 중개 서비스를 제공하지 않습니다. 그런 모델은 실제 사용자와
-            Recipe 활동이 충분히 생긴 뒤 검토할 수 있는 다음 단계입니다.
-          </p>
         </section>
       </article>
     </div>

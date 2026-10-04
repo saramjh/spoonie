@@ -102,6 +102,7 @@
 - 파트너 랜딩의 세그먼트 진입, 실제 Recipe/프로필 열기, 사이트 이동, signup, 문의 제출은 GA4 `partner_action` 이벤트로 측정한다. `partner_segment`, `partner_action` 파라미터로 구분하고, 실제 문의 내용은 별도 서버 전용 `partner_inquiries`에 저장한다.
 - 외부에서 직접 들어온 파트너는 전용 문의 폼을 사용한다. 폼은 `/api/partner-inquiry`를 통해서만 저장하며 `partner_inquiries`는 RLS 활성화 + anon/authenticated 권한 없음으로 브라우저 직접 접근을 막는다. 아웃리치 수신자는 기존 메일에 그대로 회신해도 된다.
 - 기존 hash 링크는 브라우저에서 각각 전용 랜딩으로 `replace`하고, JavaScript가 없어도 허브의 동일 anchor에서 전용 페이지 CTA를 제공한다. 정정 메일은 보내지 않는다.
+- 파트너 랜딩은 운영정책·사업계획 설명서가 아니다. 각 타깃마다 `즉시 가치 → 현재 가능한 사용 예 → 한 가지 주 CTA`만 전면에 둔다. 미래 모델, 예외 조건, 정책 세부사항, 중복된 가치 설명은 랜딩에 누적하지 않고 운영 문서·약관·후속 응답으로 보낸다. 재귀 검토는 기본적으로 추가보다 삭제·통합을 우선한다.
 - 외부 후보는 공개된 사업/제휴 채널만 사용한다. 개인정보/CS 전용 주소를 마케팅 목적으로 우회 사용하지 않는다. 현재 acquisition의 목표는 계약 체결보다 실제 Recipe 작성 사용자 확보이며, Recipe를 직접 만들 수 있는 요리 크리에이터와 자사 활용 Recipe를 자체 제작할 수 있는 식품·주방 브랜드를 모두 유효한 공급 측 사용자로 본다.
 - 발송 전 `growth_outreach_targets`와 Gmail Sent를 모두 확인해 중복 접촉을 막는다. 일괄 복붙 대신 대상별 실제 적합 이유가 있을 때만 개인화한다.
 - `growth_outreach_targets`는 서버 전용(RLS + browser policy 없음)으로 후보 유형, 공개 연락 채널, 적합 이유, 접촉/응답 상태, 다음 follow-up 시각, 외부 thread/message ID를 저장한다.
