@@ -452,7 +452,7 @@ export default function ProfileEditor({
               id="profileMessage"
               value={formData.profileMessage}
               onChange={(e) => setFormData((prev) => ({ ...prev, profileMessage: e.target.value }))}
-              placeholder="어떤 요리를 주로 하는지 적어 보세요"
+              placeholder="어떤 요리를 주로 하는지, 브랜드라면 어떤 제품을 만드는지 적어 보세요"
               maxLength={150}
               className="mt-1.5 h-28 resize-none text-body"
             />

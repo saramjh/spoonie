@@ -96,14 +96,16 @@
 ## Proactive acquisition
 
 - 목적은 자동화 자체가 아니라 실제 고적합 사용자·크리에이터·브랜드 유입이다. Instagram 예약 게시 성과를 기다리기만 하지 않는다.
-- 공개 파트너 설명면은 `/partners` 허브 + `/partners/creators` + `/partners/brands`로 분리한다. 현재 cold-start 단계에서는 `/partners/creators`를 Founding Creator 모집/활성화 랜딩으로 우선 사용한다. `/partners/brands`는 즉시 Creator 매칭을 파는 페이지가 아니라 Brand Early Access로 운영하며, 제품·사용 맥락을 미리 받거나 브랜드가 이미 보유한 Creator와 조기 파일럿 가능성을 검토한다. Spoonie에 실제 활성 Creator pool이 생기기 전에는 매칭·도달 규모를 약속하지 않는다.
+- 공개 안내면은 `/partners` 허브 + `/partners/creators` + `/partners/brands`로 분리한다. 크리에이터와 브랜드 모두 현재 제품을 직접 사용할 수 있는 콘텐츠 작성자다. 브랜드는 별도 제휴 없이 자사 제품을 실제로 활용한 Recipe/Recipeed를 올릴 수 있으며, 자사·협찬·제품 제공 관계를 프로필이나 본문에서 밝힌다. 현재 제품은 Creator↔Brand 매칭, 캠페인 중개, 도달·판매 보장을 제공하지 않는다.
 - 기존 2026-10-04 발송분의 `/partners#creators`, `/partners#brands` 링크는 깨지지 않게 유지한다.
 - Creator/Brand 전용 랜딩은 실제 공개 Recipe 화면 캡처와 실제 Recipe/프로필 링크를 proof로 사용한다. 생성형 이미지로 제품 동작을 가장하지 않는다.
 - 파트너 랜딩의 세그먼트 진입, 실제 Recipe/프로필 열기, 사이트 이동, signup, 문의 제출은 GA4 `partner_action` 이벤트로 측정한다. `partner_segment`, `partner_action` 파라미터로 구분하고, 실제 문의 내용은 별도 서버 전용 `partner_inquiries`에 저장한다.
 - 외부에서 직접 들어온 파트너는 전용 문의 폼을 사용한다. 폼은 `/api/partner-inquiry`를 통해서만 저장하며 `partner_inquiries`는 RLS 활성화 + anon/authenticated 권한 없음으로 브라우저 직접 접근을 막는다. 아웃리치 수신자는 기존 메일에 그대로 회신해도 된다.
 - 기존 hash 링크는 브라우저에서 각각 전용 랜딩으로 `replace`하고, JavaScript가 없어도 허브의 동일 anchor에서 전용 페이지 CTA를 제공한다. 정정 메일은 보내지 않는다.
-- 외부 후보는 공개된 사업/제휴 채널만 사용한다. 개인정보/CS 전용 주소를 마케팅 목적으로 우회 사용하지 않는다.
+- 외부 후보는 공개된 사업/제휴 채널만 사용한다. 개인정보/CS 전용 주소를 마케팅 목적으로 우회 사용하지 않는다. 현재 acquisition의 목표는 계약 체결보다 실제 Recipe 작성 사용자 확보이며, Recipe를 직접 만들 수 있는 요리 크리에이터와 자사 활용 Recipe를 자체 제작할 수 있는 식품·주방 브랜드를 모두 유효한 공급 측 사용자로 본다.
 - 발송 전 `growth_outreach_targets`와 Gmail Sent를 모두 확인해 중복 접촉을 막는다. 일괄 복붙 대신 대상별 실제 적합 이유가 있을 때만 개인화한다.
 - `growth_outreach_targets`는 서버 전용(RLS + browser policy 없음)으로 후보 유형, 공개 연락 채널, 적합 이유, 접촉/응답 상태, 다음 follow-up 시각, 외부 thread/message ID를 저장한다.
 - 무응답 follow-up은 최초 연락 후 최소 7일 뒤 한 번만 하는 것을 기본으로 하고, 계속 무응답이면 중단한다. 답장이 오면 자동 반복 발송보다 응답 내용에 맞는 다음 행동을 우선한다.
+- 브랜드 self-serve 아웃리치는 현재 가능하지만, `Creator를 연결해주겠다`는 제안으로 보내지 않는다. 브랜드가 자체적으로 만들 수 있는 실제 Recipe 1~3개를 Spoonie에 직접 게시하는 사용 시나리오가 명확한 경우에만 제안한다. Creator 매칭/유료 캠페인은 향후 별도 검증 영역이다.
+- 현재 프로필 데이터에는 개인/조직 entity type이 없다. 첫 실제 브랜드 계정이 활성화되기 전까지 이름·소개 문구로 브랜드 여부를 추측하거나 기존 `profiles.role`을 재활용하지 않는다. 첫 브랜드 계정 활성화 시 명시적 `person|organization` 프로필 타입을 도입하고 Profile/Recipe/Recipeed JSON-LD의 작성자 타입까지 함께 전파하는 것을 기술 게이트로 처리한다.
 - 계약, 비용 집행, 독점/공식 파트너 표현, 법적·평판 리스크가 있는 조건은 사용자 승인 대상으로 올린다.

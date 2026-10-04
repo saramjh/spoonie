@@ -146,7 +146,7 @@ export default function PartnerInquiryForm({ segment }: PartnerInquiryFormProps)
 
       <div>
         <label htmlFor={segment + "-message"} className="text-label text-ink">
-          {creator ? "같이 확인해보고 싶은 것" : "제품 · Recipe 맥락 · 기존 Creator 여부"}
+          {creator ? "같이 확인해보고 싶은 것" : "제품 · 올려보고 싶은 Recipe"}
         </label>
         <Textarea
           id={segment + "-message"}
@@ -158,7 +158,7 @@ export default function PartnerInquiryForm({ segment }: PartnerInquiryFormProps)
           placeholder={
             creator
               ? "예: 기존 Recipe 2~3개로 실제 조리 기록과 파생 관계가 어떻게 연결되는지 보고 싶습니다."
-              : "예: 특정 팬 제품 / 볶음·구이 Recipe / 현재 함께하는 요리 Creator 2명 있음 (또는 기존 Creator 없음)"
+              : "예: 자사 팬 제품으로 볶음밥·구이 Recipe를 직접 올려보고 싶습니다."
           }
         />
       </div>
@@ -175,7 +175,7 @@ export default function PartnerInquiryForm({ segment }: PartnerInquiryFormProps)
       )}
 
       <Button type="submit" size="lg" className="w-full" disabled={state === "sending"}>
-        {state === "sending" ? "접수 중..." : creator ? "크리에이터 파일럿 문의 보내기" : "브랜드 파일럿 문의 보내기"}
+        {state === "sending" ? "접수 중..." : creator ? "크리에이터 이용 문의 보내기" : "브랜드 이용 문의 보내기"}
         {state !== "sending" && <Send className="h-4 w-4" aria-hidden />}
       </Button>
       <p className="text-center text-meta text-ink-soft">

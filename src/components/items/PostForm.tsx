@@ -368,6 +368,7 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 								className="mt-1.5 resize-none text-body"
 							/>
 							{errors.content && <p className={errorText}>{errors.content.message}</p>}
+							<p className="mt-1 text-meta text-ink-soft">자사·협찬 제품을 다루는 글이라면 제품과의 관계를 프로필이나 본문에 분명히 적어주세요.</p>
 						</div>
 
 						<div>

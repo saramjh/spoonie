@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
-import { BookOpen, CookingPot, GitBranch, Package, SearchCheck, Soup, UsersRound } from "lucide-react"
+import { BookOpen, CookingPot, GitBranch, Package, Search, ShieldCheck, Soup } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import PartnerActionLink from "../partner-action-link"
 import PartnerFlow from "../partner-flow"
@@ -9,14 +9,15 @@ import PartnerInquiryForm from "../partner-inquiry-form"
 import PartnerProof from "../partner-proof"
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
+
 export const metadata: Metadata = {
-  title: "주방·식품 브랜드 Early Access | Spoonie",
+  title: "식품·주방 브랜드 이용 안내 | Spoonie",
   description:
-    "Spoonie의 Creator cohort 형성 이후 열 브랜드 Recipe 파일럿을 위한 Early Access. 제품·사용 맥락을 미리 공유하거나 기존 Creator와 조기 파일럿을 검토할 수 있습니다.",
+    "식품·주방 브랜드가 자사 제품을 실제로 활용하는 Recipe를 Spoonie에 직접 게시하는 방법과 콘텐츠 기준.",
   alternates: { canonical: `${baseUrl}/partners/brands` },
   openGraph: {
-    title: "주방·식품 브랜드 Early Access | Spoonie",
-    description: "Creator cohort 형성 이후 시작할 Recipe 기반 브랜드 파일럿을 미리 준비합니다.",
+    title: "식품·주방 브랜드 이용 안내 | Spoonie",
+    description: "자사 제품을 실제 요리에 쓰는 Recipe를 브랜드가 직접 올릴 수 있습니다.",
     url: `${baseUrl}/partners/brands`,
     siteName: "Spoonie",
     type: "website",
@@ -26,37 +27,37 @@ export const metadata: Metadata = {
 
 const brandFlow = [
   {
-    label: "제품",
-    description: "쿡웨어나 식재료처럼 실제 조리 과정에서 쓰이는 제품을 시작점으로 둡니다.",
+    label: "자사 제품",
+    description: "식재료·소스·조리도구처럼 실제 요리 과정에서 쓰이는 제품을 고릅니다.",
     icon: Package,
   },
   {
-    label: "제품이 쓰인 Recipe",
-    description: "제품이 어떤 요리에서 어떻게 쓰이는지 실제 조리 가능한 Recipe로 남깁니다.",
+    label: "브랜드가 직접 Recipe 작성",
+    description: "제품 설명이 아니라 재료·분량·단계가 있는 실제 조리 가능한 Recipe로 올립니다.",
     icon: BookOpen,
   },
   {
-    label: "Creator·사용자 조리",
-    description: "크리에이터와 사용자가 같은 Recipe를 실제로 만들어 보는 사용 맥락을 만듭니다.",
-    icon: CookingPot,
+    label: "공개 Recipe",
+    description: "다른 공개 Recipe와 같은 검색·프로필·공유 경로에서 노출될 수 있습니다.",
+    icon: Search,
   },
   {
-    label: "Recipeed",
-    description: "직접 만들어 본 사진과 경험을 원 Recipe에 연결해 단발 노출 뒤의 행동을 남깁니다.",
+    label: "만들어 본 기록",
+    description: "누군가 실제로 요리해 Recipeed를 남기면 원 Recipe와 연결될 수 있습니다.",
     icon: Soup,
   },
   {
-    label: "파생 사용 사례",
-    description: "참고·변형 Recipe가 생기면 제품이 쓰인 새로운 조리 맥락으로 관계가 확장될 수 있습니다.",
+    label: "참고·파생 Recipe",
+    description: "다른 Recipe가 참고 관계를 남기면 제품의 실제 사용 맥락도 함께 이어질 수 있습니다.",
     icon: GitBranch,
   },
 ]
 
 const brandSignals = [
-  { label: "실제 사용 맥락", icon: CookingPot },
-  { label: "Recipe 기반 콘텐츠", icon: BookOpen },
-  { label: "Creator·사용자 연결", icon: UsersRound },
-  { label: "파생 사용 사례", icon: SearchCheck },
+  { label: "브랜드가 직접 게시", icon: CookingPot },
+  { label: "실제 조리 가능한 Recipe", icon: BookOpen },
+  { label: "제품 관계를 투명하게 표시", icon: ShieldCheck },
+  { label: "일반 콘텐츠와 같은 발견 규칙", icon: Search },
 ]
 
 export default function BrandPartnersPage() {
@@ -67,87 +68,80 @@ export default function BrandPartnersPage() {
           <Link href="/" className="inline-flex" aria-label="Spoonie 홈">
             <Image src="/logo-full.svg" alt="Spoonie" width={100} height={32} priority />
           </Link>
-          <p className="mt-5 text-meta text-ink-soft">Brand Early Access</p>
+          <p className="mt-5 text-meta text-ink-soft">For Food & Kitchen Brands</p>
           <h1 className="mt-2 text-display text-ink">
-            제품을 보여주는 데서
+            자사 제품으로 만든
             <br />
-            실제로 쓰이는 요리까지
+            Recipe를 직접 올려도 됩니다
           </h1>
           <p className="mt-4 text-body text-ink-soft">
-            Spoonie는 지금 첫 Creator cohort를 만드는 단계라 Creator 매칭을 약속하지 않습니다.
-            브랜드에는 cohort 형성 이후 열 파일럿을 위해 제품과 실제 사용 맥락을 미리 받거나,
-            이미 함께하는 Creator가 있는 경우 조기 파일럿 가능성을 검토합니다.
+            Creator가 모일 때까지 기다릴 필요는 없습니다. 식품·소스·조리도구 브랜드도 직접 가입해 자사 제품을 실제로
+            활용하는 Recipe를 게시할 수 있습니다.
           </p>
         </section>
 
-        <section className="border-t border-border px-4 py-6" aria-labelledby="brand-difference">
-          <h2 id="brand-difference" className="text-heading text-ink">지금 브랜드가 할 수 있는 것은 무엇인가요?</h2>
+        <section className="border-t border-border px-4 py-6" aria-labelledby="brand-rule">
+          <h2 id="brand-rule" className="text-heading text-ink">광고판이 아니라 요리 콘텐츠로</h2>
           <p className="mt-3 text-body text-ink-soft">
-            제품군과 실제 사용 맥락을 먼저 공유해두면 Creator cohort가 준비된 뒤 적합한 파일럿을 설계할 수 있습니다.
-            이미 브랜드가 함께하는 요리 Creator를 보유하고 있다면 그 Creator가 Spoonie에 참여하는 방식의 조기 파일럿도 검토할 수 있습니다.
+            제품 구매를 유도하는 카탈로그 글보다, 그 제품으로 실제 무엇을 어떻게 만들 수 있는지가 먼저여야 합니다.
+            자사 제품이거나 제품을 제공·협찬받은 관계라면 프로필 또는 본문에서 그 관계를 분명히 밝혀주세요.
           </p>
         </section>
 
         <PartnerFlow
-          title="Creator가 준비되면 이런 흐름을 검증합니다"
-          summary="아래는 현재 확보된 Creator network를 뜻하지 않습니다. Spoonie가 만들려는 파일럿 구조이며, 실제 참여 Creator가 확보된 뒤 단계적으로 검증합니다."
+          title="지금 바로 가능한 흐름"
+          summary="브랜드가 직접 Recipe를 만드는 데 Creator 매칭은 필요하지 않습니다. 이후 사용자 활동은 실제로 발생할 때만 관계가 이어집니다."
           steps={brandFlow}
           signals={brandSignals}
         />
 
         <PartnerProof segment="brand" />
 
-        <section className="border-t border-border px-4 py-6" aria-labelledby="brand-pilot">
+        <section className="border-t border-border px-4 py-6" aria-labelledby="brand-standard">
           <div className="flex items-center gap-2">
-            <CookingPot className="h-5 w-5 text-ink" aria-hidden />
-            <h2 id="brand-pilot" className="text-heading text-ink">파일럿을 여는 두 가지 경로</h2>
+            <ShieldCheck className="h-5 w-5 text-ink" aria-hidden />
+            <h2 id="brand-standard" className="text-heading text-ink">브랜드 Recipe 기준</h2>
           </div>
           <div className="mt-4 border-y border-border">
-            <p className="py-3 text-label text-ink">① 브랜드에 기존 요리 Creator가 있다면 함께 Spoonie 조기 파일럿을 검토합니다.</p>
-            <p className="border-t border-border py-3 text-label text-ink">② 기존 Creator가 없다면 제품군·사용 맥락을 Early Access로 남기고 Creator cohort 형성 뒤 검토합니다.</p>
-            <p className="border-t border-border py-3 text-label text-ink">파일럿이 열리면 한 제품군과 2~3개 Recipe 맥락부터 작게 시작합니다.</p>
-            <p className="border-t border-border py-3 text-label text-ink">Spoonie가 현재 없는 Creator나 도달 규모를 있는 것처럼 약속하지 않습니다.</p>
+            <p className="py-3 text-label text-ink">재료·분량·조리 단계가 있어 실제로 따라 만들 수 있어야 합니다.</p>
+            <p className="border-t border-border py-3 text-label text-ink">브랜드가 권리를 가진 사진과 내용을 사용해야 합니다.</p>
+            <p className="border-t border-border py-3 text-label text-ink">자사 제품·협찬·제공 관계를 숨기지 않습니다.</p>
+            <p className="border-t border-border py-3 text-label text-ink">같은 제품 광고를 반복하거나 과장된 효능을 주장하는 글은 허용하지 않습니다.</p>
           </div>
         </section>
 
-        <section className="border-t border-border px-4 py-6" aria-labelledby="brand-current">
-          <div className="flex items-center gap-2">
-            <SearchCheck className="h-5 w-5 text-ink" aria-hidden />
-            <h2 id="brand-current" className="text-heading text-ink">현재 가능한 범위</h2>
-          </div>
+        <section className="border-t border-border px-4 py-6">
+          <p className="text-heading text-ink">현재 제공하지 않는 것</p>
           <p className="mt-3 text-body text-ink-soft">
-            Spoonie에는 공개 Recipe, Recipeed, 작성자 프로필, 검색, 팔로우, 참고 Recipe 연결이 동작합니다.
-            다만 현재는 Founding Creator를 모집하는 단계이며, 브랜드에 즉시 연결할 수 있는 Creator pool이 이미 있다는 뜻은 아닙니다.
-          </p>
-          <p className="mt-4 text-meta text-ink-soft">
-            따라서 지금 브랜드 문의의 목적은 Creator 매칭 구매가 아니라 제품·사용 맥락을 미리 공유하거나,
-            브랜드가 이미 보유한 Creator와 조기 파일럿 가능성을 확인하는 것입니다.
+            Spoonie는 아직 Creator 매칭, 유료 캠페인 운영, 도달·판매 성과 보장 서비스를 제공하지 않습니다.
+            브랜드와 Creator를 연결하는 중개 모델은 실제 사용자 활동이 충분히 생긴 뒤 별도로 검토할 수 있습니다.
           </p>
         </section>
 
         <section className="border-t border-border px-4 py-6">
-          <p className="text-heading text-ink">브랜드 Early Access를 남겨두세요</p>
+          <p className="text-heading text-ink">브랜드 계정으로 직접 시작해 보세요</p>
           <p className="mt-2 text-meta text-ink-soft">
-            제안 메일을 받고 오셨다면 그대로 회신하셔도 됩니다. 처음 방문하셨다면 제품군, 실제로 만들고 싶은 Recipe 맥락,
-            그리고 현재 함께하는 요리 Creator가 있는지를 알려주세요. Creator가 없다면 cohort 형성 이후 검토합니다.
+            가입 후 Recipe 작성 화면으로 바로 이어집니다. 첫 게시물은 제품 하나를 실제로 활용하는 Recipe 하나면 충분합니다.
+          </p>
+          <PartnerActionLink
+            href="/signup?next=%2Frecipes%2Fnew"
+            segment="brand"
+            action="signup_to_recipe"
+            className={buttonVariants({ variant: "default", size: "lg", className: "mt-5 w-full" })}
+          >
+            가입하고 브랜드 Recipe 올리기
+          </PartnerActionLink>
+        </section>
+
+        <section className="border-t border-border px-4 py-6">
+          <div className="flex items-center gap-2">
+            <CookingPot className="h-5 w-5 text-ink" aria-hidden />
+            <p className="text-heading text-ink">운영 기준이 궁금하다면</p>
+          </div>
+          <p className="mt-2 text-meta text-ink-soft">
+            올리려는 제품과 Recipe 맥락을 남겨주세요. 기존 제안 메일을 받았다면 그 메일에 그대로 회신해도 됩니다.
           </p>
           <PartnerInquiryForm segment="brand" />
-          <div className="mt-5">
-            <PartnerActionLink
-              href="/"
-              segment="brand"
-              action="site_open"
-              className={buttonVariants({ variant: "outline", size: "lg", className: "w-full" })}
-            >
-              Spoonie 둘러보기
-            </PartnerActionLink>
-          </div>
-          <p className="mt-4 text-center text-meta text-ink-soft">
-            다른 파트너 유형을 찾는다면{" "}
-            <PartnerActionLink href="/partners" segment="brand" action="hub_open" className="underline underline-offset-2">
-              파트너 안내
-            </PartnerActionLink>
-          </p>
         </section>
       </article>
     </div>

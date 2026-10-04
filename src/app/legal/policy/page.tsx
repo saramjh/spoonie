@@ -11,7 +11,7 @@ export default function OperationPolicyPage() {
             홈으로
           </Link>
           <h1 className="text-title text-ink">운영정책</h1>
-          <p className="text-ink-soft">최종 업데이트: 2025년 8월 7일</p>
+          <p className="text-ink-soft">최종 업데이트: 2026년 10월 5일</p>
         </div>
 
         {/* 내용 */}
@@ -36,6 +36,16 @@ export default function OperationPolicyPage() {
               </div>
 
               <div className="mb-6">
+                <h3 className="text-heading text-ink mb-2">브랜드·광고성 콘텐츠 가이드라인</h3>
+                <ul className="list-disc pl-6 text-ink space-y-2">
+                  <li>식품·주방 브랜드와 사업자도 실제 요리·조리 맥락이 있는 Recipe와 Recipeed를 게시할 수 있습니다</li>
+                  <li>자사 제품, 협찬·제공받은 제품처럼 작성자와 제품 사이에 이해관계가 있으면 프로필이나 본문에서 그 관계를 명확히 밝혀주세요</li>
+                  <li>브랜드 콘텐츠도 다른 게시물과 같은 공개·검색·커뮤니티 기준을 적용받으며 별도 노출을 보장하지 않습니다</li>
+                  <li>상품 카탈로그, 반복 구매 유도, 요리와 무관한 홍보, 과장된 효능 주장은 허용하지 않습니다</li>
+                </ul>
+              </div>
+
+              <div className="mb-6">
                 <h3 className="text-heading text-ink mb-2">소통 가이드라인</h3>
                 <ul className="list-disc pl-6 text-ink space-y-2">
                   <li>서로를 존중하고 배려하는 마음으로 소통해주세요</li>
@@ -53,7 +63,7 @@ export default function OperationPolicyPage() {
                 서비스 운영 비용 충당을 위해 Google AdSense 등의 광고 서비스를 이용합니다.
               </p>
               <ul className="list-disc pl-6 text-ink space-y-2 mb-6">
-                <li>광고는 서비스 운영 비용에만 사용되며, 영리 목적이 아닙니다</li>
+                <li>이 항목의 광고는 Spoonie 자체의 운영비 충당용 광고를 뜻하며, 이용자·브랜드 게시물 기준은 위 커뮤니티 가이드라인을 따릅니다</li>
                 <li>광고 쿠키 및 데이터 수집에 대한 자세한 내용은 개인정보처리방침을 참고하세요</li>
                 <li>광고 차단 기능은 브라우저 설정에서 이용할 수 있습니다</li>
               </ul>
@@ -69,7 +79,7 @@ export default function OperationPolicyPage() {
                   <li>음식과 관련 없는 콘텐츠 게시</li>
                   <li>외설적이거나 폭력적인 내용 게시</li>
                   <li>허위 정보나 과장된 효능을 주장하는 내용</li>
-                  <li>상업적 광고나 스팸성 콘텐츠</li>
+                  <li>레시피·요리 맥락 없이 반복되는 광고, 구매 유도 또는 스팸성 콘텐츠</li>
                   <li>저작권을 침해하는 콘텐츠</li>
                 </ul>
               </div>

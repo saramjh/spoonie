@@ -11,7 +11,7 @@ export default function TermsOfServicePage() {
             홈으로
           </Link>
           <h1 className="text-title text-ink">이용약관</h1>
-          <p className="text-ink-soft">최종 업데이트: 2025년 8월 7일</p>
+          <p className="text-ink-soft">최종 업데이트: 2026년 10월 5일</p>
         </div>
 
         {/* 내용 */}
@@ -31,8 +31,8 @@ export default function TermsOfServicePage() {
               <ul className="list-disc pl-6 text-ink space-y-2">
                 <li><strong>“서비스”</strong>라 함은 Spoonie가 제공하는 레시피 공유 플랫폼을 의미합니다.</li>
                 <li><strong>“이용자”</strong>라 함은 이 약관에 따라 서비스를 이용하는 회원 및 비회원을 의미합니다.</li>
-                <li><strong>“회원”</strong>이라 함은 서비스에 개인정보를 제공하여 회원등록을 한 자로서, 서비스의 정보를 지속적으로 제공받으며, 서비스를 계속적으로 이용할 수 있는 자를 의미합니다.</li>
-                <li><strong>“콘텐츠”</strong>라 함은 이용자가 서비스 내에 게시한 레시피, 이미지, 댓글, 평가 등 모든 정보를 의미합니다.</li>
+                <li><strong>“회원”</strong>이라 함은 개인, 사업자 또는 단체로서 서비스에 필요한 정보를 제공하여 회원등록을 하고 서비스를 계속적으로 이용하는 이용자를 의미합니다.</li>
+                <li><strong>“콘텐츠”</strong>라 함은 이용자가 서비스 내에 게시한 레시피, 레시피드, 이미지, 댓글 등 모든 정보를 의미합니다.</li>
               </ul>
             </section>
 
@@ -101,6 +101,7 @@ export default function TermsOfServicePage() {
                     <li>스팸, 광고성 콘텐츠의 무분별한 게시</li>
                   </ul>
                 </li>
+                <li>사업자·단체 또는 광고·협찬 관계가 있는 이용자도 음식·요리·주방과 직접 관련된 콘텐츠를 게시할 수 있습니다. 이 경우 자사 제품, 협찬, 제품 제공 등 이해관계를 프로필 또는 게시물 본문에서 명확히 밝혀야 하며, 레시피·요리 맥락 없이 광고나 구매 유도를 반복해서는 안 됩니다.</li>
               </ol>
             </section>
 
