@@ -213,8 +213,8 @@ export default function RecipesPage() {
 					value={currentTab}
 					onChange={handleTabChange}
 					items={[
-						{ key: "my_recipes", label: "내 레시피" },
-						{ key: "all_recipes", label: "팔로잉" },
+						{ key: "my_recipes", label: "내 레시피", description: "내가 작성한 레시피를 모아 보고 정리해요." },
+						{ key: "all_recipes", label: "팔로우 중", description: "내가 팔로우한 사람들이 올린 공개 레시피를 모아 봐요." },
 					]}
 				/>
 
