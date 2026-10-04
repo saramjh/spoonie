@@ -72,15 +72,7 @@ export const fetchUserItems = async (userId: string, currentUserId?: string, sup
 		// 타인은 공개 view만 조회한다.
 		query = supabase
 			.from("optimized_feed_view")
-			.select(`
-				*,
-				profiles!user_id (
-					username,
-					display_name,
-					avatar_url,
-					public_id
-				)
-			`)
+			.select("*")
 			.eq("user_id", userId)
 			.in("item_type", ["recipe", "post"])
 			.eq("is_public", true)
@@ -99,24 +91,22 @@ export const fetchUserItems = async (userId: string, currentUserId?: string, sup
 		}))
 		: items
 
-	const itemIds = itemsWithAccurateComments.map((item) => item.id)
 	const userLikesMap = new Map<string, boolean>()
 	const userFollowsMap = new Map<string, boolean>()
 
 	if (currentUserId && currentUserId !== "guest") {
-		// 좋아요 상태 확인
-		const { data: userLikes } = await supabase
-			.from("likes")
-			.select("item_id")
-			.eq("user_id", currentUserId)
-			.in("item_id", itemIds)
+		// 본인 프로필은 items를 직접 읽으므로 좋아요 상태만 별도로 채운다.
+		if (currentUserId === userId) {
+			const { data: userLikes } = await supabase
+				.from("likes")
+				.select("item_id")
+				.eq("user_id", currentUserId)
+				.in("item_id", itemsWithAccurateComments.map((item) => item.id))
 
-		userLikes?.forEach((like) => {
-			userLikesMap.set(like.item_id, true)
-		})
-
-		// 팔로우 상태 확인 (프로필 주인과 현재 사용자가 다른 경우에만)
-		if (currentUserId !== userId) {
+			userLikes?.forEach((like) => {
+				userLikesMap.set(like.item_id, true)
+			})
+		} else {
 			const { data: followStatus } = await supabase
 				.from("follows")
 				.select("following_id")
@@ -132,11 +122,19 @@ export const fetchUserItems = async (userId: string, currentUserId?: string, sup
 
 	// 홈화면과 동일한 Item 형태로 변환
 	return itemsWithAccurateComments.map((item) => {
-		const profileData = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
-		const userLikeStatus = userLikesMap.get(item.id)
-		const isLikedValue = currentUserId && currentUserId !== "guest" 
-			? (userLikeStatus !== undefined ? userLikeStatus : false)
-			: false
+		const profileData = currentUserId === userId
+			? (Array.isArray(item.profiles) ? item.profiles[0] : item.profiles)
+			: {
+				display_name: item.display_name,
+				username: item.username,
+				avatar_url: item.avatar_url,
+				public_id: item.user_public_id,
+			}
+		const isLikedValue = !currentUserId || currentUserId === "guest"
+			? false
+			: currentUserId === userId
+				? userLikesMap.get(item.id) === true
+				: Boolean(item.is_liked)
 
 		return {
 			id: item.id,

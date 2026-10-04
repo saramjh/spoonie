@@ -2,7 +2,7 @@
  * 쓰지 않는 사진 파일 정리 (매주 실행, netlify.toml의 schedule)
  *
  * 글을 고치거나 지울 때 브라우저가 바로 지우지만(src/lib/item-images.ts), 그 요청이 빠진 경우를 위한 안전망이다.
- * 남기는 것: 글(비공개 포함)의 대표·단계 사진과 크기별 버전(.w400.jpg/.w800.jpg), 최근 24시간 안에 올라온 파일.
+ * 사용자 UUID 폴더만 정리한다. 글(비공개 포함)의 대표·단계 사진과 크기별 버전(.w400.jpg/.w800.jpg), 최근 24시간 안에 올라온 파일은 남긴다.
  * 안전장치: 조회가 실패하거나, 쓰는 사진이 하나도 없거나, 전체의 절반 넘게 지우게 되면 아무것도 지우지 않는다.
  *
  * 필요한 환경변수: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SECRET_KEY
@@ -12,6 +12,8 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
 const BUCKET = 'item-images';
 const GRACE_MS = 24 * 60 * 60 * 1000;
+const PAGE_SIZE = 1000;
+const USER_FOLDER = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const headers = { apikey: SECRET_KEY, Authorization: `Bearer ${SECRET_KEY}`, 'Content-Type': 'application/json' };
 
@@ -21,13 +23,41 @@ async function call(method, path, body) {
   return res.json();
 }
 
+async function listStoragePrefix(prefix) {
+  const objects = [];
+  for (let offset = 0; ; offset += PAGE_SIZE) {
+    const page = await call('POST', `/storage/v1/object/list/${BUCKET}`, {
+      prefix,
+      limit: PAGE_SIZE,
+      offset,
+      sortBy: { column: 'name', order: 'asc' },
+    });
+    objects.push(...page);
+    if (page.length < PAGE_SIZE) return objects;
+  }
+}
+
+async function listRestRows(path) {
+  const rows = [];
+  for (let offset = 0; ; offset += PAGE_SIZE) {
+    const separator = path.includes('?') ? '&' : '?';
+    const page = await call('GET', `${path}${separator}limit=${PAGE_SIZE}&offset=${offset}`);
+    rows.push(...page);
+    if (page.length < PAGE_SIZE) return rows;
+  }
+}
+
 async function listAll() {
   const objects = [];
-  const top = await call('POST', `/storage/v1/object/list/${BUCKET}`, { prefix: '', limit: 1000 });
+  const top = await listStoragePrefix('');
   for (const entry of top) {
-    if (entry.id) { objects.push(entry); continue; }
-    const inner = await call('POST', `/storage/v1/object/list/${BUCKET}`, { prefix: `${entry.name}/`, limit: 1000 });
-    for (const o of inner) objects.push({ ...o, name: `${entry.name}/${o.name}` });
+    if (entry.id || !USER_FOLDER.test(entry.name)) continue;
+
+    const inner = await listStoragePrefix(`${entry.name}/`);
+    for (const object of inner) {
+      if (!object.id || !object.created_at) continue;
+      objects.push({ ...object, name: `${entry.name}/${object.name}` });
+    }
   }
   return objects;
 }
@@ -36,8 +66,8 @@ exports.handler = async () => {
   try {
     const prefix = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/`;
     const [items, steps] = await Promise.all([
-      call('GET', '/rest/v1/items?select=image_urls'),
-      call('GET', '/rest/v1/instructions?select=image_url&image_url=not.is.null'),
+      listRestRows('/rest/v1/items?select=image_urls&order=id.asc'),
+      listRestRows('/rest/v1/instructions?select=image_url&image_url=not.is.null&order=id.asc'),
     ]);
     const keep = new Set();
     for (const url of [...items.flatMap((i) => i.image_urls || []), ...steps.map((s) => s.image_url)]) {
@@ -49,7 +79,7 @@ exports.handler = async () => {
 
     const objects = await listAll();
     const cutoff = Date.now() - GRACE_MS;
-    const orphans = objects.filter((o) => !keep.has(o.name) && new Date(o.created_at).getTime() < cutoff).map((o) => o.name);
+    const orphans = objects.filter((o) => o.created_at && !keep.has(o.name) && new Date(o.created_at).getTime() < cutoff).map((o) => o.name);
     if (orphans.length > objects.length / 2) {
       console.error(`sweep aborted: ${orphans.length}/${objects.length} would be deleted`);
       return { statusCode: 200, body: 'skip: too many deletions' };

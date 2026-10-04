@@ -24,15 +24,7 @@ export const fetchHomeFeedPage = async (key: string): Promise<Item[]> => {
   // 공개 범위는 view/RLS가 결정하므로 클라이언트에서 별도 필터를 복제하지 않는다.
   const { data: items, error } = await supabase
     .from("optimized_feed_view")
-    .select(`
-      *,
-      profiles!user_id (
-        username,
-        display_name,
-        avatar_url,
-        public_id
-      )
-    `)
+    .select("*")
     .range(offset, offset + PAGE_SIZE - 1)
 
   if (error) {
@@ -43,32 +35,15 @@ export const fetchHomeFeedPage = async (key: string): Promise<Item[]> => {
     return []
   }
 
-  const itemIds = items.map((item) => item.id)
-  const authorIds = Array.from(new Set(items.map((item) => item.user_id))) // 중복 제거
-  const userLikesMap = new Map<string, boolean>()
+  const authorIds = Array.from(new Set(items.map((item) => item.user_id)))
   const userFollowsMap = new Map<string, boolean>()
 
-  // 사용자별 좋아요 상태와 팔로우 상태 조회 (로그인 시에만)
   if (userId && userId !== "guest") {
     try {
-      // 좋아요 상태 조회
-      const { data: userLikes, error: likesError } = await supabase
-        .rpc('get_user_likes_for_items', {
-          user_id_param: userId,
-          item_ids_param: itemIds
-        })
-
-      if (!likesError && userLikes) {
-        userLikes.forEach((like: { item_id: string; is_liked: boolean }) => {
-          userLikesMap.set(like.item_id, like.is_liked)
-        })
-      }
-
-      // 팔로우 상태 조회
       const { data: userFollows, error: followsError } = await supabase
-        .rpc('get_user_follows_for_authors', {
+        .rpc("get_user_follows_for_authors", {
           user_id_param: userId,
-          author_ids_param: authorIds
+          author_ids_param: authorIds,
         })
 
       if (!followsError && userFollows) {
@@ -77,21 +52,12 @@ export const fetchHomeFeedPage = async (key: string): Promise<Item[]> => {
         })
       }
     } catch {
-      // 에러 발생 시 조용히 무시하고 기본값 사용
+      // 팔로우 상태 조회 실패는 피드 자체를 막지 않는다.
     }
   }
 
   // 레시피(recipe)와 레시피드(post)를 통합한 FeedItem 배열 생성
-  	const feedItems: Item[] = items.map((item) => {
-    // profiles 데이터 평면화 - 서버와 동일한 방식
-    const profileData = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
-    
-    // 좋아요 상태를 정확히 구분: undefined(불확실) vs false(확실히 안함) vs true(확실히 함)
-    const userLikeStatus = userLikesMap.get(item.id)
-    const isLikedValue = userId && userId !== "guest" 
-      ? (userLikeStatus !== undefined ? userLikeStatus : false) // 로그인 시: 정확한 상태 또는 false(임시, LikeButton에서 DB 확인)
-      : false // 비로그인 시: 항상 false
-    
+  const feedItems: Item[] = items.map((item) => {
     return {
 			id: item.id,
       item_id: item.id,
@@ -99,11 +65,10 @@ export const fetchHomeFeedPage = async (key: string): Promise<Item[]> => {
 			item_type: item.item_type as "post" | "recipe", // "recipe": 요리법, "post": 일반 피드
       created_at: item.created_at,
       is_public: item.is_public,
-      // relation으로 받은 profile 값을 view의 평면 필드보다 우선한다.
-      display_name: profileData?.display_name || item.display_name || null,
-      username: profileData?.username || item.username || null,
-      avatar_url: profileData?.avatar_url || item.avatar_url || null,
-      user_public_id: profileData?.public_id || item.user_public_id || null,
+      display_name: item.display_name || null,
+      username: item.username || null,
+      avatar_url: item.avatar_url || null,
+      user_public_id: item.user_public_id || null,
       user_email: null,
       title: item.title,
       content: item.content,
@@ -124,7 +89,7 @@ export const fetchHomeFeedPage = async (key: string): Promise<Item[]> => {
       key_ingredients: item.key_ingredients || [],
       likes_count: item.likes_count || 0,
       comments_count: item.comments_count || 0,
-      is_liked: isLikedValue, // null 허용으로 불확실한 상태 표현
+      is_liked: Boolean(item.is_liked),
       is_following: userFollowsMap.get(item.user_id) || false,
     }
   })

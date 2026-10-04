@@ -24,11 +24,8 @@ export const fetchRecipeBookPage = async (key: string): Promise<Item[]> => {
 				target_user_id: userId
 			})
 		} else {
-			// 모두의 레시피: 홈 피드와 완전히 동일한 방식
-			query = supabase.from("optimized_feed_view").select(`
-				*,
-				profiles!user_id(display_name, username, avatar_url, public_id)
-			`).eq("item_type", "recipe")
+			// 팔로우 중: 공개 피드 view에서 팔로우한 작성자만 좁힌다.
+			query = supabase.from("optimized_feed_view").select("*").eq("item_type", "recipe")
 		}
 
 	if (tab === "my_recipes") {
@@ -135,24 +132,10 @@ export const fetchRecipeBookPage = async (key: string): Promise<Item[]> => {
 		return []
 	}
 
-	// 목록 행에 현재 사용자의 좋아요·팔로우 상태를 합친다.
-	const itemIds = data.map((item: Item) => item.id)
-	const userLikesMap = new Map<string, boolean>()
+	// 좋아요 상태와 작성자 정보는 view/RPC가 이미 반환한다. 팔로우 상태만 별도로 합친다.
 	const userFollowsMap = new Map<string, boolean>()
 
 	if (userId && userId !== "guest") {
-		// 좋아요 상태 확인
-		const { data: userLikes } = await supabase
-			.from("likes")
-			.select("item_id")
-			.eq("user_id", userId)
-			.in("item_id", itemIds)
-
-		userLikes?.forEach((like) => {
-			userLikesMap.set(like.item_id, true)
-		})
-
-		// 팔로우 상태 확인 (작성자들에 대한)
 		const authorIds = Array.from(new Set(data.map((item: Item) => item.user_id)))
 		const { data: userFollows } = await supabase
 			.from("follows")
@@ -165,17 +148,14 @@ export const fetchRecipeBookPage = async (key: string): Promise<Item[]> => {
 		})
 	}
 
-	return data.map((item: Item & { profiles?: Profile | Profile[] | null }) => {
-		// 나의 레시피(RPC)는 이미 평면화된 데이터, 모두의 레시피는 profiles 관계 데이터
-		const profileData: Partial<Profile> | null | undefined = tab === "my_recipes"
-			? { display_name: item.display_name, username: item.username ?? undefined, avatar_url: item.avatar_url, public_id: item.user_public_id ?? undefined } // RPC가 이미 평면화해 준다
-			: (Array.isArray(item.profiles) ? item.profiles[0] : item.profiles)
-		
-		const userLikeStatus = userLikesMap.get(item.id)
-		const isLikedValue = userId && userId !== "guest" 
-			? (userLikeStatus !== undefined ? userLikeStatus : false)
-			: false
-		
+	return data.map((item: Item) => {
+		const profileData: Partial<Profile> = {
+			display_name: item.display_name,
+			username: item.username ?? undefined,
+			avatar_url: item.avatar_url,
+			public_id: item.user_public_id ?? undefined,
+		}
+
 		return {
 			id: item.id,
 			item_id: item.id,
@@ -202,9 +182,7 @@ export const fetchRecipeBookPage = async (key: string): Promise<Item[]> => {
 			cited_recipe_ids: item.cited_recipe_ids,
 			likes_count: item.likes_count || 0,
 			comments_count: item.comments_count || 0,
-			is_liked: tab === "my_recipes" 
-				? (item.is_liked || false)  // RPC 함수에서 이미 계산됨
-				: isLikedValue,             // 별도 계산 필요
+			is_liked: Boolean(item.is_liked),
 			is_following: userFollowsMap.get(item.user_id) || false,
 			bookmarks_count: 0,
 			is_bookmarked: false,

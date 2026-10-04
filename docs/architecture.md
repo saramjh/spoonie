@@ -70,6 +70,7 @@ src/
 - **글 지우기**는 `cacheManager.deleteItems(ids)` 하나로. 모든 목록·상세 캐시에서 바로 빼고, 돌려받은 함수로 실패 시 목록을 다시 받는다.
 - **키 앞부분으로 여러 캐시를 다시 받거나 고칠 때**는 `shared/infra/swr-cache.ts`(`revalidateStartingWith`, `updateStartingWith`)를 쓴다. SWR의 `mutate((key) => …)`는 무한 스크롤 목록(`$inf$` 키: 피드·레시피북)을 건너뛰어 닿지 않는다.
 - **zustand**는 세션(`sessionStore`), 팔로우 상태(`followStore`), 레시피북 필터(`recipeStore`)만. 세션은 앱 시작 때 한 번, 그 뒤로는 Supabase 인증 이벤트(로그인·로그아웃)로 맞춘다 (`ClientLayoutWrapper`).
+- `optimized_feed_view`가 공개 글의 작성자 정보·좋아요/댓글 수·현재 사용자의 `is_liked`를 소유한다. 좋아요/댓글 수는 각 item 조건으로 집계하며, view 소비 화면은 같은 profile/like 상태를 다시 조회하지 않는다.
 - 피드 서버 조회는 탭 복귀(`usePageVisibility`), 뒤로 가기로 홈 복귀(`ClientLayoutWrapper`), 네트워크 재연결(SWR 안전장치), 사용자가 `새 글 보기`를 누른 경우에만 한다. 주기적 조회(폴링)는 하지 않는다.
 - 홈이 실제로 보이는 동안에는 공개 `items` INSERT와 최신 시각으로 공개된 UPDATE만 Realtime 신호로 받아 `새 글 보기`를 표시한다. 이벤트 payload를 피드 데이터로 쓰지 않고, 사용자가 누르면 로드된 이전 offset 페이지를 버리고 첫 페이지부터 다시 받는다. 숨겨진 탭에서는 홈 Realtime 채널을 닫는다.
 - 알림 숫자와 댓글은 필터를 건 실시간 구독(`useRealtimeRefresh`)으로 받는다.

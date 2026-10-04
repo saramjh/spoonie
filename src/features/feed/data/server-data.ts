@@ -21,32 +21,22 @@ async function loadFeed(supabase: SupabaseClient): Promise<ServerFeedData> {
   try {
     const { data: rows, error } = await supabase
       .from("optimized_feed_view")
-      .select(`
-        *,
-        profiles!user_id (
-          username,
-          display_name,
-          avatar_url,
-          public_id
-        )
-      `)
+      .select("*")
       .range(0, HOME_FEED_PAGE_SIZE - 1)
       .order("created_at", { ascending: false })
 
     if (error) throw error
 
     const items: Item[] = (rows ?? []).map((row) => {
-      const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles
       return {
         ...row,
-        profiles: undefined,
         id: row.id,
         item_id: row.id,
         item_type: row.item_type as "post" | "recipe",
-        display_name: profile?.display_name || row.display_name || null,
-        username: profile?.username || row.username || null,
-        avatar_url: profile?.avatar_url || row.avatar_url || null,
-        user_public_id: profile?.public_id || row.user_public_id || null,
+        display_name: row.display_name || null,
+        username: row.username || null,
+        avatar_url: row.avatar_url || null,
+        user_public_id: row.user_public_id || null,
         user_email: null,
         is_liked: false,
         is_following: false,

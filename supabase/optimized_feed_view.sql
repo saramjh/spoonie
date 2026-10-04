@@ -7,7 +7,10 @@ create or replace view public.optimized_feed_view as
     p.public_id AS user_public_id, p.display_name, p.username, p.avatar_url,
     COALESCE(like_stats.likes_count, 0::bigint) AS likes_count,
     COALESCE(comment_stats.comments_count, 0::bigint) AS comments_count,
-    CASE WHEN user_likes.user_id IS NOT NULL THEN true ELSE false END AS is_liked,
+    EXISTS (
+      SELECT 1 FROM likes user_like
+      WHERE user_like.user_id = auth.uid() AND user_like.item_id = i.id
+    ) AS is_liked,
     i.creation_origin,
     COALESCE(rel.made_count, 0::bigint) AS made_count,
     COALESCE(rel.continued_count, 0::bigint) AS continued_count,
@@ -16,9 +19,16 @@ create or replace view public.optimized_feed_view as
     COALESCE(ing.key_ingredients, '{}'::text[]) AS key_ingredients
    FROM items i
      LEFT JOIN profiles p ON i.user_id = p.id
-     LEFT JOIN ( SELECT likes.item_id, count(*) AS likes_count FROM likes GROUP BY likes.item_id) like_stats ON i.id = like_stats.item_id
-     LEFT JOIN ( SELECT comments.item_id, count(*) AS comments_count FROM comments WHERE comments.is_deleted = false GROUP BY comments.item_id) comment_stats ON i.id = comment_stats.item_id
-     LEFT JOIN ( SELECT DISTINCT likes.item_id, likes.user_id FROM likes WHERE likes.user_id = auth.uid()) user_likes ON i.id = user_likes.item_id
+     LEFT JOIN LATERAL (
+       SELECT count(*) AS likes_count
+       FROM likes
+       WHERE likes.item_id = i.id
+     ) like_stats ON true
+     LEFT JOIN LATERAL (
+       SELECT count(*) AS comments_count
+       FROM comments
+       WHERE comments.item_id = i.id AND comments.is_deleted = false
+     ) comment_stats ON true
      LEFT JOIN LATERAL ( SELECT count(DISTINCT f.user_id) FILTER (WHERE f.item_type = 'post'::item_type) AS made_count,
             count(*) FILTER (WHERE f.item_type = 'recipe'::item_type) AS continued_count,
             (array_agg(f.image_urls[1] ORDER BY cr.created_at DESC) FILTER (WHERE f.item_type = 'post'::item_type AND f.image_urls[1] IS NOT NULL))[1:3] AS made_thumbs
