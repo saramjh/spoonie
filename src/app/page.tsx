@@ -49,6 +49,20 @@ const websiteSchema = {
   name: "Spoonie",
   alternateName: ["스푸니"], // 화면 표기는 Spoonie. 한국어로 검색한 사람도 찾도록 별칭만 둔다
   url: (process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr") + "/",
+  inLanguage: "ko",
+  publisher: { "@id": (process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr") + "/#organization" },
+}
+
+// 서비스 운영 주체: 검색·AI가 Spoonie를 하나의 브랜드로 묶어 보도록 공식 인스타그램을 연결한다
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": (process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr") + "/#organization",
+  name: "Spoonie",
+  alternateName: ["스푸니"],
+  url: (process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr") + "/",
+  logo: (process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr") + "/android-chrome-512x512.png",
+  sameAs: ["https://www.instagram.com/spoonie.kitchen/"],
 }
 import PostCardSkeleton from "@/components/items/PostCardSkeleton"
 
@@ -69,6 +83,7 @@ export default async function HomePage() {
 			<h1 className="sr-only">Spoonie - 레시피와 요리 이야기를 나누는 커뮤니티</h1>
 			{/* Google 검색 결과의 사이트 이름 */}
 			<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(websiteSchema) }} />
+			<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(organizationSchema) }} />
 			<Suspense fallback={<ItemListSkeleton />}>
 				<SeamlessItemList initialData={initialData} />
 			</Suspense>

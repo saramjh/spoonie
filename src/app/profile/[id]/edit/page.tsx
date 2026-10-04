@@ -39,6 +39,8 @@ export default function ProfileEditPage() {
 	const handleLogout = async () => {
 		await supabase.auth.signOut()
 		// SPA 라우팅 대신 새로고침을 통한 홈 이동으로 모든 상태 초기화
+		// 의도한 예외: 로그아웃 뒤에는 화면 이동이 아니라 새로고침으로 홈에 가서 모든 상태(캐시·스토어)를 비운다
+		// eslint-disable-next-line @next/next/no-location-assign-relative-destination
 		window.location.href = "/"
 	}
 

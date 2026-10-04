@@ -35,6 +35,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         description, 
         content,
         image_urls, 
+        thumbnail_index,
         created_at,
         tags,
         profiles!user_id(display_name, username)
@@ -55,7 +56,9 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
     const profileData = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles
     const authorName = profileData?.username || '익명'
-    const imageUrl = post.image_urls?.[0] || `${process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'}/og-default.png`
+    // 공유 이미지: 작성자가 고른 대표 사진. 사진이 없으면 1200×630 기본 이미지
+    const coverUrl = post.image_urls?.[post.thumbnail_index ?? 0] || post.image_urls?.[0]
+    const imageUrl = coverUrl || `${process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'}/og-default.png`
     
     // 설명 생성 (description 우선, 없으면 content에서 추출)
     let cleanDescription = ''
@@ -98,9 +101,9 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         title: `${post.title} - Spoonie`,
         description: cleanDescription,
         images: [{ 
-          url: imageUrl, 
-          width: 1200, 
-          height: 630,
+          url: imageUrl,
+          // 실제 사진 크기는 제각각이라, 크기를 아는 기본 이미지일 때만 적는다
+          ...(coverUrl ? {} : { width: 1200, height: 630 }),
           alt: `${post.title} - ${authorName}님의 레시피드`
         }],
         type: 'article',
@@ -116,7 +119,6 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         title: seoTitle,
         description: cleanDescription,
         images: [imageUrl],
-        creator: `@${profileData?.username || 'spoonie'}`,
       },
       
       // 검색 유입의 착지는 레시피가 맡는다 (docs/discovery-and-behavior.md). 레시피드는 짧은 활동 기록이라

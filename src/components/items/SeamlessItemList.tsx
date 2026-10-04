@@ -112,8 +112,8 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
       {/* 아이템 목록 */}
       <div className="space-y-3 px-3 py-3">
         {feedItems.map((item, index) => {
-          // LCP 최적화: 첫 번째 3개 포스트에만 priority 적용
-          const isPriorityPost = index < 3
+          // LCP 최적화: 실제 첫 화면 LCP 후보 한 장만 high priority. 여러 카드에 high를 주면 초기 대역폭을 서로 경쟁한다.
+          const isPriorityPost = index === 0
           // 시간 덩어리가 바뀌는 곳에 이름을 달아 피드에 리듬을 준다 (오늘 / 어제 / 이번 주 / 이번 달 / 년월)
           const period = feedPeriod(item.created_at, now)
           const showPeriod = index === 0 || feedPeriod(feedItems[index - 1].created_at, now) !== period

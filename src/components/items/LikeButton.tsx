@@ -189,7 +189,7 @@ export const LikeButton = forwardRef<HTMLButtonElement, LikeButtonProps>(({
           }}
           disabled={isAuthLoading}
           aria-label={`좋아요 ${likesCount}개, 좋아요한 사람 보기`}
-          className="h-11 min-w-0 pl-0.5 pr-2 text-ink-soft hover:text-ink transition-colors"
+          className="h-11 min-w-6 pl-1 pr-2 text-ink-soft hover:text-ink transition-colors"
         >
           <span className="text-label font-medium tabular-nums">{likesCount}</span>
         </Button>

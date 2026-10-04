@@ -558,6 +558,8 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 						<div className="mt-2">
 							<DraggableIngredientList
 								ingredients={ingredients.map((field, index) => {
+									// React Compiler는 켜 두지 않았다(next.config). 이 컴포넌트는 react-hook-form watch 때문에 컴파일 대상에서 빠지는데, 바꾸면 다른 규칙 위반이 드러나 따로 다룬다
+									// eslint-disable-next-line react-hooks/incompatible-library
 									const watchedIngredient = form.watch(`ingredients.${index}`)
 									return {
 										id: field.id,

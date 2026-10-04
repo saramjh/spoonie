@@ -35,6 +35,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         title, 
         description, 
         image_urls, 
+        thumbnail_index,
         created_at,
         tags,
         cooking_time_minutes,
@@ -58,7 +59,9 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
     const profileData = Array.isArray(recipe.profiles) ? recipe.profiles[0] : recipe.profiles
     const authorName = profileData?.username || '익명'
-    const imageUrl = recipe.image_urls?.[0] || `${process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'}/og-default.png`
+    // 공유 이미지: 작성자가 고른 대표 사진. 사진이 없으면 1200×630 기본 이미지
+    const coverUrl = recipe.image_urls?.[recipe.thumbnail_index ?? 0] || recipe.image_urls?.[0]
+    const imageUrl = coverUrl || `${process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'}/og-default.png`
     // 검색 결과 설명: 작성자의 소개 다음에 인분·조리 시간·재료 (레시피라는 정보가 한 줄에 보이게)
     const ingredientNames = [...(recipe.ingredients || [])].sort((a, b) => a.order_index - b.order_index).map((i) => i.name)
     const cookingTime = formatCookingTime(recipe.cooking_time_minutes)
@@ -93,9 +96,9 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         title: `${recipe.title} - Spoonie`,
         description: cleanDescription,
         images: [{ 
-          url: imageUrl, 
-          width: 1200, 
-          height: 630,
+          url: imageUrl,
+          // 실제 사진 크기는 제각각이라, 크기를 아는 기본 이미지일 때만 적는다
+          ...(coverUrl ? {} : { width: 1200, height: 630 }),
           alt: `${recipe.title} - ${authorName}님의 레시피`
         }],
         type: 'article',
@@ -111,7 +114,6 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         title: seoTitle,
         description: cleanDescription,
         images: [imageUrl],
-        creator: `@${profileData?.username || 'spoonie'}`,
       },
       
       // 검색 엔진 최적화

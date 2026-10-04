@@ -240,15 +240,15 @@ export default function PostCard({
             </Avatar>
           </IntentLink>
           <div className="min-w-0">
-            <IntentLink href={profileHref} className="block truncate text-label font-semibold text-ink">
+            {/* 누르는 영역 24px: 위아래로 넓히되 같은 만큼 바깥 여백을 줄여 모양은 그대로 */}
+            <IntentLink href={profileHref} className="-my-[1.5px] block truncate py-[1.5px] text-label font-semibold text-ink">
               {enrichedItem.username || "알 수 없는 사용자"}
             </IntentLink>
             <p className="text-meta text-ink-soft">
               <span>{isRecipe ? "레시피" : "레시피드"}</span>
               {" · "}
-              <IntentLink href={detailUrl}>
-                <RelativeTime iso={item.created_at} />
-              </IntentLink>
+              {/* 시간은 글자로만 둔다: 바로 위 이름 링크와 1px 간격이라 누르는 영역이 겹친다. 글로 가는 길은 제목·사진에 있다 */}
+              <RelativeTime iso={item.created_at} />
               {!displayItem.is_public && <span> · 비공개</span>}
             </p>
           </div>

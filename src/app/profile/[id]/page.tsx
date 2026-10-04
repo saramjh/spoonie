@@ -9,6 +9,7 @@
  * - SSA, SWR 캐싱, 팔로우 시스템, 복잡한 상태 관리 모두 유지
  */
 
+import { serializeJsonLd } from "@/shared/lib/json-ld"
 import { Metadata } from 'next'
 import { createSupabasePublicClient } from '@/shared/infra/supabase-public'
 import { notFound } from 'next/navigation'
@@ -58,21 +59,24 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       .eq('item_type', 'recipe')
       .eq('is_public', true)
 
-    const displayName = profile.username || '익명'
+    // 표시 이름이 있으면 그것을 (공식 계정 "Spoonie 주방"), 없으면 사용자 이름
+    const displayName = profile.display_name || profile.username || '익명'
     const profileImageUrl = profile.avatar_url || `${process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'}/og-default.png`
     
     // 프로필 설명 생성 (profile_message 우선, 없으면 통계 기반)
     let profileDescription = ''
-    if (profile.profile_message) {
-      profileDescription = profile.profile_message
-        .replace(/\n/g, ' ')
-        .slice(0, 160)
+    const intro = profile.profile_message
+    if (intro) {
+      profileDescription = `${intro.replace(/\n/g, ' ').slice(0, 120)} — 공개 레시피 ${publicRecipes ?? 0}개`
     } else {
-      profileDescription = `${displayName}님의 Spoonie 프로필입니다. 레시피와 요리 이야기를 확인해보세요.`
+      profileDescription = `${displayName}님이 Spoonie에 올린 공개 레시피 ${publicRecipes ?? 0}개. 재료와 분량, 단계별 사진을 볼 수 있어요.`
     }
     
     // SEO 최적화된 제목 생성  
-    const seoTitle = `${displayName} (@${profile.username || profile.public_id}) - Spoonie`
+    // 같은 이름을 두 번 쓰지 않는다: 표시 이름이 사용자 이름과 다를 때만 @사용자이름을 붙인다
+    const seoTitle = profile.display_name && profile.display_name !== profile.username
+      ? `${profile.display_name} (@${profile.username}) - Spoonie`
+      : `${displayName}님의 레시피 - Spoonie`
     
     // 키워드 생성
     const keywords = [
@@ -95,9 +99,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         title: `${displayName} - Spoonie`,
         description: profileDescription,
         images: [{ 
-          url: profileImageUrl, 
-          width: 400, 
-          height: 400,
+          url: profileImageUrl,
           alt: `${displayName}님의 프로필 사진`
         }],
         type: 'profile',
@@ -110,7 +112,6 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         title: seoTitle,
         description: profileDescription,
         images: [profileImageUrl],
-        creator: `@${profile.username || 'spoonie'}`,
       },
       
       // 검색 엔진 최적화
@@ -176,9 +177,30 @@ export default async function ProfilePage(props: Props) {
     ? createBreadcrumbs.profile(initial.profile.username, initial.profile.public_id)
     : createBreadcrumbs.home()
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'
+  const p = initial ? initial.profile : null
+  const profileSchema = p?.public_id
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'ProfilePage',
+        url: `${baseUrl}/profile/${p.public_id}`,
+        ...(p.created_at && { dateCreated: p.created_at }),
+        mainEntity: {
+          '@type': 'Person',
+          name: p.display_name || p.username,
+          alternateName: p.username,
+          identifier: p.public_id,
+          url: `${baseUrl}/profile/${p.public_id}`,
+          ...(p.profile_message && { description: p.profile_message.slice(0, 300) }),
+          ...(p.avatar_url && { image: p.avatar_url }),
+        },
+      }
+    : null
+
   return (
     <>
       <BreadcrumbSchema items={breadcrumbs} />
+      {profileSchema && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(profileSchema) }} />}
       <ProfilePageClient
         key={params.id}
         params={params}

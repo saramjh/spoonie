@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useEffectEvent, useRef, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "@/shared/lib/navigation"
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
@@ -85,11 +85,14 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 	// 현재 팔로우 상태 (글로벌 스토어에서)
 	const isFollowing = profile ? getIsFollowing(profile.id) : false
 
+	// 서버가 미리 받아 둔 프로필: 값이 바뀌어도 아래 효과를 다시 돌리지 않고, 돌 때의 값을 읽기만 한다
+	const readInitialProfile = useEffectEvent(() => initialProfile)
+
 	useEffect(() => {
 		const loadAllData = async () => {
 			if (!userId) return
 			// 서버가 넘긴 프로필이 있으면 스켈레톤으로 덮지 않고 그대로 보여준 채 갱신한다
-			if (!initialProfile) setIsLoading(true)
+			if (!readInitialProfile()) setIsLoading(true)
 			setProfileError(null)
 			try {
 				// 현재 사용자 확인과 프로필 조회는 서로 의존하지 않으므로 병렬로 보낸다
@@ -98,7 +101,7 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 						data: { user },
 					},
 					profileData,
-				] = await Promise.all([supabase.auth.getUser(), initialProfile ?? fetchProfile(userId)])
+				] = await Promise.all([supabase.auth.getUser(), readInitialProfile() ?? fetchProfile(userId)])
 				setProfile(profileData)
 
 				const followStatusData = await fetchFollowStatus(user?.id || "", profileData.id) // 글로벌 팔로우 스토어 동기화용
@@ -145,6 +148,8 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 	const handleLogout = async () => {
 		await supabase.auth.signOut()
 		// SPA 라우팅 대신 새로고침을 통한 홈 이동으로 모든 상태 초기화
+		// 의도한 예외: 로그아웃 뒤에는 화면 이동이 아니라 새로고침으로 홈에 가서 모든 상태(캐시·스토어)를 비운다
+		// eslint-disable-next-line @next/next/no-location-assign-relative-destination
 		window.location.href = "/"
 	}
 
