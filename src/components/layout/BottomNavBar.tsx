@@ -77,7 +77,15 @@ export default function BottomNavBar() {
 			<nav aria-label="주요 메뉴" className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-md border-t border-border bg-paper pb-[env(safe-area-inset-bottom)]">
 				<div className="flex justify-around items-center h-16">
 					{/* 1. 홈 */}
-					<Link href="/" className={getLinkClass("/")}>
+					<Link
+						href="/"
+						className={getLinkClass("/")}
+						onNavigate={(event) => {
+							if (pathname !== "/") return
+							event.preventDefault()
+							window.scrollTo({ top: 0, left: 0 })
+						}}
+					>
 						<Home className="w-6 h-6" aria-hidden />
 						<span className="text-meta font-medium">홈</span>
 					</Link>

@@ -213,8 +213,8 @@ export default function RecipesPage() {
 					value={currentTab}
 					onChange={handleTabChange}
 					items={[
-						{ key: "my_recipes", label: "나의 레시피" },
-						{ key: "all_recipes", label: "모두의 레시피" },
+						{ key: "my_recipes", label: "내 레시피" },
+						{ key: "all_recipes", label: "팔로잉" },
 					]}
 				/>
 
