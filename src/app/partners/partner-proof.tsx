@@ -1,5 +1,6 @@
 import Image from "next/image"
 import { ArrowUpRight } from "lucide-react"
+import { buttonVariants } from "@/components/ui/button"
 import PartnerActionLink from "./partner-action-link"
 
 const recipeHref = "/recipes/b72f1e13-12d0-40ce-a7e8-d47659dc5531"
@@ -8,10 +9,29 @@ type PartnerProofProps = {
   segment: "creator" | "brand"
 }
 
+const copy = {
+  creator: {
+    title: "실제 공개 Recipe 보기",
+    description: "재료·분량·조리 단계와 사진이 한 페이지에 정리된 실제 Spoonie Recipe입니다.",
+  },
+  brand: {
+    title: "Spoonie Recipe는 이렇게 보입니다",
+    description: "브랜드 성공 사례가 아니라, 제품 활용 요리를 올렸을 때 사용하게 될 실제 공개 Recipe 형식 예시입니다.",
+  },
+} as const
+
+const cta = {
+  creator: "내 레시피 1개 옮겨보기",
+  brand: "제품 활용 Recipe 1개 올려보기",
+} as const
+
 export default function PartnerProof({ segment }: PartnerProofProps) {
+  const text = copy[segment]
+
   return (
     <section className="border-t border-border px-4 py-6" aria-labelledby={segment + "-proof-title"}>
-      <h2 id={segment + "-proof-title"} className="text-heading text-ink">실제 Spoonie Recipe</h2>
+      <h2 id={segment + "-proof-title"} className="text-heading text-ink">{text.title}</h2>
+      <p className="mt-2 text-meta text-ink-soft">{text.description}</p>
       <PartnerActionLink
         href={recipeHref}
         segment={segment}
@@ -36,6 +56,14 @@ export default function PartnerProof({ segment }: PartnerProofProps) {
       >
         실제 Recipe 열기
         <ArrowUpRight className="h-4 w-4" aria-hidden />
+      </PartnerActionLink>
+      <PartnerActionLink
+        href="/signup?next=%2Frecipes%2Fnew"
+        segment={segment}
+        action="proof_to_signup"
+        className={buttonVariants({ variant: "default", size: "lg", className: "mt-4 w-full" })}
+      >
+        {cta[segment]}
       </PartnerActionLink>
     </section>
   )

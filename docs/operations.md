@@ -111,3 +111,17 @@
 - 브랜드 self-serve 아웃리치는 현재 가능하지만, `Creator를 연결해주겠다`는 제안으로 보내지 않는다. 브랜드가 자체적으로 만들 수 있는 실제 Recipe 1~3개를 Spoonie에 직접 게시하는 사용 시나리오가 명확한 경우에만 제안한다. Creator 매칭/유료 캠페인은 향후 별도 검증 영역이다.
 - 현재 프로필 데이터에는 개인/조직 entity type이 없다. 첫 실제 브랜드 계정이 활성화되기 전까지 이름·소개 문구로 브랜드 여부를 추측하거나 기존 `profiles.role`을 재활용하지 않는다. 첫 브랜드 계정 활성화 시 명시적 `person|organization` 프로필 타입을 도입하고 Profile/Recipe/Recipeed JSON-LD의 작성자 타입까지 함께 전파하는 것을 기술 게이트로 처리한다.
 - 계약, 비용 집행, 독점/공식 파트너 표현, 법적·평판 리스크가 있는 조건은 사용자 승인 대상으로 올린다.
+
+## 로컬 Growth 운영
+
+- Spoonie의 외부 유입·아웃리치·응답 감시는 ChatGPT 예약 작업이 아니라 Mac launchd가 소유한다.
+- 설치 스크립트: python3 scripts/growth/install_growth_launchd.py
+- 실행기: scripts/growth/run_growth_automation.sh
+- 로컬 상태/로그: ~/.spoonie-growth-automation/
+- 예약:
+  - com.spoonie.growth.acquisition: 매일 10:00 KST. Creator/Brand 이메일, 허용된 커뮤니티 배포, owned Instagram, 검색/추천 유입 중 당일 가장 가치 있는 실제 acquisition action을 수행한다.
+  - com.spoonie.growth.replywatch: 매시 25분. Gmail/CRM/partner inquiry의 답장·반송·전환을 확인하고 정상 온보딩 응답을 이어간다.
+  - com.spoonie.growth.review: 매일 19:00 KST. GA4/GSC/Instagram/Supabase/CRM을 보고 채널을 EXPAND/KEEP/CHANGE/PAUSE/STOP으로 판정하고 다음 실행 방향을 조정한다.
+- 모든 로컬 growth run은 시작 시 project_context_bootstrap으로 /Users/ojihun/DEV/spoonie 컨텍스트를 복원하고, 의미 있는 실행 뒤 project_context_checkpoint로 결과·결정·다음 행동을 .context에 남기는 것을 강제한다.
+- 이 lane은 외부 growth 운영 전용이다. 제품 코드·공개 사이트 카피 수정, Git commit/push/deploy는 하지 않는다. 제품 마찰을 발견하면 정상 개발 세션에 구체적인 수정안으로 넘긴다.
+- 폐업한 PremaMon과 Spoonie 사이의 브랜드/사업 연속성을 만들지 않는다. 기존 Instagram 팔로워 풀이 주방·요리 관심사와 겹친다는 점만 warm distribution asset으로 활용한다.
