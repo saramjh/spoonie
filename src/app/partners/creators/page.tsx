@@ -37,7 +37,7 @@ const creatorFlow = [
   },
   {
     label: "직접 만들어 본 기록",
-    description: "팬이 만든 사진과 경험을 Recipeed로 원 Recipe에 연결합니다.",
+    description: "누군가 직접 만들어 본 사진과 경험을 Recipeed로 원 Recipe에 연결할 수 있습니다.",
     icon: Soup,
   },
   {
@@ -67,15 +67,15 @@ export default function CreatorPartnersPage() {
           <Link href="/" className="inline-flex" aria-label="Spoonie 홈">
             <Image src="/logo-full.svg" alt="Spoonie" width={100} height={32} priority />
           </Link>
-          <p className="mt-5 text-meta text-ink-soft">For Cooking Creators</p>
+          <p className="mt-5 text-meta text-ink-soft">Founding Creator</p>
           <h1 className="mt-2 text-display text-ink">
             내 레시피가
             <br />
             피드에서 끝나지 않게
           </h1>
           <p className="mt-4 text-body text-ink-soft">
-            Spoonie는 요리 콘텐츠를 다시 올릴 곳 하나를 더 만들려는 서비스가 아닙니다. Recipe를 중심으로 실제로
-            만들어 본 기록과 다음 Recipe가 이어지는 구조가 크리에이터에게 가치가 있는지 검증하고 있습니다.
+            Spoonie는 지금 첫 Creator cohort를 만드는 초기 단계입니다. 요리 콘텐츠를 다시 올릴 곳 하나를 더 만드는 대신,
+            기존 Recipe 몇 개부터 구조화하고 실제 조리 기록과 다음 Recipe가 이어지는 방식을 함께 검증할 Founding Creator를 찾고 있습니다.
           </p>
         </section>
 
@@ -103,7 +103,7 @@ export default function CreatorPartnersPage() {
           </div>
           <div className="mt-4 border-y border-border">
             <p className="py-3 text-label text-ink">작성한 Recipe가 내 Spoonie 프로필에 계속 축적됩니다.</p>
-            <p className="border-t border-border py-3 text-label text-ink">실제로 만든 사람의 기록이 원 Recipe와 연결됩니다.</p>
+            <p className="border-t border-border py-3 text-label text-ink">직접 만들어 본 사람의 기록을 원 Recipe에 연결할 수 있습니다.</p>
             <p className="border-t border-border py-3 text-label text-ink">참고한 Recipe와 새 Recipe 사이의 관계를 남길 수 있습니다.</p>
             <p className="border-t border-border py-3 text-label text-ink">공개 Recipe는 검색 가능한 콘텐츠로 제공됩니다.</p>
           </div>
@@ -112,20 +112,20 @@ export default function CreatorPartnersPage() {
         <section className="border-t border-border px-4 py-6" aria-labelledby="creator-pilot">
           <div className="flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-ink" aria-hidden />
-            <h2 id="creator-pilot" className="text-heading text-ink">파일럿은 작게 시작합니다</h2>
+            <h2 id="creator-pilot" className="text-heading text-ink">Founding Creator는 작게 시작합니다</h2>
           </div>
           <p className="mt-3 text-body text-ink-soft">
             기존 콘텐츠 전체를 옮기거나 별도 계약부터 요구하지 않습니다. 먼저 직접 선택한 몇 개의 Recipe로
             구조화·조리 기록·참고 관계가 실제로 유용한지 확인하는 방식이 적합하다고 보고 있습니다.
           </p>
           <p className="mt-4 text-meta text-ink-soft">
-            Spoonie는 아직 초기 단계입니다. 대규모 신규 노출이나 수익을 보장하지 않습니다. 대신 현재 제품에서
-            실제로 동작하는 구조를 보고 참여 가치가 있는지 판단할 수 있습니다.
+            아직 큰 Creator network나 대규모 신규 노출을 약속할 단계는 아닙니다. 지금 참여하는 Creator는
+            초기 사용 흐름과 Recipe 연결 방식을 실제로 만들고 검증하는 첫 cohort가 됩니다.
           </p>
         </section>
 
         <section className="border-t border-border px-4 py-6">
-          <p className="text-heading text-ink">몇 개의 Recipe부터 같이 확인해 보세요</p>
+          <p className="text-heading text-ink">Founding Creator로 몇 개의 Recipe부터 시작해 보세요</p>
           <p className="mt-2 text-meta text-ink-soft">
             제안 메일을 받고 오셨다면 그대로 회신하셔도 됩니다. 처음 방문하셨다면 아래에서 채널과 검증해보고 싶은
             Recipe를 알려주세요.

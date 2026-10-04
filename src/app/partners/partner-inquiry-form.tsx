@@ -146,7 +146,7 @@ export default function PartnerInquiryForm({ segment }: PartnerInquiryFormProps)
 
       <div>
         <label htmlFor={segment + "-message"} className="text-label text-ink">
-          {creator ? "같이 확인해보고 싶은 것" : "검증해보고 싶은 제품 · Recipe 맥락"}
+          {creator ? "같이 확인해보고 싶은 것" : "제품 · Recipe 맥락 · 기존 Creator 여부"}
         </label>
         <Textarea
           id={segment + "-message"}
@@ -158,7 +158,7 @@ export default function PartnerInquiryForm({ segment }: PartnerInquiryFormProps)
           placeholder={
             creator
               ? "예: 기존 Recipe 2~3개로 실제 조리 기록과 파생 관계가 어떻게 연결되는지 보고 싶습니다."
-              : "예: 특정 팬 제품이 실제 Recipe와 사용자 조리 경험으로 이어지는 파일럿을 검토하고 싶습니다."
+              : "예: 특정 팬 제품 / 볶음·구이 Recipe / 현재 함께하는 요리 Creator 2명 있음 (또는 기존 Creator 없음)"
           }
         />
       </div>

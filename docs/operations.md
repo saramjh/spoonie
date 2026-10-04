@@ -96,7 +96,7 @@
 ## Proactive acquisition
 
 - 목적은 자동화 자체가 아니라 실제 고적합 사용자·크리에이터·브랜드 유입이다. Instagram 예약 게시 성과를 기다리기만 하지 않는다.
-- 공개 파트너 설명면은 `/partners` 허브 + `/partners/creators` + `/partners/brands`로 분리한다. Creator에는 Recipe → Recipeed → 파생/참고 Recipe의 지속 관계를, 주방·식품 브랜드에는 제품 → 실제 Recipe 사용 → 사용자/Creator 조리 기록의 파일럿 가치를 각각 전용 페이지에서 설명한다. 현재 규모나 기능을 과장하지 않는다.
+- 공개 파트너 설명면은 `/partners` 허브 + `/partners/creators` + `/partners/brands`로 분리한다. 현재 cold-start 단계에서는 `/partners/creators`를 Founding Creator 모집/활성화 랜딩으로 우선 사용한다. `/partners/brands`는 즉시 Creator 매칭을 파는 페이지가 아니라 Brand Early Access로 운영하며, 제품·사용 맥락을 미리 받거나 브랜드가 이미 보유한 Creator와 조기 파일럿 가능성을 검토한다. Spoonie에 실제 활성 Creator pool이 생기기 전에는 매칭·도달 규모를 약속하지 않는다.
 - 기존 2026-10-04 발송분의 `/partners#creators`, `/partners#brands` 링크는 깨지지 않게 유지한다.
 - Creator/Brand 전용 랜딩은 실제 공개 Recipe 화면 캡처와 실제 Recipe/프로필 링크를 proof로 사용한다. 생성형 이미지로 제품 동작을 가장하지 않는다.
 - 파트너 랜딩의 세그먼트 진입, 실제 Recipe/프로필 열기, 사이트 이동, signup, 문의 제출은 GA4 `partner_action` 이벤트로 측정한다. `partner_segment`, `partner_action` 파라미터로 구분하고, 실제 문의 내용은 별도 서버 전용 `partner_inquiries`에 저장한다.

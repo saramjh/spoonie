@@ -34,8 +34,8 @@ export default function PartnersPage() {
           <p className="mt-5 text-meta text-ink-soft">Spoonie Partner Pilot</p>
           <h1 className="mt-2 text-display text-ink">어떤 파트너이신가요?</h1>
           <p className="mt-4 text-body text-ink-soft">
-            같은 Recipe 그래프라도 크리에이터와 브랜드가 얻는 가치는 다릅니다. 해당하는 안내에서 현재 Spoonie로
-            무엇을 함께 검증할 수 있는지 확인해 주세요.
+            Spoonie는 지금 첫 Creator cohort를 만드는 단계입니다. 요리 크리에이터 참여를 먼저 열고,
+            주방·식품 브랜드는 이후 파일럿을 위한 제품·사용 맥락을 미리 받고 있습니다.
           </p>
         </section>
 
@@ -45,8 +45,8 @@ export default function PartnersPage() {
             <h2 className="text-heading text-ink">요리 크리에이터</h2>
           </div>
           <p className="mt-3 text-body text-ink-soft">
-            SNS의 요리 콘텐츠를 검색 가능한 Recipe로 남기고, 팬이 실제로 만들어 본 기록과 참고·파생 Recipe를
-            원 콘텐츠에 이어 붙이는 구조를 검증합니다.
+            현재 가장 먼저 찾고 있습니다. 기존 요리 콘텐츠 몇 개를 Spoonie Recipe로 시작해,
+            실제 조리 기록과 참고·파생 Recipe가 이어지는 구조를 함께 만드는 Founding Creator 모집입니다.
           </p>
           <PartnerActionLink
             href="/partners/creators"
@@ -54,7 +54,7 @@ export default function PartnersPage() {
             action="creator_segment_open"
             className={buttonVariants({ variant: "default", size: "lg", className: "mt-5 w-full" })}
           >
-            크리에이터 안내 보기 <ArrowRight aria-hidden />
+            Founding Creator 안내 보기 <ArrowRight aria-hidden />
           </PartnerActionLink>
         </section>
 
@@ -64,8 +64,8 @@ export default function PartnersPage() {
             <h2 className="text-heading text-ink">주방·식품 브랜드</h2>
           </div>
           <p className="mt-3 text-body text-ink-soft">
-            제품 노출 한 번으로 끝내지 않고, 제품이 실제로 쓰인 Recipe와 크리에이터·사용자의 조리 경험이 이어지는
-            파일럿을 검증합니다.
+            지금 당장 Creator 매칭을 약속하는 단계는 아닙니다. 첫 Creator cohort가 형성된 뒤 열 브랜드 파일럿을 위해
+            제품군·사용 맥락을 미리 공유하거나, 이미 함께하는 Creator가 있다면 조기 파일럿 가능성을 검토할 수 있습니다.
           </p>
           <PartnerActionLink
             href="/partners/brands"
@@ -73,7 +73,7 @@ export default function PartnersPage() {
             action="brand_segment_open"
             className={buttonVariants({ variant: "default", size: "lg", className: "mt-5 w-full" })}
           >
-            브랜드 안내 보기 <ArrowRight aria-hidden />
+            브랜드 Early Access 보기 <ArrowRight aria-hidden />
           </PartnerActionLink>
         </section>
 
