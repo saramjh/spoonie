@@ -9,7 +9,7 @@ import { LikeButton } from "@/components/items/LikeButton"
 import { BookmarkButton } from "@/components/items/BookmarkButton"
 import { useRouter } from "@/shared/lib/navigation"
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { useShare } from "@/hooks/useShare"
 import { useNavigation } from "@/hooks/useNavigation"
 import { useToast } from "@/hooks/use-toast"
@@ -27,6 +27,9 @@ import { IntentLink, MadeProof, RelativeTime, Sheet, SourceRow } from "@/compone
 import { revalidateItemPage } from "@/shared/infra/revalidate-item"
 import { collectItemImageUrls, removeItemImages } from "@/shared/infra/item-images"
 import { topicHref } from "@/shared/lib/topics"
+import { logEvent } from "@/shared/infra/events"
+
+const loggedFeedImpressions = new Set<string>()
 
 /**
  * 검증된 홈 피드 게시물 카드 컴포넌트
@@ -42,12 +45,14 @@ export default function PostCard({
   item, 
   currentUser, 
   onItemUpdate,
-  priority = false
+  priority = false,
+  surface = "home",
 }: { 
   item: Item; 
   currentUser?: User | null;
   onItemUpdate?: () => Promise<void> | void;
   priority?: boolean;
+  surface?: "home" | "bookmarks";
 }) {
   const supabase = createSupabaseBrowserClient()
   const { toast } = useToast()
@@ -72,6 +77,21 @@ export default function PostCard({
 
   // Hook 안정성을 위한 값 안정화
   const stableItemId = useMemo(() => item.item_id || item.id, [item.item_id, item.id])
+  const cardRef = useRef<HTMLElement | null>(null)
+  const impressionLogged = useRef(false)
+
+  useEffect(() => {
+    if (surface !== "home" || impressionLogged.current || loggedFeedImpressions.has(stableItemId) || !cardRef.current) return
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry?.isIntersecting || entry.intersectionRatio < 0.5 || impressionLogged.current || loggedFeedImpressions.has(stableItemId)) return
+      impressionLogged.current = true
+      loggedFeedImpressions.add(stableItemId)
+      logEvent("feed_impression", stableItemId, "home")
+      observer.disconnect()
+    }, { threshold: 0.5 })
+    observer.observe(cardRef.current)
+    return () => observer.disconnect()
+  }, [stableItemId, surface])
   const stableFallbackData = useMemo(() => ({
     ...item,
     likes_count: item.likes_count || 0,
@@ -218,7 +238,7 @@ export default function PostCard({
   const handleShare = () => {
     const url = `${window.location.origin}${detailUrl}`
     const text = displayItem.title || displayItem.content?.substring(0, 100) || '맛있는 레시피'
-    share({ title: 'Spoonie에서 보기', text, url })
+    share({ title: 'Spoonie에서 보기', text, url, itemId: stableItemId, origin: surface })
   }
 
   const cookingTime = formatCookingTime(displayItem.cooking_time_minutes)
@@ -230,7 +250,7 @@ export default function PostCard({
   }
 
   return (
-    <Sheet as="article" className="relative">
+    <Sheet ref={cardRef} as="article" className="relative">
 
       <header className="flex items-center justify-between gap-2 py-2 pl-4 pr-1.5">
         <div className="flex min-w-0 items-center gap-2.5">
@@ -256,7 +276,7 @@ export default function PostCard({
         </div>
 
         <div className="flex flex-shrink-0 items-center">
-          {!isOwnItem && <FollowButton userId={item.user_id} initialIsFollowing={item.is_following} />}
+          {!isOwnItem && <FollowButton userId={item.user_id} initialIsFollowing={item.is_following} eventOrigin={surface} />}
           {isOwnItem && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

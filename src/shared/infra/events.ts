@@ -1,12 +1,45 @@
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 
-// 레시피가 실제로 쓰였는지 보는 행동 기록. 로그인 사용자만 남기고, 실패해도 화면 동작에 영향을 주지 않는다.
-// 읽기는 관리자(서비스 키)만 가능하다 (events RLS).
-// origin 형식: detail_open은 온 화면 이름(home, search, recipe, post, profile ...).
-// profile_open은 "온 화면|본 사람 id"이고, 글에서 왔으면 item_id가 그 글이다 (글 → 작성자 발견을 잰다).
-export type EventType = "detail_open" | "cook_start" | "cook_complete" | "save" | "recipeed_create" | "derived_create" | "profile_open"
+// 성장 이벤트는 두 층으로 보낸다.
+// - GA4: 비로그인 포함 acquisition/funnel 관측
+// - Supabase events: 로그인 사용자의 관계/행동 분석
+// 어느 쪽이 실패해도 사용자 동작에는 영향을 주지 않는다.
+export type EventType =
+	| "detail_open"
+	| "cook_start"
+	| "cook_complete"
+	| "save"
+	| "recipeed_create"
+	| "derived_create"
+	| "profile_open"
+	| "feed_impression"
+	| "follow"
+	| "unfollow"
+	| "share"
+	| "recipeed_start"
+	| "related_open"
+
+type GtagWindow = Window & {
+	gtag?: (command: "event", eventName: string, params?: Record<string, string | number | boolean | undefined>) => void
+}
+
+function logAnalytics(type: EventType, itemId?: string | null, origin?: string) {
+	if (typeof window === "undefined") return
+	const gtag = (window as GtagWindow).gtag
+	if (!gtag) return
+	gtag("event", type, {
+		item_id: itemId ?? undefined,
+		origin: origin ?? undefined,
+	})
+}
 
 export function logEvent(type: EventType, itemId?: string | null, origin?: string) {
+	logAnalytics(type, itemId, origin)
+
+	// 피드 노출은 빈도가 너무 높아 DB row-per-card로 저장하지 않는다.
+	// GA4에서 집계하고, Supabase에는 의도가 강한 저빈도 행동만 남긴다.
+	if (type === "feed_impression") return
+
 	const supabase = createSupabaseBrowserClient()
 	supabase.auth
 		.getSession()

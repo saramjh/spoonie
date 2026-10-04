@@ -8,6 +8,7 @@ import { useFollowStore } from "@/features/social/store/followStore"
 import { useToast } from "@/hooks/use-toast"
 import { useSessionStore } from "@/store/sessionStore"
 import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
+import { logEvent } from "@/shared/infra/events"
 
 interface FollowButtonProps {
 	userId: string
@@ -15,9 +16,10 @@ interface FollowButtonProps {
 	className?: string
 	// icon: 카드·목록 머리의 아이콘 버튼(사람+ / 사람✓, 상태는 aria-label로). primary: 프로필처럼 그 화면의 주요 동작일 때(아이콘 + 글자)
 	appearance?: "icon" | "primary"
+	eventOrigin?: string
 }
 
-export default function FollowButton({ userId, initialIsFollowing, className, appearance = "icon" }: FollowButtonProps) {
+export default function FollowButton({ userId, initialIsFollowing, className, appearance = "icon", eventOrigin = "unknown" }: FollowButtonProps) {
 	const { toast } = useToast()
 	const { session } = useSessionStore()
 	
@@ -50,6 +52,7 @@ export default function FollowButton({ userId, initialIsFollowing, className, ap
 				success = await unfollow(userId)
 				
 				if (success) {
+					logEvent("unfollow", null, eventOrigin)
 					toast({
 						title: "언팔로우 완료",
 						description: "더 이상 이 사용자의 게시물을 받아보지 않습니다.",
@@ -60,6 +63,7 @@ export default function FollowButton({ userId, initialIsFollowing, className, ap
 				success = await follow(userId)
 				
 				if (success) {
+					logEvent("follow", null, eventOrigin)
 					toast({
 						title: "팔로우 완료", 
 						description: "이제 이 사용자의 게시물을 받아볼 수 있습니다.",

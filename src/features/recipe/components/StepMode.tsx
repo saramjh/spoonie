@@ -197,6 +197,7 @@ export default function StepMode({ steps, ingredients, servingsLabel, startAt, r
 					onClick={async () => {
 						// 요리한 경험을 나누려 할 때 가입을 권한다: 비로그인이면 로그인 후 바로 작성 화면으로 이어진다
 						const target = `/posts/new?source=${recipeId}&origin=cook_mode`
+						logEvent("recipeed_start", recipeId, "cook_mode")
 						const { data } = await createSupabaseBrowserClient().auth.getSession()
 						router.push(data.session ? target : `/login?next=${encodeURIComponent(target)}`)
 					}}

@@ -83,7 +83,8 @@ src/
 
 ## 행동 기록과 발견
 
-- 행동 기록: `shared/infra/events.ts`(쓰기)와 `shared/lib/surface.ts`(어느 화면에서 왔는지, 작성 화면의 돌아가기).
+- 행동 기록: `shared/infra/events.ts`가 GA4와 Supabase를 한 호출로 라우팅한다. `feed_impression`은 비회원 포함 GA4 전용이고, follow/share/Recipe→Recipeed/related 등 저빈도 로그인 행동만 Supabase `events`에도 남긴다. `shared/lib/surface.ts`는 어느 화면에서 왔는지와 작성 화면의 돌아가기를 정한다.
+- 홈 피드는 최신순이 기본이다. `features/feed/domain/feed-order.ts`는 같은 날짜 안에서 동일 작성자 3연속일 때만 가까운 다른 작성자를 끌어와 노출 독점을 완화하며, 좋아요·팔로워·반응 점수로 재정렬하지 않는다.
 - 순위·권유 규칙: `docs/discovery-and-behavior.md`.
 
 ## 서버 함수 (비용이 드는 곳)

@@ -138,7 +138,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	// SSA 표준: 상태 관리 - 조건부 렌더링 전에 호출
 	// commentsCount는 캐시에서 직접 사용 (실시간 동기화)
 	const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
-	const [, setIsAuthLoading] = useState(true)
+	const [isAuthLoading, setIsAuthLoading] = useState(true)
 	const [showDeleteModal, setShowDeleteModal] = useState(false)
 	const [isDeleting, setIsDeleting] = useState(false)
 	
@@ -191,14 +191,15 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		fetchCurrentUser()
 	}, [supabase])
 
-	// 상세 열람 기록: 어느 화면에서 왔는지와 함께. 본인 글은 남기지 않는다 (한 화면에 한 번)
+	// 상세 열람 기록: auth 확인 뒤 비회원까지 GA4에 남긴다.
+	// 로그인 사용자는 events.ts가 Supabase에도 쓰며, 본인 글 열람은 분석에서 제외한다.
 	const loggedOpenRef = useRef<string | null>(null)
 	useEffect(() => {
-		if (!currentUser?.id || !item?.user_id || !stableItemId || loggedOpenRef.current === stableItemId) return
+		if (isAuthLoading || !item?.user_id || !stableItemId || loggedOpenRef.current === stableItemId) return
 		loggedOpenRef.current = stableItemId
-		if (currentUser.id === item.user_id) return
+		if (currentUser?.id === item.user_id) return
 		logEvent("detail_open", stableItemId, cameFrom(window.location.pathname).surface)
-	}, [currentUser?.id, item?.user_id, stableItemId])
+	}, [isAuthLoading, currentUser?.id, item?.user_id, stableItemId])
 
 	// 댓글 스크롤 useEffect
 	useEffect(() => {
@@ -341,7 +342,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 			text: isRecipe ? item.description || "" : item.content || "",
 			url: url,
 		}
-		share(shareData)
+		share({ ...shareData, itemId: stableItemId, origin: "detail" })
 	}
 
 
@@ -404,7 +405,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 					<ul className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1">
 						{relations.made.map((made) => (
 							<li key={made.id} className="w-28 flex-shrink-0">
-								<IntentLink href={`/posts/${made.id}`} className="block">
+								<IntentLink href={`/posts/${made.id}`} className="block" onClick={() => logEvent("related_open", made.id, `recipe_made:${stableItemId}`)}>
 									<div className="relative aspect-square overflow-hidden rounded-[2px] bg-muted">
 										{made.image_url && <Photo src={made.image_url} sizes="112px" />}
 									</div>
@@ -415,7 +416,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 					</ul>
 				)}
 				<Button asChild variant="outline" className="mt-3 w-full">
-					<IntentLink href={requireLogin(`/posts/new?source=${stableItemId}&origin=recipe_detail`)}>이 레시피로 만들었어요</IntentLink>
+					<IntentLink href={requireLogin(`/posts/new?source=${stableItemId}&origin=recipe_detail`)} onClick={() => logEvent("recipeed_start", stableItemId, "recipe_detail")}>이 레시피로 만들었어요</IntentLink>
 				</Button>
 
 				{relations.continued.length > 0 && (
@@ -426,7 +427,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 						<ul className="mt-2 divide-y divide-border">
 							{relations.continued.map((next) => (
 								<li key={next.id}>
-									<IntentLink href={`/recipes/${next.id}`} className="flex min-h-12 items-center gap-2 py-2.5 text-label text-ink">
+									<IntentLink href={`/recipes/${next.id}`} onClick={() => logEvent("related_open", next.id, `continued:${stableItemId}`)} className="flex min-h-12 items-center gap-2 py-2.5 text-label text-ink">
 										<span className="min-w-0 truncate">
 											{next.username}의 <span className="font-semibold">{next.title}</span>
 										</span>
@@ -485,7 +486,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 								</DropdownMenuContent>
 							</DropdownMenu>
 						) : (
-							currentUser && <FollowButton userId={item.user_id} initialIsFollowing={item.is_following} />
+							currentUser && <FollowButton userId={item.user_id} initialIsFollowing={item.is_following} eventOrigin="detail" />
 						)}
 					</div>
 				</header>
@@ -613,7 +614,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 								<ul className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1">
 									{siblingRecords.map((made) => (
 										<li key={made.id} className="w-28 flex-shrink-0">
-											<IntentLink href={`/posts/${made.id}`} className="block">
+											<IntentLink href={`/posts/${made.id}`} className="block" onClick={() => logEvent("related_open", made.id, `sibling:${stableItemId}`)}>
 												<div className="relative aspect-square overflow-hidden rounded-[2px] bg-muted">{made.image_url && <Photo src={made.image_url} sizes="112px" />}</div>
 												<p className="mt-1 truncate text-meta text-ink-soft">{made.username}</p>
 											</IntentLink>

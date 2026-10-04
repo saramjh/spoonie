@@ -260,7 +260,10 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 			description: "레시피드가 성공적으로 처리되었습니다.",
 		})
 			
-			if (!isEditMode) logEvent("recipeed_create", itemId, sourceOrigin ?? undefined)
+			if (!isEditMode) {
+				const creationOrigin = sourceRecipeId && sourceOrigin ? `${sourceOrigin}:${sourceRecipeId}` : "manual"
+				logEvent("recipeed_create", itemId, creationOrigin)
+			}
 			await revalidateItemPage(itemId, initialData?.tags ?? []) // 상세 + sitemap/topic/profile 검색 자산을 즉시 갱신
 			// 고치면서 빠진 사진 파일을 저장소에서 지운다
 			if (isEditMode && initialData) removeDroppedImages(initialData.image_urls || [], uploadedImageUrls)

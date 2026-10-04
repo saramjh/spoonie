@@ -176,6 +176,7 @@ export default function BookmarksPage() {
                 key={item.id}
                 item={item}
                 currentUser={session}
+                surface="bookmarks"
               />
             ))}
           </div>

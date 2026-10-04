@@ -4,8 +4,8 @@
 
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import type { Item } from "@/types/item"
+import { HOME_FEED_PAGE_SIZE } from "@/features/feed/domain/feed-order"
 
-export const HOME_FEED_PAGE_SIZE = 10
 const PAGE_SIZE = HOME_FEED_PAGE_SIZE
 
 /**

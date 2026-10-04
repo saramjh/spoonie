@@ -2,13 +2,14 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { createSupabasePublicClient } from "@/shared/infra/supabase-public"
 import type { Item } from "@/types/item"
 import type { User } from "@supabase/supabase-js"
+import { HOME_FEED_PAGE_SIZE } from "@/features/feed/domain/feed-order"
 
 /**
  * 서버 사이드 초기 피드 데이터 페칭
  * SSR 성능 최적화를 위한 서버 전용 함수
  */
 
-const PAGE_SIZE = 12
+const PAGE_SIZE = HOME_FEED_PAGE_SIZE
 
 export interface ServerFeedData {
   items: Item[]

@@ -84,7 +84,7 @@ export default function FollowListModal({ direction, isOpen, onClose, userId, cu
 											</span>
 										</span>
 									</IntentLink>
-									{currentUserId && person.id !== currentUserId && <FollowButton userId={person.id} initialIsFollowing={person.viewer_follows} />}
+									{currentUserId && person.id !== currentUserId && <FollowButton userId={person.id} initialIsFollowing={person.viewer_follows} eventOrigin="follow_list" />}
 								</li>
 							))}
 						</ul>

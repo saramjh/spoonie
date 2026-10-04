@@ -76,11 +76,15 @@ create table if not exists public.events (
   id bigint generated always as identity primary key,
   user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
   item_id uuid references public.items(id) on delete cascade,
-  type text not null check (type in ('detail_open', 'cook_start', 'cook_complete', 'save', 'recipeed_create', 'derived_create', 'profile_open')),
+  type text not null check (type in (
+    'detail_open', 'cook_start', 'cook_complete', 'save', 'recipeed_create', 'derived_create', 'profile_open',
+    'feed_impression', 'follow', 'unfollow', 'share', 'recipeed_start', 'related_open'
+  )),
   origin text,
   created_at timestamptz not null default now()
 );
 create index if not exists events_item_type_idx on public.events (item_id, type, created_at desc);
+create index if not exists events_type_created_idx on public.events (type, created_at desc);
 
 alter table public.events enable row level security;
 drop policy if exists "Insert own events" on public.events;

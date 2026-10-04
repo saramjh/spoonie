@@ -62,8 +62,8 @@
 | 인기 독점 완화 | 인기 수치를 보여 주면 불평등과 예측 불가능성이 커짐 (Salganik, Dodds & Watts, 2006). 누적 우위 (Merton, 1968). 추천의 인기 편향 (Abdollahpouri 외, 2019) | 적용: 최근 30일만, 작성자 상한 |
 | 새 작성자의 탐색 기회 | 노출의 공정성 (Singh & Joachims, 2018) | 적용: 새 레시피 1자리 |
 | 비교·통제형 보상(팔로워 경쟁, 포인트) 배제 | 외적 보상이 내적 동기를 깎을 수 있음 (Deci, Koestner & Ryan, 1999). 게임화 효과는 엇갈림 (Hamari 외, 2014) | 적용 |
-| 홈은 최신순 유지 | 반응 기반 정렬은 사용자가 원한다고 답한 것과 어긋날 수 있음 (Kleinberg 외, 2022; Milli 외, 트위터 무작위 실험) | 적용 |
-| 노출 대비 반응률, 베이지안 보정 | 작은 표본의 비율은 믿을 수 없음 (Wilson 하한 등) | 보류: 노출 기록이 없음 |
+| 홈은 최신순 유지 | 반응 기반 정렬은 사용자가 원한다고 답한 것과 어긋날 수 있음 (Kleinberg 외, 2022; Milli 외, 트위터 무작위 실험) | 적용: 최신순이 기본. 같은 날짜 안에서 같은 작성자 3연속일 때만 가까운 다른 작성자를 한 칸 끌어옴 |
+| 노출 대비 반응률, 베이지안 보정 | 작은 표본의 비율은 믿을 수 없음 (Wilson 하한 등) | 측정만 시작: 홈 카드 50% 노출을 GA4로 기록. 순위 반영은 데이터가 충분해질 때까지 보류 |
 | LLM으로 관계 판정·관심사 프로필 | 이용이 적을 때 개인화는 동질화를 키움 (Chaney 외, 2018) | 보류 |
 
 ## 탐색 순위 (get_explore)
@@ -78,19 +78,28 @@
 
 ## 행동 기록 (events)
 
-로그인 사용자만, 남의 글과 남의 프로필만 기록한다.
+측정은 비용과 목적에 따라 두 층으로 나눈다.
+
+- **GA4**: 비회원까지 포함한다. 홈 카드가 50% 이상 보이면 세션 중 해당 카드 첫 노출을 `feed_impression`으로 기록하고, `detail_open`, `follow/unfollow`, `share`, `recipeed_start`, `recipeed_create`, `related_open` 등 성장 funnel 이벤트도 보낸다.
+- **Supabase `events`**: 로그인 사용자의 저빈도 행동만 저장한다. 카드 노출은 행이 너무 많이 생기므로 DB에는 쓰지 않는다. 분석 저장 실패는 UI 동작을 막지 않는다.
 
 | type | item_id | origin |
 |---|---|---|
+| feed_impression | 보인 글 | home — **GA4 전용** |
 | detail_open | 연 글 | 온 화면: home, search, recipe, post, profile, recipebook, notifications, bookmarks, external |
-| profile_open | 온 글 (글에서 왔을 때) | `온 화면\|본 사람 id` |
-| cook_start, cook_complete | 레시피 | cook_mode |
-| recipeed_create, derived_create | 새 글 | 작성 경로 |
+| profile_open | 온 글 (글에서 왔을 때) | `온 화면\\|본 사람 id` |
+| cook_start, cook_complete | Recipe | cook_mode |
+| recipeed_start | 출처 Recipe | recipe_detail / cook_mode |
+| recipeed_create | 새 Recipeed | `recipe_detail:<source id>`, `cook_mode:<source id>`, manual |
+| derived_create | 새 Recipe | fork |
+| follow, unfollow | 없음 | home, detail, profile, follow_list 등 |
+| share | 공유한 글 | home, bookmarks, detail |
+| related_open | 이동한 글 | `recipe_made:<source>`, `continued:<source>`, `sibling:<source>` |
 
-저장은 bookmarks 표, 만듦은 content_relations 표에서 센다. 점검 쿼리는 `supabase/queries/growth_loop.sql`.
+저장은 bookmarks 표, Recipe↔Recipeed/Recipe 관계는 content_relations 표에서도 별도로 센다. SQL 점검은 `supabase/queries/growth_loop.sql`, 비회원·노출 funnel은 GA4에서 본다.
 
 ## 다시 정할 때
 
 - 공개 레시피 50개, 한 달 기록한 사람 30명이 넘으면: growth_loop.sql로 단계별 전환을 보고 가중치를 다시 정한다.
 - 탐색에서 같은 레시피가 4주 넘게 1위면: 30일 창을 줄이거나 누적 상한을 둔다.
-- 노출 대비 반응률이 필요해지면: 화면 단위 노출을 묶어서(한 번에 하나의 행) 기록하는 방식을 먼저 정한다. 카드마다 쓰면 무료 요금제 쓰기 한도를 넘는다.
+- 노출 대비 반응률은 GA4 `feed_impression`으로 먼저 관측한다. DB 기반 정교한 exposure 모델이 필요해져도 카드마다 Supabase 행을 쓰지 말고 배치/집계를 먼저 설계한다.

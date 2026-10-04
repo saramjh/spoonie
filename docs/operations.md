@@ -63,7 +63,7 @@
 
 ## 분석과 검색 노출
 
-- GA4: 속성 `properties/499223400`. 태그는 `components/analytics/GoogleAnalytics.tsx` (gtag 표준 설치, 화면 이동은 향상된 측정이 센다).
+- GA4: 속성 `properties/499223400`. 태그는 `components/analytics/GoogleAnalytics.tsx` (gtag 표준 설치, 화면 이동은 향상된 측정이 센다). `shared/infra/events.ts`가 feed impression과 social/growth funnel 이벤트를 GA4에도 보낸다. 홈 카드 노출은 고빈도라 Supabase에 저장하지 않는다.
 - 서치 콘솔(`sc-domain:spoonie.kr`, DNS 확인), 빙 웹마스터, 네이버 서치어드바이저에 `https://spoonie.kr/sitemap.xml` 제출됨.
 - 색인 범위: 공개 Recipe는 기본 index, 정상 공개 Recipeed도 기본 index 후보다. 빈 글·placeholder·반복/링크 스팸만 자동 제외한다. Topic과 Profile은 별도 gate를 사용한다 (`docs/discovery-and-behavior.md`).
 - 서치 콘솔·GA·빙 조회는 Composio CLI로 할 수 있다 (`composio execute <도구> -d '{…}'`).
@@ -71,7 +71,7 @@
 ## DB 변경
 
 - 스키마·함수·정책은 `supabase/*.sql`에 파일로 남기고, Supabase MCP의 마이그레이션으로 적용한다. 파일과 적용 내용이 같아야 한다.
-- 주요 파일: `release_queue.sql`(나눠서 공개할 순서), `optimized_feed_view.sql`(피드 뷰), `growth_graph.sql`(관계·행동 기록), `discovery_and_behavior.sql`(탐색 순위·레시피 활동), `storage_owner_policies.sql`, `security_hardening.sql`.
+- 주요 파일: `release_queue.sql`(나눠서 공개할 순서), `optimized_feed_view.sql`(피드 뷰), `growth_graph.sql`(관계·행동 기록), `growth_events_v2.sql`(성장 이벤트 타입 확장 migration), `discovery_and_behavior.sql`(탐색 순위·레시피 활동), `storage_owner_policies.sql`, `security_hardening.sql`.
 - 점검 쿼리: `supabase/queries/growth_loop.sql`.
 
 ## 관리 스크립트 (`scripts/`)

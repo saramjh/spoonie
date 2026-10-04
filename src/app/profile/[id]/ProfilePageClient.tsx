@@ -255,7 +255,7 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 					</p>
 				)}
 
-				{!isOwner && profile && <FollowButton userId={profile.id} initialIsFollowing={isFollowing} appearance="primary" className="mt-4 w-full" />}
+				{!isOwner && profile && <FollowButton userId={profile.id} initialIsFollowing={isFollowing} appearance="primary" eventOrigin="profile" className="mt-4 w-full" />}
 			</header>
 
 			<UnderlineTabs
