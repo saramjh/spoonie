@@ -1,7 +1,9 @@
 import type { Metadata } from "next"
+import Image from "next/image"
 import Link from "next/link"
-import { ArrowRight, CookingPot, GitFork, SearchCheck } from "lucide-react"
+import { ArrowRight, BookOpen, CookingPot, GitBranch, Package, SearchCheck, Soup, UsersRound } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
+import PartnerFlow from "../partner-flow"
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
 
@@ -20,18 +22,50 @@ export const metadata: Metadata = {
   },
 }
 
-const flow = [
-  ["제품이 쓰이는 Recipe", "냄비·팬·조리도구·식재료가 실제 어떤 요리에 쓰이는지 콘텐츠로 남깁니다."],
-  ["실제 조리 기록", "크리에이터나 사용자가 직접 만들어 본 경험을 Recipe와 연결할 수 있습니다."],
-  ["다음 사용 사례", "참고·변형 Recipe가 생기면 제품이 쓰인 조리 맥락도 함께 확장될 가능성을 검증합니다."],
+const brandFlow = [
+  {
+    label: "제품",
+    description: "쿡웨어나 식재료처럼 실제 조리 과정에서 쓰이는 제품을 시작점으로 둡니다.",
+    icon: Package,
+  },
+  {
+    label: "제품이 쓰인 Recipe",
+    description: "제품이 어떤 요리에서 어떻게 쓰이는지 실제 조리 가능한 Recipe로 남깁니다.",
+    icon: BookOpen,
+  },
+  {
+    label: "Creator·사용자 조리",
+    description: "크리에이터와 사용자가 같은 Recipe를 실제로 만들어 보는 사용 맥락을 만듭니다.",
+    icon: CookingPot,
+  },
+  {
+    label: "Recipeed",
+    description: "직접 만들어 본 사진과 경험을 원 Recipe에 연결해 단발 노출 뒤의 행동을 남깁니다.",
+    icon: Soup,
+  },
+  {
+    label: "파생 사용 사례",
+    description: "참고·변형 Recipe가 생기면 제품이 쓰인 새로운 조리 맥락으로 관계가 확장될 수 있습니다.",
+    icon: GitBranch,
+  },
+]
+
+const brandSignals = [
+  { label: "실제 사용 맥락", icon: CookingPot },
+  { label: "Recipe 기반 콘텐츠", icon: BookOpen },
+  { label: "Creator·사용자 연결", icon: UsersRound },
+  { label: "파생 사용 사례", icon: SearchCheck },
 ]
 
 export default function BrandPartnersPage() {
   return (
     <div className="min-h-screen bg-door px-3 py-4">
       <article className="mx-auto overflow-hidden rounded-[3px] bg-paper shadow-sm">
-        <section className="px-4 pb-6 pt-7">
-          <p className="text-meta text-ink-soft">For Kitchen & Food Brands</p>
+        <section className="px-4 pb-6 pt-6">
+          <Link href="/" className="inline-flex" aria-label="Spoonie 홈">
+            <Image src="/logo-full.svg" alt="Spoonie" width={100} height={32} priority />
+          </Link>
+          <p className="mt-5 text-meta text-ink-soft">For Kitchen & Food Brands</p>
           <h1 className="mt-2 text-display text-ink">
             제품을 보여주는 데서
             <br />
@@ -51,25 +85,12 @@ export default function BrandPartnersPage() {
           </p>
         </section>
 
-        <section className="border-t border-border px-4 py-6" aria-labelledby="brand-flow">
-          <div className="flex items-center gap-2">
-            <GitFork className="h-5 w-5 text-ink" aria-hidden />
-            <h2 id="brand-flow" className="text-heading text-ink">제품에서 요리 경험으로</h2>
-          </div>
-          <div className="mt-4">
-            {flow.map(([title, description], index) => (
-              <div key={title} className="flex gap-3 border-b border-border py-4 last:border-b-0">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border text-label tabular-nums text-ink">
-                  {index + 1}
-                </span>
-                <div>
-                  <p className="text-label text-ink">{title}</p>
-                  <p className="mt-1 text-meta text-ink-soft">{description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+        <PartnerFlow
+          title="제품 노출에서, 실제 사용 맥락까지"
+          summary="광고 이미지를 한 번 더 만드는 것이 아니라 제품이 실제 Recipe에 쓰이고, 그 뒤의 조리 경험과 파생 사용 사례가 이어지는지를 검증합니다."
+          steps={brandFlow}
+          signals={brandSignals}
+        />
 
         <section className="border-t border-border px-4 py-6" aria-labelledby="brand-pilot">
           <div className="flex items-center gap-2">

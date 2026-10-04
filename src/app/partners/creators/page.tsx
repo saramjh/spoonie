@@ -1,7 +1,9 @@
 import type { Metadata } from "next"
+import Image from "next/image"
 import Link from "next/link"
-import { ArrowRight, BookOpen, GitFork, UserRoundCheck } from "lucide-react"
+import { ArrowRight, BookOpen, GitBranch, GitFork, Search, Soup, UserRoundCheck, UsersRound } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
+import PartnerFlow from "../partner-flow"
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
 
@@ -20,18 +22,50 @@ export const metadata: Metadata = {
   },
 }
 
-const flow = [
-  ["내 Recipe", "재료·분량·단계·사진을 요리할 수 있는 형태로 남깁니다."],
-  ["직접 만들어 본 기록", "다른 사용자가 만든 사진과 경험을 Recipeed로 원 Recipe에 연결할 수 있습니다."],
-  ["참고·파생 Recipe", "원 Recipe를 참고해 새 Recipe를 만들면 그 관계를 함께 남길 수 있습니다."],
+const creatorFlow = [
+  {
+    label: "SNS 콘텐츠",
+    description: "발견은 빠르지만 재료·분량·후속 조리 경험은 피드 밖으로 흩어지기 쉽습니다.",
+    icon: UsersRound,
+  },
+  {
+    label: "Spoonie Recipe",
+    description: "재료·분량·단계·사진을 실제로 다시 요리할 수 있는 형태로 남깁니다.",
+    icon: BookOpen,
+  },
+  {
+    label: "직접 만들어 본 기록",
+    description: "팬이 만든 사진과 경험을 Recipeed로 원 Recipe에 연결합니다.",
+    icon: Soup,
+  },
+  {
+    label: "참고·파생 Recipe",
+    description: "원 Recipe를 참고해 새 Recipe가 생기면 그 관계를 이어서 남길 수 있습니다.",
+    icon: GitBranch,
+  },
+  {
+    label: "Creator 프로필 자산",
+    description: "Recipe와 연결된 활동이 작성자의 공개 프로필에 계속 축적됩니다.",
+    icon: UserRoundCheck,
+  },
+]
+
+const creatorSignals = [
+  { label: "구조화된 Recipe", icon: BookOpen },
+  { label: "원 Recipe 연결", icon: GitFork },
+  { label: "실제 조리 경험", icon: Soup },
+  { label: "검색 가능한 공개 자산", icon: Search },
 ]
 
 export default function CreatorPartnersPage() {
   return (
     <div className="min-h-screen bg-door px-3 py-4">
       <article className="mx-auto overflow-hidden rounded-[3px] bg-paper shadow-sm">
-        <section className="px-4 pb-6 pt-7">
-          <p className="text-meta text-ink-soft">For Cooking Creators</p>
+        <section className="px-4 pb-6 pt-6">
+          <Link href="/" className="inline-flex" aria-label="Spoonie 홈">
+            <Image src="/logo-full.svg" alt="Spoonie" width={100} height={32} priority />
+          </Link>
+          <p className="mt-5 text-meta text-ink-soft">For Cooking Creators</p>
           <h1 className="mt-2 text-display text-ink">
             내 레시피가
             <br />
@@ -51,25 +85,12 @@ export default function CreatorPartnersPage() {
           </p>
         </section>
 
-        <section className="border-t border-border px-4 py-6" aria-labelledby="creator-flow">
-          <div className="flex items-center gap-2">
-            <GitFork className="h-5 w-5 text-ink" aria-hidden />
-            <h2 id="creator-flow" className="text-heading text-ink">Recipe에서 이어지는 흐름</h2>
-          </div>
-          <div className="mt-4">
-            {flow.map(([title, description], index) => (
-              <div key={title} className="flex gap-3 border-b border-border py-4 last:border-b-0">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border text-label tabular-nums text-ink">
-                  {index + 1}
-                </span>
-                <div>
-                  <p className="text-label text-ink">{title}</p>
-                  <p className="mt-1 text-meta text-ink-soft">{description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+        <PartnerFlow
+          title="한 번의 게시물에서, 다음 요리까지"
+          summary="Spoonie의 차이는 콘텐츠를 다시 진열하는 데 있지 않습니다. 원 Recipe를 중심으로 실제 조리와 파생 관계가 계속 남는 데 있습니다."
+          steps={creatorFlow}
+          signals={creatorSignals}
+        />
 
         <section className="border-t border-border px-4 py-6" aria-labelledby="creator-value">
           <div className="flex items-center gap-2">
