@@ -16,6 +16,7 @@ import { notFound } from 'next/navigation'
 import ProfilePageClient from './ProfilePageClient'
 import { fetchUserItems, fetchFollowCounts, PUBLIC_PROFILE_COLUMNS, type UserProfile } from '@/features/profile/data/profile-repository'
 import BreadcrumbSchema, { createBreadcrumbs } from '@/components/ai-search-optimization/BreadcrumbSchema'
+import { hasSearchIndexableProfileContent, isSearchIndexableRecipeed } from '@/features/discovery/domain/search-exposure'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -51,13 +52,17 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       }
     }
 
-    // 공개 레시피가 있는 프로필만 색인한다 (빈 프로필은 검색 결과에서 얇은 페이지가 된다)
-    const { count: publicRecipes } = await supabase
-      .from('items')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', profile.id)
-      .eq('item_type', 'recipe')
-      .eq('is_public', true)
+    // 프로필은 레시피 또는 검색 가치가 있는 레시피드가 하나라도 있을 때 검색 자산이 된다.
+    // 레시피드는 수동 플래그가 아니라 전 사이트 공통 자동 정책으로 판정한다.
+    const [recipeCountResult, postCountResult, postsResult] = await Promise.all([
+      supabase.from('items').select('id', { count: 'exact', head: true }).eq('user_id', profile.id).eq('item_type', 'recipe').eq('is_public', true),
+      supabase.from('items').select('id', { count: 'exact', head: true }).eq('user_id', profile.id).eq('item_type', 'post').eq('is_public', true),
+      supabase.from('items').select('title, content, tags, image_urls, cited_recipe_ids').eq('user_id', profile.id).eq('item_type', 'post').eq('is_public', true).limit(1000),
+    ])
+    const publicRecipes = recipeCountResult.count ?? 0
+    const publicPosts = postCountResult.count ?? 0
+    const searchablePosts = (postsResult.data ?? []).filter(isSearchIndexableRecipeed).length
+    const hasSearchContent = hasSearchIndexableProfileContent(publicRecipes, searchablePosts)
 
     // 표시 이름이 있으면 그것을 (공식 계정 "Spoonie 주방"), 없으면 사용자 이름
     const displayName = profile.display_name || profile.username || '익명'
@@ -67,16 +72,16 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     let profileDescription = ''
     const intro = profile.profile_message
     if (intro) {
-      profileDescription = `${intro.replace(/\n/g, ' ').slice(0, 120)} — 공개 레시피 ${publicRecipes ?? 0}개`
+      profileDescription = `${intro.replace(/\n/g, ' ').slice(0, 120)} — 공개 레시피 ${publicRecipes}개 · 레시피드 ${publicPosts}개`
     } else {
-      profileDescription = `${displayName}님이 Spoonie에 올린 공개 레시피 ${publicRecipes ?? 0}개. 재료와 분량, 단계별 사진을 볼 수 있어요.`
+      profileDescription = `${displayName}님이 Spoonie에 올린 공개 레시피 ${publicRecipes}개와 레시피드 ${publicPosts}개. 요리법과 음식·주방의 경험 기록을 볼 수 있어요.`
     }
     
     // SEO 최적화된 제목 생성  
     // 같은 이름을 두 번 쓰지 않는다: 표시 이름이 사용자 이름과 다를 때만 @사용자이름을 붙인다
     const seoTitle = profile.display_name && profile.display_name !== profile.username
       ? `${profile.display_name} (@${profile.username}) - Spoonie`
-      : `${displayName}님의 레시피 - Spoonie`
+      : `${displayName}님의 요리 기록 - Spoonie`
     
     // 키워드 생성
     const keywords = [
@@ -85,6 +90,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       '프로필',
       '요리',
       '레시피',
+      '레시피드',
       'Spoonie',
       '요리 블로거'
     ].filter(Boolean).join(', ')
@@ -115,7 +121,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       },
       
       // 검색 엔진 최적화
-      robots: publicRecipes
+      robots: hasSearchContent
         ? { index: true, follow: true, googleBot: { 'max-image-preview': 'large', 'max-snippet': -1 } }
         : { index: false, follow: true },
       
@@ -194,6 +200,12 @@ export default async function ProfilePage(props: Props) {
           ...(p.profile_message && { description: p.profile_message.slice(0, 300) }),
           ...(p.avatar_url && { image: p.avatar_url }),
         },
+        ...(initial?.items?.length && {
+          hasPart: initial.items.slice(0, 12).map((item) => ({
+            '@type': item.item_type === 'recipe' ? 'Recipe' : 'SocialMediaPosting',
+            url: `${baseUrl}/${item.item_type === 'recipe' ? 'recipes' : 'posts'}/${item.item_id || item.id}`,
+          })),
+        }),
       }
     : null
 

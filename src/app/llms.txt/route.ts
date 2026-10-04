@@ -1,17 +1,17 @@
 /**
- * /llms.txt: AI 검색(ChatGPT·Perplexity·Claude 등)이 사이트를 이해하도록 돕는 안내 파일 (https://llmstxt.org 형식).
- * Spoonie가 무엇인지, 어떤 페이지가 있는지, 공개 레시피 목록(제목·요약·주소)을 담는다.
- * 사이트맵과 같이 로그인 정보 없이 공개 데이터로 만들고 1시간마다 다시 만든다.
- * 지어낸 수치·후기는 넣지 않는다: 레시피 수는 실제로 센 값만 쓴다.
+ * /llms.txt: 비Google AI 에이전트가 Spoonie의 공개 콘텐츠 구조를 이해하도록 돕는 보조 안내 파일.
+ * Google 검색 랭킹용 파일이 아니며, 실제 공개 데이터만 싣는다.
  */
 
 import { createSupabasePublicClient } from "@/shared/infra/supabase-public"
+import { isSearchIndexableRecipeed, isSearchIndexableTopic } from "@/features/discovery/domain/search-exposure"
+import { normalizeTags, topicHref } from "@/shared/lib/topics"
 
 export const revalidate = 3600
-
-const MAX_RECIPES = 200
+const MAX_PER_TYPE = 200
 
 type RecipeRow = { id: string; title: string | null; description: string | null; servings: number | null; cooking_time_minutes: number | null; tags: string[] | null }
+type PostRow = { id: string; title: string | null; content: string | null; tags: string[] | null; image_urls: string[] | null; cited_recipe_ids: string[] | null }
 
 function oneLine(text: string | null, max = 120) {
 	const t = (text || "").replace(/\s+/g, " ").trim()
@@ -21,32 +21,40 @@ function oneLine(text: string | null, max = 120) {
 export async function GET() {
 	const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
 	let recipes: RecipeRow[] = []
+	let posts: PostRow[] = []
 	try {
-		const { data, error } = await createSupabasePublicClient()
-			.from("items")
-			.select("id, title, description, servings, cooking_time_minutes, tags")
-			.eq("is_public", true)
-			.eq("item_type", "recipe")
-			.order("created_at", { ascending: false })
-			.limit(MAX_RECIPES)
-		if (!error && data) recipes = data as RecipeRow[]
+		const supabase = createSupabasePublicClient()
+		const [recipeResult, postResult] = await Promise.all([
+			supabase.from("items").select("id, title, description, servings, cooking_time_minutes, tags").eq("is_public", true).eq("item_type", "recipe").order("created_at", { ascending: false }).limit(MAX_PER_TYPE),
+			supabase.from("items").select("id, title, content, tags, image_urls, cited_recipe_ids").eq("is_public", true).eq("item_type", "post").order("created_at", { ascending: false }).limit(MAX_PER_TYPE),
+		])
+		if (!recipeResult.error && recipeResult.data) recipes = recipeResult.data as RecipeRow[]
+		if (!postResult.error && postResult.data) posts = (postResult.data as PostRow[]).filter(isSearchIndexableRecipeed)
 	} catch {
-		// 목록을 못 받아도 사이트 안내는 보낸다
+		// 공개 목록 조회가 실패해도 서비스 설명은 제공한다.
 	}
+
+	const topicCounts = new Map<string, number>()
+	for (const item of [...recipes, ...posts]) {
+		for (const tag of normalizeTags(item.tags)) topicCounts.set(tag, (topicCounts.get(tag) ?? 0) + 1)
+	}
+	const topics = [...topicCounts.entries()].filter(([, count]) => isSearchIndexableTopic(count)).sort((a, b) => b[1] - a[1]).slice(0, 40)
 
 	const lines = [
 		"# Spoonie",
 		"",
-		"> 집에서 한 요리를 레시피(재료·분량·단계별 사진)로 남기고, 요리할 때 다시 꺼내 보며, 다른 사람의 레시피를 바탕으로 자기 버전을 만드는 한국어 레시피 공유 서비스. 별칭: 스푸니.",
+		"> 한국어 요리 소셜 플랫폼. 레시피와 레시피드는 서로 다른 1급 공개 콘텐츠다.",
 		"",
-		"레시피 페이지에는 인분, 조리 시간, 재료와 분량, 단계별 설명이 HTML 본문과 schema.org Recipe 구조화 데이터로 함께 들어 있다. 레시피는 가입 없이 모두 볼 수 있다.",
-		"참고한 레시피를 인용해 새 레시피를 쓰면 원본과 이어진다(이어진 레시피). 레시피로 실제로 만들어 본 기록(레시피드)은 사진과 글 중심이며 검색 색인 대상이 아니다.",
+		"레시피는 재료·분량·조리 단계·사진을 갖춘 구조화된 요리법이며 schema.org Recipe로 표시한다.",
+		"레시피드는 사진과 글 중심의 음식·요리·주방·식생활 기록이다. 특정 레시피를 참고해 만들 수도 있지만, 일반적인 요리 일상·후기·도구·재료 경험처럼 독립적인 이야기일 수도 있다.",
+		"공개 레시피드 중 검색자가 독립적으로 읽을 정보와 주제 맥락이 충분한 글은 SocialMediaPosting으로 검색에 노출하고, 짧은 소셜 업데이트는 공개 상태를 유지하되 검색 색인에서는 제외한다. 이 구분은 게시물마다 수동 설정하지 않고 같은 자동 정책으로 판정한다.",
+		"레시피와 레시피드는 태그 주제 페이지에서 함께 연결되며, 참고 레시피 관계가 있는 경우에는 그 관계도 별도로 표시한다.",
 		"",
 		"## 주요 페이지",
 		"",
-		`- [홈](${baseUrl}/): 최근 공개 레시피와 요리 기록`,
-		`- [레시피 찾기](${baseUrl}/search): 요리 이름·재료로 레시피 검색, 실제로 만들어 본 기록`,
-		`- [사이트맵](${baseUrl}/sitemap.xml): 공개 레시피와 작성자 프로필 전체 주소`,
+		`- [홈](${baseUrl}/): 최근 공개 레시피와 레시피드`,
+		`- [검색](${baseUrl}/search): 레시피·레시피드·사용자 검색`,
+		`- [사이트맵](${baseUrl}/sitemap.xml): 검색에 노출할 레시피, 레시피드, 주제, 작성자 프로필`,
 		"",
 		`## 레시피 (최근 공개 ${recipes.length}개)`,
 		"",
@@ -55,6 +63,14 @@ export async function GET() {
 			const summary = oneLine(r.description)
 			return `- [${oneLine(r.title, 60) || "레시피"}](${baseUrl}/recipes/${r.id})${meta ? ` (${meta})` : ""}${summary ? `: ${summary}` : ""}`
 		}),
+		"",
+		`## 레시피드 (검색 노출 정책을 통과한 최근 공개 ${posts.length}개)`,
+		"",
+		...posts.map((p) => `- [${oneLine(p.title, 60) || oneLine(p.content, 40) || "레시피드"}](${baseUrl}/posts/${p.id})${p.content ? `: ${oneLine(p.content)}` : ""}`),
+		"",
+		"## 주제",
+		"",
+		...topics.map(([tag, count]) => `- [#${tag}](${baseUrl}${topicHref(tag)}): 공개 검색 자산 ${count}개`),
 		"",
 	]
 

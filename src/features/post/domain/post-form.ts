@@ -4,6 +4,7 @@
 
 import type { Item } from "@/types/item"
 import type { PostDraft, PostSourceOrigin } from "../contracts"
+import { normalizeTags } from "@/shared/lib/topics"
 
 // 폼 처음 값: 수정이면 저장된 값, 아니면 빈 값 (레시피드 기본값은 공개)
 export function postFormDefaults(editing: Item | null): Required<Omit<PostDraft, "title">> & { title: string } {
@@ -45,7 +46,7 @@ export function buildPostItemPayload(
 		title: values.title?.trim() || null,
 		content: values.content,
 		image_urls: ctx.imageUrls,
-		tags: values.tags,
+		tags: normalizeTags(values.tags),
 		cited_recipe_ids: values.cited_recipe_ids,
 		is_public: values.is_public,
 		thumbnail_index: ctx.thumbnailIndex,

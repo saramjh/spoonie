@@ -37,6 +37,7 @@ import { logEvent } from "@/shared/infra/events"
 import { cameFrom } from "@/shared/lib/surface"
 import { collectItemImageUrls, removeItemImages } from "@/shared/infra/item-images"
 import { deleteOwnItem } from "@/features/feed/data/item-detail"
+import { topicHref } from "@/shared/lib/topics"
 import { fetchProfileSummary } from "@/features/profile/data/profile-repository"
 
 interface ItemDetailViewProps {
@@ -543,8 +544,8 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 							{item.tags && item.tags.length > 0 && (
 								<ul className="mt-4 flex flex-wrap gap-x-3 gap-y-1" aria-label="태그">
 									{item.tags.map((tag, idx) => (
-										<li key={idx} className="text-label text-ink-soft">
-											#{tag}
+										<li key={idx}>
+											<IntentLink href={topicHref(tag)} className="inline-flex min-h-8 items-center text-label text-ink-soft hover:text-ink">#{tag}</IntentLink>
 										</li>
 									))}
 								</ul>

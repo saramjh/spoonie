@@ -16,6 +16,7 @@ import { fetchItemDetail, ItemNotFoundError } from '@/features/feed/data/item-de
 import PostDetailClient from './PostDetailClient'
 import PostSchema from '@/components/ai-search-optimization/PostSchema'
 import BreadcrumbSchema, { createBreadcrumbs } from '@/components/ai-search-optimization/BreadcrumbSchema'
+import { isSearchIndexableRecipeed } from '@/features/discovery/domain/search-exposure'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -38,6 +39,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         thumbnail_index,
         created_at,
         tags,
+        cited_recipe_ids,
         profiles!user_id(display_name, username)
       `)
       .eq('id', params.id)
@@ -55,6 +57,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     }
 
     const profileData = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles
+    const indexable = isSearchIndexableRecipeed(post)
     const authorName = profileData?.username || '익명'
     // 공유 이미지: 작성자가 고른 대표 사진. 사진이 없으면 1200×630 기본 이미지
     const coverUrl = post.image_urls?.[post.thumbnail_index ?? 0] || post.image_urls?.[0]
@@ -121,9 +124,11 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         images: [imageUrl],
       },
       
-      // 검색 유입의 착지는 레시피가 맡는다 (docs/discovery-and-behavior.md). 레시피드는 짧은 활동 기록이라
-      // 색인하지 않고, 안의 링크(출처 레시피, 작성자)만 따라가게 한다. 공유 미리보기는 그대로 쓴다.
-      robots: { index: false, follow: true },
+      // 공개 레시피드는 공통 자동 정책으로 검색 랜딩 여부를 판정한다.
+      // 좋아요·팔로워 같은 인기값은 쓰지 않아 새 글/소규모 작성자가 불리해지지 않는다.
+      robots: indexable
+        ? { index: true, follow: true, googleBot: { 'max-image-preview': 'large', 'max-snippet': -1 } }
+        : { index: false, follow: true },
       
       // 정규 URL 설정
       alternates: {
@@ -143,6 +148,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     return { 
       title: '레시피드 - Spoonie',
       description: '요리와 관련된 이야기를 공유하는 Spoonie입니다.',
+      robots: { index: false, follow: true },
     }
   }
 }

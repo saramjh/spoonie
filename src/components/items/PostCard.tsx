@@ -26,6 +26,7 @@ import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
 import { IntentLink, MadeProof, RelativeTime, Sheet, SourceRow } from "@/components/kit"
 import { revalidateItemPage } from "@/shared/infra/revalidate-item"
 import { collectItemImageUrls, removeItemImages } from "@/shared/infra/item-images"
+import { topicHref } from "@/shared/lib/topics"
 
 /**
  * 검증된 홈 피드 게시물 카드 컴포넌트
@@ -346,8 +347,8 @@ export default function PostCard({
         {displayItem.tags && displayItem.tags.length > 0 && (
           <ul className="mt-2 flex flex-wrap gap-x-3 gap-y-1" aria-label="태그">
             {displayItem.tags.map((tag, idx) => (
-              <li key={idx} className="text-meta text-ink-soft">
-                #{tag}
+              <li key={idx}>
+                <IntentLink href={topicHref(tag)} className="inline-flex min-h-8 items-center text-meta text-ink-soft hover:text-ink">#{tag}</IntentLink>
               </li>
             ))}
           </ul>

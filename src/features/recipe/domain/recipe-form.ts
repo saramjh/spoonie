@@ -5,6 +5,7 @@
 
 import type { Item, ItemDetail } from "@/types/item"
 import type { RecipeDraft, RecipeFormInput, RecipeIngredientInput, RecipeInstructionInput } from "../contracts"
+import { normalizeTags } from "@/shared/lib/topics"
 
 // 수정 화면: 저장된 레시피로 폼을 채운다. 재료는 order_index 순서로 (원래 배열을 그 자리에서 정렬하는 동작도 그대로)
 export function editDefaults(initialData: Item): RecipeFormInput {
@@ -97,7 +98,7 @@ export function buildRecipeItemPayload(
 		is_public: values.is_public,
 		image_urls: ctx.imageUrls,
 		color_label: values.color_label,
-		tags: values.tags,
+		tags: normalizeTags(values.tags),
 		cited_recipe_ids: values.cited_recipe_ids,
 		thumbnail_index: ctx.thumbnailIndex,
 		...creationOriginField(ctx.isEditMode, ctx.forkFromId, values.cited_recipe_ids),
