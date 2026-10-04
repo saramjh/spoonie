@@ -3,7 +3,7 @@
  * - 공개 레시피: 항상 검색 자산
  * - 공개 레시피드: 공통 정보가치 정책을 통과한 글만
  * - 프로필: 검색 자산이 하나 이상 있는 작성자
- * - 주제: 검색 자산이 두 개 이상 모인 태그
+ * - 주제: 공통 품질 게이트(자산 수·작성자 다양성·태그 품질)를 통과한 태그
  */
 
 import { MetadataRoute } from 'next'
@@ -73,11 +73,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ? await supabase.from('profiles').select('public_id, updated_at').in('id', authorIds).not('public_id', 'is', null)
       : { data: [] as { public_id: string; updated_at: string }[] }
 
-    const topicCounts = new Map<string, number>()
+    const topicStats = new Map<string, { count: number; authors: Set<string> }>()
     for (const item of searchItems) {
-      for (const tag of normalizeTags(item.tags)) topicCounts.set(tag, (topicCounts.get(tag) ?? 0) + 1)
+      for (const tag of normalizeTags(item.tags)) {
+        const stats = topicStats.get(tag) ?? { count: 0, authors: new Set<string>() }
+        stats.count += 1
+        stats.authors.add(item.user_id)
+        topicStats.set(tag, stats)
+      }
     }
-    const topics = [...topicCounts.entries()].filter(([, count]) => isSearchIndexableTopic(count)).map(([tag]) => tag)
+    const topics = [...topicStats.entries()]
+      .filter(([tag, stats]) => isSearchIndexableTopic({ tag, searchAssetCount: stats.count, distinctAuthorCount: stats.authors.size }))
+      .map(([tag]) => tag)
     const lastModified = (row: ItemRow) => new Date(row.updated_at || row.created_at)
 
     return [

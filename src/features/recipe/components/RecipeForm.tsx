@@ -388,7 +388,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 
 		toast({ title: `레시피 ${isEditMode ? "수정" : "작성"} 완료`, description: `성공적으로 ${isEditMode ? "수정" : "등록"}되었습니다.` })
 		if (!isEditMode && forkFrom) logEvent("derived_create", itemId, "fork")
-		revalidateItemPage(itemId) // 미리 만든 상세 페이지를 고친 내용으로 바로 갱신
+		await revalidateItemPage(itemId, initialData?.tags ?? []) // 상세 + sitemap/topic/profile 검색 자산을 즉시 갱신
 		// 고치면서 빠진 사진(대표·단계) 파일을 저장소에서 지운다
 		if (isEditMode && initialData) {
 			removeDroppedImages(

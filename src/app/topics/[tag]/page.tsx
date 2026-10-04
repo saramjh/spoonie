@@ -9,6 +9,7 @@ import { IntentLink, PageHeader, Photo, RelativeTime, SectionHeading, Sheet } fr
 
 type TopicRow = {
 	id: string
+	user_id: string
 	item_type: "recipe" | "post"
 	title: string | null
 	description: string | null
@@ -33,7 +34,7 @@ const loadTopic = cache(async (tag: string) => {
 	if (!tag) return [] as TopicRow[]
 	const { data, error } = await createSupabasePublicClient()
 		.from("items")
-		.select("id, item_type, title, description, content, image_urls, thumbnail_index, tags, cited_recipe_ids, created_at, profiles!user_id(public_id, display_name, username)")
+		.select("id, user_id, item_type, title, description, content, image_urls, thumbnail_index, tags, cited_recipe_ids, created_at, profiles!user_id(public_id, display_name, username)")
 		.eq("is_public", true)
 		.contains("tags", [tag])
 		.order("created_at", { ascending: false })
@@ -42,8 +43,9 @@ const loadTopic = cache(async (tag: string) => {
 	return (data ?? []) as unknown as TopicRow[]
 })
 
-function searchSurfaceCount(items: TopicRow[]): number {
-	return items.filter((item) => item.item_type === "recipe" || isSearchIndexableRecipeed(item)).length
+function topicSearchSignals(tag: string, items: TopicRow[]) {
+	const assets = items.filter((item) => item.item_type === "recipe" || isSearchIndexableRecipeed(item))
+	return { tag, searchAssetCount: assets.length, distinctAuthorCount: new Set(assets.map((item) => item.user_id)).size }
 }
 
 function authorName(item: TopicRow): string {
@@ -67,7 +69,7 @@ export async function generateMetadata({ params }: { params: Promise<{ tag: stri
 		const items = await loadTopic(tag)
 		const recipes = items.filter((item) => item.item_type === "recipe").length
 		const posts = items.length - recipes
-		const indexable = isSearchIndexableTopic(searchSurfaceCount(items))
+		const indexable = isSearchIndexableTopic(topicSearchSignals(tag, items))
 		const description = `${tag}에 관한 공개 레시피 ${recipes}개와 레시피드 ${posts}개를 함께 봅니다. 요리법과 실제 음식·주방 경험을 한 주제에서 연결합니다.`
 		const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
 		return {

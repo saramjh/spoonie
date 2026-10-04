@@ -302,7 +302,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 			const { error } = await deleteOwnItem(supabase, item.item_id, currentUser.id) // 보안 검증
 			
 			if (error) throw error
-			revalidateItemPage(item.item_id) // 지운 글의 미리 만든 페이지를 바로 내린다
+			revalidateItemPage(item.item_id, item.tags ?? []) // 상세 + 검색 자산에서 즉시 제거
 			removeItemImages(imageUrls) // 지운 글의 사진 파일도 지운다
 			
 

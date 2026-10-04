@@ -261,7 +261,7 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 		})
 			
 			if (!isEditMode) logEvent("recipeed_create", itemId, sourceOrigin ?? undefined)
-			revalidateItemPage(itemId) // 미리 만든 상세 페이지를 고친 내용으로 바로 갱신
+			await revalidateItemPage(itemId, initialData?.tags ?? []) // 상세 + sitemap/topic/profile 검색 자산을 즉시 갱신
 			// 고치면서 빠진 사진 파일을 저장소에서 지운다
 			if (isEditMode && initialData) removeDroppedImages(initialData.image_urls || [], uploadedImageUrls)
 			// 레시피 상세의 "만들어 본 기록"이 바로 보이도록 관계 캐시를 비운다

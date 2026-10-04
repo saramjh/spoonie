@@ -113,7 +113,13 @@ async function performUpload(
 	if (uploadError) {
 		throw new Error(`이미지 업로드 실패: ${uploadError.message}`)
 	}
-	await uploadVariants(bucketId, fileName, image.file)
+	try {
+		await uploadVariants(bucketId, fileName, image.file)
+	} catch (error) {
+		// 최적화 버전이 끝내 만들어지지 않으면 미완성 이미지 자산을 게시하지 않는다.
+		await supabase.storage.from(bucketId).remove([fileName, ...VARIANT_WIDTHS.map((width) => variantPath(fileName, width))])
+		throw error
+	}
 
 	const { data: publicUrlData } = supabase.storage
 		.from(bucketId)
@@ -184,23 +190,38 @@ export async function uploadImagesOptimized(
 }
 
 /**
- * 크기별 버전(400px, 800px)을 원본 옆에 올린다. 화면은 srcset으로 필요한 크기만 받는다 (lib/image-variants).
- * 실패해도 원본 저장은 막지 않는다 (화면은 버전이 없으면 원본으로 되돌아간다).
+ * 크기별 버전(400px, 800px)을 원본 옆에 올린다.
+ * 각 variant는 최대 3번 재시도한다. 끝내 실패하면 throw하여 새 게시물이
+ * "원본만 있고 responsive variant가 없는" 불완전 상태로 저장되지 않게 한다.
  */
 export async function uploadVariants(bucketId: string, path: string, file: File): Promise<void> {
 	const supabase = createSupabaseBrowserClient()
+	const failures: string[] = []
+
 	await Promise.all(
 		VARIANT_WIDTHS.map(async (width) => {
-			try {
-				const [variant] = await optimizeImages([file], width, 0.78)
-				await supabase.storage.from(bucketId).upload(variantPath(path, width), variant.file, {
-					cacheControl: "31536000",
-					contentType: "image/jpeg",
-					upsert: true,
-				})
-			} catch (error) {
-				console.warn("variant upload failed", width, error)
+			let lastError: unknown = null
+			for (let attempt = 1; attempt <= 3; attempt += 1) {
+				try {
+					const [variant] = await optimizeImages([file], width, 0.78)
+					const { error } = await supabase.storage.from(bucketId).upload(variantPath(path, width), variant.file, {
+						cacheControl: "31536000",
+						contentType: "image/jpeg",
+						upsert: true,
+					})
+					if (error) throw error
+					return
+				} catch (error) {
+					lastError = error
+					if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 150 * attempt))
+				}
 			}
+			failures.push(`${width}px: ${lastError instanceof Error ? lastError.message : String(lastError)}`)
 		})
 	)
+
+	if (failures.length > 0) {
+		console.error("image variant pipeline failed", { path, failures })
+		throw new Error(`이미지 최적화 버전 생성 실패: ${failures.join(" / ")}`)
+	}
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
-import { revalidatePath } from "next/cache"
 import { createSupabaseRouteHandlerClient } from "@/shared/infra/supabase-server"
+import { normalizeTags } from "@/shared/lib/topics"
+import { revalidateDiscoveryPaths, revalidateProfilePaths } from "@/features/discovery/data/revalidate-discovery"
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -12,6 +13,9 @@ export async function POST(request: Request) {
 	const body = await request.json().catch(() => null)
 	const itemId = typeof body?.itemId === "string" ? body.itemId : ""
 	const profileOnly = body?.profile === true
+	const previousTags = Array.isArray(body?.previousTags)
+		? normalizeTags(body.previousTags.filter((tag: unknown): tag is string => typeof tag === "string" && tag.length <= 80)).slice(0, 30)
+		: []
 	if (!profileOnly && !UUID.test(itemId)) return NextResponse.json({ error: "invalid item" }, { status: 400 })
 
 	const supabase = await createSupabaseRouteHandlerClient()
@@ -22,21 +26,20 @@ export async function POST(request: Request) {
 
 	// 내 프로필 경로 (공개 아이디와 내부 아이디 두 주소 모두)
 	const { data: me } = await supabase.from("profiles").select("public_id").eq("id", user.id).maybeSingle()
-	const revalidateMyProfile = () => {
-		revalidatePath(`/profile/${user.id}`)
-		if (me?.public_id) revalidatePath(`/profile/${me.public_id}`)
-	}
+	const profileIds = [user.id, me?.public_id]
+
 	if (profileOnly) {
-		revalidateMyProfile()
+		revalidateProfilePaths(profileIds)
 		return NextResponse.json({ revalidated: true })
 	}
 
 	// 작성자는 RLS로 자기 비공개 글까지 읽을 수 있다. 다른 사람의 글이 보이면 거절한다
-	const { data: item } = await supabase.from("items").select("user_id").eq("id", itemId).maybeSingle()
+	const { data: item } = await supabase.from("items").select("user_id, tags").eq("id", itemId).maybeSingle()
 	if (item && item.user_id !== user.id) return NextResponse.json({ error: "forbidden" }, { status: 403 })
 
-	revalidatePath(`/recipes/${itemId}`)
-	revalidatePath(`/posts/${itemId}`)
-	revalidateMyProfile() // 내 프로필의 글 목록도 바뀐다
-	return NextResponse.json({ revalidated: true })
+	// 수정/삭제로 태그가 빠졌을 때 옛 topic도 갱신해야 하므로 이전+현재 태그를 함께 무효화한다.
+	const affectedTags = normalizeTags([...(item?.tags ?? []), ...previousTags]).slice(0, 40)
+	revalidateDiscoveryPaths({ itemId, profileIds, tags: affectedTags })
+
+	return NextResponse.json({ revalidated: true, topics: affectedTags.length })
 }

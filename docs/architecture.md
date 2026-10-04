@@ -22,7 +22,7 @@
 src/
 ├─ app/                    라우트 (경로 그대로). 화면 조립만
 ├─ features/
-│  ├─ recipe/  post/  social/  profile/  feed/  notification/
+│  ├─ recipe/  post/  discovery/  social/  profile/  feed/  notification/
 │  │  ├─ contracts.ts      입력·출력 타입 (실행 코드 없음)
 │  │  ├─ domain/           순수 함수: React·Supabase·브라우저를 모른다. *.test.ts로 동작을 기록
 │  │  ├─ data/             DB·저장소 읽기·쓰기 (Supabase 호출은 여기만)
@@ -40,6 +40,8 @@ src/
 - 판단 로직(폼 기본값, 저장 값 만들기, 상태 계산)은 `domain/`에 두고 테스트를 붙인다: `npm test`(vitest).
 - 새 폴더를 만들면 `tailwind.config.ts`의 `content`에 들어가는지 확인한다 (`src/features`, `src/shared`는 들어 있다).
 - 브라우저 Supabase 클라이언트는 `shared/infra/supabase-client.ts` 하나다. @supabase/ssr이 브라우저에서 쿠키 저장·PKCE·토큰 갱신을 늘 자기 값으로 정하고, 클라이언트 하나를 모든 화면이 함께 쓴다.
+- 레시피 저장은 `save_recipe_atomic` RPC 하나로 `items`·`ingredients`·`instructions`를 같은 DB 트랜잭션에서 처리한다. 일반 사용자 호출은 SECURITY INVOKER로 기존 RLS를 그대로 따르고, service-role 운영 importer도 같은 함수의 제한된 ingest 경로를 쓴다. 자식 행 저장이 실패하면 본체 변경도 rollback된다.
+- 새 이미지 게시 전 원본과 400/800px responsive variant를 모두 만든다. variant는 최대 3번 재시도하고 끝내 실패하면 해당 원본/부분 variant를 지운 뒤 게시를 실패시켜 불완전 이미지 자산을 남기지 않는다.
 
 ## 데이터 (Supabase)
 

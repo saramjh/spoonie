@@ -162,7 +162,7 @@ export default function RecipesPage() {
 			const { error } = await deleteItemsByIds(supabase, selectedRecipes)
 
 			if (error) throw error
-			selectedRecipes.forEach(revalidateItemPage) // 지운 레시피의 미리 만든 페이지를 바로 내린다
+			selectedRecipes.forEach((itemId) => revalidateItemPage(itemId)) // 지운 레시피의 미리 만든 페이지를 바로 내린다
 			removeItemImages(imageUrls) // 지운 레시피의 사진 파일도 지운다
 			
 			

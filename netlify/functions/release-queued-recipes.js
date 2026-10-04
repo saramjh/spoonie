@@ -21,11 +21,25 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
 const IG = 'https://graph.instagram.com/v21.0';
 const REFRESH_AFTER_MS = 30 * 24 * 60 * 60 * 1000;
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr';
 const headers = { apikey: SECRET_KEY, Authorization: `Bearer ${SECRET_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=representation' };
 
 async function call(method, path, body, extraHeaders) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { method, headers: { ...headers, ...extraHeaders }, body: body ? JSON.stringify(body) : undefined });
   if (!res.ok) throw new Error(`${method} ${path.split('?')[0]} ${res.status} ${await res.text()}`);
+  return res.json();
+}
+
+async function revalidatePublished(itemId) {
+  const secret = process.env.PUSH_WEBHOOK_SECRET;
+  if (!secret) return { skipped: 'no revalidation secret' };
+  const res = await fetch(`${APP_URL}/api/revalidate-published`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${secret}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ itemId }),
+    signal: AbortSignal.timeout(5000),
+  });
+  if (!res.ok) throw new Error(`revalidate published ${res.status} ${await res.text()}`);
   return res.json();
 }
 
@@ -153,6 +167,11 @@ exports.handler = async () => {
       const [item] = await call('PATCH', `items?id=eq.${next.item_id}`, { is_public: true, created_at: now, updated_at: now });
       await call('PATCH', `release_queue?item_id=eq.${next.item_id}`, { released_at: now });
       console.log('released', next.item_id, item && item.title);
+      try {
+        console.log('revalidated', JSON.stringify(await revalidatePublished(next.item_id)));
+      } catch (error) {
+        console.error('release revalidation failed', error);
+      }
     } else {
       console.log(recentlyReleased ? 'skip release: released less than 50 minutes ago' : 'queue empty');
     }

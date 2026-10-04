@@ -177,7 +177,7 @@ export default function PostCard({
           .eq('user_id', currentUser?.id) // 보안: 자신의 아이템만 삭제
 
         if (error) throw error
-        revalidateItemPage(item.item_id || item.id) // 지운 글의 미리 만든 페이지를 바로 내린다
+        revalidateItemPage(item.item_id || item.id, item.tags ?? []) // 상세 + 검색 자산에서 즉시 제거
         removeItemImages(imageUrls) // 지운 글의 사진 파일도 지운다
 
 

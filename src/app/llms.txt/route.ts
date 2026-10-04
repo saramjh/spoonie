@@ -10,8 +10,8 @@ import { normalizeTags, topicHref } from "@/shared/lib/topics"
 export const revalidate = 3600
 const MAX_PER_TYPE = 200
 
-type RecipeRow = { id: string; title: string | null; description: string | null; servings: number | null; cooking_time_minutes: number | null; tags: string[] | null }
-type PostRow = { id: string; title: string | null; content: string | null; tags: string[] | null; image_urls: string[] | null; cited_recipe_ids: string[] | null }
+type RecipeRow = { id: string; user_id: string; title: string | null; description: string | null; servings: number | null; cooking_time_minutes: number | null; tags: string[] | null }
+type PostRow = { id: string; user_id: string; title: string | null; content: string | null; tags: string[] | null; image_urls: string[] | null; cited_recipe_ids: string[] | null }
 
 function oneLine(text: string | null, max = 120) {
 	const t = (text || "").replace(/\s+/g, " ").trim()
@@ -25,8 +25,8 @@ export async function GET() {
 	try {
 		const supabase = createSupabasePublicClient()
 		const [recipeResult, postResult] = await Promise.all([
-			supabase.from("items").select("id, title, description, servings, cooking_time_minutes, tags").eq("is_public", true).eq("item_type", "recipe").order("created_at", { ascending: false }).limit(MAX_PER_TYPE),
-			supabase.from("items").select("id, title, content, tags, image_urls, cited_recipe_ids").eq("is_public", true).eq("item_type", "post").order("created_at", { ascending: false }).limit(MAX_PER_TYPE),
+			supabase.from("items").select("id, user_id, title, description, servings, cooking_time_minutes, tags").eq("is_public", true).eq("item_type", "recipe").order("created_at", { ascending: false }).limit(MAX_PER_TYPE),
+			supabase.from("items").select("id, user_id, title, content, tags, image_urls, cited_recipe_ids").eq("is_public", true).eq("item_type", "post").order("created_at", { ascending: false }).limit(MAX_PER_TYPE),
 		])
 		if (!recipeResult.error && recipeResult.data) recipes = recipeResult.data as RecipeRow[]
 		if (!postResult.error && postResult.data) posts = (postResult.data as PostRow[]).filter(isSearchIndexableRecipeed)
@@ -34,11 +34,19 @@ export async function GET() {
 		// 공개 목록 조회가 실패해도 서비스 설명은 제공한다.
 	}
 
-	const topicCounts = new Map<string, number>()
+	const topicStats = new Map<string, { count: number; authors: Set<string> }>()
 	for (const item of [...recipes, ...posts]) {
-		for (const tag of normalizeTags(item.tags)) topicCounts.set(tag, (topicCounts.get(tag) ?? 0) + 1)
+		for (const tag of normalizeTags(item.tags)) {
+			const stats = topicStats.get(tag) ?? { count: 0, authors: new Set<string>() }
+			stats.count += 1
+			stats.authors.add(item.user_id)
+			topicStats.set(tag, stats)
+		}
 	}
-	const topics = [...topicCounts.entries()].filter(([, count]) => isSearchIndexableTopic(count)).sort((a, b) => b[1] - a[1]).slice(0, 40)
+	const topics = [...topicStats.entries()]
+		.filter(([tag, stats]) => isSearchIndexableTopic({ tag, searchAssetCount: stats.count, distinctAuthorCount: stats.authors.size }))
+		.sort((a, b) => b[1].count - a[1].count)
+		.slice(0, 40)
 
 	const lines = [
 		"# Spoonie",
@@ -70,7 +78,7 @@ export async function GET() {
 		"",
 		"## 주제",
 		"",
-		...topics.map(([tag, count]) => `- [#${tag}](${baseUrl}${topicHref(tag)}): 공개 검색 자산 ${count}개`),
+		...topics.map(([tag, stats]) => `- [#${tag}](${baseUrl}${topicHref(tag)}): 공개 검색 자산 ${stats.count}개`),
 		"",
 	]
 

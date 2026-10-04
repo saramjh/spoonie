@@ -7,10 +7,10 @@
 
 import type { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { uploadVariants } from "@/shared/infra/image-optimization"
+import { VARIANT_WIDTHS, variantPath } from "@/shared/infra/image-variants"
 import type { OptimizedImage } from "@/shared/infra/image-utils"
 import type { Item } from "@/types/item"
 import type { RecipeActivity } from "../contracts"
-import { toIngredientRows, toInstructionRows } from "../domain/recipe-form"
 import type { RecipeIngredientInput, RecipeInstructionInput } from "../contracts"
 
 type Db = ReturnType<typeof createSupabaseBrowserClient>
@@ -65,7 +65,12 @@ export async function uploadInstructionImages(supabase: Db, bucketId: string, us
 				const fileName = `${userId}/${Date.now()}-instruction-${index}-${Math.random().toString(36).slice(2, 10)}.jpg`
 				const { error: uploadError } = await supabase.storage.from(bucketId).upload(fileName, image.file, { cacheControl: "31536000", contentType: "image/jpeg" })
 				if (uploadError) throw new Error(`조리법 이미지 업로드 실패: ${uploadError.message}`)
-				await uploadVariants(bucketId, fileName, image.file)
+				try {
+					await uploadVariants(bucketId, fileName, image.file)
+				} catch (error) {
+					await supabase.storage.from(bucketId).remove([fileName, ...VARIANT_WIDTHS.map((width) => variantPath(fileName, width))])
+					throw error
+				}
 				const { data: publicUrlData } = supabase.storage.from(bucketId).getPublicUrl(fileName)
 				return publicUrlData.publicUrl
 			} else if (image) {
@@ -77,33 +82,24 @@ export async function uploadInstructionImages(supabase: Db, bucketId: string, us
 	)
 }
 
-// items를 새로 넣거나 고치고, 재료·단계는 지우고 다시 넣는다
+// 레시피 본체·재료·단계를 DB RPC 한 트랜잭션으로 저장한다.
+// 중간 insert가 실패하면 items 수정/생성까지 함께 rollback된다.
 export async function saveRecipeRows<P extends object, I extends RecipeInstructionInput>(
 	supabase: Db,
 	args: { existingId: string | null; itemPayload: P; ingredients: RecipeIngredientInput[]; instructions: I[] }
 ) {
-	let itemId: string
-
-	if (args.existingId) {
-		const { data: updatedItem, error: itemError } = await supabase.from("items").update(args.itemPayload).eq("id", args.existingId).select("id").single()
-		if (itemError) throw new Error(`레시피 수정 실패: ${itemError.message}`)
-		itemId = updatedItem.id
-
-		await supabase.from("ingredients").delete().eq("item_id", itemId)
-		await supabase.from("instructions").delete().eq("item_id", itemId)
-	} else {
-		const { data: newItem, error: itemError } = await supabase.from("items").insert(args.itemPayload).select("id").single()
-		if (itemError) throw new Error(`레시피 생성 실패: ${itemError.message}`)
-		itemId = newItem.id
-	}
-
-	// 재료 순서 정보 포함하여 저장 (드래그앤드롭 순서 유지)
-	const ingredientsToInsert = toIngredientRows(args.ingredients, itemId)
-	await supabase.from("ingredients").insert(ingredientsToInsert)
-
-	const instructionsToInsert = toInstructionRows(args.instructions, itemId)
-	await supabase.from("instructions").insert(instructionsToInsert)
-
+	const ingredients = args.ingredients.map((ingredient, index) => ({ ...ingredient, order_index: index + 1 }))
+	const instructions = args.instructions.map((instruction, index) => ({ ...instruction, step_number: index + 1 }))
+	const { data, error } = await supabase.rpc("save_recipe_atomic", {
+		p_existing_id: args.existingId,
+		p_item: args.itemPayload,
+		p_ingredients: ingredients,
+		p_instructions: instructions,
+	})
+	if (error) throw new Error(`레시피 ${args.existingId ? "수정" : "생성"} 실패: ${error.message}`)
+	if (!data) throw new Error("레시피 저장 결과를 확인할 수 없습니다.")
+	const itemId = String(data)
+	const ingredientsToInsert = ingredients.map((ingredient) => ({ ...ingredient, item_id: itemId }))
 	return { itemId, ingredientsToInsert }
 }
 
