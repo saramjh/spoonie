@@ -4,7 +4,6 @@ import Link from "next/link"
 import { BookOpen, GitFork, Search } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import PartnerActionLink from "../partner-action-link"
-import PartnerInquiryForm from "../partner-inquiry-form"
 import PartnerProof from "../partner-proof"
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
@@ -52,7 +51,7 @@ export default function CreatorPartnersPage() {
           <p className="mt-5 text-meta text-ink-soft">For Cooking Creators</p>
           <h1 className="mt-2 text-display text-ink">이미 만든 레시피를<br />다시 꺼내 쓸 수 있게</h1>
           <p className="mt-4 text-body text-ink-soft">
-            SNS나 블로그에 올린 요리 중 1~3개만 먼저 Spoonie Recipe로 옮겨보세요. 별도 계약이나 프로그램은 필요 없습니다.
+            SNS나 블로그에 올린 요리 중 1~3개만 먼저 Spoonie Recipe로 옮겨보세요.
           </p>
           <PartnerActionLink
             href="/signup?next=%2Frecipes%2Fnew"
@@ -81,15 +80,6 @@ export default function CreatorPartnersPage() {
 
         <PartnerProof segment="creator" />
 
-        <section className="border-t border-border px-4 py-5">
-          <details>
-            <summary className="cursor-pointer text-label text-ink">시작 전에 물어볼 게 있나요?</summary>
-            <p className="mt-3 text-meta text-ink-soft">
-              기존 콘텐츠를 어떻게 옮길지 궁금하면 남겨주세요. 제안 메일을 받았다면 그 메일에 바로 회신해도 됩니다.
-            </p>
-            <PartnerInquiryForm segment="creator" />
-          </details>
-        </section>
       </article>
     </div>
   )

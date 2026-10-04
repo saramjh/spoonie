@@ -4,7 +4,6 @@ import Link from "next/link"
 import { BookOpen, Search, ShieldCheck } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import PartnerActionLink from "../partner-action-link"
-import PartnerInquiryForm from "../partner-inquiry-form"
 import PartnerProof from "../partner-proof"
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
@@ -77,22 +76,10 @@ export default function BrandPartnersPage() {
               </div>
             ))}
           </div>
-          <p className="mt-4 text-meta text-ink-soft">
-            상품 카탈로그, 반복 구매 유도, 과장된 효능 주장은 Recipe로 보지 않습니다.
-          </p>
         </section>
 
         <PartnerProof segment="brand" />
 
-        <section className="border-t border-border px-4 py-5">
-          <details>
-            <summary className="cursor-pointer text-label text-ink">게시 전에 확인할 게 있나요?</summary>
-            <p className="mt-3 text-meta text-ink-soft">
-              올리려는 제품과 Recipe 아이디어를 남겨주세요. 크리에이터 매칭이나 캠페인 운영은 현재 제공 기능이 아닙니다.
-            </p>
-            <PartnerInquiryForm segment="brand" />
-          </details>
-        </section>
       </article>
     </div>
   )
