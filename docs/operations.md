@@ -96,7 +96,7 @@
 
 ## Proactive acquisition
 
-- 목적은 자동화 자체가 아니라 실제 고적합 사용자·크리에이터·브랜드 유입이다. Instagram 예약 게시 성과를 기다리기만 하지 않는다.
+- 목적은 자동화 자체가 아니라 `좋은 Recipe 공급 → 외부 수요 유입 → 첫 Recipe → 두 번째 Recipe → Recipe 관계 형성`이라는 성장 루프를 실제로 돌리는 것이다. Instagram 예약 게시 성과를 기다리기만 하지 않는다.
 - 공개 안내면은 `/partners` 허브 + `/partners/creators` + `/partners/brands`로 분리한다. 크리에이터와 브랜드 모두 현재 제품을 직접 사용할 수 있는 콘텐츠 작성자다. 브랜드는 별도 제휴 없이 자사 제품을 실제로 활용한 Recipe/Recipeed를 올릴 수 있으며, 자사·협찬·제품 제공 관계를 프로필이나 본문에서 밝힌다. 현재 제품은 Creator↔Brand 매칭, 캠페인 중개, 도달·판매 보장을 제공하지 않는다.
 - 기존 2026-10-04 발송분의 `/partners#creators`, `/partners#brands` 링크는 깨지지 않게 유지한다.
 - Creator/Brand 전용 랜딩은 실제 공개 Recipe 화면 캡처와 실제 Recipe/프로필 링크를 proof로 사용한다. 생성형 이미지로 제품 동작을 가장하지 않는다.
@@ -107,14 +107,19 @@
 - 외부에서 직접 들어온 파트너는 전용 문의 폼을 사용한다. 폼은 `/api/partner-inquiry`를 통해서만 저장하며 `partner_inquiries`는 RLS 활성화 + anon/authenticated 권한 없음으로 브라우저 직접 접근을 막는다. 아웃리치 수신자는 기존 메일에 그대로 회신해도 된다.
 - 기존 hash 링크는 브라우저에서 각각 전용 랜딩으로 `replace`하고, JavaScript가 없어도 허브의 동일 anchor에서 전용 페이지 CTA를 제공한다. 정정 메일은 보내지 않는다.
 - 파트너 랜딩은 운영정책·사업계획 설명서가 아니다. 각 타깃마다 `즉시 가치 → 현재 가능한 사용 예 → 한 가지 주 CTA`만 전면에 둔다. 미래 모델, 예외 조건, 정책 세부사항, 중복된 가치 설명은 랜딩에 누적하지 않고 운영 문서·약관·후속 응답으로 보낸다. 재귀 검토는 기본적으로 추가보다 삭제·통합을 우선한다.
-- 외부 후보는 공개된 사업/제휴 채널만 사용한다. 개인정보/CS 전용 주소를 마케팅 목적으로 우회 사용하지 않는다. 현재 acquisition의 목표는 계약 체결보다 실제 Recipe 작성 사용자 확보이며, Recipe를 직접 만들 수 있는 요리 크리에이터와 자사 활용 Recipe를 자체 제작할 수 있는 식품·주방 브랜드를 모두 유효한 공급 측 사용자로 본다.
-- 발송 전 `growth_outreach_targets`와 Gmail Sent를 모두 확인해 중복 접촉을 막는다. 일괄 복붙 대신 대상별 실제 적합 이유가 있을 때만 개인화한다.
+- 외부 후보는 공개된 사업/제휴 채널만 사용한다. 개인정보/CS 전용 주소를 마케팅 목적으로 우회 사용하지 않는다. 현재 supply acquisition의 1순위는 기존 Recipe 자산을 이미 가진 Creator다. 운영 자원은 rolling 기준 Creator supply 약 60~70%, Recipe 검색·owned social·community·referral 같은 demand distribution 약 20~30%, Brand 실험 최대 10%를 기본값으로 둔다. Brand는 이미 유용한 레시피/serving idea를 만드는 소형·D2C 중심으로 좁히며, 대형 브랜드를 Creator와 동일 우선순위로 추적하지 않는다.
+- 외부 홍보 운영의 주 원장은 `/Users/ojihun/DEV/media-agent-prm`의 Promotion Ops session `spoonie-growth`다. Creator/Brand/커뮤니티 타깃, owned social account, 채널 판정, 실제 email/post/community action과 external provider ID를 이 세션에 기록한다. Spoonie의 GA4·Supabase는 방문·가입·Recipe 생성·반복 사용 같은 제품 활성화의 진실 공급원으로 유지한다. 기존 `growth_outreach_targets` 13건은 PRM으로 이관됐으며 과거 dedupe/감사 원장으로만 병행 조회하고 신규 외부 CRM write의 기본 목적지로 쓰지 않는다.
+- 발송 전 PRM `spoonie-growth` target/action, 기존 `growth_outreach_targets`, Gmail Sent를 함께 확인해 중복 접촉을 막는다. 일괄 복붙 대신 대상별 실제 적합 이유가 있을 때만 개인화한다.
 - 첫 콜드메일은 기본적으로 세그먼트 랜딩 하나만 주 링크로 쓴다. Creator는 /partners/creators, Brand는 /partners/brands를 쓰고 utm_source=outreach, utm_medium=email과 세그먼트 campaign을 붙인다. 아직 의사가 확인되지 않은 수신자에게 랜딩 링크와 raw signup 링크를 동시에 나열하지 않는다. 가입 의사가 확인된 후에는 직접 Recipe 작성으로 이어지는 signup 경로를 안내할 수 있다.
 - `growth_outreach_targets`는 서버 전용(RLS + browser policy 없음)으로 후보 유형, 공개 연락 채널, 적합 이유, 접촉/응답 상태, 다음 follow-up 시각, 외부 thread/message ID를 저장한다.
 - 무응답 follow-up은 최초 연락 후 최소 7일 뒤 한 번만 하는 것을 기본으로 하고, 계속 무응답이면 중단한다. 답장이 오면 자동 반복 발송보다 응답 내용에 맞는 다음 행동을 우선한다.
-- 브랜드 self-serve 아웃리치는 현재 가능하지만, `Creator를 연결해주겠다`는 제안으로 보내지 않는다. 브랜드가 자체적으로 만들 수 있는 실제 Recipe 1~3개를 Spoonie에 직접 게시하는 사용 시나리오가 명확한 경우에만 제안한다. Creator 매칭/유료 캠페인은 향후 별도 검증 영역이다.
+- 브랜드 self-serve 아웃리치는 현재 좁은 실험 채널이다. `Creator를 연결해주겠다`는 제안으로 보내지 않으며, 이미 자사 레시피·serving idea·팬 조리 콘텐츠를 만드는 소형/D2C 브랜드가 실제 Recipe 1~3개를 직접 게시하는 시나리오가 명확할 때만 시도한다. Creator 매칭/유료 캠페인은 향후 별도 검증 영역이다.
 - 현재 프로필 데이터에는 개인/조직 entity type이 없다. 첫 실제 브랜드 계정이 활성화되기 전까지 이름·소개 문구로 브랜드 여부를 추측하거나 기존 `profiles.role`을 재활용하지 않는다. 첫 브랜드 계정 활성화 시 명시적 `person|organization` 프로필 타입을 도입하고 Profile/Recipe/Recipeed JSON-LD의 작성자 타입까지 함께 전파하는 것을 기술 게이트로 처리한다.
 - 계약, 비용 집행, 독점/공식 파트너 표현, 법적·평판 리스크가 있는 조건은 사용자 승인 대상으로 올린다.
+- owned Instagram의 주 역할은 Spoonie 자체를 반복 광고하는 것이 아니라 개별 Recipe의 유용성(분량·비율·대체재·실패 포인트·단계)을 배포해 특정 Recipe detail로 수요를 보내는 것이다. 서비스 소개형 게시물은 보조적으로만 쓴다.
+- 커뮤니티 배포는 `서비스 홍보`가 아니라 완결성 있는 요리 정보가 먼저여야 한다. 해당 커뮤니티 규칙이 허용할 때만 Spoonie Recipe를 전체 분량/과정의 원문 또는 보충 링크로 사용한다.
+- organic search는 현재 네트워크 규모와 무관하게 작동하는 핵심 demand 채널로 본다. Creator가 올린 Recipe의 검색 진입점이 누적되는지를 장기 성장 지표로 본다.
+- Creator adoption의 핵심은 signup 자체가 아니라 `첫 공개 Recipe → 두 번째 공개 Recipe` 전환이다. 한 건만 올리고 끝나면 migration trial, 두 번째 이상부터 반복 사용 신호로 분류한다.
 
 ## 로컬 Growth 운영
 
@@ -123,9 +128,9 @@
 - 실행기: scripts/growth/run_growth_automation.sh
 - 로컬 상태/로그: ~/.spoonie-growth-automation/
 - 예약:
-  - com.spoonie.growth.acquisition: 매일 10:00 KST. Creator/Brand 이메일, 허용된 커뮤니티 배포, owned Instagram, 검색/추천 유입 중 당일 가장 가치 있는 실제 acquisition action을 수행한다.
+  - com.spoonie.growth.acquisition: 매일 10:00 KST. `spoonie-growth` Promotion Ops 상태를 먼저 읽고, Creator supply와 Recipe demand distribution을 우선해 당일 가장 가치 있는 실제 acquisition action을 수행한다. Brand는 좁은 실험 슬롯에서만 다룬다.
   - com.spoonie.growth.replywatch: 매시 25분. Gmail/CRM/partner inquiry의 답장·반송·전환을 확인하고 정상 온보딩 응답을 이어간다.
-  - com.spoonie.growth.review: 매일 19:00 KST. GA4/GSC/Instagram/Supabase/CRM을 보고 채널을 EXPAND/KEEP/CHANGE/PAUSE/STOP으로 판정하고 다음 실행 방향을 조정한다.
+  - com.spoonie.growth.review: 매일 19:00 KST. PRM `spoonie-growth`의 target/channel/action 이력과 GA4/GSC/Instagram/Supabase activation을 함께 보고 채널을 EXPAND/KEEP/CHANGE/PAUSE/STOP으로 판정한다. 특히 first Recipe→second Recipe와 Recipe 외부 유입을 본다.
 - 모든 로컬 growth run은 시작 시 project_context_bootstrap으로 /Users/ojihun/DEV/spoonie 컨텍스트를 복원하고, 의미 있는 실행 뒤 project_context_checkpoint로 결과·결정·다음 행동을 .context에 남기는 것을 강제한다.
 - 이 lane은 외부 growth 운영 전용이다. 제품 코드·공개 사이트 카피 수정, Git commit/push/deploy는 하지 않는다. 제품 마찰을 발견하면 정상 개발 세션에 구체적인 수정안으로 넘긴다.
 - 폐업한 PremaMon과 Spoonie 사이의 브랜드/사업 연속성을 만들지 않는다. 기존 Instagram 팔로워 풀이 주방·요리 관심사와 겹친다는 점만 warm distribution asset으로 활용한다.
