@@ -69,7 +69,7 @@ export default function CreatorPartnersPage() {
             새 콘텐츠를 만들 필요 없습니다. SNS·블로그에 이미 올린 요리 중 1~3개부터 재료·분량·순서가 있는 Recipe로 옮겨보세요.
           </p>
           <PartnerActionLink
-            href="/signup?next=%2Frecipes%2Fnew"
+            href="/signup?next=%2Frecipes%2Fnew&from=partner_creator"
             segment="creator"
             action="signup_to_recipe"
             className={buttonVariants({ variant: "default", size: "lg", className: "mt-5 w-full" })}

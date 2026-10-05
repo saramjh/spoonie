@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useRouter } from "@/shared/lib/navigation"
+import { useHydrated } from "@/hooks/useHydrated"
 import { useState } from "react"
 import { Loader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
@@ -13,6 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { useToast } from "@/hooks/use-toast"
 import { safeNextPath } from "@/shared/lib/safe-next-path"
+import { authEntryHref, parsePartnerEntrySource, partnerEntryCopy } from "@/shared/lib/partner-entry"
 
 import { generateUniqueUsername } from "@/features/profile/data/username-generator"
 import { Sheet } from "@/components/kit"
@@ -32,6 +34,12 @@ export default function SignupPage() {
 	const router = useRouter()
 	const supabase = createSupabaseBrowserClient()
 	const { toast } = useToast()
+	const hydrated = useHydrated()
+	const searchParams = hydrated ? new URLSearchParams(window.location.search) : null
+	const next = safeNextPath(searchParams?.get("next"))
+	const partnerSource = parsePartnerEntrySource(searchParams?.get("from"))
+	const partnerCopy = partnerSource ? partnerEntryCopy[partnerSource] : null
+	const loginHref = authEntryHref("/login", next, partnerSource)
 
 	// 가입 성공 후 로그인 화면으로 이동하는 동안에도 버튼을 잠근다
 	const [isRedirecting, setIsRedirecting] = useState(false)
@@ -47,7 +55,6 @@ export default function SignupPage() {
 	const handleSignUp = async (values: z.infer<typeof formSchema>) => {
 		const username = await generateUniqueUsername()
 		// 가입 전 보던 곳(예: 만들었어요 작성 화면)으로 인증 메일 링크와 로그인 화면이 이어지게 한다
-		const next = safeNextPath(new URLSearchParams(window.location.search).get("next"))
 		const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth/callback`
 		const redirectUrl = next === "/" ? callbackUrl : `${callbackUrl}?next=${encodeURIComponent(next)}`
 		
@@ -74,7 +81,7 @@ export default function SignupPage() {
 				description: "보내 드린 인증 메일의 링크를 누르면 로그인할 수 있어요.",
 			})
 			setIsRedirecting(true)
-			router.push(next === "/" ? "/login" : `/login?next=${encodeURIComponent(next)}`)
+			router.push(loginHref)
 		}
 	}
 
@@ -85,6 +92,7 @@ export default function SignupPage() {
 				{/* 컴팩트한 브랜드 영역 */}
 				<div className="text-center mb-6">
 					<h1 className="text-title text-ink">회원가입</h1>
+					{partnerCopy && <p className="mt-2 text-meta text-ink-soft">{partnerCopy.signupHint}</p>}
 				</div>
 
 				{/* 회원가입 카드 */}
@@ -152,7 +160,7 @@ export default function SignupPage() {
 										<Loader2 className="mr-2 h-5 w-5 animate-spin" aria-hidden="true" />
 										가입하는 중
 									</>
-								) : "회원가입"}
+								) : partnerCopy ? "가입하고 Recipe 작성하기" : "회원가입"}
 							</Button>
 						</form>
 					</Form>
@@ -160,7 +168,7 @@ export default function SignupPage() {
 						{/* 로그인 링크 */}
 						<div className="mt-8 text-center">
 							<span className="text-meta text-ink-soft">이미 계정이 있으신가요? </span>
-							<Link href="/login" className="text-label font-semibold text-orange-ink hover:text-orange-ink transition-colors duration-200">
+							<Link href={loginHref} className="text-label font-semibold text-orange-ink hover:text-orange-ink transition-colors duration-200">
 								로그인
 							</Link>
 						</div>

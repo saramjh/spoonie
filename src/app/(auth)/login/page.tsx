@@ -14,6 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { useToast } from "@/hooks/use-toast"
 import { safeNextPath } from "@/shared/lib/safe-next-path"
+import { authEntryHref, parsePartnerEntrySource, partnerEntryCopy } from "@/shared/lib/partner-entry"
 import { Sheet } from "@/components/kit"
 
 const formSchema = z.object({
@@ -41,8 +42,11 @@ export default function LoginPage() {
 	// 가입 화면으로 가도 돌아갈 곳(next)을 잃지 않게 한다
 	// 주소는 화면이 뜬 뒤에 읽는다 (미리 만든 HTML과 어긋나지 않게)
 	const hydrated = useHydrated()
-	const next = hydrated ? new URLSearchParams(window.location.search).get("next") : null
-	const signupHref = next ? `/signup?next=${encodeURIComponent(safeNextPath(next))}` : "/signup"
+	const searchParams = hydrated ? new URLSearchParams(window.location.search) : null
+	const next = safeNextPath(searchParams?.get("next"))
+	const partnerSource = parsePartnerEntrySource(searchParams?.get("from"))
+	const partnerCopy = partnerSource ? partnerEntryCopy[partnerSource] : null
+	const signupHref = authEntryHref("/signup", next, partnerSource)
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
@@ -65,14 +69,13 @@ export default function LoginPage() {
 			})
 		} else {
 			setIsRedirecting(true)
-			router.push(safeNextPath(new URLSearchParams(window.location.search).get("next")))
+			router.push(next)
 			router.refresh()
 		}
 	}
 
 	const handleGoogleLogin = async () => {
 		// 환경변수 우선, 없으면 현재 도메인 사용
-		const next = safeNextPath(new URLSearchParams(window.location.search).get("next"))
 		const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth/callback`
 		const redirectUrl = next === "/" ? callbackUrl : `${callbackUrl}?next=${encodeURIComponent(next)}`
 		
@@ -109,6 +112,7 @@ export default function LoginPage() {
 				{/* 컴팩트한 브랜드 영역 */}
 				<div className="text-center mb-6">
 					<h1 className="text-title text-ink">로그인</h1>
+					{partnerCopy && <p className="mt-2 text-meta text-ink-soft">{partnerCopy.loginHint}</p>}
 				</div>
 
 				{/* 로그인 카드 */}

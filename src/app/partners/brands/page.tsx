@@ -69,14 +69,14 @@ export default function BrandPartnersPage() {
             자사 제품으로 실제로 만드는 요리 1~3개부터 직접 올려보세요. 별도 제휴 없이 일반 Recipe와 같은 작성 흐름으로 시작합니다.
           </p>
           <PartnerActionLink
-            href="/signup?next=%2Frecipes%2Fnew"
+            href="/signup?next=%2Frecipes%2Fnew&from=partner_brand"
             segment="brand"
             action="signup_to_recipe"
             className={buttonVariants({ variant: "default", size: "lg", className: "mt-5 w-full" })}
           >
             제품 활용 Recipe 1개 올려보기
           </PartnerActionLink>
-          <p className="mt-2 text-center text-meta text-ink-soft">가입 → 프로필 → Recipe 작성</p>
+          <p className="mt-2 text-center text-meta text-ink-soft">가입 → Recipe 작성 → 프로필에 쌓임</p>
         </section>
 
         <section className="border-t border-border px-4 py-6" aria-labelledby="brand-value">
