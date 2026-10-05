@@ -39,6 +39,7 @@ web
 - 기기: 모바일이 기준이고 데스크톱은 보조다.
 - 기술: Next.js 16 App Router, Supabase(DB, 인증, 저장소, Realtime), Netlify 배포, PWA(웹 푸시).
 - 브랜드 self-serve: 별도 제휴 계약 없이 일반 회원과 같은 작성 경로로 Recipe/Recipeed를 올릴 수 있다. 현재 제품은 Creator↔Brand 매칭, 캠페인 중개, 도달·판매 보장을 제공하지 않는다.
+- Creator migration concierge: 크리에이터가 직접 고른 Instagram 게시물·릴스 URL 1~5개와 게시 권한 확인을 제출하면 운영자가 확인 가능한 내용만 Recipe 초안으로 정리한다. 요청만으로 계정이나 Recipe를 공개하지 않으며, 공개 전 크리에이터 검수를 거친다. 초기 목적은 기존 콘텐츠 재입력 마찰을 줄이는 것이다.
 
 ## Brand Commitments
 

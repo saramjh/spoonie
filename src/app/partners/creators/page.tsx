@@ -1,6 +1,8 @@
 import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
+
+import CreatorMigrationForm from "../creator-migration-form"
 import PartnerProof from "../partner-proof"
 import PartnerRelationProof from "../partner-relation-proof"
 
@@ -8,32 +10,18 @@ const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
 
 export const metadata: Metadata = {
   title: "요리 크리에이터 이용 안내 | Spoonie",
-  description: "기존 레시피를 다시 따라 만들 수 있게 남기고, 만들었어요·참고·이어진 Recipe 관계를 따라 작성자까지 발견되는 Spoonie 이용 방법.",
+  description:
+    "Instagram에 이미 올린 레시피 게시물·릴스 주소를 보내면 Spoonie Recipe 초안으로 정리하고, 공개 전 직접 확인할 수 있습니다.",
   alternates: { canonical: `${baseUrl}/partners/creators` },
   openGraph: {
     title: "요리 크리에이터 이용 안내 | Spoonie",
-    description: "새 콘텐츠를 만들 필요 없이 기존 레시피 1~3개부터 Spoonie Recipe로 옮겨보세요.",
+    description: "이미 만든 레시피를 다시 입력하지 말고, 옮길 Instagram 게시물 주소만 보내주세요.",
     url: `${baseUrl}/partners/creators`,
     siteName: "Spoonie",
     type: "website",
     images: [{ url: `${baseUrl}/og-default.png`, width: 1200, height: 630, alt: "Spoonie" }],
   },
 }
-
-const startSteps = [
-  {
-    title: "기존 레시피 하나 고르기",
-    description: "영상 설명란, 블로그, SNS에 이미 올린 요리면 됩니다. 새 촬영이나 새 기획은 필요 없습니다.",
-  },
-  {
-    title: "재료·분량·순서를 옮기기",
-    description: "기존 사진과 설명을 활용해 실제로 다시 만들 때 필요한 정보만 Recipe로 정리합니다.",
-  },
-  {
-    title: "공개하고 다시 쓰기",
-    description: "프로필에 쌓아두고 링크로 공유하거나, 이후 새 Recipe·Recipeed가 참고한 바탕 Recipe로 이어갈 수 있습니다.",
-  },
-] as const
 
 export default function CreatorPartnersPage() {
   return (
@@ -44,27 +32,27 @@ export default function CreatorPartnersPage() {
             <Image src="/logo-full.svg" alt="Spoonie" width={100} height={32} priority />
           </Link>
           <p className="mt-5 text-meta text-ink-soft">요리 크리에이터</p>
-          <h1 className="mt-2 text-display text-ink">피드에 묻히는 레시피를<br />다시 따라 만들 수 있게</h1>
+          <h1 className="mt-2 text-display text-ink">이미 올린 레시피,<br />다시 입력하지 마세요</h1>
           <p className="mt-4 text-body text-ink-soft">
-            새 콘텐츠를 만들 필요 없습니다. SNS·블로그에 이미 올린 요리 중 1~3개부터 재료·분량·순서가 있는 Recipe로 옮겨보세요.
+            Instagram 게시물·릴스 주소만 보내면, 확인되는 사진과 설명을 재료·분량·순서가 있는 Recipe 초안으로 정리합니다.
+            공개하기 전에는 직접 확인할 수 있습니다.
+          </p>
+          <p className="mt-3 text-meta text-ink-soft">
+            새 촬영이나 새 기획 없이 기존 콘텐츠를 다시 꺼내 쓸 수 있는 Recipe 링크로 바꾸는 방식입니다.
           </p>
         </section>
 
         <PartnerRelationProof segment="creator" />
 
-        <section className="border-t border-border px-4 py-6" aria-labelledby="creator-start">
-          <h2 id="creator-start" className="text-heading text-ink">첫 Recipe는 이렇게 시작합니다</h2>
-          <ol className="mt-4 divide-y divide-border border-y border-border">
-            {startSteps.map(({ title, description }, index) => (
-              <li key={title} className="grid grid-cols-[1.5rem_minmax(0,1fr)] gap-3 py-4">
-                <span className="pt-0.5 text-meta tabular-nums text-ink-soft">{index + 1}</span>
-                <div className="min-w-0">
-                  <p className="text-label text-ink">{title}</p>
-                  <p className="mt-1 text-meta text-ink-soft">{description}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
+        <section id="migration" className="scroll-mt-4 border-t border-border px-4 py-6" aria-labelledby="migration-title">
+          <h2 id="migration-title" className="text-heading text-ink">옮길 게시물 주소만 보내주세요</h2>
+          <p className="mt-2 text-body text-ink-soft">
+            지금은 Instagram부터 받습니다. 먼저 1~5개만 골라 보내면 초안을 정리하고, 확인되지 않는 분량이나 순서는 임의로 만들지 않습니다.
+          </p>
+          <p className="mt-2 text-meta text-ink-soft">
+            접수 → 초안 정리 → 공개 전 확인. 요청만으로 계정이나 Recipe가 자동 공개되지는 않습니다.
+          </p>
+          <CreatorMigrationForm />
         </section>
 
         <PartnerProof segment="creator" />

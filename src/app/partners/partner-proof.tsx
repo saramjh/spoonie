@@ -1,5 +1,6 @@
 import Image from "next/image"
 import { ArrowUpRight } from "lucide-react"
+
 import { buttonVariants } from "@/components/ui/button"
 import PartnerActionLink from "./partner-action-link"
 
@@ -11,18 +12,19 @@ type PartnerProofProps = {
 
 const copy = {
   creator: {
-    title: "Recipe는 이렇게 읽힙니다",
-    description: "재료·분량·조리 단계와 사진을 한 페이지에서 바로 따라 볼 수 있습니다.",
+    title: "댓글에 다시 적던 분량과 순서를 한 링크로",
+    description:
+      "재료·분량·조리 단계와 사진을 한 페이지에 남겨, 짧은 게시물에서 생기는 ‘몇 인분? 얼마나 넣어요?’ 같은 질문에 같은 Recipe 링크를 다시 쓸 수 있습니다.",
+    cta: "직접 Recipe 작성하기",
+    href: "/signup?next=%2Frecipes%2Fnew&from=partner_creator",
   },
   brand: {
-    title: "제품 활용 Recipe도 같은 형식입니다",
-    description: "제품 소개문 대신 재료·분량·조리 순서와 사진이 실제 요리 흐름으로 보입니다.",
+    title: "제품 설명과 실제 조리법을 분리해서 보여줍니다",
+    description:
+      "제품 장점 대신 실제 한 끼를 만드는 재료·분량·순서를 보여줘, 활용법 자체를 독립 Recipe 링크로 다시 사용할 수 있습니다.",
+    cta: "제품 활용 Recipe 작성하기",
+    href: "/signup?next=%2Frecipes%2Fnew&from=partner_brand",
   },
-} as const
-
-const cta = {
-  creator: "내 레시피 1개 옮겨보기",
-  brand: "제품 활용 Recipe 1개 올려보기",
 } as const
 
 export default function PartnerProof({ segment }: PartnerProofProps) {
@@ -46,12 +48,12 @@ export default function PartnerProof({ segment }: PartnerProofProps) {
         <figcaption className="mt-2 text-meta text-ink-soft">실제 Spoonie 공개 Recipe 화면</figcaption>
       </figure>
       <PartnerActionLink
-        href={"/signup?next=%2Frecipes%2Fnew&from=partner_" + segment}
+        href={text.href}
         segment={segment}
         action="proof_to_signup"
-        className={buttonVariants({ variant: "default", size: "lg", className: "mt-4 w-full" })}
+        className={buttonVariants({ variant: "outline", size: "lg", className: "mt-4 w-full" })}
       >
-        {cta[segment]}
+        {text.cta}
       </PartnerActionLink>
       <PartnerActionLink
         href={recipeHref}

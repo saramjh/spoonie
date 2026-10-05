@@ -1,4 +1,5 @@
 import Image from "next/image"
+
 import { buttonVariants } from "@/components/ui/button"
 import PartnerActionLink from "./partner-action-link"
 
@@ -6,22 +7,24 @@ type Segment = "creator" | "brand"
 
 const copy = {
   creator: {
-    title: "참고해도, 출발점은 남습니다",
+    title: "피드가 지나가도, 레시피는 다시 꺼내 쓸 수 있습니다",
     description:
-      "다른 사람이 내 Recipe로 만들거나 참고해 자기 Recipe를 만들면, 바탕이 된 Recipe와 작성자를 다시 열 수 있게 연결됩니다.",
+      "릴스·게시물은 빠르게 지나가지만, Recipe는 재료·분량·순서를 한 페이지에 남깁니다. 누군가 따라 만들거나 자기 Recipe를 이어 쓰면 바탕 Recipe와 작성자로 돌아갈 경로도 남습니다.",
     note:
-      "Recipe에는 관계가 생기면 ‘만들어 본 기록’과 ‘이어진 레시피’가 같은 흐름에 모입니다.",
-    cta: "기존 레시피 1개 옮겨보기",
-    flow: "가입 → 기존 레시피 입력 → 공개",
+      "새 콘텐츠를 더 만드는 대신, 이미 만든 콘텐츠를 ‘다시 만들 수 있는 원본 링크’로 한 번 더 활용하는 방식입니다.",
+    cta: "옮길 게시물 주소 보내기",
+    flow: "Instagram 주소 1~5개 → 초안 정리 → 공개 전 확인",
+    href: "#migration",
   },
   brand: {
-    title: "제품 활용도, 다음 Recipe로 이어집니다",
+    title: "캠페인이 끝나도, 제품 쓰는 법은 남습니다",
     description:
-      "팬이 제품 활용 Recipe로 만들거나 참고해 응용 Recipe를 만들면, 바탕이 된 Recipe와 작성자를 다시 열 수 있게 연결됩니다.",
+      "제품 소개 게시물은 지나가지만, 활용 Recipe는 이 제품으로 무엇을 만들 수 있는지를 계속 보여주는 페이지로 남습니다. 팬이 참고해 만든 기록이나 응용 Recipe가 생기면 원본 활용 Recipe로 돌아갈 수 있습니다.",
     note:
-      "한 번의 포스트가 아니라 제품을 쓰는 여러 방법을 Recipe 관계로 이어갈 수 있습니다.",
+      "한 제품의 활용법을 여러 Recipe로 쌓을수록 ‘이 제품을 어디에 쓰지?’에 답할 수 있는 자산이 늘어납니다.",
     cta: "제품 활용 Recipe 1개 올려보기",
-    flow: "가입 → Recipe 작성 → 프로필에 쌓임",
+    flow: "가입 → 활용 Recipe 작성 → 브랜드 프로필에 누적",
+    href: "/signup?next=%2Frecipes%2Fnew&from=partner_brand",
   },
 } as const
 
@@ -53,9 +56,9 @@ export default function PartnerRelationProof({ segment }: { segment: Segment }) 
       </figure>
 
       <PartnerActionLink
-        href={"/signup?next=%2Frecipes%2Fnew&from=partner_" + segment}
+        href={text.href}
         segment={segment}
-        action="signup_to_recipe"
+        action={segment === "creator" ? "migration_anchor_open" : "signup_to_recipe"}
         className={buttonVariants({ variant: "default", size: "lg", className: "mt-4 w-full" })}
       >
         {text.cta}

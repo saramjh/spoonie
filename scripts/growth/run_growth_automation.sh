@@ -71,12 +71,12 @@ MODE RULES:
 discovery:
 - This lane is time-insensitive and may run immediately. Research high-fit Creator prospects, permitted cooking/home-cooking communities, organic Recipe search opportunities, and zero-cost distribution surfaces.
 - Do not send email or publish community posts in discovery mode. Write verified candidate targets/channel evidence to PRM so time-sensitive lanes can act later without repeating research.
-- Prefer evidence that exposes an actual audience need Spoonie can satisfy: reusable back catalog, repeated quantity questions, adaptation/cook-along behavior, or communities requesting complete recipes.
+- Prefer evidence that exposes an actual audience need Spoonie can satisfy: original cooking/recipe/reel/kitchen content the creator can reuse, reusable back catalog, repeated quantity questions, adaptation/cook-along behavior, or communities requesting complete recipes. Do not use follower count as an eligibility floor; long-tail creators with owned content are valid migration prospects.
 
 creator:
 - This is the time-sensitive Creator outreach lane. Use only legitimate public business/contact channels and only when the daily outbound ceiling and follow-up rules allow.
 - If today's outbound ceiling is already reached or email execution is unavailable, do not force a send. Convert the run into verified prospect research/queueing for the next eligible window.
-- First touch remains one immediate use plus one network benefit; one landing URL; no mass personalization template.
+- First touch remains one immediate use plus one network benefit; one landing URL; no mass personalization template. For Instagram-first creators, the immediate use is now usually the migration concierge: choose 1-5 existing post/reel URLs and Spoonie prepares reviewable Recipe drafts, so they do not have to re-enter the archive manually. If migration is not a fit, fall back to direct 1-3 Recipe self-entry.
 
 community:
 - This is the time-sensitive community distribution lane. Post at most 1-2 times per run, only where self-promotion/link rules clearly allow it.
@@ -115,7 +115,7 @@ acquisition:
 - Record every verified external action/source/thread/post ID in media-agent-prm session `spoonie-growth` using promotion actions; external_ref must be the provider-side message/post ID when available. Product activation events stay in Spoonie GA4/Supabase.
 
 replywatch:
-- Check PRM `spoonie-growth` promotion targets/actions first, then legacy growth_outreach_targets for migrated-history dedupe, partner_inquiries, Gmail replies, and bounces.
+- Check PRM `spoonie-growth` promotion targets/actions first, then creator_migration_requests, legacy growth_outreach_targets for migrated-history dedupe, partner_inquiries, Gmail replies, and bounces. Treat a new migration request as high-intent inbound: verify the submitted URL list and consent state, move it toward draft preparation/review, and never auto-publish.
 - Move positive replies toward signup -> first Recipe -> second Recipe/repeat use.
 - Reply directly to simple factual onboarding questions when safe.
 - Record decline/later/bounce states and stop inappropriate follow-up.
