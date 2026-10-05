@@ -93,9 +93,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 	const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
 	const staticPages: MetadataRoute.Sitemap = [
 		{ url: baseUrl },
-		{ url: `${baseUrl}/partners` },
-		{ url: `${baseUrl}/partners/creators` },
-		{ url: `${baseUrl}/partners/brands` },
 	]
 
 	try {

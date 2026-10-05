@@ -98,8 +98,8 @@ export default function SignupPage() {
 
 	const emailSentBody = partnerSource
 		? partnerSource === "partner_creator"
-			? "메일의 인증 링크를 누르면 기존 콘텐츠 초기 셋업 화면으로 돌아옵니다."
-			: "메일의 인증 링크를 누르면 제품 활용 자료 초기 셋업 화면으로 돌아옵니다."
+			? "메일의 인증 링크를 누르면 크리에이터 초대 페이지로 돌아와 기존 콘텐츠를 제출할 수 있습니다."
+			: "메일의 인증 링크를 누르면 브랜드 초대 페이지로 돌아와 기존 제품 활용 자료를 제출할 수 있습니다."
 		: "메일의 인증 링크를 누르면 가입이 완료됩니다."
 
 	return (
@@ -109,7 +109,7 @@ export default function SignupPage() {
 					<Link href="/" className="inline-flex" aria-label="Spoonie 홈">
 						<Image src="/logo-full.svg" alt="Spoonie" width={100} height={32} priority />
 					</Link>
-					<h1 className="mt-5 text-title text-ink">회원가입</h1>
+					<h1 className="mt-5 text-title text-ink">{partnerSource ? "Spoonie 계정 만들기" : "회원가입"}</h1>
 					{partnerCopy && <p className="mt-2 text-meta text-ink-soft">{partnerCopy.signupHint}</p>}
 				</div>
 
@@ -128,7 +128,7 @@ export default function SignupPage() {
 							<GoogleAuthButton
 								next={next}
 								partnerSource={partnerSource}
-								label={partnerSource ? "Google로 가입하고 초기 셋업" : "Google로 계속하기"}
+								label={partnerSource ? "Google로 계정 만들기" : "Google로 계속하기"}
 							/>
 
 							<div className="relative my-6">
@@ -182,7 +182,7 @@ export default function SignupPage() {
 									>
 										{form.formState.isSubmitting || isRedirecting ? (
 											<><Loader2 className="mr-2 h-5 w-5 animate-spin" aria-hidden />가입하는 중</>
-										) : partnerCopy ? "이메일로 가입하고 초기 셋업" : "이메일로 회원가입"}
+										) : partnerCopy ? "이메일로 계정 만들기" : "이메일로 회원가입"}
 									</Button>
 								</form>
 							</Form>

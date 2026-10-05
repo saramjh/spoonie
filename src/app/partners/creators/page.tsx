@@ -8,18 +8,19 @@ import PartnerProof from "../partner-proof"
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
 
 export const metadata: Metadata = {
-  title: "요리 크리에이터 초기 셋업 | Spoonie",
+  title: "요리 크리에이터 초대 | Spoonie",
   description:
-    "본인 Spoonie 계정을 먼저 만든 뒤 기존 Instagram 레시피 게시물·릴스를 제출해, 본인 계정 소유의 비공개 Recipe 초안을 검수하고 공개합니다.",
+    "아직 Spoonie를 사용하지 않는 요리 크리에이터를 위한 초대 페이지입니다. 계정을 만든 뒤 기존 Instagram 레시피를 다시 입력하지 않고 첫 Recipe로 옮길 수 있습니다.",
   alternates: { canonical: `${baseUrl}/partners/creators` },
   openGraph: {
-    title: "요리 크리에이터 초기 셋업 | Spoonie",
-    description: "계정 먼저, 기존 게시물 선택, 내 비공개 Recipe 초안, 직접 확인 후 공개.",
+    title: "요리 크리에이터 초대 | Spoonie",
+    description: "Instagram에 이미 올린 레시피를 다시 입력하지 않고 Spoonie의 첫 Recipe로 옮겨보세요.",
     url: `${baseUrl}/partners/creators`,
     siteName: "Spoonie",
     type: "website",
     images: [{ url: `${baseUrl}/og-default.png`, width: 1200, height: 630, alt: "Spoonie" }],
   },
+  robots: { index: false, follow: true },
 }
 
 export default function CreatorPartnersPage() {
@@ -30,20 +31,20 @@ export default function CreatorPartnersPage() {
           <Link href="/" className="inline-flex" aria-label="Spoonie 홈">
             <Image src="/logo-full.svg" alt="Spoonie" width={100} height={32} priority />
           </Link>
-          <p className="mt-5 text-meta text-ink-soft">요리 크리에이터</p>
+          <p className="mt-5 text-meta text-ink-soft">Spoonie × 요리 크리에이터</p>
           <h1 className="mt-2 text-display text-ink">
-            이미 만든 레시피를
+            인스타에 올린 레시피,
             <br />
-            다시 입력하지 않게
+            Spoonie에 다시 쓰지 마세요
           </h1>
           <p className="mt-4 text-body text-ink-soft">
-            먼저 본인 Spoonie 계정을 만듭니다. 그다음 이미 올린 Instagram 게시물·릴스 중 옮길
-            것을 고르면, 확인되는 사진과 설명만 사용해 그 계정의 비공개 Recipe 초안으로
-            정리합니다.
+            아직 Spoonie 계정이 없어도 됩니다. 계정을 만든 뒤 기존 Instagram 게시물·릴스
+            주소 1~5개만 보내 주세요. 사진과 설명에서 확인되는 내용을 본인 계정의 비공개
+            Recipe 초안으로 옮겨드립니다.
           </p>
           <p className="mt-3 text-meta text-ink-soft">
-            확인되지 않는 분량이나 조리 순서는 만들지 않습니다. 영상 자체를 Spoonie에
-            저장하거나 스트리밍하지 않으며, 공개는 작성자가 검수한 뒤 결정합니다.
+            초안을 직접 확인하고 수정한 뒤 공개합니다. 원문에 없는 분량이나 조리 순서는
+            임의로 만들지 않습니다.
           </p>
         </section>
 
@@ -53,11 +54,11 @@ export default function CreatorPartnersPage() {
           aria-labelledby="creator-setup-title"
         >
           <h2 id="creator-setup-title" className="text-heading text-ink">
-            내 계정에 초기 Recipe 셋업하기
+            Spoonie에서 첫 Recipe 시작하기
           </h2>
           <p className="mt-2 text-body text-ink-soft">
-            계정 → 기존 source 1~5개 제출 → 계정 소유의 비공개 초안 → 직접 검수 → 공개 순서로
-            진행합니다.
+            처음 방문했다면 계정 생성부터 시작합니다. 가입이 끝나면 이 페이지로 자동 복귀하고,
+            그때 옮길 Instagram 콘텐츠를 받습니다.
           </p>
           <PartnerOnboardingForm actorType="creator" />
         </section>

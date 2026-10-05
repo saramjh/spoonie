@@ -192,16 +192,21 @@ export default function PartnerOnboardingForm({ actorType }: Props) {
     const next = text.sourcePath + "?setup=1#setup"
     return (
       <div className="mt-5 border-y border-border py-5">
-        <p className="text-label text-ink">먼저 본인 Spoonie 계정이 필요합니다.</p>
+        <p className="text-label text-ink">
+          {actorType === "creator"
+            ? "Spoonie 계정을 만들고 시작하세요."
+            : "브랜드 담당 계정을 만들고 시작하세요."}
+        </p>
         <p className="mt-2 text-meta text-ink-soft">
-          초안의 소유자가 처음부터 본인 계정이어야 하므로, 자료보다 계정을 먼저 연결합니다.
+          처음이라면 계정부터 만들어 주세요. 가입이 끝나면 이 페이지로 자동 복귀하고,
+          그다음 기존 콘텐츠 주소를 제출하면 됩니다.
         </p>
         <div className="mt-4 grid grid-cols-2 gap-2">
           <Link
             href={authEntryHref("/signup", next, text.entry)}
             className={buttonVariants({ variant: "default", size: "lg" })}
           >
-            계정 만들기
+            계정 만들고 계속하기
           </Link>
           <Link
             href={authEntryHref("/login", next, text.entry)}
