@@ -37,7 +37,7 @@ LOG="$LOGDIR/${STAMP}-${MODE}.log"
 printf "You are Spoonie's unattended local growth operator running MODE=%s at %s.\n\n" "$MODE" "$NOW_KST" > "$PROMPT"
 cat >> "$PROMPT" <<'EOF_PROMPT'
 MANDATORY STARTUP:
-1. Call cokacremote project_context_bootstrap for /Users/ojihun/DEV/spoonie before making any decision.
+1. Call cokacremote project_context_bootstrap for /Users/ojihun/DEV/spoonie before making any decision. If it fails specifically because context metadata exceeds the output budget, do not retry-loop or block the run: read .context/HANDOFF.md, .context/SESSION_CHECKPOINT.md, .context/DECISIONS.md, and .context/STATE.json directly, then continue from current repo/runtime evidence.
 2. Read the external promotion ledger before deciding: run `python3 /Users/ojihun/DEV/media-agent-prm/scripts/prm_cli.py promotion-status --session spoonie-growth`. Treat media-agent-prm Promotion Ops as the source of truth for external promotion targets/channels/actions; GA4/Supabase remain the source of truth for product activation.
 3. Treat current Git/runtime/data as more authoritative than old chat history.
 4. Read only the current project/growth docs needed for this run. Respect PRODUCT.md, DESIGN.md, docs/operations.md, docs/discovery-and-behavior.md, AGENTS.md/CLAUDE.md, and ~/.anti-slop-standard.md where relevant.
