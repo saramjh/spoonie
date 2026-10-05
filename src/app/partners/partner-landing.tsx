@@ -11,8 +11,7 @@ import {
 } from "@/shared/lib/partner-entry"
 import PartnerActionLink from "./partner-action-link"
 import PartnerOnboardingForm from "./partner-onboarding-form"
-import PartnerProof from "./partner-proof"
-import PartnerRelationProof from "./partner-relation-proof"
+import PartnerProductTour from "./partner-product-tour"
 
 type Segment = "creator" | "brand"
 
@@ -23,7 +22,6 @@ const copy: Record<
     title: string
     description: string
     directCta: string
-    directHint: string
     setupTitle: string
     setupDescription: string
     setupCta: string
@@ -33,29 +31,27 @@ const copy: Record<
 > = {
   creator: {
     eyebrow: "Spoonie × 요리 크리에이터",
-    title: "피드에 묻히는 레시피를\n다시 쓰이는 Recipe로",
+    title: "내 레시피가\n실제로 다시 쓰이게",
     description:
-      "Spoonie는 레시피를 재료·분량·단계가 있는 Recipe로 남기고, 실제로 만든 기록과 참고·응용 관계를 이어가는 요리 소셜 서비스입니다.",
-    directCta: "가입하고 Recipe 하나 올려보기",
-    directHint: "직접 작성해도 되고, 기존 콘텐츠를 옮기는 도움을 받을 수도 있습니다.",
-    setupTitle: "처음 작성이 번거롭다면",
+      "보는 사람이 양을 바꾸고, 요리하고, 만든 기록을 남겨도 원본 Recipe와 작성자로 돌아오는 길이 이어집니다.",
+    directCta: "가입하고 내 Recipe 올려보기",
+    setupTitle: "옮겨 적는 게 먼저 걸린다면",
     setupDescription:
-      "이미 올린 Instagram 게시물·릴스 1~5개의 주소를 보내면 확인되는 내용을 내 계정의 비공개 Recipe 초안으로 정리합니다. 직접 확인·수정한 뒤 공개합니다.",
-    setupCta: "계정 만들고 셋업 도움받기",
+      "가입 후 기존 Instagram 게시물·릴스 1~5개 주소를 보내세요. 확인되는 정보만 내 계정의 비공개 Recipe 초안으로 정리하고, 내가 검수한 뒤 공개합니다.",
+    setupCta: "가입하고 첫 Recipe 도움받기",
     sourcePath: "/partners/creators",
     entry: "partner_creator",
   },
   brand: {
     eyebrow: "Spoonie × 식품·주방 브랜드",
-    title: "상품 설명을 넘어\n실제 쓰는 법을 Recipe로",
+    title: "제품 활용법을\n실제로 쓰는 Recipe로",
     description:
-      "Spoonie는 제품이 실제 요리에 어떻게 쓰이는지 Recipe로 남기고, 여러 활용법과 팬의 조리·응용 관계를 이어갈 수 있는 요리 소셜 서비스입니다.",
-    directCta: "가입하고 제품 활용 Recipe 올리기",
-    directHint: "직접 작성해도 되고, 기존 활용 콘텐츠를 옮기는 도움을 받을 수도 있습니다.",
-    setupTitle: "기존 활용 콘텐츠가 있다면",
+      "제품을 소개하는 글을 넘어, 사용자가 양과 순서를 따라 요리하고 활용 기록을 원본 Recipe와 이어 남길 수 있습니다.",
+    directCta: "가입하고 활용 Recipe 올려보기",
+    setupTitle: "기존 활용 자료부터 옮기고 싶다면",
     setupDescription:
-      "자사몰·SNS의 제품 활용 자료 1~5개의 주소를 보내면 실제로 따라 만들 수 있다고 확인되는 내용을 브랜드 계정의 비공개 Recipe 초안으로 정리합니다.",
-    setupCta: "계정 만들고 셋업 도움받기",
+      "가입 후 자사몰·SNS의 활용 자료 1~5개 주소를 보내세요. 따라 만들 수 있다고 확인되는 정보만 브랜드 계정의 비공개 Recipe 초안으로 정리합니다.",
+    setupCta: "가입하고 첫 Recipe 도움받기",
     sourcePath: "/partners/brands",
     entry: "partner_brand",
   },
@@ -87,15 +83,22 @@ export default async function PartnerLanding({ segment }: { segment: Segment }) 
   return (
     <div className="min-h-screen bg-door px-3 py-4">
       <article className="mx-auto max-w-md overflow-hidden rounded-[3px] bg-paper shadow-sm">
-        <section className="px-4 pb-6 pt-6">
+        <section className="px-4 pb-5 pt-6">
           <Link href="/" className="inline-flex" aria-label="Spoonie 홈">
             <Image src="/logo-full.svg" alt="Spoonie" width={100} height={32} priority />
           </Link>
-
           <p className="mt-5 text-meta text-ink-soft">{text.eyebrow}</p>
           <h1 className="mt-2 whitespace-pre-line text-display text-ink">{text.title}</h1>
-          <p className="mt-4 text-body text-ink-soft">{text.description}</p>
+          <p className="mt-3 text-body text-ink-soft">{text.description}</p>
+        </section>
 
+        <PartnerProductTour segment={segment} />
+
+        <section className="border-t border-border px-4 py-6" aria-label="Spoonie 시작하기">
+          <p className="text-heading text-ink">직접 써보는 게 가장 빠릅니다</p>
+          <p className="mt-1 text-meta text-ink-soft">
+            가입하면 바로 내 계정에서 Recipe를 작성할 수 있습니다.
+          </p>
           <PartnerActionLink
             href={directHref}
             segment={segment}
@@ -103,7 +106,7 @@ export default async function PartnerLanding({ segment }: { segment: Segment }) 
             className={buttonVariants({
               variant: "default",
               size: "lg",
-              className: "mt-5 w-full",
+              className: "mt-4 w-full",
             })}
           >
             {text.directCta}
@@ -122,20 +125,15 @@ export default async function PartnerLanding({ segment }: { segment: Segment }) 
               </PartnerActionLink>
             </p>
           )}
-
-          <p className="mt-4 border-t border-border pt-4 text-meta text-ink-soft">
-            {text.directHint}
-          </p>
         </section>
-
-        <PartnerRelationProof segment={segment} />
 
         <section
           id="setup"
           className="scroll-mt-4 border-t border-border px-4 py-6"
           aria-labelledby={segment + "-setup-title"}
         >
-          <h2 id={segment + "-setup-title"} className="text-heading text-ink">
+          <p className="text-micro font-medium text-ink-soft">선택 사항 · 첫 작성 부담 줄이기</p>
+          <h2 id={segment + "-setup-title"} className="mt-1 text-heading text-ink">
             {text.setupTitle}
           </h2>
           <p className="mt-2 text-body text-ink-soft">{text.setupDescription}</p>
@@ -151,19 +149,17 @@ export default async function PartnerLanding({ segment }: { segment: Segment }) 
                 className={buttonVariants({
                   variant: "outline",
                   size: "lg",
-                  className: "mt-5 w-full",
+                  className: "mt-4 w-full",
                 })}
               >
                 {text.setupCta}
               </PartnerActionLink>
               <p className="mt-2 text-center text-meta text-ink-soft">
-                가입 후 이 위치로 돌아와 기존 콘텐츠 주소를 보낼 수 있습니다.
+                계정을 만든 뒤 기존 콘텐츠 주소를 보낼 수 있습니다.
               </p>
             </>
           )}
         </section>
-
-        <PartnerProof segment={segment} />
       </article>
     </div>
   )
