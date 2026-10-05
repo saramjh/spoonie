@@ -9,9 +9,17 @@ STATE_ROOT="/Users/ojihun/.spoonie-growth-automation"
 LOGDIR="$STATE_ROOT/logs"
 MODE="${1:-discovery}"
 LOCKDIR="/tmp/spoonie-growth-automation-${MODE}.lock"
-WORKER_LOCKDIR="/tmp/spoonie-growth-automation-worker.lock"
+WORKER_GROUP="mutation"
+case "$MODE" in
+  discovery|strategy|review|smoke) WORKER_GROUP="research" ;;
+esac
+WORKER_LOCKDIR="/tmp/spoonie-growth-automation-worker-${WORKER_GROUP}.lock"
 WORKER_LOCK_HELD=0
-WORKER_WAIT_SECONDS="${SPOONIE_GROWTH_WORKER_WAIT_SECONDS:-1200}"
+if [ "$WORKER_GROUP" = "research" ]; then
+  WORKER_WAIT_SECONDS="${SPOONIE_GROWTH_RESEARCH_WAIT_SECONDS:-900}"
+else
+  WORKER_WAIT_SECONDS="${SPOONIE_GROWTH_MUTATION_WAIT_SECONDS:-1800}"
+fi
 PRM_DB="/Users/ojihun/DEV/media-agent-prm/data/prm.db"
 DAILY_EMAIL_LIMIT=3
 NOW_KST="$(TZ=Asia/Seoul date '+%Y-%m-%dT%H:%M:%S%z')"
@@ -51,7 +59,7 @@ while ! mkdir "$WORKER_LOCKDIR" 2>/dev/null; do
   fi
 
   if [ $(( $(date +%s) - worker_wait_started )) -ge "$WORKER_WAIT_SECONDS" ]; then
-    printf '%s mode=%s skipped=worker_lock_timeout wait_seconds=%s\n' "$NOW_KST" "$MODE" "$WORKER_WAIT_SECONDS" >> "$LOGDIR/scheduler.log"
+    printf '%s mode=%s worker_group=%s skipped=worker_lock_timeout wait_seconds=%s\n' "$NOW_KST" "$MODE" "$WORKER_GROUP" "$WORKER_WAIT_SECONDS" >> "$LOGDIR/scheduler.log"
     exit 0
   fi
   sleep 5
@@ -84,7 +92,7 @@ MANDATORY STARTUP:
 2. Read the external promotion ledger before deciding: run python3 /Users/ojihun/DEV/media-agent-prm/scripts/prm_cli.py promotion-status --session spoonie-growth, then read /Users/ojihun/DEV/media-agent-prm/sessions/spoonie-growth/session_spec.json for stable channel policy. Latest evidence-backed strategy_review may override bounded channel decisions; current runtime evidence overrides stale readiness facts.
 3. Treat media-agent-prm Promotion Ops as the source of truth for external promotion and GA4/Supabase as the source of truth for product activation. Treat current Git/runtime/data as more authoritative than old chat history.
 4. Read only the current project/growth docs needed for this run. Respect PRODUCT.md, DESIGN.md, docs/operations.md, docs/discovery-and-behavior.md, AGENTS.md/CLAUDE.md, and ~/.anti-slop-standard.md where relevant.
-5. At the end of every meaningful run, call cokacremote project_context_checkpoint so the next session/automation run inherits verified actions, decisions, blockers, and next steps.
+5. At the end of every meaningful run, call cokacremote project_context_checkpoint so the next session/automation run inherits verified actions, decisions, blockers, and next steps. Research and mutation workers may run concurrently; if checkpoint rejects a stale base revision, restore the newest local context/runtime evidence and retry once with the current revision instead of dropping the run result.
 
 CORE OBJECTIVE:
 Create real Spoonie growth while the owner focuses on development:
@@ -200,9 +208,10 @@ GENERAL:
 - Do not modify Spoonie product code or public-site copy in unattended growth runs. Surface product changes for a normal development session.
 - Do not commit/push/deploy from this unattended lane.
 - Keep reports concise and factual: actions actually taken, verified evidence, blockers, next smallest compounding action.
+- The runner has separate research and mutation worker groups. Research may run concurrently with one mutation worker, but external-action modes remain serialized with each other. PRM writes should be short transactions; on transient SQLite locking, retry after a short delay rather than inventing state or abandoning verified evidence.
 EOF_PROMPT
 
-printf '%s mode=%s start\n' "$NOW_KST" "$MODE" >> "$LOGDIR/scheduler.log"
+printf '%s mode=%s worker_group=%s start\n' "$NOW_KST" "$MODE" "$WORKER_GROUP" >> "$LOGDIR/scheduler.log"
 
 set +e
 /opt/homebrew/bin/codex exec \
@@ -225,5 +234,5 @@ else
   STATUS="exit_$RC"
 fi
 
-printf '%s mode=%s exit=%s status=%s report=%s\n' "$(TZ=Asia/Seoul date '+%Y-%m-%dT%H:%M:%S%z')" "$MODE" "$RC" "$STATUS" "$OUT" >> "$LOGDIR/scheduler.log"
+printf '%s mode=%s worker_group=%s exit=%s status=%s report=%s\n' "$(TZ=Asia/Seoul date '+%Y-%m-%dT%H:%M:%S%z')" "$MODE" "$WORKER_GROUP" "$RC" "$STATUS" "$OUT" >> "$LOGDIR/scheduler.log"
 exit "$RC"
