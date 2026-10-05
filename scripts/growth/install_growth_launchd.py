@@ -26,6 +26,13 @@ jobs = {
             {"Weekday": 5, "Hour": 10, "Minute": 30},
         ],
     ),
+    "com.spoonie.growth.media": (
+        ["/bin/zsh", RUNNER, "media"],
+        [
+            {"Weekday": 2, "Hour": 9, "Minute": 40},
+            {"Weekday": 4, "Hour": 9, "Minute": 40},
+        ],
+    ),
     "com.spoonie.growth.referral": (
         ["/bin/zsh", RUNNER, "referral"],
         {"Hour": 13, "Minute": 45},

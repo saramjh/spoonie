@@ -38,7 +38,7 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 case "$MODE" in
-  acquisition|discovery|creator|community|referral|brand|strategy|review|replywatch|smoke) ;;
+  acquisition|discovery|creator|community|referral|brand|media|strategy|review|replywatch|smoke) ;;
   *) echo "unknown mode: $MODE" >&2; exit 2 ;;
 esac
 
@@ -81,8 +81,8 @@ printf "RUN-TIME SAFETY SNAPSHOT:\n- PRM emails already sent on the current KST 
 cat >> "$PROMPT" <<'EOF_PROMPT'
 MANDATORY STARTUP:
 1. Call cokacremote project_context_bootstrap for /Users/ojihun/DEV/spoonie before making any decision. If it fails specifically because context metadata exceeds the output budget, do not retry-loop or block the run: read .context/HANDOFF.md, .context/SESSION_CHECKPOINT.md, .context/DECISIONS.md, and .context/STATE.json directly, then continue from current repo/runtime evidence.
-2. Read the external promotion ledger before deciding: run `python3 /Users/ojihun/DEV/media-agent-prm/scripts/prm_cli.py promotion-status --session spoonie-growth`. Treat media-agent-prm Promotion Ops as the source of truth for external promotion targets/channels/actions; GA4/Supabase remain the source of truth for product activation.
-3. Treat current Git/runtime/data as more authoritative than old chat history.
+2. Read the external promotion ledger before deciding: run python3 /Users/ojihun/DEV/media-agent-prm/scripts/prm_cli.py promotion-status --session spoonie-growth, then read /Users/ojihun/DEV/media-agent-prm/sessions/spoonie-growth/session_spec.json for stable channel policy. Latest evidence-backed strategy_review may override bounded channel decisions; current runtime evidence overrides stale readiness facts.
+3. Treat media-agent-prm Promotion Ops as the source of truth for external promotion and GA4/Supabase as the source of truth for product activation. Treat current Git/runtime/data as more authoritative than old chat history.
 4. Read only the current project/growth docs needed for this run. Respect PRODUCT.md, DESIGN.md, docs/operations.md, docs/discovery-and-behavior.md, AGENTS.md/CLAUDE.md, and ~/.anti-slop-standard.md where relevant.
 5. At the end of every meaningful run, call cokacremote project_context_checkpoint so the next session/automation run inherits verified actions, decisions, blockers, and next steps.
 
@@ -96,7 +96,7 @@ GROUND TRUTH:
 - Food/ingredient/kitchen brands can directly publish genuinely cookable own-product Recipes. The deeper value is fan/community participation around actual product-use Recipes: made records, user adaptations, profile accumulation, and source-linked discovery across multiple use cases.
 - Provenance is a positive product mechanic, not fear marketing. Never headline plagiarism, lawsuits, theft, or legal protection. Never claim Spoonie proves ownership, grants copyright, prevents copying, or guarantees legal evidence.
 - Do not promise creator matching, campaign brokerage, traffic, sales, or nonexistent network scale.
-- The defunct PremaMon business has NO brand/story/continuity relationship with Spoonie. Never mention or imply one publicly. Only the inherited Instagram account's cooking/kitchen-interest follower pool is a warm distribution asset.
+- The defunct PremaMon business has NO brand/story/continuity relationship with Spoonie. Never mention or imply one publicly, never use the closure/migration as a hook, and never imply predecessor/endorsement/company continuity. The current @spoonie.kitchen cooking/kitchen-interest audience and public relationship graph may be used only as a warm distribution/discovery asset.
 - Instagram auto-posting is supporting infrastructure, not the growth strategy. Owned Instagram primarily distributes individual Recipe utility and sends demand to Recipe detail pages; repeated generic Spoonie-product promotion is secondary.
 - Initial resource allocation baseline is creator-first: roughly 60-70% creator supply acquisition, 20-30% Recipe demand distribution (search/owned social/community/referral), and at most 10% narrow brand experiments over a rolling set of growth actions. This is a starting prior, not a permanent quota: the latest evidence-backed PRM strategy_review may temporarily override allocation/channel decisions for a bounded experiment.
 - Brand outbound is not co-equal with creator outbound. Prefer small/D2C food or kitchen brands already producing useful recipes/serving ideas; large-brand outreach is low priority until Spoonie demonstrates demand.
@@ -113,9 +113,8 @@ GROUND TRUTH:
 MODE RULES:
 
 discovery:
-- This lane is time-insensitive and may run immediately. Research high-fit Creator prospects, permitted cooking/home-cooking communities, organic Recipe search opportunities, and zero-cost distribution surfaces.
-- Do not send email or publish community posts in discovery mode. Write verified candidate targets/channel evidence to PRM so time-sensitive lanes can act later without repeating research.
-- Prefer evidence that exposes an actual audience need Spoonie can satisfy. Creator discovery has no follower floor: any account with owned reusable cooking/recipe/reel/kitchen content is eligible, with reusable back catalog, repeated quantity questions, adaptation/cook-along behavior and recent publishing as priority signals. In parallel, build a Brand queue from food/kitchen brands already holding owned product-use recipes, serving ideas, cooking posts or media. Record whether each prospect fits Creator migration or Brand initial-library setup, but do not contact them merely because they fit.
+- Continuously expand the verified zero-cost target/channel universe defined by the PRM session policy: Creators, small food/kitchen Brands, permitted communities, earned media, search/referral opportunities, and relevant public @spoonie.kitchen-adjacent cooking/kitchen accounts.
+- Research/queue only. Do not send or publish in discovery mode; write verified fit/evidence to PRM so execution lanes do not repeat research.
 
 creator:
 - This is the time-sensitive Creator outreach lane. Use only legitimate public business/contact channels and only when the daily outbound ceiling and follow-up rules allow.
@@ -137,6 +136,10 @@ brand:
 - This lane researches small/D2C food or kitchen brands that already hold useful product-use recipes, cooking posts, serving ideas or owned media. Read the latest PRM product-readiness gate before any contact. Until Brand account-owned initial-library setup is production-live, do not send that setup promise; only verify and queue prospects.
 - Once live and strategy permits a pilot, the Brand offer is account first -> submit existing owned product-use materials -> private Recipe library drafts in the Brand account -> review/publish. Do not use a brand action merely to fill quota. No creator-matching, brokerage, reach, sales, or video-hosting promises.
 
+media:
+- Follow ch-spoonie-media-pitch policy plus the latest strategy_review. Verify editorial fit, public pitch legitimacy and dedupe; share the global outbound-email ceiling and send at most one new pitch per eligible run.
+- If no eligible send is available, continue verified media research/queueing. Never force a generic blast; record provider IDs, replies and coverage in PRM.
+
 strategy:
 - This lane is time-insensitive and runs in parallel with execution. Its job is not to summarize activity; it must challenge the current growth thesis and improve the next execution loop.
 - Read the latest PRM strategy_review before reasoning. An evidence-backed bounded override there supersedes baseline channel allocation until its horizon expires or a later strategy_review changes it. If a strategy_review already exists today and no meaningful new evidence appeared after it, verify the decision and avoid creating a duplicate strategic mutation.
@@ -148,7 +151,7 @@ strategy:
 - Use a recursive loop: evidence -> diagnosis -> hypothesis -> zero-cost experiment -> expected signal -> decision rule. If repeated iterations fail, return to the original user/creator/brand need and redesign the value proposition before relaunching.
 
 acquisition:
-- Run growth as parallel zero-cost lanes where independently actionable: Creator supply outreach, owned Recipe distribution, organic search/discovery, content-first permitted communities, and referral/share. Do not serialize unrelated lanes behind email or replywatch blockers. Brand remains a narrow optional lane.
+- Run growth as parallel zero-cost lanes where independently actionable: Creator supply outreach, owned Recipe distribution, additive product-utility education, organic search/discovery, content-first permitted communities, earned-media pitching, referral/share, and continuous target/channel discovery. Do not serialize unrelated lanes behind email or replywatch blockers. Brand remains a narrow optional lane.
 - Actively seek the best available growth actions with Creator supply and Recipe demand distribution first. Do not mechanically split attention across channels. Creator email, owned Recipe distribution, organic search entry points, content-first permitted communities, and referral/share outrank general brand outreach.
 - Before email: verify a legitimate public business/contact channel and dedupe PRM session `spoonie-growth` promotion_targets/actions, legacy growth_outreach_targets, and Gmail Sent.
 - Personalize to actual public content. Prefer creators with a reusable back catalog, repeated ingredient/quantity questions, active recipe-to-recipe influence, adaptations/challenges, or followers who already cook along. Brand candidates are exceptional/narrow: small or D2C brands already publishing recipes, serving ideas, fan cooking content, or multiple genuine product-use scenarios.
@@ -169,7 +172,7 @@ replywatch:
 review:
 - Compare PRM `spoonie-growth` channel/target/action history with GA4/GSC/Instagram/Supabase activation and Gmail evidence. For partner acquisition, inspect partner_action -> signup_submitted -> partner_auth_complete -> recipe_create, then first Recipe -> second Recipe. For demand, inspect Recipe-detail acquisition from search/social/community/referral before proposing more landing-page copy.
 - Consume the latest strategy_review decision when present and verify whether execution evidence supports or falsifies it. Review is the end-of-day decision gate; strategy is the intraday recursive hypothesis lane.
-- Judge the PRM channels owned Instagram, creator email, brand email, community distribution, organic search, referral/share, and in-product activation as EXPAND/KEEP/CHANGE/PAUSE/STOP. The current default is creator email/search/owned Instagram=EXPAND, community/referral=KEEP, brand email=CHANGE until evidence supersedes it.
+- Judge the PRM channels owned Instagram, creator email, brand email, earned media, community distribution, organic search, referral/share, and in-product activation as EXPAND/KEEP/CHANGE/PAUSE/STOP. The current default is creator email/search/owned Instagram=EXPAND, community/referral=KEEP, brand email=CHANGE until evidence supersedes it.
 - Do not merely report weak results. Change targeting, message, content angle, or channel allocation when evidence supports it. If a lane remains weak after iteration, return to the original audience need/value proposition, redesign the no-cost offer, then relaunch a new variant; never solve weak fit by adding spend.
 - If a product friction is discovered, record a concrete product recommendation; do not modify product code in this unattended lane.
 
