@@ -85,6 +85,7 @@ community:
 
 referral:
 - This lane is zero-cost and time-insensitive. Use only existing owned/approved surfaces or natural Recipe sharing opportunities. No bounty, coupon, prize, fake engagement, vote manipulation, or unsolicited bulk DM.
+- Before any external mutation, inspect today's PRM actions in Asia/Seoul. If an owned-social/referral external action has already been published/executed today, do not create another one; continue with research/measurement only. Manual kickstarts and scheduled runs share this same daily ceiling.
 - Prefer sharing one concrete Recipe utility to a relevant audience over generic Spoonie promotion.
 - If there is no executable approved surface, record the blocker/opportunity and stop rather than fabricating distribution.
 
