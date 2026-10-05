@@ -22,14 +22,18 @@ def pages(method, path, body=None):
         if len(page) < PAGE_SIZE: return rows
         offset += PAGE_SIZE
 PREFIX = U + '/storage/v1/object/public/item-images/'
-used = set()
-for it in pages('GET', '/rest/v1/items?select=image_urls&order=id.asc'):
-    for u in it['image_urls'] or []: used.add(u)
-for st in pages('GET', '/rest/v1/instructions?select=image_url&image_url=not.is.null&order=id.asc'): used.add(st['image_url'])
-keep = set()
-for u in used:
-    if u and u.startswith(PREFIX):
-        p = urllib.parse.unquote(u[len(PREFIX):].split('?')[0]); keep |= {p, p + '.w400.jpg', p + '.w800.jpg'}
+def referenced_paths():
+    used = set()
+    for it in pages('GET', '/rest/v1/items?select=image_urls&order=id.asc'):
+        for u in it['image_urls'] or []: used.add(u)
+    for st in pages('GET', '/rest/v1/instructions?select=image_url&image_url=not.is.null&order=id.asc'): used.add(st['image_url'])
+    keep = set()
+    for u in used:
+        if u and u.startswith(PREFIX):
+            p = urllib.parse.unquote(u[len(PREFIX):].split('?')[0]); keep |= {p, p + '.w400.jpg', p + '.w800.jpg'}
+    return keep
+
+keep = referenced_paths()
 # 사용자 UUID 폴더만 끝까지 읽는다. marketing 같은 운영 자산 prefix는 이 스크립트의 소유 범위가 아니다.
 objects = []
 for folder in pages('POST', '/storage/v1/object/list/item-images', {'prefix': ''}):
@@ -45,7 +49,8 @@ if not keep or len(orphans) > len(objects) / 2:
     sys.exit(f'중단: 쓰는 사진 {len(keep)}개, 지울 파일 {len(orphans)}/{len(objects)} (안전장치)')
 print(f'files {len(objects)}, keep {len([o for o in objects if o["name"] in keep])}, orphans {len(orphans)} ({size/1024/1024:.1f}MB)')
 if '--apply' in sys.argv and orphans:
-    names = [o['name'] for o in orphans]
+    latest_keep = referenced_paths()
+    names = [o['name'] for o in orphans if o['name'] not in latest_keep]
     for i in range(0, len(names), 100):
         req('DELETE', '/storage/v1/object/item-images', {'prefixes': names[i:i+100]})
     print('deleted', len(names))

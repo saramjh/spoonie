@@ -25,6 +25,8 @@ export const fetchHomeFeedPage = async (key: string): Promise<Item[]> => {
   const { data: items, error } = await supabase
     .from("optimized_feed_view")
     .select("*")
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
     .range(offset, offset + PAGE_SIZE - 1)
 
   if (error) {

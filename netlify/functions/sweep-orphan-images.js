@@ -62,24 +62,35 @@ async function listAll() {
   return objects;
 }
 
+async function loadReferencedPaths() {
+  const prefix = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/`;
+  const [items, steps] = await Promise.all([
+    listRestRows('/rest/v1/items?select=image_urls&order=id.asc'),
+    listRestRows('/rest/v1/instructions?select=image_url&image_url=not.is.null&order=id.asc'),
+  ]);
+  const keep = new Set();
+  for (const url of [...items.flatMap((i) => i.image_urls || []), ...steps.map((s) => s.image_url)]) {
+    if (!url || !url.startsWith(prefix)) continue;
+    const path = decodeURIComponent(url.slice(prefix.length).split('?')[0]);
+    keep.add(path).add(`${path}.w400.jpg`).add(`${path}.w800.jpg`);
+  }
+  return keep;
+}
+
 exports.handler = async () => {
   try {
-    const prefix = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/`;
-    const [items, steps] = await Promise.all([
-      listRestRows('/rest/v1/items?select=image_urls&order=id.asc'),
-      listRestRows('/rest/v1/instructions?select=image_url&image_url=not.is.null&order=id.asc'),
-    ]);
-    const keep = new Set();
-    for (const url of [...items.flatMap((i) => i.image_urls || []), ...steps.map((s) => s.image_url)]) {
-      if (!url || !url.startsWith(prefix)) continue;
-      const path = decodeURIComponent(url.slice(prefix.length).split('?')[0]);
-      keep.add(path).add(`${path}.w400.jpg`).add(`${path}.w800.jpg`);
-    }
+    const keep = await loadReferencedPaths();
     if (keep.size === 0) return { statusCode: 200, body: 'skip: no referenced images found' };
 
     const objects = await listAll();
     const cutoff = Date.now() - GRACE_MS;
-    const orphans = objects.filter((o) => o.created_at && !keep.has(o.name) && new Date(o.created_at).getTime() < cutoff).map((o) => o.name);
+    const candidates = objects.filter((o) => o.created_at && !keep.has(o.name) && new Date(o.created_at).getTime() < cutoff).map((o) => o.name);
+    if (candidates.length === 0) return { statusCode: 200, body: 'deleted 0' };
+
+    const latestKeep = await loadReferencedPaths();
+    if (latestKeep.size === 0) return { statusCode: 200, body: 'skip: no referenced images found on recheck' };
+    const orphans = candidates.filter((name) => !latestKeep.has(name));
+
     if (orphans.length > objects.length / 2) {
       console.error(`sweep aborted: ${orphans.length}/${objects.length} would be deleted`);
       return { statusCode: 200, body: 'skip: too many deletions' };
@@ -87,7 +98,7 @@ exports.handler = async () => {
     for (let i = 0; i < orphans.length; i += 100) {
       await call('DELETE', `/storage/v1/object/${BUCKET}`, { prefixes: orphans.slice(i, i + 100) });
     }
-    console.log(`sweep: files ${objects.length}, deleted ${orphans.length}`);
+    console.log(`sweep: files ${objects.length}, candidates ${candidates.length}, deleted ${orphans.length}`);
     return { statusCode: 200, body: `deleted ${orphans.length}` };
   } catch (error) {
     console.error('sweep failed', error);

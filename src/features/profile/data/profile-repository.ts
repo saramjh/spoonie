@@ -1,6 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
-import { getCommentCountConcurrencySafe } from "@/shared/infra/concurrency-helpers"
 
 /** 누구나 읽을 수 있는 프로필 컬럼. email, role은 포함하지 않는다. */
 export const PUBLIC_PROFILE_COLUMNS =
@@ -83,26 +82,23 @@ export const fetchUserItems = async (userId: string, currentUserId?: string, sup
 	if (error) throw new Error(error.message)
 	if (!items || items.length === 0) return []
 
-	// 직접 items를 읽는 본인 프로필만 댓글 수를 별도로 보정한다.
-	const itemsWithAccurateComments = currentUserId === userId 
-		? await Promise.all(items.map(async (item) => {
-			const accurateCommentsCount = await getCommentCountConcurrencySafe(item.id)
-			return { ...item, accurate_comments_count: accurateCommentsCount }
-		}))
-		: items
-
+	const commentCountsMap = new Map<string, number>()
 	const userLikesMap = new Map<string, boolean>()
 	const userFollowsMap = new Map<string, boolean>()
 
 	if (currentUserId && currentUserId !== "guest") {
-		// 본인 프로필은 items를 직접 읽으므로 좋아요 상태만 별도로 채운다.
 		if (currentUserId === userId) {
-			const { data: userLikes } = await supabase
-				.from("likes")
-				.select("item_id")
-				.eq("user_id", currentUserId)
-				.in("item_id", itemsWithAccurateComments.map((item) => item.id))
+			const itemIds = items.map((item) => item.id)
+			const [{ data: commentCounts, error: commentCountsError }, { data: userLikes, error: userLikesError }] = await Promise.all([
+				supabase.rpc("get_comment_counts_for_items", { item_ids_param: itemIds }),
+				supabase.from("likes").select("item_id").eq("user_id", currentUserId).in("item_id", itemIds),
+			])
 
+			if (commentCountsError) console.error("Error fetching profile comment counts:", commentCountsError)
+			commentCounts?.forEach((row: { item_id: string; comments_count: number | string }) => {
+				commentCountsMap.set(row.item_id, Number(row.comments_count) || 0)
+			})
+			if (userLikesError) console.error("Error fetching profile like states:", userLikesError)
 			userLikes?.forEach((like) => {
 				userLikesMap.set(like.item_id, true)
 			})
@@ -121,7 +117,7 @@ export const fetchUserItems = async (userId: string, currentUserId?: string, sup
 	}
 
 	// 홈화면과 동일한 Item 형태로 변환
-	return itemsWithAccurateComments.map((item) => {
+	return items.map((item) => {
 		const profileData = currentUserId === userId
 			? (Array.isArray(item.profiles) ? item.profiles[0] : item.profiles)
 			: {
@@ -168,9 +164,9 @@ export const fetchUserItems = async (userId: string, currentUserId?: string, sup
 		likes_count: currentUserId === userId 
 			? (item.likes_count?.[0]?.count ?? 0)   // 본인 프로필: items 테이블 집계 결과
 			: (item.likes_count || 0),              // 타인 프로필: optimized_feed_view 결과
-		comments_count: currentUserId === userId 
-			? ('accurate_comments_count' in item ? (item as { accurate_comments_count: number }).accurate_comments_count : 0)  // 본인 프로필: 정확한 댓글 수 (삭제된 댓글 제외)
-			: (item.comments_count || 0),                   // 타인 프로필: optimized_feed_view 결과 (이미 삭제된 댓글 제외)
+		comments_count: currentUserId === userId
+			? (commentCountsMap.get(item.id) || 0)
+			: (item.comments_count || 0),
 			view_count: 0,
 			is_liked: isLikedValue,
 			is_following: userFollowsMap.get(userId) || false,

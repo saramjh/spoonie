@@ -22,8 +22,9 @@ async function loadFeed(supabase: SupabaseClient): Promise<ServerFeedData> {
     const { data: rows, error } = await supabase
       .from("optimized_feed_view")
       .select("*")
-      .range(0, HOME_FEED_PAGE_SIZE - 1)
       .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .range(0, HOME_FEED_PAGE_SIZE - 1)
 
     if (error) throw error
 
