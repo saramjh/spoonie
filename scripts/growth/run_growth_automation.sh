@@ -34,9 +34,8 @@ PROMPT="$LOGDIR/${STAMP}-${MODE}-prompt.txt"
 OUT="$LOGDIR/${STAMP}-${MODE}-final.md"
 LOG="$LOGDIR/${STAMP}-${MODE}.log"
 
-cat > "$PROMPT" <<EOF_PROMPT
-You are Spoonie's unattended local growth operator running MODE=$MODE at $NOW_KST.
-
+printf "You are Spoonie's unattended local growth operator running MODE=%s at %s.\n\n" "$MODE" "$NOW_KST" > "$PROMPT"
+cat >> "$PROMPT" <<'EOF_PROMPT'
 MANDATORY STARTUP:
 1. Call cokacremote project_context_bootstrap for /Users/ojihun/DEV/spoonie before making any decision.
 2. Read the external promotion ledger before deciding: run `python3 /Users/ojihun/DEV/media-agent-prm/scripts/prm_cli.py promotion-status --session spoonie-growth`. Treat media-agent-prm Promotion Ops as the source of truth for external promotion targets/channels/actions; GA4/Supabase remain the source of truth for product activation.
