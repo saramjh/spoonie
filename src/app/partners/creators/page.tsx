@@ -1,16 +1,16 @@
 import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
-import { GitFork, Library, ListChecks } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import PartnerActionLink from "../partner-action-link"
 import PartnerProof from "../partner-proof"
+import PartnerNetworkFlow from "../partner-network-flow"
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
 
 export const metadata: Metadata = {
   title: "요리 크리에이터 이용 안내 | Spoonie",
-  description: "피드와 영상에 흘러가는 기존 레시피를 다시 찾아 따라 만들 수 있는 Spoonie Recipe로 남기는 방법.",
+  description: "기존 레시피를 다시 따라 만들 수 있게 남기고, 만들었어요·참고·이어진 Recipe 관계를 따라 작성자까지 발견되는 Spoonie 이용 방법.",
   alternates: { canonical: `${baseUrl}/partners/creators` },
   openGraph: {
     title: "요리 크리에이터 이용 안내 | Spoonie",
@@ -21,24 +21,6 @@ export const metadata: Metadata = {
     images: [{ url: `${baseUrl}/og-default.png`, width: 1200, height: 630, alt: "Spoonie" }],
   },
 }
-
-const values = [
-  {
-    title: "피드 밖에서도 다시 따라 만들 수 있게",
-    description: "설명란과 예전 게시물을 다시 찾지 않아도 재료·분량·조리 순서를 Recipe 한 화면에서 봅니다.",
-    icon: ListChecks,
-  },
-  {
-    title: "내 레시피가 한곳에 계속 쌓이게",
-    description: "공개 Recipe는 작성자 프로필에 모이고, 필요한 Recipe를 링크로 바로 공유할 수 있습니다.",
-    icon: Library,
-  },
-  {
-    title: "누군가 참고해도 원본과 이어지게",
-    description: "내 Recipe를 참고한 새 Recipe나 Recipeed가 생기면 어떤 요리에서 출발했는지 연결해 남길 수 있습니다.",
-    icon: GitFork,
-  },
-]
 
 const startSteps = [
   {
@@ -79,20 +61,7 @@ export default function CreatorPartnersPage() {
           <p className="mt-2 text-center text-meta text-ink-soft">가입 → 기존 레시피 입력 → 공개</p>
         </section>
 
-        <section className="border-t border-border px-4 py-6" aria-labelledby="creator-value">
-          <h2 id="creator-value" className="text-heading text-ink">SNS에 올리는 것과 다른 점</h2>
-          <div className="mt-4 divide-y divide-border border-y border-border">
-            {values.map(({ title, description, icon: Icon }) => (
-              <div key={title} className="flex gap-3 py-4">
-                <Icon className="mt-0.5 h-5 w-5 shrink-0 text-orange-ink" strokeWidth={1.75} aria-hidden />
-                <div className="min-w-0">
-                  <p className="text-label text-ink">{title}</p>
-                  <p className="mt-1 text-meta text-ink-soft">{description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+        <PartnerNetworkFlow segment="creator" />
 
         <section className="border-t border-border px-4 py-6" aria-labelledby="creator-start">
           <h2 id="creator-start" className="text-heading text-ink">첫 Recipe는 이렇게 시작합니다</h2>

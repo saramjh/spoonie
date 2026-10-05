@@ -1,16 +1,16 @@
 import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
-import { BookOpen, Library, PenLine } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import PartnerActionLink from "../partner-action-link"
 import PartnerProof from "../partner-proof"
+import PartnerNetworkFlow from "../partner-network-flow"
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
 
 export const metadata: Metadata = {
   title: "식품·주방 브랜드 이용 안내 | Spoonie",
-  description: "상품 설명만으로는 보이지 않는 실제 사용법을 자사 제품 활용 Recipe로 직접 쌓는 방법.",
+  description: "제품 활용 Recipe를 직접 쌓고, 팬의 조리 기록과 응용 Recipe가 출처를 따라 이어지는 Spoonie 이용 방법.",
   alternates: { canonical: `${baseUrl}/partners/brands` },
   openGraph: {
     title: "식품·주방 브랜드 이용 안내 | Spoonie",
@@ -21,24 +21,6 @@ export const metadata: Metadata = {
     images: [{ url: `${baseUrl}/og-default.png`, width: 1200, height: 630, alt: "Spoonie" }],
   },
 }
-
-const values = [
-  {
-    title: "상품 설명보다 실제 사용 장면으로",
-    description: "소스·식재료·팬·조리도구가 실제 요리에서 어떻게 쓰이는지 재료와 조리 과정으로 보여줍니다.",
-    icon: BookOpen,
-  },
-  {
-    title: "한 번 쓰고 사라지는 홍보가 아니라",
-    description: "공개 Recipe는 프로필에 쌓이고 검색·공유할 수 있는 제품 활용 콘텐츠로 남습니다.",
-    icon: Library,
-  },
-  {
-    title: "브랜드가 가진 콘텐츠로 바로 시작",
-    description: "크리에이터 섭외나 별도 제휴를 기다리지 않고, 이미 보유한 요리·활용 콘텐츠부터 직접 작성할 수 있습니다.",
-    icon: PenLine,
-  },
-]
 
 const startSteps = [
   {
@@ -79,20 +61,7 @@ export default function BrandPartnersPage() {
           <p className="mt-2 text-center text-meta text-ink-soft">가입 → Recipe 작성 → 프로필에 쌓임</p>
         </section>
 
-        <section className="border-t border-border px-4 py-6" aria-labelledby="brand-value">
-          <h2 id="brand-value" className="text-heading text-ink">브랜드가 얻는 실제 쓰임</h2>
-          <div className="mt-4 divide-y divide-border border-y border-border">
-            {values.map(({ title, description, icon: Icon }) => (
-              <div key={title} className="flex gap-3 py-4">
-                <Icon className="mt-0.5 h-5 w-5 shrink-0 text-orange-ink" strokeWidth={1.75} aria-hidden />
-                <div className="min-w-0">
-                  <p className="text-label text-ink">{title}</p>
-                  <p className="mt-1 text-meta text-ink-soft">{description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+        <PartnerNetworkFlow segment="brand" />
 
         <section className="border-t border-border px-4 py-6" aria-labelledby="brand-start">
           <h2 id="brand-start" className="text-heading text-ink">첫 제품 활용 Recipe는 이렇게 시작합니다</h2>

@@ -36,7 +36,7 @@ export default function PartnersPage() {
             크리에이터는 기존 레시피를, 식품·주방 브랜드는 제품 활용 요리를 재료·분량·조리 순서가 남는 Recipe로 직접 올릴 수 있습니다.
           </p>
           <p className="mt-2 text-meta text-ink-soft">
-            별도 파트너 계약을 기다리는 페이지가 아닙니다. 나에게 맞는 안내를 보고 Recipe 1개부터 바로 시작할 수 있습니다.
+            Recipe는 혼자 쌓이지 않습니다. 누가 만들고 참고하고 이어갔는지 관계가 남고, 그 연결을 따라 다른 Recipe와 작성자가 발견됩니다.
           </p>
         </section>
 

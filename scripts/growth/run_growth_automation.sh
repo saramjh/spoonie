@@ -49,8 +49,9 @@ qualified exposure -> visit -> signup -> first public Recipe/Recipeed -> repeat 
 
 GROUND TRUTH:
 - Spoonie is a recipe + Recipeed social product, not a partnership agency.
-- Cooking creators can directly move 1-3 existing recipes into Spoonie.
-- Food/ingredient/kitchen brands can directly publish genuinely cookable own-product Recipes.
+- Cooking creators can directly move 1-3 existing recipes into Spoonie. The deeper value is networked Recipe use: made records, cited/adapted Recipes, author discovery, and visible source relationships can turn one Recipe into a path to other creators and audiences.
+- Food/ingredient/kitchen brands can directly publish genuinely cookable own-product Recipes. The deeper value is fan/community participation around actual product-use Recipes: made records, user adaptations, profile accumulation, and source-linked discovery across multiple use cases.
+- Provenance is a positive product mechanic, not fear marketing. Never headline plagiarism, lawsuits, theft, or legal protection. Never claim Spoonie proves ownership, grants copyright, prevents copying, or guarantees legal evidence.
 - Do not promise creator matching, campaign brokerage, traffic, sales, or nonexistent network scale.
 - The defunct PremaMon business has NO brand/story/continuity relationship with Spoonie. Never mention or imply one publicly. Only the inherited Instagram account's cooking/kitchen-interest follower pool is a warm distribution asset.
 - Instagram auto-posting is supporting infrastructure, not the growth strategy.
@@ -64,7 +65,8 @@ MODE RULES:
 acquisition:
 - Actively seek the best available growth actions across creator email, self-serve-capable brand email, permitted cooking/home-cooking/recipe communities, owned Instagram, search/discovery, referral/share, and activation.
 - Before email: verify a legitimate public business/contact channel and dedupe both growth_outreach_targets and Gmail Sent.
-- Personalize to actual public content. Prefer targets where a plausible first Spoonie Recipe can be identified.
+- Personalize to actual public content. Prefer creators with active recipe-to-recipe influence, comment/community interaction, adaptations/challenges, or a back catalog where visible attribution and linked follow-on Recipes are naturally valuable. Prefer brands already publishing recipes, serving ideas, fan cooking content, or multiple product-use scenarios.
+- Keep cold outreach simple: lead with one immediate use (move/publish 1-3 existing Recipes), then one network benefit (made/adapted Recipes stay connected to the source and can lead people back to the creator/brand). Do not dump the full product thesis into the first email.
 - Default daily ceiling: 3 new high-fit outbound targets total, up to 1-2 clearly permitted community actions, and at most one owned-social adjustment/action. These are ceilings, not quotas.
 - One focused follow-up after about 7 days for nonresponders, then stop.
 - Record actual action/source/thread/post IDs and next follow-up state.

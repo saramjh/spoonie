@@ -100,6 +100,8 @@
 - 공개 안내면은 `/partners` 허브 + `/partners/creators` + `/partners/brands`로 분리한다. 크리에이터와 브랜드 모두 현재 제품을 직접 사용할 수 있는 콘텐츠 작성자다. 브랜드는 별도 제휴 없이 자사 제품을 실제로 활용한 Recipe/Recipeed를 올릴 수 있으며, 자사·협찬·제품 제공 관계를 프로필이나 본문에서 밝힌다. 현재 제품은 Creator↔Brand 매칭, 캠페인 중개, 도달·판매 보장을 제공하지 않는다.
 - 기존 2026-10-04 발송분의 `/partners#creators`, `/partners#brands` 링크는 깨지지 않게 유지한다.
 - Creator/Brand 전용 랜딩은 실제 공개 Recipe 화면 캡처와 실제 Recipe/프로필 링크를 proof로 사용한다. 생성형 이미지로 제품 동작을 가장하지 않는다.
+- 파트너 가치 제안은 개인 보관 효용에서 끝내지 않는다. Creator는 원본 Recipe → 만들었어요/Recipeed 또는 다른 Creator의 이어진 Recipe → 원본·작성자 연결 → 서로의 Recipe/프로필 발견, Brand는 제품 활용 Recipe → 팬의 조리 기록/사용자 응용 Recipe → 출처·브랜드 작성자 연결 → 다른 활용 Recipe 발견이라는 현재 제품의 관계 루프를 핵심 차별점으로 설명한다.
+- provenance는 공포 마케팅이나 법적 보증으로 쓰지 않는다. 레시피 도용·소송을 랜딩/콜드메일의 훅으로 사용하지 않고, Spoonie가 저작권을 부여·판단·보호하거나 법적 소유권을 증명한다고 표현하지 않는다. 공개 이력과 사용자가 선택한 참고/파생 관계가 플랫폼 안에서 보존된다는 사실만 말한다.
 - 파트너 랜딩의 세그먼트 진입, 실제 Recipe/프로필 열기, 사이트 이동, signup, 문의 제출은 GA4 `partner_action` 이벤트로 측정한다. `partner_segment`, `partner_action` 파라미터로 구분하고, 실제 문의 내용은 별도 서버 전용 `partner_inquiries`에 저장한다.
 - 외부에서 직접 들어온 파트너는 전용 문의 폼을 사용한다. 폼은 `/api/partner-inquiry`를 통해서만 저장하며 `partner_inquiries`는 RLS 활성화 + anon/authenticated 권한 없음으로 브라우저 직접 접근을 막는다. 아웃리치 수신자는 기존 메일에 그대로 회신해도 된다.
 - 기존 hash 링크는 브라우저에서 각각 전용 랜딩으로 `replace`하고, JavaScript가 없어도 허브의 동일 anchor에서 전용 페이지 CTA를 제공한다. 정정 메일은 보내지 않는다.
