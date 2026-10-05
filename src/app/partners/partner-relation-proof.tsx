@@ -17,7 +17,7 @@ const copy = {
     href: "#migration",
   },
   brand: {
-    title: "캠페인이 끝나도, 제품 쓰는 법은 남습니다",
+    title: "게시물이 지나가도, 제품 쓰는 법은 남습니다",
     description:
       "제품 소개 게시물은 지나가지만, 활용 Recipe는 이 제품으로 무엇을 만들 수 있는지를 계속 보여주는 페이지로 남습니다. 팬이 참고해 만든 기록이나 응용 Recipe가 생기면 원본 활용 Recipe로 돌아갈 수 있습니다.",
     note:

@@ -31,8 +31,8 @@ const outcomes = [
     description: "제품 하나에 볶음·구이·한 끼·디저트처럼 실제 사용법을 Recipe로 누적해 프로필에서 함께 보여줄 수 있습니다.",
   },
   {
-    title: "팬의 사용 사례가 원본으로 돌아오게 하기",
-    description: "팬이 제품 활용 Recipe를 참고해 만들거나 자기 버전을 올린 경우, 바탕 Recipe와 브랜드 프로필로 다시 이동할 경로가 남습니다.",
+    title: "팬이 만든 사용 사례를 흩어두지 않기",
+    description: "팬이 제품 활용 Recipe를 참고해 만들거나 자기 버전을 올리면, 바탕 Recipe의 만들었던 기록과 이어진 Recipe에서 실제 사용 사례를 다시 찾아볼 수 있습니다.",
   },
 ] as const
 
