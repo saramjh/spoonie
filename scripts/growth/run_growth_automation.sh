@@ -92,7 +92,7 @@ qualified Recipe exposure -> visit -> signup -> first public Recipe -> second pu
 
 GROUND TRUTH:
 - Spoonie is a recipe + Recipeed social product, not a partnership agency.
-- Cooking creators can directly move 1-3 existing recipes into Spoonie. The deeper value is networked Recipe use: made records, cited/adapted Recipes, author discovery, and visible source relationships can turn one Recipe into a path to other creators and audiences.
+- Cooking creators can publish structured, reusable Recipes whose servings can be adjusted, whose steps can be followed while cooking, and whose made/reference relationships can lead back to the source Recipe and author. Existing-content-to-private-draft setup is only a secondary way to reduce first-post friction after the creator sees product value.
 - Food/ingredient/kitchen brands can directly publish genuinely cookable own-product Recipes. The deeper value is fan/community participation around actual product-use Recipes: made records, user adaptations, profile accumulation, and source-linked discovery across multiple use cases.
 - Provenance is a positive product mechanic, not fear marketing. Never headline plagiarism, lawsuits, theft, or legal protection. Never claim Spoonie proves ownership, grants copyright, prevents copying, or guarantees legal evidence.
 - Do not promise creator matching, campaign brokerage, traffic, sales, or nonexistent network scale.
@@ -119,7 +119,7 @@ discovery:
 creator:
 - This is the time-sensitive Creator outreach lane. Use only legitimate public business/contact channels and only when the daily outbound ceiling and follow-up rules allow.
 - If today's outbound ceiling is already reached or email execution is unavailable, do not force a send. Convert the run into verified prospect research/queueing for the next eligible window.
-- First touch remains one immediate use plus one secondary network benefit; one landing URL; no mass personalization template. Read the latest PRM product-readiness gate first. Until account-owned source intake and processing are production-verified, do not send a migration-automation promise; convert the run to prospect research/queueing. Once live, the Creator offer is: create/login to their own Spoonie account, choose owned posts/reels, receive reviewable private Recipe drafts owned by that account, then approve/publish. Never imply Spoonie official owns or posts their Recipe, and never imply Spoonie hosts video.
+- First touch must lead with one concrete Spoonie product benefit for that creator and use /partners/creators as the single destination. The default action is sign up and publish a Recipe directly. Mention account-owned existing-content-to-private-draft setup only as an optional secondary way to reduce first-post friction. Never make setup the headline offer, never imply Spoonie official owns or posts their Recipe, and never imply Spoonie hosts video.
 
 community:
 - This is the time-sensitive community distribution lane. Post at most 1-2 times per run, only where self-promotion/link rules clearly allow it.
@@ -133,8 +133,8 @@ referral:
 - If there is no executable approved surface, record the blocker/opportunity and stop rather than fabricating distribution.
 
 brand:
-- This lane researches small/D2C food or kitchen brands that already hold useful product-use recipes, cooking posts, serving ideas or owned media. Read the latest PRM product-readiness gate before any contact. Until Brand account-owned initial-library setup is production-live, do not send that setup promise; only verify and queue prospects.
-- Once live and strategy permits a pilot, the Brand offer is account first -> submit existing owned product-use materials -> private Recipe library drafts in the Brand account -> review/publish. Do not use a brand action merely to fill quota. No creator-matching, brokerage, reach, sales, or video-hosting promises.
+- This lane researches small/D2C food or kitchen brands that already hold useful product-use recipes, cooking posts, serving ideas or owned media. When strategy permits contact, lead with the product value: publish genuinely cookable product-use Recipes, accumulate multiple real use cases, and connect later made/reference context back to the source Recipe when it actually occurs.
+- Existing-material-to-private-draft setup is an optional activation aid after the Brand account exists, not the Brand value proposition. Do not use a brand action merely to fill quota. No creator-matching, brokerage, reach, sales, or video-hosting promises.
 
 media:
 - Follow ch-spoonie-media-pitch policy plus the latest strategy_review. Verify editorial fit, public pitch legitimacy and dedupe; share the global outbound-email ceiling and send at most one new pitch per eligible run.
@@ -155,7 +155,7 @@ acquisition:
 - Actively seek the best available growth actions with Creator supply and Recipe demand distribution first. Do not mechanically split attention across channels. Creator email, owned Recipe distribution, organic search entry points, content-first permitted communities, and referral/share outrank general brand outreach.
 - Before email: verify a legitimate public business/contact channel and dedupe PRM session `spoonie-growth` promotion_targets/actions, legacy growth_outreach_targets, and Gmail Sent.
 - Personalize to actual public content. Prefer creators with a reusable back catalog, repeated ingredient/quantity questions, active recipe-to-recipe influence, adaptations/challenges, or followers who already cook along. Brand candidates are exceptional/narrow: small or D2C brands already publishing recipes, serving ideas, fan cooking content, or multiple genuine product-use scenarios.
-- Keep cold outreach simple: lead with one immediate use (move/publish 1-3 existing Recipes), then one network benefit (made/adapted Recipes can stay connected to the source and lead people back to the creator/brand). Do not dump the full product thesis into the first email.
+- Keep cold outreach simple and product-first: lead with one concrete Spoonie use for that target, then one network benefit. The relevant partner landing is the primary destination and visually demonstrates the product. Existing-content setup may be mentioned only as a secondary friction-reduction option, not as the headline offer. Do not dump the full product thesis into the first email.
 - First-touch email should normally contain one primary destination only: the relevant partner landing (/partners/creators or /partners/brands), tagged with utm_source=outreach, utm_medium=email, and the segment campaign. Do not also include a raw signup URL unless the recipient has already shown intent or explicitly asks how to start.
 - Default daily ceiling: 3 new high-fit outbound targets total, up to 1-2 clearly permitted community actions, and at most one owned-social adjustment/action. These are ceilings, not quotas. Do not spend a daily brand slot merely to satisfy a mix; brand actions should remain <=10% over a rolling window unless evidence changes the channel decision.
 - One focused follow-up after about 7 days for nonresponders, then stop.
