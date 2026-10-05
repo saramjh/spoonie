@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest"
-import { authCallbackUrl, authEntryHref, parsePartnerEntrySource, withPartnerEntry } from "./partner-entry"
+import {
+	authCallbackUrl,
+	authEntryHref,
+	parsePartnerEntrySource,
+	resolveAuthEntryContext,
+	withPartnerEntry,
+} from "./partner-entry"
 
 describe("partner entry context", () => {
 	it("허용한 partner source만 유지한다", () => {
@@ -7,6 +13,22 @@ describe("partner entry context", () => {
 		expect(parsePartnerEntrySource("partner_brand")).toBe("partner_brand")
 		expect(parsePartnerEntrySource("premamont")).toBeNull()
 		expect(parsePartnerEntrySource(null)).toBeNull()
+	})
+
+	it("서버 auth page가 query를 한 번만 검증해 같은 context를 받는다", () => {
+		expect(
+			resolveAuthEntryContext({
+				next: ["/partners/creators?setup=1#setup", "/ignored"],
+				from: ["partner_creator", "partner_brand"],
+			}),
+		).toEqual({
+			next: "/partners/creators?setup=1#setup",
+			partnerSource: "partner_creator",
+		})
+		expect(resolveAuthEntryContext({ next: "//evil.example", from: "unknown" })).toEqual({
+			next: "/",
+			partnerSource: null,
+		})
 	})
 
 	it("인증 화면을 오가도 next와 partner source를 유지한다", () => {

@@ -24,6 +24,19 @@ export function parsePartnerEntrySource(raw: string | null | undefined): Partner
 	return raw === "partner_creator" || raw === "partner_brand" ? raw : null
 }
 
+type AuthEntrySearchParams = Record<string, string | string[] | undefined>
+
+function firstSearchParam(value: string | string[] | undefined) {
+	return Array.isArray(value) ? value[0] : value
+}
+
+export function resolveAuthEntryContext(query: AuthEntrySearchParams) {
+	return {
+		next: safeNextPath(firstSearchParam(query.next)),
+		partnerSource: parsePartnerEntrySource(firstSearchParam(query.from)),
+	}
+}
+
 export function authEntryHref(
 	path: "/login" | "/signup" | "/forgot-password" | "/reset-password",
 	next: string,
