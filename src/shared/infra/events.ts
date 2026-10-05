@@ -18,6 +18,9 @@ export type EventType =
 	| "share"
 	| "recipeed_start"
 	| "related_open"
+	| "signup_submitted"
+	| "partner_auth_complete"
+	| "recipe_create"
 
 type GtagWindow = Window & {
 	gtag?: (command: "event", eventName: string, params?: Record<string, string | number | boolean | undefined>) => void
@@ -33,19 +36,19 @@ function logAnalytics(type: EventType, itemId?: string | null, origin?: string) 
 	})
 }
 
-export function logEvent(type: EventType, itemId?: string | null, origin?: string) {
+export async function logEvent(type: EventType, itemId?: string | null, origin?: string): Promise<void> {
 	logAnalytics(type, itemId, origin)
 
 	// 피드 노출은 빈도가 너무 높아 DB row-per-card로 저장하지 않는다.
 	// GA4에서 집계하고, Supabase에는 의도가 강한 저빈도 행동만 남긴다.
 	if (type === "feed_impression") return
 
-	const supabase = createSupabaseBrowserClient()
-	supabase.auth
-		.getSession()
-		.then(({ data: { session } }) => {
-			if (!session) return
-			return supabase.from("events").insert({ type, item_id: itemId ?? null, origin: origin ?? null })
-		})
-		.catch(() => {})
+	try {
+		const supabase = createSupabaseBrowserClient()
+		const { data: { session } } = await supabase.auth.getSession()
+		if (!session) return
+		await supabase.from("events").insert({ type, item_id: itemId ?? null, origin: origin ?? null })
+	} catch {
+		// 계측 실패가 제품 동작을 막아서는 안 된다.
+	}
 }

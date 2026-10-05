@@ -76,7 +76,7 @@ const recipeSchema = z.object({
 
 export type RecipeFormValues = z.infer<typeof recipeSchema>
 
-export default function RecipeForm({ initialData, onNavigateBack, forkFrom = null }: RecipeFormProps) {
+export default function RecipeForm({ initialData, onNavigateBack, forkFrom = null, entrySource = null }: RecipeFormProps) {
 	const router = useRouter()
 	const supabase = createSupabaseBrowserClient()
 	const { toast } = useToast()
@@ -381,6 +381,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 		
 
 		toast({ title: `레시피 ${isEditMode ? "수정" : "작성"} 완료`, description: `성공적으로 ${isEditMode ? "수정" : "등록"}되었습니다.` })
+		if (!isEditMode) await logEvent("recipe_create", itemId, entrySource ?? (forkFrom ? "fork" : "recipe_form"))
 		if (!isEditMode && forkFrom) logEvent("derived_create", itemId, "fork")
 		await revalidateItemPage(itemId, initialData?.tags ?? []) // 상세 + sitemap/topic/profile 검색 자산을 즉시 갱신
 		// 고치면서 빠진 사진(대표·단계) 파일을 저장소에서 지운다
@@ -411,6 +412,12 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 			}
 		}
 		
+		// 파트너 유입의 첫 Recipe는 저장 결과를 바로 보여 줘, 작성 보상과 다음 공유/관계 행동을 끊지 않는다.
+		if (!isEditMode && entrySource) {
+			router.replace(`/recipes/${itemId}`)
+			return
+		}
+
 		// 내 버전은 저장한 새 레시피로 바로 간다 (위쪽에 원본이 "참고한 레시피"로 겹쳐 보인다)
 		if (!isEditMode && forkFrom) {
 			router.replace(`/recipes/${itemId}`)

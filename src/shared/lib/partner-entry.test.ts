@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { authEntryHref, parsePartnerEntrySource } from "./partner-entry"
+import { authCallbackUrl, authEntryHref, parsePartnerEntrySource, withPartnerEntry } from "./partner-entry"
 
 describe("partner entry context", () => {
 	it("허용한 partner source만 유지한다", () => {
@@ -14,5 +14,24 @@ describe("partner entry context", () => {
 			"/login?next=%2Frecipes%2Fnew&from=partner_creator",
 		)
 		expect(authEntryHref("/signup", "/", null)).toBe("/signup")
+		expect(authEntryHref("/forgot-password", "/recipes/new", "partner_brand")).toBe(
+			"/forgot-password?next=%2Frecipes%2Fnew&from=partner_brand",
+		)
+	})
+
+	it("인증을 마친 뒤 작성 화면에 partner source를 별도 entry로 붙인다", () => {
+		expect(withPartnerEntry("/recipes/new", "partner_creator")).toBe(
+			"/recipes/new?entry=partner_creator",
+		)
+		expect(withPartnerEntry("/recipes/new?fork=abc", "partner_brand")).toBe(
+			"/recipes/new?fork=abc&entry=partner_brand",
+		)
+		expect(withPartnerEntry("//evil.example", "partner_brand")).toBe("/?entry=partner_brand")
+	})
+
+	it("이메일·OAuth callback에도 next와 source를 함께 보존한다", () => {
+		expect(authCallbackUrl("https://spoonie.kr", "/recipes/new", "partner_creator")).toBe(
+			"https://spoonie.kr/auth/callback?next=%2Frecipes%2Fnew&entry=partner_creator",
+		)
 	})
 })

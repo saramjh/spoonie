@@ -9,9 +9,12 @@ import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Sheet } from "@/components/kit"
+import { useHydrated } from "@/hooks/useHydrated"
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { useToast } from "@/hooks/use-toast"
-import { Sheet } from "@/components/kit"
+import { safeNextPath } from "@/shared/lib/safe-next-path"
+import { authEntryHref, parsePartnerEntrySource } from "@/shared/lib/partner-entry"
 
 const formSchema = z
 	.object({
@@ -27,19 +30,19 @@ export default function ResetPasswordPage() {
 	const router = useRouter()
 	const supabase = createSupabaseBrowserClient()
 	const { toast } = useToast()
+	const hydrated = useHydrated()
+	const searchParams = hydrated ? new URLSearchParams(window.location.search) : null
+	const next = safeNextPath(searchParams?.get("next"))
+	const partnerSource = parsePartnerEntrySource(searchParams?.get("from"))
+	const loginHref = authEntryHref("/login", next, partnerSource)
 
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
-		defaultValues: {
-			password: "",
-			confirmPassword: "",
-		},
+		defaultValues: { password: "", confirmPassword: "" },
 	})
 
 	const onSubmit = async (values: z.infer<typeof formSchema>) => {
-		const { error } = await supabase.auth.updateUser({
-			password: values.password,
-		})
+		const { error } = await supabase.auth.updateUser({ password: values.password })
 
 		if (error) {
 			toast({
@@ -47,35 +50,25 @@ export default function ResetPasswordPage() {
 				description: "비밀번호 재설정에 실패했습니다. 다시 시도해주세요.",
 				variant: "destructive",
 			})
-		} else {
-			toast({
-				title: "성공",
-				description: "비밀번호가 성공적으로 재설정되었습니다. 2초 후 로그인 페이지로 이동합니다.",
-			})
-			setTimeout(() => {
-				router.push("/login")
-			}, 2000)
+			return
 		}
+
+		toast({ title: "비밀번호를 바꿨어요", description: "다시 로그인하면 이어서 작성할 수 있습니다." })
+		router.replace(loginHref)
 	}
 
-						return (
-			<div className="min-h-screen flex flex-col items-center justify-start p-4">
-				{/* 상단 여백 + 카드 컨테이너 */}
-				<main className="w-full max-w-sm mx-auto pt-16 sm:pt-20">
-					{/* 컴팩트한 브랜드 영역 */}
-					<div className="text-center mb-6">
-					<Link href="/" className="inline-block">
-						<div className="inline-block mb-4">
-							<Image src="/icon-only.svg" alt="Spoonie" width={32} height={32} />
-						</div>
+	return (
+		<div className="min-h-screen flex flex-col items-center justify-start p-4">
+			<main className="w-full max-w-sm mx-auto pt-12">
+				<div className="text-center mb-6">
+					<Link href="/" className="inline-flex" aria-label="Spoonie 홈">
+						<Image src="/logo-full.svg" alt="Spoonie" width={100} height={32} priority />
 					</Link>
-					<h1 className="text-title text-ink mb-1">새 비밀번호 설정</h1>
-					<p className="text-meta text-ink-soft">새로운 비밀번호를 입력해주세요.</p>
+					<h1 className="mt-5 text-title text-ink">새 비밀번호 설정</h1>
+					<p className="mt-1 text-meta text-ink-soft">새로운 비밀번호를 입력해주세요.</p>
 				</div>
 
-				{/* 비밀번호 재설정 카드 */}
 				<Sheet className="p-6">
-
 					<Form {...form}>
 						<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
 							<FormField
@@ -84,13 +77,7 @@ export default function ResetPasswordPage() {
 								render={({ field }) => (
 									<FormItem className="space-y-1.5">
 										<FormLabel className="text-label font-medium text-ink">새 비밀번호</FormLabel>
-										<FormControl>
-											<Input 
-												type="password" 
-												placeholder="6자 이상" 
-												{...field}  
-											/>
-										</FormControl>
+										<FormControl><Input type="password" placeholder="6자 이상" {...field} /></FormControl>
 										<FormMessage />
 									</FormItem>
 								)}
@@ -101,32 +88,20 @@ export default function ResetPasswordPage() {
 								render={({ field }) => (
 									<FormItem className="space-y-1.5">
 										<FormLabel className="text-label font-medium text-ink">새 비밀번호 확인</FormLabel>
-										<FormControl>
-											<Input 
-												type="password" 
-												 
-												{...field}  
-											/>
-										</FormControl>
+										<FormControl><Input type="password" {...field} /></FormControl>
 										<FormMessage />
 									</FormItem>
 								)}
 							/>
-							<Button 
-								type="submit" 
-								className="h-12 w-full text-body"
-							>
-								비밀번호 재설정
-							</Button>
+							<Button type="submit" className="h-12 w-full text-body">비밀번호 재설정</Button>
 						</form>
 					</Form>
 
-						{/* 로그인 링크 */}
-						<div className="mt-8 text-center">
-							<Link href="/login" className="text-label font-semibold text-orange-ink hover:text-orange-ink transition-colors duration-200">
-								로그인으로 돌아가기
-							</Link>
-						</div>
+					<div className="mt-8 text-center">
+						<Link href={loginHref} className="text-label font-semibold text-orange-ink hover:text-orange-ink transition-colors duration-200">
+							로그인으로 돌아가기
+						</Link>
+					</div>
 				</Sheet>
 			</main>
 		</div>

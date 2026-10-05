@@ -80,7 +80,7 @@ replywatch:
 - If nothing meaningful changed, record a concise no-change status and do not create noise.
 
 review:
-- Compare current GA4/GSC/Instagram/Supabase activation/CRM/Gmail evidence with recent growth actions.
+- Compare current GA4/GSC/Instagram/Supabase activation/CRM/Gmail evidence with recent growth actions. For partner acquisition, inspect the observable funnel partner_action -> signup_submitted -> partner_auth_complete -> recipe_create by creator/brand source before proposing more landing-page copy.
 - Judge owned Instagram, creator email, brand email, community distribution, organic search, referral/share, and in-product activation as EXPAND/KEEP/CHANGE/PAUSE/STOP.
 - Do not merely report weak results. Change targeting, message, content angle, or channel allocation when evidence supports it.
 - If a product friction is discovered, record a concrete product recommendation; do not modify product code in this unattended lane.

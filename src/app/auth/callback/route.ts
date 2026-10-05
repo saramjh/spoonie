@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import { generateUniqueUsername } from "@/features/profile/data/username-generator"
 import { generateUniquePublicId } from "@/features/profile/data/public-id-generator"
 import { safeNextPath } from "@/shared/lib/safe-next-path"
+import { parsePartnerEntrySource, withPartnerEntry } from "@/shared/lib/partner-entry"
 
 // 오픈 리다이렉트 방지: 같은 사이트 내부의 절대 경로만 허용한다.
 // "@evil.com", ".evil.com", "//evil.com", "/\\evil.com" 같은 값은 도메인 뒤에 붙으면 외부로 이동하므로 거부한다.
@@ -11,6 +12,8 @@ export async function GET(request: Request) {
 	const { searchParams, origin } = new URL(request.url)
 	const code = searchParams.get("code")
 	const next = safeNextPath(searchParams.get("next"))
+	const partnerSource = parsePartnerEntrySource(searchParams.get("entry"))
+	const destination = withPartnerEntry(next, partnerSource)
 
 	if (code) {
 		const supabase = await createSupabaseRouteHandlerClient()
@@ -100,7 +103,7 @@ export async function GET(request: Request) {
 			if (process.env.NODE_ENV === 'development') {
 				console.log('🔍 Callback redirect:', { origin, redirectOrigin, next })
 			}
-			return NextResponse.redirect(`${redirectOrigin}${next}`)
+			return NextResponse.redirect(`${redirectOrigin}${destination}`)
 		}
 	}
 

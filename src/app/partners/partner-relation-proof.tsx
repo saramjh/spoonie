@@ -42,7 +42,7 @@ export default function PartnerRelationProof({ segment }: { segment: Segment }) 
             src="/partners/relation-proof.png"
             alt="실제 Spoonie 화면에서 Recipeed가 참고한 Recipe와 작성자를 표시한 모습"
             width={366}
-            height={184}
+            height={57}
             sizes="(max-width: 448px) calc(100vw - 56px), 366px"
             className="h-auto w-full"
           />
@@ -52,17 +52,16 @@ export default function PartnerRelationProof({ segment }: { segment: Segment }) 
         </figcaption>
       </figure>
 
-      <p className="mt-4 border-t border-border pt-4 text-label text-ink">{text.note}</p>
-
       <PartnerActionLink
         href={"/signup?next=%2Frecipes%2Fnew&from=partner_" + segment}
         segment={segment}
         action="signup_to_recipe"
-        className={buttonVariants({ variant: "default", size: "lg", className: "mt-5 w-full" })}
+        className={buttonVariants({ variant: "default", size: "lg", className: "mt-4 w-full" })}
       >
         {text.cta}
       </PartnerActionLink>
       <p className="mt-2 text-center text-meta text-ink-soft">{text.flow}</p>
+      <p className="mt-4 border-t border-border pt-4 text-label text-ink">{text.note}</p>
     </section>
   )
 }
