@@ -134,10 +134,12 @@
   - com.spoonie.growth.creator: 월~금 10:30 KST. 공개 business contact를 쓰는 Creator outreach. 일일 총 outbound 상한과 중복/후속 규칙을 먼저 확인한다.
   - com.spoonie.growth.brand: 화·목 11:10 KST. rolling 10% 이내의 소형/D2C self-serve Brand 실험만 수행한다.
   - com.spoonie.growth.referral: 매일 13:45 KST. 현금·쿠폰·경품 없이 기존 owned/approved 표면의 자연스러운 Recipe 공유 기회를 실행한다.
+  - com.spoonie.growth.strategy: 매일 14:35 KST. 실행 lane과 병렬로 현재 성장 가설을 재검증한다. audience need → 무상 가치교환 → target → channel → message/creative → activation → second-Recipe retention 순서로 원점부터 점검하고, 근거가 바뀌면 PRM에 `strategy_review`를 남겨 다음 실행을 수정한다. 최신 evidence-backed `strategy_review`의 한시적 allocation/channel override는 기존 baseline보다 우선한다. 외부 게시/발송은 하지 않는다.
   - com.spoonie.growth.community: 매일 20:30 KST. 해당 커뮤니티 규칙이 명확히 허용하는 경우에만 완결성 있는 요리 콘텐츠를 먼저 제공하고 Recipe 원문 링크를 보조로 사용한다.
   - com.spoonie.growth.replywatch: 매시 25분. PRM/Gmail/partner inquiry의 답장·반송·전환을 확인하고 정상 온보딩 응답을 이어간다.
   - com.spoonie.growth.review: 매일 22:30 KST. 당일 evening distribution까지 포함해 PRM target/channel/action 이력과 GA4/GSC/Instagram/Supabase activation을 함께 보고 EXPAND/KEEP/CHANGE/PAUSE/STOP을 판정한다.
   - owned Instagram Recipe 공개/게시 자체는 기존 Netlify 11:30·18:30 KST 스케줄을 유지한다.
 - 모든 로컬 growth run은 시작 시 project_context_bootstrap으로 /Users/ojihun/DEV/spoonie 컨텍스트를 복원하고, 의미 있는 실행 뒤 project_context_checkpoint로 결과·결정·다음 행동을 .context에 남기는 것을 강제한다.
+- 실행 lane과 전략 lane을 분리하되 서로 단절시키지 않는다. `strategy`는 활동량 보고가 아니라 현재 가정을 반증하려고 시도하고, `evidence → diagnosis → hypothesis → zero-cost experiment → expected signal → decision rule`을 PRM에 남긴다. 반복 실패 시 채널 증량보다 대상의 원래 니즈와 Spoonie가 무료로 줄 수 있는 가치로 원점회귀한다.
 - 이 lane은 외부 growth 운영 전용이다. 제품 코드·공개 사이트 카피 수정, Git commit/push/deploy는 하지 않는다. 제품 마찰을 발견하면 정상 개발 세션에 구체적인 수정안으로 넘긴다.
 - 폐업한 PremaMon과 Spoonie 사이의 브랜드/사업 연속성을 만들지 않는다. 기존 Instagram 팔로워 풀이 주방·요리 관심사와 겹친다는 점만 warm distribution asset으로 활용한다.

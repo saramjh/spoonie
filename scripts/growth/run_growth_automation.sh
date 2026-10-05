@@ -26,7 +26,7 @@ fi
 trap 'rm -rf "$LOCKDIR"' EXIT INT TERM
 
 case "$MODE" in
-  acquisition|discovery|creator|community|referral|brand|review|replywatch|smoke) ;;
+  acquisition|discovery|creator|community|referral|brand|strategy|review|replywatch|smoke) ;;
   *) echo "unknown mode: $MODE" >&2; exit 2 ;;
 esac
 
@@ -55,7 +55,7 @@ GROUND TRUTH:
 - Do not promise creator matching, campaign brokerage, traffic, sales, or nonexistent network scale.
 - The defunct PremaMon business has NO brand/story/continuity relationship with Spoonie. Never mention or imply one publicly. Only the inherited Instagram account's cooking/kitchen-interest follower pool is a warm distribution asset.
 - Instagram auto-posting is supporting infrastructure, not the growth strategy. Owned Instagram primarily distributes individual Recipe utility and sends demand to Recipe detail pages; repeated generic Spoonie-product promotion is secondary.
-- Initial resource allocation is creator-first: roughly 60-70% creator supply acquisition, 20-30% Recipe demand distribution (search/owned social/community/referral), and at most 10% narrow brand experiments over a rolling set of growth actions.
+- Initial resource allocation baseline is creator-first: roughly 60-70% creator supply acquisition, 20-30% Recipe demand distribution (search/owned social/community/referral), and at most 10% narrow brand experiments over a rolling set of growth actions. This is a starting prior, not a permanent quota: the latest evidence-backed PRM strategy_review may temporarily override allocation/channel decisions for a bounded experiment.
 - Brand outbound is not co-equal with creator outbound. Prefer small/D2C food or kitchen brands already producing useful recipes/serving ideas; large-brand outreach is low priority until Spoonie demonstrates demand.
 - Second public Recipe is a stronger creator-adoption signal than signup or one migrated Recipe. Treat one Recipe as a trial and repeat creation as adoption.
 - Organic Recipe search is a core compounding demand channel because it works before network scale exists.
@@ -93,6 +93,16 @@ brand:
 - This is a narrow <=10% experiment. Only contact small/D2C food or kitchen brands already publishing recipes/serving ideas when rolling allocation and the daily total outbound ceiling allow.
 - Do not use a brand action merely to fill quota. No creator-matching, brokerage, reach, or sales promises.
 
+strategy:
+- This lane is time-insensitive and runs in parallel with execution. Its job is not to summarize activity; it must challenge the current growth thesis and improve the next execution loop.
+- Read the latest PRM strategy_review before reasoning. An evidence-backed bounded override there supersedes baseline channel allocation until its horizon expires or a later strategy_review changes it. If a strategy_review already exists today and no meaningful new evidence appeared after it, verify the decision and avoid creating a duplicate strategic mutation.
+- Inspect PRM target/channel/action history plus current GA4/GSC/Instagram/Supabase evidence. Re-evaluate, in order: (1) audience/need, (2) no-cost value exchange, (3) target selection, (4) channel role and allocation, (5) message/creative, (6) activation friction, (7) repeat-use/second-Recipe retention.
+- Explicitly ask whether current evidence falsifies any assumption. If a lane is weak, identify whether the problem is demand, offer, targeting, channel, creative, activation, or retention; do not default to more volume.
+- If evidence is sparse, preserve uncertainty rather than inventing a conclusion. Prefer the smallest next experiment that can discriminate between competing explanations.
+- When a strategy decision changes, record a concise PRM promotion_action with subject_kind=session, subject_id=spoonie-growth, action_type=strategy_review, status=completed, including evidence, changed hypothesis, channel decision/allocation delta, and the next executable zero-cost experiment.
+- Strategy mode must not send outreach, publish social/community content, modify product code/public copy, or spend money. It changes the operating hypothesis and queues executable next actions for the relevant lanes.
+- Use a recursive loop: evidence -> diagnosis -> hypothesis -> zero-cost experiment -> expected signal -> decision rule. If repeated iterations fail, return to the original user/creator/brand need and redesign the value proposition before relaunching.
+
 acquisition:
 - Run growth as parallel zero-cost lanes where independently actionable: Creator supply outreach, owned Recipe distribution, organic search/discovery, content-first permitted communities, and referral/share. Do not serialize unrelated lanes behind email or replywatch blockers. Brand remains a narrow optional lane.
 - Actively seek the best available growth actions with Creator supply and Recipe demand distribution first. Do not mechanically split attention across channels. Creator email, owned Recipe distribution, organic search entry points, content-first permitted communities, and referral/share outrank general brand outreach.
@@ -113,6 +123,7 @@ replywatch:
 
 review:
 - Compare PRM `spoonie-growth` channel/target/action history with GA4/GSC/Instagram/Supabase activation and Gmail evidence. For partner acquisition, inspect partner_action -> signup_submitted -> partner_auth_complete -> recipe_create, then first Recipe -> second Recipe. For demand, inspect Recipe-detail acquisition from search/social/community/referral before proposing more landing-page copy.
+- Consume the latest strategy_review decision when present and verify whether execution evidence supports or falsifies it. Review is the end-of-day decision gate; strategy is the intraday recursive hypothesis lane.
 - Judge the PRM channels owned Instagram, creator email, brand email, community distribution, organic search, referral/share, and in-product activation as EXPAND/KEEP/CHANGE/PAUSE/STOP. The current default is creator email/search/owned Instagram=EXPAND, community/referral=KEEP, brand email=CHANGE until evidence supersedes it.
 - Do not merely report weak results. Change targeting, message, content angle, or channel allocation when evidence supports it. If a lane remains weak after iteration, return to the original audience need/value proposition, redesign the no-cost offer, then relaunch a new variant; never solve weak fit by adding spend.
 - If a product friction is discovered, record a concrete product recommendation; do not modify product code in this unattended lane.
@@ -121,6 +132,7 @@ smoke:
 - Perform startup/context restoration only, verify the operating rules and connected local execution environment, take no external marketing action, make no code/product changes, then checkpoint the scheduler verification.
 
 GENERAL:
+- Before choosing a lane action, check the latest completed PRM strategy_review. Its evidence-backed temporary channel/allocation override takes precedence over the baseline mix and static session preset until superseded or expired.
 - Do not modify Spoonie product code or public-site copy in unattended growth runs. Surface product changes for a normal development session.
 - Do not commit/push/deploy from this unattended lane.
 - Keep reports concise and factual: actions actually taken, verified evidence, blockers, next smallest compounding action.

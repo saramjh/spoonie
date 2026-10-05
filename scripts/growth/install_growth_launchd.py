@@ -37,6 +37,10 @@ jobs = {
             {"Weekday": 4, "Hour": 11, "Minute": 10},
         ],
     ),
+    "com.spoonie.growth.strategy": (
+        ["/bin/zsh", RUNNER, "strategy"],
+        {"Hour": 14, "Minute": 35},
+    ),
     "com.spoonie.growth.community": (
         ["/bin/zsh", RUNNER, "community"],
         {"Hour": 20, "Minute": 30},
