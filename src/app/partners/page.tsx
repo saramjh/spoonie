@@ -45,44 +45,43 @@ export default function PartnersPage() {
           </p>
         </section>
 
-        <section className="border-t border-border bg-door p-3" aria-label="Spoonie 작동 방식">
-          <div className="overflow-hidden rounded-[3px] bg-paper shadow-sheet">
-            <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
-              <div>
-                <p className="text-micro text-ink-soft">Recipe</p>
-                <p className="mt-0.5 text-label font-semibold text-ink">재료와 단계를 실제 요리에 맞게</p>
-              </div>
-              <div className="rounded-lg border border-border px-3 py-2 text-label font-semibold tabular-nums text-ink">
-                − &nbsp;2인분&nbsp; +
-              </div>
+        <section className="border-t border-border bg-paper" aria-label="Spoonie 작동 방식">
+          <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+            <div>
+              <p className="text-micro text-ink-soft">Recipe</p>
+              <p className="mt-0.5 text-label font-semibold text-ink">재료와 단계를 실제 요리에 맞게</p>
             </div>
-
-            <div className="border-b border-border px-4 py-3">
-              <div className="flex items-center gap-2">
-                <p className="text-micro text-ink-soft">요리하기</p>
-                <div className="flex flex-1 gap-1" aria-hidden>
-                  <span className="h-1 flex-1 rounded-full bg-ink" />
-                  <span className="h-1 flex-1 rounded-full bg-border" />
-                  <span className="h-1 flex-1 rounded-full bg-border" />
-                </div>
-                <span className="text-meta tabular-nums text-ink-soft">1 / 3</span>
-              </div>
-              <p className="mt-2 text-read text-ink">지금 필요한 단계만 보며 끝까지 따라갑니다.</p>
-            </div>
-
-            <div className="px-4 py-3">
-              <p className="text-micro text-ink-soft">만든 기록 · 참고 관계</p>
-              <div className="mt-2 flex items-center gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className="text-meta text-ink-soft">이 Recipe로 만들었어요</p>
-                  <p className="truncate text-label font-semibold text-ink">만들어 본 기록</p>
-                </div>
-                <ArrowRight className="h-4 w-4 flex-shrink-0 text-ink-soft" aria-hidden />
-                <p className="text-label font-semibold text-ink">원본 Recipe</p>
-              </div>
+            <div className="rounded-lg border border-border px-3 py-2 text-label font-semibold tabular-nums text-ink">
+              − &nbsp;2인분&nbsp; +
             </div>
           </div>
-          <p className="px-1 pt-3 text-meta text-ink-soft">
+
+          <div className="border-b border-border px-4 py-3">
+            <div className="flex items-center gap-2">
+              <p className="text-micro text-ink-soft">요리하기</p>
+              <div className="flex flex-1 gap-1" aria-hidden>
+                <span className="h-1 flex-1 rounded-full bg-ink" />
+                <span className="h-1 flex-1 rounded-full bg-border" />
+                <span className="h-1 flex-1 rounded-full bg-border" />
+              </div>
+              <span className="text-meta tabular-nums text-ink-soft">1 / 3</span>
+            </div>
+            <p className="mt-2 text-read text-ink">지금 필요한 단계만 보며 끝까지 따라갑니다.</p>
+          </div>
+
+          <div className="border-b border-border px-4 py-3">
+            <p className="text-micro text-ink-soft">만든 기록 · 참고 관계</p>
+            <div className="mt-2 flex items-center gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-meta text-ink-soft">이 Recipe로 만들었어요</p>
+                <p className="truncate text-label font-semibold text-ink">만들어 본 기록</p>
+              </div>
+              <ArrowRight className="h-4 w-4 flex-shrink-0 text-ink-soft" aria-hidden />
+              <p className="text-label font-semibold text-ink">원본 Recipe</p>
+            </div>
+          </div>
+
+          <p className="px-4 py-3 text-meta text-ink-soft">
             기능 동작 예시 · 실제 관계는 사용자가 만들거나 참고했을 때만 생깁니다.
           </p>
         </section>
