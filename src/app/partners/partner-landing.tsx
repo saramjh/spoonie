@@ -37,7 +37,7 @@ const copy: Record<
     directCta: "가입하고 내 Recipe 올려보기",
     setupTitle: "옮겨 적는 게 먼저 걸린다면",
     setupDescription:
-      "가입 후 기존 Instagram 게시물·릴스 1~5개 주소를 보내세요. 확인되는 정보만 내 계정의 비공개 Recipe 초안으로 정리하고, 내가 검수한 뒤 공개합니다.",
+      "가입 후 기존 Instagram 게시물·릴스 1~5개 주소를 보내세요. 접수된 자료는 매시간 한 번씩 일괄 확인·처리하며, 확인되는 정보만 내 계정의 비공개 Recipe 초안으로 정리합니다. 내가 검수한 뒤 공개합니다.",
     setupCta: "가입하고 첫 Recipe 도움받기",
     sourcePath: "/partners/creators",
     entry: "partner_creator",
@@ -50,7 +50,7 @@ const copy: Record<
     directCta: "가입하고 활용 Recipe 올려보기",
     setupTitle: "기존 활용 자료부터 옮기고 싶다면",
     setupDescription:
-      "가입 후 자사몰·SNS의 활용 자료 1~5개 주소를 보내세요. 따라 만들 수 있다고 확인되는 정보만 브랜드 계정의 비공개 Recipe 초안으로 정리합니다.",
+      "가입 후 자사몰·SNS의 활용 자료 1~5개 주소를 보내세요. 접수된 자료는 매시간 한 번씩 일괄 확인·처리하며, 따라 만들 수 있다고 확인되는 정보만 브랜드 계정의 비공개 Recipe 초안으로 정리합니다.",
     setupCta: "가입하고 첫 Recipe 도움받기",
     sourcePath: "/partners/brands",
     entry: "partner_brand",
