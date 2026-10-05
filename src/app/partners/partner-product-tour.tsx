@@ -98,64 +98,70 @@ export default function PartnerProductTour({ segment }: { segment: Segment }) {
   return (
     <section className="border-t border-border" aria-labelledby={segment + "-tour-title"}>
       <div className="px-4 pb-3 pt-5">
-        <p className="text-micro font-medium text-ink-soft">직접 눌러보는 기능 동작 예시</p>
-        <h2 id={segment + "-tour-title"} className="mt-1 text-heading text-ink">
+        <h2 id={segment + "-tour-title"} className="text-heading text-ink">
           Spoonie에서는 이렇게 이어집니다
         </h2>
         <p className="mt-2 text-meta text-ink-soft">{text.intro}</p>
       </div>
 
-      <div
-        className="grid grid-cols-4 border-y border-border bg-paper px-2"
-        role="tablist"
-        aria-label="Spoonie 기능 흐름"
-      >
-        {stages.map((item) => (
-          <button
-            key={item.key}
-            type="button"
-            role="tab"
-            aria-selected={stage === item.key}
-            onClick={() => setStage(item.key)}
-            className={cn(
-              "relative min-h-11 px-1 text-meta font-medium text-ink-soft",
-              stage === item.key && "text-ink",
-            )}
-          >
-            {item.label}
-            {stage === item.key && (
-              <span className="absolute inset-x-2 bottom-0 h-0.5 bg-ink" aria-hidden />
-            )}
-          </button>
-        ))}
+      <div className="mx-4 overflow-hidden rounded-[3px] border border-border bg-paper-tint">
+        <div className="flex min-h-11 items-center justify-between gap-3 border-b border-border px-3">
+          <p className="text-label font-semibold text-ink">기능 시연</p>
+          <p className="text-meta text-ink-soft">직접 눌러보세요</p>
+        </div>
+
+        <div
+          className="grid grid-cols-4 border-b border-border bg-paper px-2"
+          role="tablist"
+          aria-label="Spoonie 기능 흐름"
+        >
+          {stages.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              role="tab"
+              aria-selected={stage === item.key}
+              onClick={() => setStage(item.key)}
+              className={cn(
+                "relative min-h-11 px-1 text-meta font-medium text-ink-soft",
+                stage === item.key && "text-ink",
+              )}
+            >
+              {item.label}
+              {stage === item.key && (
+                <span className="absolute inset-x-2 bottom-0 h-0.5 bg-ink" aria-hidden />
+              )}
+            </button>
+          ))}
+        </div>
+
+        <div className="bg-paper">
+          {stage === "recipe" && (
+            <RecipeDemo
+              segment={segment}
+              title={text.demoTitle}
+              meta={text.demoMeta}
+              image={text.image}
+              servings={servings}
+              ingredients={ingredients}
+              onDecrease={() => setServings((value) => Math.max(1, value - 1))}
+              onIncrease={() => setServings((value) => Math.min(6, value + 1))}
+            />
+          )}
+          {stage === "cook" && (
+            <CookDemo
+              steps={text.steps}
+              cookStep={cookStep}
+              onPrevious={() => setCookStep((value) => Math.max(0, value - 1))}
+              onNext={() => setCookStep((value) => Math.min(text.steps.length - 1, value + 1))}
+            />
+          )}
+          {stage === "relation" && <RelationDemo segment={segment} sourceTitle={text.sourceTitle} />}
+          {stage === "profile" && <ProfileDemo segment={segment} />}
+        </div>
       </div>
 
-      <div className="border-b border-border bg-paper">
-        {stage === "recipe" && (
-          <RecipeDemo
-            segment={segment}
-            title={text.demoTitle}
-            meta={text.demoMeta}
-            image={text.image}
-            servings={servings}
-            ingredients={ingredients}
-            onDecrease={() => setServings((value) => Math.max(1, value - 1))}
-            onIncrease={() => setServings((value) => Math.min(6, value + 1))}
-          />
-        )}
-        {stage === "cook" && (
-          <CookDemo
-            steps={text.steps}
-            cookStep={cookStep}
-            onPrevious={() => setCookStep((value) => Math.max(0, value - 1))}
-            onNext={() => setCookStep((value) => Math.min(text.steps.length - 1, value + 1))}
-          />
-        )}
-        {stage === "relation" && <RelationDemo segment={segment} sourceTitle={text.sourceTitle} />}
-        {stage === "profile" && <ProfileDemo segment={segment} />}
-      </div>
-
-      <p className="px-4 pb-5 pt-1 text-body font-medium text-ink">{text.consequence[stage]}</p>
+      <p className="px-4 pb-5 pt-3 text-body font-medium text-ink">{text.consequence[stage]}</p>
     </section>
   )
 }
