@@ -6,7 +6,7 @@
 revoke select on public.profiles from anon, authenticated;
 
 grant select (
-  id, username, display_name, avatar_url, bio, profile_message,
+  id, username, display_name, avatar_url, entity_type, bio, profile_message,
   created_at, updated_at, public_id, is_profile_public,
   show_follower_count, show_join_date, username_changed_count
 ) on public.profiles to anon, authenticated;

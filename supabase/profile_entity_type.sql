@@ -18,3 +18,7 @@ begin
   end if;
 end
 $$;
+
+-- profiles는 개인정보 보호를 위해 공개 SELECT가 컬럼 단위다.
+-- 새 공개 작성자 타입도 email/role을 노출하지 않고 이 컬럼만 읽게 한다.
+grant select (entity_type) on public.profiles to anon, authenticated;
