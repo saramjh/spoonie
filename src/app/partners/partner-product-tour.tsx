@@ -130,31 +130,29 @@ export default function PartnerProductTour({ segment }: { segment: Segment }) {
         ))}
       </div>
 
-      <div className="bg-door p-3">
-        <div className="overflow-hidden rounded-[3px] bg-paper shadow-sheet">
-          {stage === "recipe" && (
-            <RecipeDemo
-              segment={segment}
-              title={text.demoTitle}
-              meta={text.demoMeta}
-              image={text.image}
-              servings={servings}
-              ingredients={ingredients}
-              onDecrease={() => setServings((value) => Math.max(1, value - 1))}
-              onIncrease={() => setServings((value) => Math.min(6, value + 1))}
-            />
-          )}
-          {stage === "cook" && (
-            <CookDemo
-              steps={text.steps}
-              cookStep={cookStep}
-              onPrevious={() => setCookStep((value) => Math.max(0, value - 1))}
-              onNext={() => setCookStep((value) => Math.min(text.steps.length - 1, value + 1))}
-            />
-          )}
-          {stage === "relation" && <RelationDemo segment={segment} sourceTitle={text.sourceTitle} />}
-          {stage === "profile" && <ProfileDemo segment={segment} />}
-        </div>
+      <div className="border-b border-border bg-paper">
+        {stage === "recipe" && (
+          <RecipeDemo
+            segment={segment}
+            title={text.demoTitle}
+            meta={text.demoMeta}
+            image={text.image}
+            servings={servings}
+            ingredients={ingredients}
+            onDecrease={() => setServings((value) => Math.max(1, value - 1))}
+            onIncrease={() => setServings((value) => Math.min(6, value + 1))}
+          />
+        )}
+        {stage === "cook" && (
+          <CookDemo
+            steps={text.steps}
+            cookStep={cookStep}
+            onPrevious={() => setCookStep((value) => Math.max(0, value - 1))}
+            onNext={() => setCookStep((value) => Math.min(text.steps.length - 1, value + 1))}
+          />
+        )}
+        {stage === "relation" && <RelationDemo segment={segment} sourceTitle={text.sourceTitle} />}
+        {stage === "profile" && <ProfileDemo segment={segment} />}
       </div>
 
       <p className="px-4 pb-5 pt-1 text-body font-medium text-ink">{text.consequence[stage]}</p>
