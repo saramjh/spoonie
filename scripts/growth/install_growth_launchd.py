@@ -3,6 +3,13 @@ from pathlib import Path
 import plistlib
 import subprocess
 
+import os
+
+if os.environ.get("SPOONIE_ALLOW_LOCAL_CODEX_GROWTH") != "1":
+    raise SystemExit(
+        "Spoonie local Codex growth automation is disabled; explicit owner authorization required."
+    )
+
 HOME = Path.home()
 ROOT = Path("/Users/ojihun/DEV/spoonie")
 RUNNER = str(ROOT / "scripts/growth/run_growth_automation.sh")

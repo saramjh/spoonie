@@ -4,6 +4,15 @@ set -euo pipefail
 export HOME="/Users/ojihun"
 export PATH="/Users/ojihun/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
+
+# Owner policy: local Codex usage for Spoonie growth is disabled by default.
+# Foreground promotion must be performed by the active web ChatGPT session through
+# the cokacremote plugin. Re-enable only with the owner's explicit authorization.
+if [ "${SPOONIE_ALLOW_LOCAL_CODEX_GROWTH:-0}" != "1" ]; then
+  echo "Spoonie local Codex growth automation is disabled; explicit owner authorization required." >&2
+  exit 78
+fi
+
 ROOT="/Users/ojihun/DEV/spoonie"
 STATE_ROOT="/Users/ojihun/.spoonie-growth-automation"
 LOGDIR="$STATE_ROOT/logs"
