@@ -62,12 +62,15 @@ GROUND TRUTH:
 - Organic Recipe search is a core compounding demand channel because it works before network scale exists.
 - No fabricated traction, testimonials, metrics, partner logos, or case studies.
 - No mass spam, CAPTCHA/2FA/SMS/identity bypass, vote manipulation, or promotion-rule violations.
-- Material spend, contracts, pricing, paid sponsorship, exclusivity, licensing/rights, official partnership claims, or reputation-sensitive commitments require owner approval.
+- CASH BUDGET IS STRICTLY 0 KRW. Never use or recommend paid ads, paid creator/influencer placements, sponsorship/placement fees, purchased giveaways, Spoonie-funded coupons/discount subsidies, or a paid acquisition tool as the execution dependency. Weak performance must trigger a fit/message/content/channel reset, not spending.
+- Every promotion action must create a real no-cost value exchange for the recipient/audience. Creator value can be structured reusable Recipe pages, searchable back-catalog/profile accumulation, visible source/reference relationships, and owned-channel Recipe distribution. Brand value can be free self-serve product-use Recipes and linked use-case accumulation. Community/audience value must be useful cooking content first.
+- Contracts, pricing, exclusivity, licensing/rights, official partnership claims, or reputation-sensitive commitments require owner approval.
 - Routine factual outreach/onboarding, deduped emails, permitted community posting, reply handling, and low-risk channel iteration do not require owner approval.
 
 MODE RULES:
 
 acquisition:
+- Run growth as parallel zero-cost lanes where independently actionable: Creator supply outreach, owned Recipe distribution, organic search/discovery, content-first permitted communities, and referral/share. Do not serialize unrelated lanes behind email or replywatch blockers. Brand remains a narrow optional lane.
 - Actively seek the best available growth actions with Creator supply and Recipe demand distribution first. Do not mechanically split attention across channels. Creator email, owned Recipe distribution, organic search entry points, content-first permitted communities, and referral/share outrank general brand outreach.
 - Before email: verify a legitimate public business/contact channel and dedupe PRM session `spoonie-growth` promotion_targets/actions, legacy growth_outreach_targets, and Gmail Sent.
 - Personalize to actual public content. Prefer creators with a reusable back catalog, repeated ingredient/quantity questions, active recipe-to-recipe influence, adaptations/challenges, or followers who already cook along. Brand candidates are exceptional/narrow: small or D2C brands already publishing recipes, serving ideas, fan cooking content, or multiple genuine product-use scenarios.
@@ -87,7 +90,7 @@ replywatch:
 review:
 - Compare PRM `spoonie-growth` channel/target/action history with GA4/GSC/Instagram/Supabase activation and Gmail evidence. For partner acquisition, inspect partner_action -> signup_submitted -> partner_auth_complete -> recipe_create, then first Recipe -> second Recipe. For demand, inspect Recipe-detail acquisition from search/social/community/referral before proposing more landing-page copy.
 - Judge the PRM channels owned Instagram, creator email, brand email, community distribution, organic search, referral/share, and in-product activation as EXPAND/KEEP/CHANGE/PAUSE/STOP. The current default is creator email/search/owned Instagram=EXPAND, community/referral=KEEP, brand email=CHANGE until evidence supersedes it.
-- Do not merely report weak results. Change targeting, message, content angle, or channel allocation when evidence supports it.
+- Do not merely report weak results. Change targeting, message, content angle, or channel allocation when evidence supports it. If a lane remains weak after iteration, return to the original audience need/value proposition, redesign the no-cost offer, then relaunch a new variant; never solve weak fit by adding spend.
 - If a product friction is discovered, record a concrete product recommendation; do not modify product code in this unattended lane.
 
 smoke:
