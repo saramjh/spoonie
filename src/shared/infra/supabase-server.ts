@@ -46,6 +46,10 @@ async function createSupabaseServerClient(isRouteHandler = false) {
 	)
 }
 
+export async function createSupabaseServerComponentClient() {
+	return createSupabaseServerClient(false)
+}
+
 // Route Handler 전용 함수
 export async function createSupabaseRouteHandlerClient() {
 	return createSupabaseServerClient(true)

@@ -1,20 +1,19 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useMemo, useState, type FormEvent } from "react"
-import { Check, LogIn, Send } from "lucide-react"
-import type { User } from "@supabase/supabase-js"
+import { useState, type FormEvent } from "react"
+import { Check } from "lucide-react"
 
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import type { OnboardingStatusRequest } from "@/features/onboarding/contracts"
-import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
-import { authEntryHref, type PartnerEntrySource } from "@/shared/lib/partner-entry"
+import type { PartnerEntrySource } from "@/shared/lib/partner-entry"
 
 type ActorType = "creator" | "brand"
 
 type Props = {
   actorType: ActorType
+  initialRequests: OnboardingStatusRequest[]
 }
 
 type SubmitState = "idle" | "sending" | "success" | "error"
@@ -58,18 +57,14 @@ type GtagWindow = Window & {
   ) => void
 }
 
-export default function PartnerOnboardingForm({ actorType }: Props) {
+export default function PartnerOnboardingForm({ actorType, initialRequests }: Props) {
   const text = copy[actorType]
-  const supabase = useMemo(() => createSupabaseBrowserClient(), [])
-  const [user, setUser] = useState<User | null>(null)
-  const [authReady, setAuthReady] = useState(false)
   const [state, setState] = useState<SubmitState>("idle")
   const [error, setError] = useState("")
   const [rightsConfirmed, setRightsConfirmed] = useState(false)
-  const [requests, setRequests] = useState<OnboardingStatusRequest[]>([])
+  const [requests, setRequests] = useState<OnboardingStatusRequest[]>(initialRequests)
 
-  async function loadStatus(currentUser: User | null) {
-    if (!currentUser) return
+  async function loadStatus() {
     const response = await fetch("/api/partner-onboarding", {
       credentials: "same-origin",
       cache: "no-store",
@@ -83,43 +78,9 @@ export default function PartnerOnboardingForm({ actorType }: Props) {
     )
   }
 
-  useEffect(() => {
-    let active = true
-
-    supabase.auth
-      .getUser()
-      .then(async ({ data }) => {
-        if (!active) return
-        setUser(data.user)
-        if (data.user) {
-          const response = await fetch("/api/partner-onboarding", {
-            credentials: "same-origin",
-            cache: "no-store",
-          })
-          if (active && response.ok) {
-            const result = (await response.json().catch(() => null)) as
-              | { requests?: OnboardingStatusRequest[] }
-              | null
-            setRequests(
-              (result?.requests || []).filter((request) => request.actorType === actorType),
-            )
-          }
-        }
-        if (active) setAuthReady(true)
-      })
-      .catch((statusError) => {
-        console.error("Partner onboarding status load failed:", statusError)
-        if (active) setAuthReady(true)
-      })
-
-    return () => {
-      active = false
-    }
-  }, [actorType, supabase])
-
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (state === "sending" || !user) return
+    if (state === "sending") return
 
     const form = event.currentTarget
     const data = new FormData(form)
@@ -173,7 +134,7 @@ export default function PartnerOnboardingForm({ actorType }: Props) {
       form.reset()
       setRightsConfirmed(false)
       setState("success")
-      await loadStatus(user)
+      await loadStatus()
     } catch (submitError) {
       setError(
         submitError instanceof Error
@@ -184,52 +145,16 @@ export default function PartnerOnboardingForm({ actorType }: Props) {
     }
   }
 
-  if (!authReady) {
-    return <div className="mt-5 h-24 animate-pulse rounded-[3px] bg-paper-tint" aria-hidden />
-  }
-
-  if (!user) {
-    const next = text.sourcePath + "?setup=1#setup"
-    return (
-      <div className="mt-5 border-y border-border py-5">
-        <p className="text-label text-ink">
-          {actorType === "creator"
-            ? "Spoonie 계정을 만들고 시작하세요."
-            : "브랜드 담당 계정을 만들고 시작하세요."}
-        </p>
-        <p className="mt-2 text-meta text-ink-soft">
-          처음이라면 계정부터 만들어 주세요. 가입이 끝나면 이 페이지로 자동 복귀하고,
-          그다음 기존 콘텐츠 주소를 제출하면 됩니다.
-        </p>
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          <Link
-            href={authEntryHref("/signup", next, text.entry)}
-            className={buttonVariants({ variant: "default", size: "lg" })}
-          >
-            계정 만들고 계속하기
-          </Link>
-          <Link
-            href={authEntryHref("/login", next, text.entry)}
-            className={buttonVariants({ variant: "outline", size: "lg" })}
-          >
-            <LogIn className="h-4 w-4" aria-hidden />
-            로그인
-          </Link>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="mt-5">
       {state === "success" ? (
         <div className="border-y border-border py-5" role="status">
           <div className="flex items-center gap-2 text-label text-ink">
             <Check className="h-5 w-5 text-orange-ink" aria-hidden />
-            초기 셋업 요청이 이 계정에 연결됐습니다.
+            자료를 받았습니다.
           </div>
           <p className="mt-2 text-meta text-ink-soft">
-            확인되는 정보만 먼저 채웁니다. 빠진 분량·재료·순서는 직접 확인한 뒤 공개할 수 있습니다.
+            확인되는 정보만 Recipe 초안에 채웁니다. 빠진 내용은 직접 확인한 뒤 공개할 수 있습니다.
           </p>
           <Button type="button" variant="outline" className="mt-4" onClick={() => setState("idle")}>
             자료 더 보내기
@@ -291,12 +216,11 @@ export default function PartnerOnboardingForm({ actorType }: Props) {
           )}
 
           <Button type="submit" size="lg" className="w-full" disabled={state === "sending"}>
-            {state === "sending" ? "접수·정리 중..." : "초기 셋업 자료 보내기"}
-            {state !== "sending" && <Send className="h-4 w-4" aria-hidden />}
+            {state === "sending" ? "보내는 중..." : "Recipe 초안 만들기"}
           </Button>
 
           <p className="text-center text-meta text-ink-soft">
-            요청은 현재 로그인한 계정에 연결됩니다.{" "}
+            초안은 현재 로그인한 계정에만 연결됩니다.{" "}
             <a href="/legal/privacy" className="underline underline-offset-2">
               개인정보처리방침
             </a>
