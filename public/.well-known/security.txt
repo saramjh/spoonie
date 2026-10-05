@@ -1,0 +1,4 @@
+Contact: mailto:hello@spoonie.kr
+Expires: 2027-09-30T00:00:00Z
+Preferred-Languages: ko, en
+Canonical: https://spoonie.kr/.well-known/security.txt
