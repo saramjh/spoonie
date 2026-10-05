@@ -14,24 +14,39 @@ LA.mkdir(parents=True, exist_ok=True)
 jobs = {
     "com.spoonie.growth.discovery": (
         ["/bin/zsh", RUNNER, "discovery"],
-        {"Hour": 8, "Minute": 45},
+        [
+            {"Hour": 8, "Minute": 45},
+            {"Hour": 14, "Minute": 15},
+            {"Hour": 21, "Minute": 45},
+        ],
     ),
     "com.spoonie.growth.creator": (
         ["/bin/zsh", RUNNER, "creator"],
         [
-            {"Weekday": 1, "Hour": 10, "Minute": 30},
-            {"Weekday": 2, "Hour": 10, "Minute": 30},
-            {"Weekday": 3, "Hour": 10, "Minute": 30},
-            {"Weekday": 4, "Hour": 10, "Minute": 30},
-            {"Weekday": 5, "Hour": 10, "Minute": 30},
+            *[
+                {"Weekday": weekday, "Hour": hour, "Minute": minute}
+                for weekday in range(1, 6)
+                for hour, minute in ((10, 30), (16, 0))
+            ],
         ],
     ),
     "com.spoonie.growth.media": (
         ["/bin/zsh", RUNNER, "media"],
         [
-            {"Weekday": 2, "Hour": 9, "Minute": 40},
-            {"Weekday": 4, "Hour": 9, "Minute": 40},
+            {"Weekday": weekday, "Hour": 9, "Minute": 40}
+            for weekday in range(1, 6)
         ],
+    ),
+    "com.spoonie.growth.network": (
+        ["/bin/zsh", RUNNER, "network"],
+        [
+            {"Hour": 11, "Minute": 0},
+            {"Hour": 19, "Minute": 0},
+        ],
+    ),
+    "com.spoonie.growth.launch": (
+        ["/bin/zsh", RUNNER, "launch"],
+        {"Hour": 13, "Minute": 20},
     ),
     "com.spoonie.growth.referral": (
         ["/bin/zsh", RUNNER, "referral"],
@@ -50,7 +65,10 @@ jobs = {
     ),
     "com.spoonie.growth.community": (
         ["/bin/zsh", RUNNER, "community"],
-        {"Hour": 20, "Minute": 30},
+        [
+            {"Hour": 12, "Minute": 30},
+            {"Hour": 20, "Minute": 30},
+        ],
     ),
     "com.spoonie.growth.review": (
         ["/bin/zsh", RUNNER, "review"],
@@ -61,6 +79,7 @@ jobs = {
         {"Minute": 25},
     ),
 }
+
 
 retired_labels = [
     "com.spoonie.growth.acquisition",

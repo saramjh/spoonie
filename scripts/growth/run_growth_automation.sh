@@ -38,7 +38,7 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 case "$MODE" in
-  acquisition|discovery|creator|community|referral|brand|media|strategy|review|replywatch|smoke) ;;
+  acquisition|discovery|creator|community|referral|brand|media|network|launch|strategy|review|replywatch|smoke) ;;
   *) echo "unknown mode: $MODE" >&2; exit 2 ;;
 esac
 
@@ -113,18 +113,22 @@ GROUND TRUTH:
 MODE RULES:
 
 discovery:
-- Continuously expand the verified zero-cost target/channel universe defined by the PRM session policy: Creators, small food/kitchen Brands, permitted communities, earned media, search/referral opportunities, and relevant public @spoonie.kitchen-adjacent cooking/kitchen accounts.
-- Research/queue only. Do not send or publish in discovery mode; write verified fit/evidence to PRM so execution lanes do not repeat research.
+- The immediate ignition objective is >=20 genuinely active cooks. Breadth is the bottleneck: build a verified pool large enough to create 200-400 independent qualified touchpoints before treating the current audience as saturated.
+- Continuously expand across at least four distinct families per meaningful run: Instagram cooking relationships, YouTube creators, food bloggers, Korean cooking communities, Reddit food communities, maker/product launch surfaces, media/newsletters, food/kitchen Brands, search/referral opportunities.
+- Current 7-day verified-pool goals live in the PRM session config. Prefer 20+ genuinely new verified candidates/surfaces per discovery run while those goals are unmet, but stop rather than padding with weak/unverified leads.
+- Research/queue only. Do not send or publish in discovery mode. Record both accepted and clearly rejected surfaces so execution lanes do not repeat research or rediscover prohibited communities.
 
 creator:
-- This is the time-sensitive Creator outreach lane. Use only legitimate public business/contact channels and only when the daily outbound ceiling and follow-up rules allow.
-- If today's outbound ceiling is already reached or email execution is unavailable, do not force a send. Convert the run into verified prospect research/queueing for the next eligible window.
-- First touch must lead with one concrete Spoonie product benefit for that creator and use /partners/creators as the single destination. The default action is sign up and publish a Recipe directly. Mention account-owned existing-content-to-private-draft setup only as an optional secondary way to reduce first-post friction. Never make setup the headline offer, never imply Spoonie official owns or posts their Recipe, and never imply Spoonie hosts video.
+- This lane covers high-fit cooking Creators across legitimate public business/contact routes, not email alone: public business email, YouTube creator business contact, food-blogger public contact, and explicitly permitted Instagram collaboration/contact surfaces.
+- Email remains under the separate hard email ceiling. Do not impose that email ceiling on unrelated non-email channels. Never bulk-DM or spam comments.
+- If a specific contact route is unavailable, continue verified prospect research/queueing in another Creator subchannel rather than stopping the entire Creator lane.
+- First touch must lead with one concrete Spoonie product benefit and use /partners/creators as the primary destination. Default action is sign up and publish a Recipe directly. Setup help is secondary only.
 
 community:
-- This is the time-sensitive community distribution lane. Post at most 1-2 times per run, only where self-promotion/link rules clearly allow it.
-- Lead with a complete useful cooking contribution; Spoonie is the source/full Recipe link, not the subject of the post.
-- If login, CAPTCHA, moderation, or rules are unclear, do not bypass; record the blocker/candidate and move on.
+- This lane spans multiple independent community surfaces: Korean cooking/home-cooking/one-person-household forums plus rule-compatible Reddit food communities. Do not treat one subreddit or one Korean forum as the community strategy.
+- Contribute to at most 2 distinct communities per KST day, only where current rules clearly permit the exact format. A rejected/blocked community does not consume the entire lane: record it and move to another verified surface.
+- Lead with a complete useful cooking contribution; Spoonie is the optional source/full Recipe link, not the subject of the post.
+- If login, CAPTCHA, moderation, or rules are unclear, do not bypass.
 
 referral:
 - This lane is zero-cost and time-insensitive. Use only existing owned/approved surfaces or natural Recipe sharing opportunities. No bounty, coupon, prize, fake engagement, vote manipulation, or unsolicited bulk DM.
@@ -137,8 +141,20 @@ brand:
 - Existing-material-to-private-draft setup is an optional activation aid after the Brand account exists, not the Brand value proposition. Do not use a brand action merely to fill quota. No creator-matching, brokerage, reach, sales, or video-hosting promises.
 
 media:
-- Follow ch-spoonie-media-pitch policy plus the latest strategy_review. Verify editorial fit, public pitch legitimacy and dedupe; share the global outbound-email ceiling and send at most one new pitch per eligible run.
+- Follow ch-spoonie-media-pitch policy plus the latest strategy_review. Verify editorial fit, public pitch legitimacy and dedupe; share the outbound-email ceiling and send at most one new earned-media pitch per KST calendar day.
 - If no eligible send is available, continue verified media research/queueing. Never force a generic blast; record provider IDs, replies and coverage in PRM.
+
+network:
+- Use @spoonie.kitchen as a warm cooking/kitchen-interest distribution and relationship asset only. Never mention or imply PremaMon history, predecessor status, closure, migration or endorsement.
+- Primary objective is the first 20 active cooks: test one clear participation path at a time (try a Recipe, publish a Recipe, or leave a Recipeed/cook record) while normal Recipe utility content remains always-on.
+- Discover relevant public cooking/kitchen accounts and genuine relationship opportunities. No bulk DM, follow/unfollow automation, fake engagement, or repetitive generic product promotion.
+- For Korean-audience outbound owned-social actions, outside 08:00-22:00 KST research/queue only; do not publish merely because the scheduler ran.
+- Existing scheduled Recipe posts are separate from this lane. A network run may prepare/research additional opportunities even when no new owned-social post should be published.
+
+launch:
+- Treat Disquiet, GeekNews Show, Product Hunt and other verified maker/product communities as independent one-time launch surfaces, not recurring ad channels.
+- Verify current platform rules and product readiness before posting. Use factual maker/product language, not generic marketing copy; never solicit votes.
+- Once Spoonie has been legitimately introduced on a platform for the current product state, switch that platform to feedback/measurement and discover another launch surface rather than reposting the same launch.
 
 strategy:
 - This lane is time-insensitive and runs in parallel with execution. Its job is not to summarize activity; it must challenge the current growth thesis and improve the next execution loop.
@@ -157,7 +173,7 @@ acquisition:
 - Personalize to actual public content. Prefer creators with a reusable back catalog, repeated ingredient/quantity questions, active recipe-to-recipe influence, adaptations/challenges, or followers who already cook along. Brand candidates are exceptional/narrow: small or D2C brands already publishing recipes, serving ideas, fan cooking content, or multiple genuine product-use scenarios.
 - Keep cold outreach simple and product-first: lead with one concrete Spoonie use for that target, then one network benefit. The relevant partner landing is the primary destination and visually demonstrates the product. Existing-content setup may be mentioned only as a secondary friction-reduction option, not as the headline offer. Do not dump the full product thesis into the first email.
 - First-touch email should normally contain one primary destination only: the relevant partner landing (/partners/creators or /partners/brands), tagged with utm_source=outreach, utm_medium=email, and the segment campaign. Do not also include a raw signup URL unless the recipient has already shown intent or explicitly asks how to start.
-- Default daily ceiling: 3 new high-fit outbound targets total, up to 1-2 clearly permitted community actions, and at most one owned-social adjustment/action. These are ceilings, not quotas. Do not spend a daily brand slot merely to satisfy a mix; brand actions should remain <=10% over a rolling window unless evidence changes the channel decision.
+- There is NO cross-channel global action ceiling. Independent zero-cost channels may all execute on the same KST day when each channel's own safety rules allow. Per-channel limits remain: new outbound email <=3/day total; earned-media pitch <=1/day; community contributions <=2 distinct communities/day; no bulk Instagram DM/comment automation; maker/product launch <=1 introduction per platform/product state; owned Recipe posting follows its existing schedule. Discovery/research/queue growth is not capped by those external-action limits.
 - One focused follow-up after about 7 days for nonresponders, then stop.
 - Record every verified external action/source/thread/post ID in media-agent-prm session `spoonie-growth` using promotion actions; external_ref must be the provider-side message/post ID when available. Product activation events stay in Spoonie GA4/Supabase.
 
@@ -172,7 +188,7 @@ replywatch:
 review:
 - Compare PRM `spoonie-growth` channel/target/action history with GA4/GSC/Instagram/Supabase activation and Gmail evidence. For partner acquisition, inspect partner_action -> signup_submitted -> partner_auth_complete -> recipe_create, then first Recipe -> second Recipe. For demand, inspect Recipe-detail acquisition from search/social/community/referral before proposing more landing-page copy.
 - Consume the latest strategy_review decision when present and verify whether execution evidence supports or falsifies it. Review is the end-of-day decision gate; strategy is the intraday recursive hypothesis lane.
-- Judge the PRM channels owned Instagram, creator email, brand email, earned media, community distribution, organic search, referral/share, and in-product activation as EXPAND/KEEP/CHANGE/PAUSE/STOP. The current default is creator email/search/owned Instagram=EXPAND, community/referral=KEEP, brand email=CHANGE until evidence supersedes it.
+- Judge the full PRM portfolio, including founding-cooks activation, Instagram network, YouTube creators, food bloggers, Korean communities, Reddit food communities, maker launches, newsletters/media, owned Instagram, creator email, brand email, organic search and referral/share as EXPAND/KEEP/CHANGE/PAUSE/STOP. Do not collapse these back into a few generic lanes.
 - Do not merely report weak results. Change targeting, message, content angle, or channel allocation when evidence supports it. If a lane remains weak after iteration, return to the original audience need/value proposition, redesign the no-cost offer, then relaunch a new variant; never solve weak fit by adding spend.
 - If a product friction is discovered, record a concrete product recommendation; do not modify product code in this unattended lane.
 

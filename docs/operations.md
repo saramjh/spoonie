@@ -132,18 +132,23 @@
 - 설치 스크립트: python3 scripts/growth/install_growth_launchd.py
 - 실행기: scripts/growth/run_growth_automation.sh
 - 로컬 상태/로그: ~/.spoonie-growth-automation/
-- 예약은 한 개의 acquisition 잡이 아니라 lane별 launchd로 분리해 조사·Creator·Media·Brand·Referral·Strategy·Community·Replywatch·Review의 책임을 독립적으로 유지한다. 다만 실제 로컬 모델 worker는 전역 lock으로 한 번에 하나만 실행한다. PRM/Gmail 상태 확인과 외부 행동 사이의 race, 로컬 모델 동시 실행 충돌, 일일 발송 상한 초과를 막기 위한 직렬화이며 각 lane의 의사결정·스케줄 자체는 분리 유지한다.
-  - com.spoonie.growth.discovery: 매일 08:45 KST. 시간 비의존 조사/발굴. Creator·Brand·earned media·허용 커뮤니티·Recipe 검색/Referral 기회와 현재 @spoonie.kitchen 주변의 공개 요리·주방 계정을 검증해 PRM 후보 큐에 축적한다. 이 lane은 발송·게시하지 않는다.
-  - com.spoonie.growth.creator: 월~금 10:30 KST. 공개 business contact를 쓰는 Creator lane. account-owned 초기 셋업은 production-live이며, 실제 발송 여부는 최신 PRM `strategy_review`, 중복/후속 규칙과 일일 총 outbound 상한을 따른다.
-  - com.spoonie.growth.media: 화·목 09:40 KST. startup·food/foodtech·creator-economy·consumer/lifestyle 편집 대상 중 최근 주제 적합성과 공개 피칭 채널이 검증된 경우만 earned-media 피칭한다. Creator/Brand와 같은 일일 outbound 상한을 공유하며 실행당 신규 피치는 최대 1건이다. 발송 여지가 없으면 조사·큐잉만 수행한다.
-  - com.spoonie.growth.brand: 화·목 11:10 KST. 기존 제품 활용 Recipe·요리 미디어 자산이 있는 소형/D2C Brand를 조사한다. account-owned 초기 셋업은 production-live지만 proactive Brand outbound는 현재 전략상 PAUSE/narrow이며, 최신 strategy override가 바뀌기 전에는 조사·큐잉을 우선한다.
-  - com.spoonie.growth.referral: 매일 13:45 KST. 현금·쿠폰·경품 없이 기존 owned/approved 표면의 자연스러운 Recipe 공유 기회를 실행한다.
-  - com.spoonie.growth.strategy: 매일 14:35 KST. 실행 lane과 병렬로 현재 성장 가설을 재검증한다. audience need → 무상 가치교환 → target → channel → message/creative → activation → second-Recipe retention 순서로 원점부터 점검하고, 근거가 바뀌면 PRM에 `strategy_review`를 남겨 다음 실행을 수정한다. 최신 evidence-backed `strategy_review`의 한시적 allocation/channel override는 기존 baseline보다 우선한다. 외부 게시/발송은 하지 않는다.
-  - com.spoonie.growth.community: 매일 20:30 KST. 해당 커뮤니티 규칙이 명확히 허용하는 경우에만 완결성 있는 요리 콘텐츠를 먼저 제공하고 Recipe 원문 링크를 보조로 사용한다.
-  - com.spoonie.growth.replywatch: 매시 25분. PRM/Gmail/partner inquiry와 `content_onboarding_requests` / `content_onboarding_sources`의 신규 제출·상태 변화를 확인하고 정상 온보딩 응답을 이어간다. account-owned 초기 셋업 제출은 일반 문의보다 강한 intent 신호로 취급한다.
-  - com.spoonie.growth.review: 매일 22:30 KST. 당일 evening distribution까지 포함해 PRM target/channel/action 이력과 GA4/GSC/Instagram/Supabase activation을 함께 보고 EXPAND/KEEP/CHANGE/PAUSE/STOP을 판정한다.
+- 초기 ignition 목표는 **외부 active cook 20명**이다. 여기서 active는 owner가 아닌 사용자가 가입 후 Recipe 공개, Recipeed/cook log 공개, 또는 두 번째 Recipe 관련 행동처럼 실제 cooking-network 행동을 한 경우다. 아직 실측 전환율이 없으므로 qualified touch → meaningful activation 5~10%는 계획용 범위일 뿐 성과 주장에 사용하지 않는다. 이 범위를 쓰면 20명 ignition에는 대략 200~400개의 서로 다른 고적합 접점이 필요하므로, 현재 몇 개의 Creator/커뮤니티/미디어 후보로 충분하다고 보지 않는다.
+- Growth 운영의 기본 원칙은 **반복 빈도보다 breadth**다. 같은 대상·같은 채널에 반복 노출을 늘리지 말고 Instagram cooking graph, YouTube Creator, food blogger, 한국 요리 커뮤니티, Reddit food community, maker/product launch, media/newsletter, search/referral 등 서로 다른 표면과 대상을 계속 늘린다. PRM spoonie-growth의 7일 verified-pool 목표가 충족되기 전에는 discovery가 매 실행마다 최소 4개 channel family를 확인하고 가능한 경우 20개 이상의 신규 검증 후보/표면을 추가한다. 약한 후보로 숫자를 채우지 않는다.
+- **전 채널 공통 일일 행동 상한은 없다.** 이메일이 3건 찼다고 community, launch, Instagram network, search/referral까지 멈추지 않는다. 대신 채널별 안전 상한을 적용한다: 신규 outbound email 합계 <=3/day, earned-media pitch <=1/day, community contribution <=2 distinct communities/day, bulk Instagram DM/comment automation 금지, maker/product launch는 platform/product-state당 1회, owned Recipe 게시 자체는 기존 스케줄을 따른다. 조사·발굴·큐 확장은 이 외부 행동 상한에 묶지 않는다.
+- 예약은 lane별 launchd로 분리해 Discovery·Creator·Media·Instagram Network·Maker Launch·Brand·Referral·Strategy·Community·Replywatch·Review의 책임을 독립적으로 유지한다. 실제 Codex 모델 worker는 PRM/Gmail write race와 중복 외부 행동 방지를 위해 전역 lock으로 한 번에 하나만 실행하므로, 동시에 trigger된 lane은 queue처럼 대기한다. 이것은 **모델 실행 직렬화**이지 채널 포트폴리오나 당일 확산을 하나로 제한하는 정책이 아니다.
+  - com.spoonie.growth.discovery: 매일 08:45·14:15·21:45 KST. 20-active ignition에 필요한 후보 풀을 계속 확장한다. 발송·게시하지 않고 PRM에 검증된 후보와 reject evidence를 축적한다.
+  - com.spoonie.growth.creator: 월~금 10:30·16:00 KST. email뿐 아니라 YouTube business contact, food-blogger public contact, 명시적으로 허용된 creator contact surface를 함께 다룬다. email은 별도 3/day 상한을 따르지만 다른 Creator subchannel 탐색까지 멈추지 않는다.
+  - com.spoonie.growth.media: 월~금 09:40 KST. startup·food/foodtech·creator-economy·consumer/lifestyle media/newsletter를 계속 발굴하고, fit과 public pitch route가 검증된 경우에만 earned pitch를 KST 하루 최대 1건 보낸다.
+  - com.spoonie.growth.network: 매일 11:00·19:00 KST. @spoonie.kitchen의 cooking/kitchen 관심 audience와 공개 adjacent graph를 founding-cook/creator discovery 및 참여 유도에 활용한다. PremaMon 서사는 절대 사용하지 않고 bulk DM/follow-unfollow/fake engagement를 하지 않는다.
+  - com.spoonie.growth.launch: 매일 13:20 KST. Disquiet·GeekNews Show·Product Hunt 등 maker/product surface의 현재 규칙과 launch 상태를 점검하고, platform/product-state당 한 번의 정상 소개만 수행한다. 이미 소개한 표면은 feedback/measurement로 전환한다.
+  - com.spoonie.growth.brand: 화·목 11:10 KST. 실제 product-use Recipe 자산이 있는 소형/D2C food/kitchen Brand를 조사한다. proactive outbound는 현재 PAUSE/narrow이며 다른 lane을 막지 않는다.
+  - com.spoonie.growth.referral: 매일 13:45 KST. 현금·쿠폰·경품 없이 자연스러운 Recipe share/cook-along/referral surface를 찾고 실행한다.
+  - com.spoonie.growth.strategy: 매일 14:35 KST. 활동량 보고가 아니라 acquisition breadth, target fit, activation과 second-action 신호를 반증·재배분한다.
+  - com.spoonie.growth.community: 매일 12:30·20:30 KST. 한국 요리/집밥/1인가구 커뮤니티와 rule-compatible Reddit food community를 별개 표면으로 다룬다. 막힌 한 커뮤니티 때문에 전체 lane을 중단하지 않는다.
+  - com.spoonie.growth.replywatch: 매시 25분. PRM/Gmail/partner inquiry와 onboarding 신규 제출·상태 변화를 확인한다.
+  - com.spoonie.growth.review: 매일 22:30 KST. 15개 PRM channel portfolio 전체와 activation evidence를 함께 보고 EXPAND/KEEP/CHANGE/PAUSE/STOP을 판정한다.
   - owned Instagram Recipe 공개/게시 자체는 기존 Netlify 11:30·18:30 KST 스케줄을 유지한다.
-- 모든 로컬 growth run은 worker lock 획득 후 PRM에서 KST 당일 실제 email sent 건수를 다시 계산해 기본 일일 신규 발송 상한 3건의 남은 수량을 실행 prompt에 하드 입력한다. 집계가 실패하거나 남은 수량이 0이면 새 outbound email은 발송하지 않는다. 이어서 Spoonie 로컬 컨텍스트와 PRM `spoonie-growth` 상태·`session_spec.json`을 복원해 실행 정책을 읽고, 의미 있는 실행 뒤 project_context_checkpoint로 결과·결정·다음 행동을 .context에 남기는 것을 강제한다.
+- 모든 로컬 growth run은 worker lock 획득 후 KST 당일 실제 email sent 수를 재계산해 **이메일에만** 신규 발송 상한 3건을 적용한다. 집계 실패 또는 잔여 0이면 새 email은 보내지 않지만 독립적인 community/network/launch/referral/discovery는 각자의 규칙대로 계속할 수 있다. 의미 있는 실행 뒤에는 PRM action과 project context checkpoint에 검증 결과를 남긴다.
 - 실행 lane과 전략 lane을 분리하되 서로 단절시키지 않는다. `strategy`는 활동량 보고가 아니라 현재 가정을 반증하려고 시도하고, `evidence → diagnosis → hypothesis → zero-cost experiment → expected signal → decision rule`을 PRM에 남긴다. 반복 실패 시 채널 증량보다 대상의 원래 니즈와 Spoonie가 무료로 줄 수 있는 가치로 원점회귀한다.
 - 이 lane은 외부 growth 운영 전용이다. 제품 코드·공개 사이트 카피 수정, Git commit/push/deploy는 하지 않는다. 제품 마찰을 발견하면 정상 개발 세션에 구체적인 수정안으로 넘긴다.
 - 폐업한 PremaMon과 Spoonie 사이의 브랜드/사업 연속성·전신·리브랜딩·기원 서사를 공개적으로 만들거나 언급하지 않는다. 현재 @spoonie.kitchen의 요리·주방 관심 audience와 공개 관계망만 warm distribution/discovery asset으로 활용한다.
