@@ -17,7 +17,7 @@ import ImageUploader from "@/components/common/ImageUploader"
 import InstructionImageUploader from "@/features/recipe/components/InstructionImageUploader"
 import CitedRecipeSearch from "@/features/recipe/components/CitedRecipeSearch"
 import DraggableIngredientList, { DraggableIngredient } from "@/features/recipe/components/DraggableIngredientList"
-import { OptimizedImage } from "@/shared/infra/image-utils"
+import { OptimizedImage, optimizeImages } from "@/shared/infra/image-utils"
 import { useToast } from "@/hooks/use-toast"
 
 
@@ -33,6 +33,7 @@ import { removeDroppedImages } from "@/shared/infra/item-images"
 import { attachInstructionImages, buildRecipeItemPayload, editDefaults, forkDefaults, reorderIngredients } from "@/features/recipe/domain/recipe-form"
 import { fetchCitedRecipes, saveRecipeRows, uploadInstructionImages } from "@/features/recipe/data/recipe-repository"
 import type { RecipeFormProps } from "@/features/recipe/contracts"
+import { onboardingRecipeDefaults } from "@/features/onboarding/domain/review"
 
 // Zod 스키마 업데이트
 const recipeSchema = z.object({
@@ -76,7 +77,22 @@ const recipeSchema = z.object({
 
 export type RecipeFormValues = z.infer<typeof recipeSchema>
 
-export default function RecipeForm({ initialData, onNavigateBack, forkFrom = null, entrySource = null }: RecipeFormProps) {
+const onboardingFieldLabels: Record<string, string> = {
+	title: "제목",
+	image: "완성 사진",
+	servings: "분량",
+	cooking_time: "조리시간",
+	ingredients: "재료·분량",
+	instructions: "만드는 법",
+}
+
+export default function RecipeForm({
+	initialData,
+	onNavigateBack,
+	forkFrom = null,
+	entrySource = null,
+	onboardingDraft = null,
+}: RecipeFormProps) {
 	const router = useRouter()
 	const supabase = createSupabaseBrowserClient()
 	const { toast } = useToast()
@@ -186,6 +202,36 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 		setSelectedCitedRecipes([{ ...forkFrom, item_id: forkFrom.id } as Item])
 	}, [isEditMode, forkFrom, form])
 
+	useEffect(() => {
+		if (isEditMode || !onboardingDraft) return
+		form.reset(onboardingRecipeDefaults(onboardingDraft) as unknown as RecipeFormValues)
+
+		if (!onboardingDraft.sourceImageEndpoint) return
+		let cancelled = false
+
+		const loadSourceImage = async () => {
+			try {
+				const response = await fetch(onboardingDraft.sourceImageEndpoint!, {
+					credentials: "same-origin",
+					cache: "no-store",
+				})
+				if (!response.ok) return
+				const blob = await response.blob()
+				const extension = blob.type === "image/png" ? "png" : blob.type === "image/webp" ? "webp" : "jpg"
+				const file = new File([blob], "onboarding-source." + extension, { type: blob.type })
+				const images = await optimizeImages([file])
+				if (!cancelled) setMainImages(images)
+			} catch (error) {
+				console.error("Onboarding source image preload failed:", error)
+			}
+		}
+
+		loadSourceImage()
+		return () => {
+			cancelled = true
+		}
+	}, [form, isEditMode, onboardingDraft])
+
 	const { fields: ingredients, append: appendIngredient, remove: removeIngredient } = useFieldArray({ control: form.control, name: "ingredients" })
 	const { fields: instructions, append: appendInstruction, remove: removeInstruction } = useFieldArray({ control: form.control, name: "instructions" })
 
@@ -290,6 +336,7 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 				thumbnailIndex, // 썸네일 인덱스 저장
 				isEditMode,
 				forkFromId: forkFrom?.id,
+				onboardingDraftId: onboardingDraft?.id,
 			})
 
 			const { itemId, ingredientsToInsert } = await saveRecipeRows(supabase, {
@@ -447,10 +494,37 @@ export default function RecipeForm({ initialData, onNavigateBack, forkFrom = nul
 	// 쓰는 순서 = 읽는 순서: 사진 → 제목 → 분량·시간 → 설명 → 재료 → 만드는 법 → 참고 → 내 정리 (DESIGN.md Interface Grammar)
 	return (
 		<div className="min-h-screen pb-28">
-			<PageHeader leading="cancel" title={isEditMode ? "레시피 수정" : forkFrom ? "내 버전으로 고쳐 쓰기" : "레시피 쓰기"} />
+			<PageHeader
+				leading="cancel"
+				title={isEditMode ? "레시피 수정" : onboardingDraft ? "Recipe 초안 검수" : forkFrom ? "내 버전으로 고쳐 쓰기" : "레시피 쓰기"}
+			/>
 
 			{/* @ts-expect-error - form 핸들러 타입 변환 처리 */}
 			<form id="recipe-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 px-3 pt-3">
+				{!isEditMode && onboardingDraft && (
+					<Sheet>
+						<div className="px-4 py-4">
+							<p className="text-label font-medium text-ink">기존 콘텐츠에서 확인된 내용</p>
+							<p className="mt-1 text-meta text-ink-soft">
+								원본에서 확인되는 값만 먼저 채웠습니다. 비어 있거나 0인 항목은 저장 전에 직접 확인해 주세요.
+							</p>
+							{onboardingDraft.unresolvedFields.length > 0 && (
+								<p className="mt-2 text-meta text-ink-soft">
+									확인 필요: {onboardingDraft.unresolvedFields.map((field) => onboardingFieldLabels[field] || field).join(", ")}
+								</p>
+							)}
+							<a
+								href={onboardingDraft.sourceUrl}
+								target="_blank"
+								rel="noreferrer"
+								className="mt-3 inline-flex min-h-11 items-center text-label font-medium text-ink underline underline-offset-4"
+							>
+								원본 확인
+							</a>
+						</div>
+					</Sheet>
+				)}
+
 				{/* fork: 무엇을 바탕으로 쓰는지 먼저 보여 준다. 저장하면 원본의 "이어진 레시피"에 고친 버전으로 실린다 */}
 				{!isEditMode && forkFrom && (
 					<Sheet>

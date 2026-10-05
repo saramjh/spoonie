@@ -20,6 +20,7 @@ declare
   v_cooking_time integer := nullif(p_item->>'cooking_time_minutes', '')::integer;
   v_thumbnail_index integer := coalesce(nullif(p_item->>'thumbnail_index', '')::integer, 0);
   v_creation_origin text := nullif(p_item->>'creation_origin', '');
+  v_onboarding_draft_id uuid := nullif(p_item->>'onboarding_draft_id', '')::uuid;
 begin
   -- 일반 사용자는 auth.uid()만 사용한다. service_role 기반 운영 importer만 p_item.user_id를 허용한다.
   if v_jwt_role = 'service_role' then
@@ -116,6 +117,15 @@ begin
 
   if not found then
     raise exception 'at least one valid instruction is required' using errcode = '22023';
+  end if;
+
+  if v_onboarding_draft_id is not null then
+    perform public.link_content_onboarding_draft(
+      v_onboarding_draft_id,
+      v_item_id,
+      v_user_id,
+      coalesce((p_item->>'is_public')::boolean, true)
+    );
   end if;
 
   return v_item_id;

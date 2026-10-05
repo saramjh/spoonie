@@ -26,7 +26,7 @@ export default function PostSchema({ item, baseUrl }: { item: ItemDetail; baseUr
     ...(sharedContent.length === 1 && { sharedContent: sharedContent[0] }),
     ...(sharedContent.length > 1 && { sharedContent }),
     author: {
-      "@type": "Person",
+      "@type": item.author?.entity_type === "organization" ? "Organization" : "Person",
       name: authorName,
       ...(item.user_public_id && { url: `${baseUrl}/profile/${item.user_public_id}` }),
     },
@@ -37,7 +37,7 @@ export default function PostSchema({ item, baseUrl }: { item: ItemDetail; baseUr
         text: comment.content,
         datePublished: comment.created_at,
         author: {
-          "@type": "Person",
+          "@type": comment.user?.entity_type === "organization" ? "Organization" : "Person",
           name: comment.user?.display_name || comment.user?.username || "사용자",
           ...(comment.user?.public_id && { url: `${baseUrl}/profile/${comment.user.public_id}` }),
         },

@@ -4,7 +4,7 @@
 -- 여러 번 실행해도 안전하다.
 
 alter table public.items add column if not exists creation_origin text
-  check (creation_origin in ('recipe_detail', 'cook_mode', 'fork', 'manual'));
+  check (creation_origin in ('recipe_detail', 'cook_mode', 'fork', 'manual', 'partner_onboarding'));
 
 create table if not exists public.content_relations (
   from_item_id uuid not null references public.items(id) on delete cascade,

@@ -29,6 +29,21 @@ describe("partner entry context", () => {
 		expect(withPartnerEntry("//evil.example", "partner_brand")).toBe("/?entry=partner_brand")
 	})
 
+	it("계정 우선 초기 셋업 경로도 인증 전후에 그대로 보존한다", () => {
+		const creatorNext = "/partners/creators?setup=1#setup"
+		const brandNext = "/partners/brands?setup=1#setup"
+
+		expect(authEntryHref("/signup", creatorNext, "partner_creator")).toBe(
+			"/signup?next=%2Fpartners%2Fcreators%3Fsetup%3D1%23setup&from=partner_creator",
+		)
+		expect(withPartnerEntry(creatorNext, "partner_creator")).toBe(
+			"/partners/creators?setup=1&entry=partner_creator#setup",
+		)
+		expect(authCallbackUrl("https://spoonie.kr", brandNext, "partner_brand")).toBe(
+			"https://spoonie.kr/auth/callback?next=%2Fpartners%2Fbrands%3Fsetup%3D1%23setup&entry=partner_brand",
+		)
+	})
+
 	it("이메일·OAuth callback에도 next와 source를 함께 보존한다", () => {
 		expect(authCallbackUrl("https://spoonie.kr", "/recipes/new", "partner_creator")).toBe(
 			"https://spoonie.kr/auth/callback?next=%2Frecipes%2Fnew&entry=partner_creator",

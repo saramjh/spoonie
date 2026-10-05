@@ -7,6 +7,7 @@ export interface Profile {
 	username: string // Required in database
 	display_name: string | null
 	avatar_url: string | null
+	entity_type?: "person" | "organization"
 	email?: string | null // Kept for fallback
 	user_email?: string | null // Kept for fallback
 	user_public_id?: string | null // Kept for fallback

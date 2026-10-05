@@ -86,7 +86,7 @@ export function creationOriginField(
 // items 표에 쓸 값
 export function buildRecipeItemPayload(
 	values: RecipeDraft,
-	ctx: { userId: string; imageUrls: string[]; thumbnailIndex: number; isEditMode: boolean; forkFromId: string | undefined }
+	ctx: { userId: string; imageUrls: string[]; thumbnailIndex: number; isEditMode: boolean; forkFromId: string | undefined; onboardingDraftId?: string | null }
 ) {
 	return {
 		user_id: ctx.userId,
@@ -101,6 +101,7 @@ export function buildRecipeItemPayload(
 		tags: normalizeTags(values.tags),
 		cited_recipe_ids: values.cited_recipe_ids,
 		thumbnail_index: ctx.thumbnailIndex,
+		...(ctx.onboardingDraftId ? { onboarding_draft_id: ctx.onboardingDraftId } : {}),
 		...creationOriginField(ctx.isEditMode, ctx.forkFromId, values.cited_recipe_ids),
 	}
 }

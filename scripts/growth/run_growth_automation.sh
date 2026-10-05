@@ -9,6 +9,11 @@ STATE_ROOT="/Users/ojihun/.spoonie-growth-automation"
 LOGDIR="$STATE_ROOT/logs"
 MODE="${1:-discovery}"
 LOCKDIR="/tmp/spoonie-growth-automation-${MODE}.lock"
+WORKER_LOCKDIR="/tmp/spoonie-growth-automation-worker.lock"
+WORKER_LOCK_HELD=0
+WORKER_WAIT_SECONDS="${SPOONIE_GROWTH_WORKER_WAIT_SECONDS:-1200}"
+PRM_DB="/Users/ojihun/DEV/media-agent-prm/data/prm.db"
+DAILY_EMAIL_LIMIT=3
 NOW_KST="$(TZ=Asia/Seoul date '+%Y-%m-%dT%H:%M:%S%z')"
 STAMP="$(TZ=Asia/Seoul date '+%Y%m%d-%H%M%S')"
 
@@ -23,18 +28,56 @@ if ! mkdir "$LOCKDIR" 2>/dev/null; then
     exit 0
   fi
 fi
-trap 'rm -rf "$LOCKDIR"' EXIT INT TERM
+
+cleanup() {
+  rm -rf "$LOCKDIR"
+  if [ "$WORKER_LOCK_HELD" -eq 1 ]; then
+    rm -rf "$WORKER_LOCKDIR"
+  fi
+}
+trap cleanup EXIT INT TERM
 
 case "$MODE" in
   acquisition|discovery|creator|community|referral|brand|strategy|review|replywatch|smoke) ;;
   *) echo "unknown mode: $MODE" >&2; exit 2 ;;
 esac
 
+worker_wait_started="$(date +%s)"
+while ! mkdir "$WORKER_LOCKDIR" 2>/dev/null; do
+  worker_lock_age=$(( $(date +%s) - $(stat -f %m "$WORKER_LOCKDIR" 2>/dev/null || echo 0) ))
+  if [ -d "$WORKER_LOCKDIR" ] && [ "$worker_lock_age" -gt 3600 ]; then
+    rm -rf "$WORKER_LOCKDIR"
+    continue
+  fi
+
+  if [ $(( $(date +%s) - worker_wait_started )) -ge "$WORKER_WAIT_SECONDS" ]; then
+    printf '%s mode=%s skipped=worker_lock_timeout wait_seconds=%s\n' "$NOW_KST" "$MODE" "$WORKER_WAIT_SECONDS" >> "$LOGDIR/scheduler.log"
+    exit 0
+  fi
+  sleep 5
+done
+WORKER_LOCK_HELD=1
+
+EMAILS_SENT_TODAY="unknown"
+EMAILS_REMAINING=0
+if EMAILS_SENT_TODAY="$(sqlite3 "$PRM_DB" "select count(*) from promotion_actions where session_id='spoonie-growth' and action_type='email' and status='sent' and date(datetime(executed_at), '+9 hours') = date('now', '+9 hours');" 2>/dev/null)"; then
+  case "$EMAILS_SENT_TODAY" in
+    ''|*[!0-9]*) EMAILS_SENT_TODAY="unknown" ;;
+    *)
+      EMAILS_REMAINING=$(( DAILY_EMAIL_LIMIT - EMAILS_SENT_TODAY ))
+      if [ "$EMAILS_REMAINING" -lt 0 ]; then
+        EMAILS_REMAINING=0
+      fi
+      ;;
+  esac
+fi
+
 PROMPT="$LOGDIR/${STAMP}-${MODE}-prompt.txt"
 OUT="$LOGDIR/${STAMP}-${MODE}-final.md"
 LOG="$LOGDIR/${STAMP}-${MODE}.log"
 
 printf "You are Spoonie's unattended local growth operator running MODE=%s at %s.\n\n" "$MODE" "$NOW_KST" > "$PROMPT"
+printf "RUN-TIME SAFETY SNAPSHOT:\n- PRM emails already sent on the current KST calendar day: %s\n- Hard daily new outbound email ceiling: %s\n- Maximum additional new outbound emails allowed in this run: %s\n- Treat the remaining count as a hard maximum. If it is zero or the count is unknown, send no new outbound email. Re-read PRM immediately before any external mutation.\n\n" "$EMAILS_SENT_TODAY" "$DAILY_EMAIL_LIMIT" "$EMAILS_REMAINING" >> "$PROMPT"
 cat >> "$PROMPT" <<'EOF_PROMPT'
 MANDATORY STARTUP:
 1. Call cokacremote project_context_bootstrap for /Users/ojihun/DEV/spoonie before making any decision. If it fails specifically because context metadata exceeds the output budget, do not retry-loop or block the run: read .context/HANDOFF.md, .context/SESSION_CHECKPOINT.md, .context/DECISIONS.md, and .context/STATE.json directly, then continue from current repo/runtime evidence.
@@ -61,7 +104,8 @@ GROUND TRUTH:
 - Organic Recipe search is a core compounding demand channel because it works before network scale exists.
 - No fabricated traction, testimonials, metrics, partner logos, or case studies.
 - No mass spam, CAPTCHA/2FA/SMS/identity bypass, vote manipulation, or promotion-rule violations.
-- CASH BUDGET IS STRICTLY 0 KRW. Never use or recommend paid ads, paid creator/influencer placements, sponsorship/placement fees, purchased giveaways, Spoonie-funded coupons/discount subsidies, or a paid acquisition tool as the execution dependency. Weak performance must trigger a fit/message/content/channel reset, not spending.
+- CASH BUDGET IS STRICTLY 0 KRW UNTIL SPOONIE IS MONETIZED. Do not adopt paid services, trials that require payment later, or freemium infrastructure that becomes an execution dependency. Prefer existing/local resources and currently-free first-party infrastructure already in use. Never use or recommend paid ads, paid creator/influencer placements, sponsorship/placement fees, purchased giveaways, Spoonie-funded coupons/discount subsidies, or paid acquisition/email tooling as the execution dependency. Weak performance must trigger a fit/message/content/channel reset, not spending.
+- BUSINESS EMAIL: hello@spoonie.kr and partners@spoonie.kr are inbound Cloudflare Email Routing addresses. Use partners@spoonie.kr as the public partner contact in outreach copy and signatures. Do not spoof From: @spoonie.kr and do not add a paid/freemium SMTP provider. Until a truly zero-cost authenticated sender exists, outbound mail may originate from the already connected Gmail account; record the real provider message ID and monitor Spoonie/Partners plus normal Gmail replies.
 - Every promotion action must create a real no-cost value exchange for the recipient/audience. Creator value can be structured reusable Recipe pages, searchable back-catalog/profile accumulation, visible source/reference relationships, and owned-channel Recipe distribution. Brand value can be free self-serve product-use Recipes and linked use-case accumulation. Community/audience value must be useful cooking content first.
 - Contracts, pricing, exclusivity, licensing/rights, official partnership claims, or reputation-sensitive commitments require owner approval.
 - Routine factual outreach/onboarding, deduped emails, permitted community posting, reply handling, and low-risk channel iteration do not require owner approval.
@@ -115,7 +159,8 @@ acquisition:
 - Record every verified external action/source/thread/post ID in media-agent-prm session `spoonie-growth` using promotion actions; external_ref must be the provider-side message/post ID when available. Product activation events stay in Spoonie GA4/Supabase.
 
 replywatch:
-- Check PRM `spoonie-growth` promotion targets/actions first, then creator_migration_requests, legacy growth_outreach_targets for migrated-history dedupe, partner_inquiries, Gmail replies, and bounces. Treat a new migration request as high-intent inbound: verify the submitted URL list and consent state, move it toward draft preparation/review, and never auto-publish.
+- Check PRM `spoonie-growth` promotion targets/actions first, then content_onboarding_requests/content_onboarding_sources, legacy growth_outreach_targets for migrated-history dedupe, partner_inquiries, Gmail replies, Spoonie/Partners-labeled inbound, and bounces. Treat a new account-owned onboarding request as high-intent inbound: verify the submitted source list and consent state, move it toward private draft preparation/review, preserve request.user_id as the draft owner, and never auto-publish.
+- For a newly submitted account-owned onboarding request, use existing local/browser/Supabase resources only to improve the existing content_onboarding_draft from explicit source evidence. Never create or publish an item from replywatch. Preserve request.user_id, update recipe_data/evidence/unresolved_fields, and move source/draft/request to ready/private_draft/needs_review only when every required Recipe fact is evidenced. If any required fact is missing, keep needs_input and surface the review link so the partner can complete it. Final image optimization and Recipe persistence belong only to the normal authenticated RecipeForm -> save_recipe_atomic path.
 - Move positive replies toward signup -> first Recipe -> second Recipe/repeat use.
 - Reply directly to simple factual onboarding questions when safe.
 - Record decline/later/bounce states and stop inappropriate follow-up.

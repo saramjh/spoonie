@@ -3,7 +3,7 @@ import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 
 /** 누구나 읽을 수 있는 프로필 컬럼. email, role은 포함하지 않는다. */
 export const PUBLIC_PROFILE_COLUMNS =
-	"id, username, display_name, avatar_url, bio, profile_message, created_at, updated_at, public_id, is_profile_public, show_follower_count, show_join_date, username_changed_count"
+	"id, username, display_name, avatar_url, entity_type, bio, profile_message, created_at, updated_at, public_id, is_profile_public, show_follower_count, show_join_date, username_changed_count"
 
 /**
  * 프로필 화면 데이터 조회. 서버 컴포넌트(공개 데이터 초기 렌더링)와
@@ -15,6 +15,7 @@ export interface UserProfile {
 	username: string
 	display_name: string | null
 	avatar_url: string | null
+	entity_type?: "person" | "organization"
 	profile_message: string | null // bio → profile_message로 변경
 	created_at?: string
 	public_id?: string | null

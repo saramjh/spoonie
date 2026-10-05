@@ -22,7 +22,7 @@
 src/
 ├─ app/                    라우트 (경로 그대로). 화면 조립만
 ├─ features/
-│  ├─ recipe/  post/  discovery/  social/  profile/  feed/  notification/
+│  ├─ recipe/  post/  discovery/  social/  profile/  feed/  notification/  onboarding/
 │  │  ├─ contracts.ts      입력·출력 타입 (실행 코드 없음)
 │  │  ├─ domain/           순수 함수: React·Supabase·브라우저를 모른다. *.test.ts로 동작을 기록
 │  │  ├─ data/             DB·저장소 읽기·쓰기 (Supabase 호출은 여기만)
@@ -40,7 +40,7 @@ src/
 - 판단 로직(폼 기본값, 저장 값 만들기, 상태 계산)은 `domain/`에 두고 테스트를 붙인다: `npm test`(vitest).
 - 새 폴더를 만들면 `tailwind.config.ts`의 `content`에 들어가는지 확인한다 (`src/features`, `src/shared`는 들어 있다).
 - 브라우저 Supabase 클라이언트는 `shared/infra/supabase-client.ts` 하나다. @supabase/ssr이 브라우저에서 쿠키 저장·PKCE·토큰 갱신을 늘 자기 값으로 정하고, 클라이언트 하나를 모든 화면이 함께 쓴다.
-- 레시피 저장은 `save_recipe_atomic` RPC 하나로 `items`·`ingredients`·`instructions`를 같은 DB 트랜잭션에서 처리한다. 일반 사용자 호출은 SECURITY INVOKER로 기존 RLS를 그대로 따르고, service-role 운영 importer도 같은 함수의 제한된 ingest 경로를 쓴다. 자식 행 저장이 실패하면 본체 변경도 rollback된다.
+- 레시피 저장은 `save_recipe_atomic` RPC 하나로 `items`·`ingredients`·`instructions`를 같은 DB 트랜잭션에서 처리한다. 일반 사용자 호출은 SECURITY INVOKER로 기존 RLS를 그대로 따르고, service-role 운영 importer도 같은 함수의 제한된 ingest 경로를 쓴다. 파트너 초기 셋업도 별도 저장기를 만들지 않고 검수 화면에서 같은 RPC를 호출하며, 선택적 onboarding draft ID가 있으면 Recipe와 draft 연결까지 같은 트랜잭션에 포함한다. 자식 행이나 draft 연결이 실패하면 본체 변경도 rollback된다.
 - 새 이미지 게시 전 원본과 400/800px responsive variant를 모두 만든다. variant는 최대 3번 재시도하고 끝내 실패하면 해당 원본/부분 variant를 지운 뒤 게시를 실패시켜 불완전 이미지 자산을 남기지 않는다.
 - 홈 피드 캐러셀은 초기 대역폭을 위해 첫 사진만 마운트하지만, 상세 페이지는 모든 사진을 초기 HTML에 두고 lazy-load한다. sitemap은 적격 콘텐츠의 실제 이미지 URL(Recipe 단계 사진 포함)을 image sitemap으로 함께 제공한다.
 - 공개 검색 인벤토리는 `features/discovery/data/public-assets.ts`가 500개 단위로 끝까지 읽는다. 원본 Recipeed index, Topic 기여, Profile index 판정은 `features/discovery/domain/search-exposure.ts`에서 분리한다.
@@ -54,6 +54,7 @@ src/
   - 관계 그래프·행동 기록: `growth_graph.sql`
   - 탐색 순위·레시피 활동: `discovery_and_behavior.sql`
   - 알림·푸시: `notifications_triggers.sql`, `push_dispatch.sql`
+  - 파트너 초기 셋업: `content_onboarding.sql`, 작성자 유형: `profile_entity_type.sql`
 
 ## 화면 상태
 
@@ -94,10 +95,14 @@ src/
 - `/api/revalidate`: 글 수정·삭제 때 미리 만든 페이지 갱신 (작성자 확인)
 - `/api/delete-user`: 탈퇴
 - `/api/test-push`: 개발 환경 전용
+- `/api/partner-onboarding`: 로그인한 Creator/Brand source 접수·상태·본인 draft 조회. 외부 source fetch는 `features/onboarding/data/source-fetch.ts`가 HTTPS·공인 IP·redirect·크기 제한을 강제하고, `domain/source-extraction.ts`는 source에 명시된 값만 구조화한다.
+- `/api/partner-onboarding/process`: `PUSH_WEBHOOK_SECRET` 보호. 제출 직후 처리에 실패한 queued/failed source의 재시도 owner.
+- `/api/partner-onboarding/image`: 본인 draft의 source 이미지만 인증 후 proxy해 기존 브라우저 이미지 최적화/업로드 경로로 넘긴다.
 - Netlify Functions:
   - `push-dispatch`: DB 트리거 → 웹 푸시
   - `send-push`: 알림 설정의 테스트 발송
   - `sweep-orphan-images`: 매주, 쓰지 않는 사진 정리
+  - `process-onboarding-sources`: 매시 20분, 남은 파트너 source 처리 재시도
 
 ## 서비스워커 (`next.config.mjs`)
 

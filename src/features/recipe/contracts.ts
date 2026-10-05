@@ -13,6 +13,7 @@
 
 import type { Item, ItemDetail } from "@/types/item"
 import type { PartnerEntrySource } from "@/shared/lib/partner-entry"
+import type { OnboardingReviewDraft } from "@/features/onboarding/contracts"
 
 // ── 폼 입력: RecipeForm의 zod 스키마(recipeSchema) 결과와 같은 모양 ──
 export interface RecipeIngredientInput {
@@ -48,6 +49,7 @@ export interface RecipeFormProps {
 	// "참고해서 내 레시피 만들기": 원본의 분량·재료·단계를 미리 채우고 출처를 자동으로 남긴다
 	forkFrom?: ItemDetail | null
 	entrySource?: PartnerEntrySource | null
+	onboardingDraft?: OnboardingReviewDraft | null
 	onNavigateBack?: (itemId?: string, options?: { replace?: boolean }) => void
 }
 

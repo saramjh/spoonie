@@ -85,3 +85,7 @@
 # Growth OS: 게시 후 24h/72h Instagram 성과 snapshot을 시간당 한 번 확인한다.
 [functions."collect-instagram-insights"]
   schedule = "10 * * * *"
+
+# 파트너 source 처리 재시도 안전망. 제출 시 즉시 처리하고, 남은 queued/failed만 매시 재확인한다.
+[functions."process-onboarding-sources"]
+  schedule = "20 * * * *"

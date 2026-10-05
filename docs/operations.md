@@ -10,6 +10,7 @@
   - `push-dispatch`: 알림 저장 → DB 트리거 → 웹 푸시 발송
   - `send-push`: 알림 설정 화면의 테스트 발송
   - `sweep-orphan-images`: 매주(`@weekly`) 쓰지 않는 사진 정리
+  - `process-onboarding-sources`: 매시 20분. 제출 시 즉시 처리하지 못한 `content_onboarding_sources`의 queued/failed 항목을 최대 5건 재시도한다. 별도 queue 서비스 없이 기존 `PUSH_WEBHOOK_SECRET` 보호 API를 호출한다.
   - `release-queued-recipes`: 매일 11:30·18:30(한국 시간) `release_queue` 맨 앞의 비공개 레시피 하나를 공개 (공개 시각을 작성 시각으로). 이어서 인스타그램 @spoonie.kitchen에 그 레시피 사진(최대 10장)과 캡션을 확인 없이 게시.
   - `retry-instagram-posts`: 13:00·15:00·20:00·22:00(한국 시간) 공개는 건드리지 않고 실패한 인스타그램 게시만 재시도한다. 알 수 없는/일시 오류는 15분→1시간→6시간→24시간 간격으로 최대 5회 재시도한다. 성공 게시 사이에는 최소 3시간 간격을 두고 실행당 최대 1건만 게시해 backlog가 연속 노출되지 않게 한다. 인증·권한 오류와 `media_publish` 전송 결과가 불명확한 경우는 중복 게시 방지를 위해 terminal 상태로 남겨 수동 확인한다. 상태는 `instagram_media_id`, `instagram_error`, `instagram_attempt_count`, `instagram_next_retry_at`, `instagram_terminal_error`에 기록한다.
   - `collect-instagram-insights`: 매시 10분에 Instagram 게시 성과를 확인한다. 실제 게시 후 24~30시간, 72~78시간 구간에서만 `reach/likes/comments/saved/shares/total_interactions/profile_activity/profile_visits/follows`를 한 번씩 저장하며 당시 팔로워 수와 실제 관측 나이(분)도 함께 남긴다. 구간을 놓친 경우 늦은 누적값을 24h/72h처럼 저장하지 않고 `missed`로 표시한다.
@@ -27,7 +28,7 @@
 | `SUPABASE_SECRET_KEY` | 탈퇴 API, 푸시 함수, 사진 정리 함수, 관리 스크립트 | **비밀** |
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY` / `VAPID_PUBLIC_KEY` | 푸시 구독(브라우저) / 발송(함수). 같은 값 | 아님 |
 | `VAPID_PRIVATE_KEY` | 푸시 발송 함수 | **비밀** |
-| `PUSH_WEBHOOK_SECRET` | DB 트리거 → `push-dispatch` 호출 검증 | **비밀** |
+| `PUSH_WEBHOOK_SECRET` | DB 트리거 → `push-dispatch`, 파트너 source 재처리 API 호출 검증 | **비밀** |
 | `NEXT_PUBLIC_GA_ID` | GA4 측정 ID (없으면 `G-16DKDXVQ9T`) | 아님 |
 | `NEXT_PUBLIC_ADSENSE_ID` | 애드센스 게시자 ID | 아님 |
 | `NEXT_PUBLIC_ADSENSE_ENABLED` | `true`일 때만 광고 스크립트를 싣는다. 지금은 꺼 둠(설정 안 함) | 아님 |
@@ -104,8 +105,9 @@
 - provenance는 공포 마케팅이나 법적 보증으로 쓰지 않는다. 레시피 도용·소송을 랜딩/콜드메일의 훅으로 사용하지 않고, Spoonie가 저작권을 부여·판단·보호하거나 법적 소유권을 증명한다고 표현하지 않는다. 공개 이력과 사용자가 선택한 참고/파생 관계가 플랫폼 안에서 보존된다는 사실만 말한다.
 - 직접 작성 퍼널은 `partner_action` → `signup_submitted` → `partner_auth_complete` → `recipe_create` 순서로 본다. 자동 초기 셋업 퍼널은 `account_ready` → `onboarding_sources_submitted` → `processing` → `private_drafts_ready` → `reviewed` → `published` → 같은 작성자의 첫 native Recipe → 두 번째 native Recipe로 측정한다. Creator/Brand 모두 계정 소유가 source 제출보다 먼저이며, 생성 초안은 처음부터 해당 사용자 `user_id` 소유다. 제출 source에서 확인되지 않는 재료·분량·순서는 추정하지 않는다.
 - 파트너 인증 화면은 전역 앱 내비게이션을 숨기고, Google 또는 이메일 가입/로그인과 비밀번호 복구가 모두 같은 `next`·partner source를 유지한다. 신규 파트너의 `display_name`이 비어 있으면 Recipe 작성 직전에 활동명/브랜드명 한 칸만 받고, 첫 partner Recipe 저장 후에는 홈이 아니라 방금 작성한 Recipe 상세를 보여준다.
-- Creator와 Brand 파트너 랜딩은 분리 유지한다. Creator는 기존 본인 요리 게시물·Reel을, Brand는 기존 제품 활용 Recipe·요리 미디어 자료를 자기 계정에 초기 셋업하는 오퍼를 사용한다. 공통 원칙은 `계정 생성/로그인 → source 제출 → 자동 구조화 → 본인 계정 private draft → 검수 → 공개`다. 영상은 source 분석에만 쓰고 Spoonie에는 동영상을 호스팅/게시하지 않는다. 현재 production이 이 account-owned 자동 처리 계약을 완전히 충족하기 전에는 외부 콜드메일에서 해당 자동화 완료를 약속하지 않고, Promotion Ops는 research/queue만 수행한다.
+- Creator와 Brand 파트너 랜딩은 분리 유지한다. Creator는 기존 본인 요리 게시물·Reel을, Brand는 기존 제품 활용 Recipe·요리 미디어 자료를 자기 계정에 초기 셋업하는 오퍼를 사용한다. 공통 원칙은 `계정 생성/로그인 → source 제출 → source에 명시된 값만 구조화 → 본인 계정 review draft → 검수 → 기존 Recipe 저장 경로로 공개`다. 영상은 source 분석에만 쓰고 Spoonie에는 동영상을 호스팅/게시하지 않는다. JSON-LD Recipe처럼 충분한 구조가 있으면 검수 가능한 draft를 자동 생성하고, Instagram/일반 source에서 값이 빠지면 `needs_input`으로 남긴다. replywatch의 로컬 concierge는 source 증거를 바탕으로 draft만 보완하며 Recipe를 대신 저장·공개하지 않는다.
 - 기존 hash 링크는 브라우저에서 각각 전용 랜딩으로 `replace`하고, JavaScript가 없어도 허브의 동일 anchor에서 전용 페이지 CTA를 제공한다. 정정 메일은 보내지 않는다.
+- 업무메일 운영: `hello@spoonie.kr`는 일반 문의, `partners@spoonie.kr`는 Creator/Brand 파트너 연락용 수신 주소다. 둘 다 Cloudflare Email Routing으로 기존 Gmail에 포워딩되며 Gmail에서는 `Spoonie/General`, `Spoonie/Partners` 라벨로 분류한다. 도메인 인증 발신 계층이 없는 동안 외부 발신은 실제 연결된 Gmail 주소를 숨기거나 위조하지 않는다. 대신 파트너 메일 본문/서명에 `partners@spoonie.kr`를 공식 연락처로 명시하고, replywatch는 해당 라벨과 기존 Gmail thread를 함께 본다. 수익화 전 별도 유료·trial·freemium SMTP/메일 발송 사업자를 도입하지 않는다.
 - 파트너 랜딩은 운영정책·사업계획 설명서가 아니다. 각 타깃마다 `즉시 가치 → 현재 가능한 사용 예 → 한 가지 주 CTA`만 전면에 둔다. 미래 모델, 예외 조건, 정책 세부사항, 중복된 가치 설명은 랜딩에 누적하지 않고 운영 문서·약관·후속 응답으로 보낸다. 재귀 검토는 기본적으로 추가보다 삭제·통합을 우선한다.
 - 외부 후보는 공개된 사업/제휴 채널만 사용한다. 개인정보/CS 전용 주소를 마케팅 목적으로 우회 사용하지 않는다. Creator supply의 후보 범위는 팔로워 수로 자르지 않는다. 본인이 권리를 가진 요리·레시피·릴스·주방 콘텐츠를 이미 공개하고 있고, 그중 1~5개를 구조화 Recipe로 다시 쓸 실익이 있는 계정이면 long-tail creator도 잠재사용자다. 기존 Recipe 백카탈로그가 크거나 분량·재료 질문이 반복되는 계정은 우선순위를 높인다. 운영 자원은 최신 `strategy_review` override를 따르고, Brand는 이미 유용한 레시피/serving idea를 만드는 소형·D2C 중심으로 좁힌다.
 - 외부 홍보 운영의 주 원장은 `/Users/ojihun/DEV/media-agent-prm`의 Promotion Ops session `spoonie-growth`다. Creator/Brand/커뮤니티 타깃, owned social account, 채널 판정, 실제 email/post/community action과 external provider ID를 이 세션에 기록한다. Spoonie의 GA4·Supabase는 방문·가입·Recipe 생성·반복 사용 같은 제품 활성화의 진실 공급원으로 유지한다. 기존 `growth_outreach_targets` 13건은 PRM으로 이관됐으며 과거 dedupe/감사 원장으로만 병행 조회하고 신규 외부 CRM write의 기본 목적지로 쓰지 않는다.
@@ -114,10 +116,10 @@
 - `growth_outreach_targets`는 서버 전용(RLS + browser policy 없음)으로 후보 유형, 공개 연락 채널, 적합 이유, 접촉/응답 상태, 다음 follow-up 시각, 외부 thread/message ID를 저장한다.
 - 무응답 follow-up은 최초 연락 후 최소 7일 뒤 한 번만 하는 것을 기본으로 하고, 계속 무응답이면 중단한다. 답장이 오면 자동 반복 발송보다 응답 내용에 맞는 다음 행동을 우선한다.
 - 브랜드 self-serve 아웃리치는 현재 좁은 실험 채널이다. `Creator를 연결해주겠다`는 제안으로 보내지 않으며, 이미 자사 레시피·serving idea·팬 조리 콘텐츠를 만드는 소형/D2C 브랜드가 실제 Recipe 1~3개를 직접 게시하는 시나리오가 명확할 때만 시도한다. Creator 매칭/유료 캠페인은 향후 별도 검증 영역이다.
-- 현재 프로필 데이터에는 개인/조직 entity type이 없다. 첫 실제 브랜드 계정이 활성화되기 전까지 이름·소개 문구로 브랜드 여부를 추측하거나 기존 `profiles.role`을 재활용하지 않는다. 첫 브랜드 계정 활성화 시 명시적 `person|organization` 프로필 타입을 도입하고 Profile/Recipe/Recipeed JSON-LD의 작성자 타입까지 함께 전파하는 것을 기술 게이트로 처리한다.
+- `profiles.entity_type`은 `person|organization`을 명시적으로 보관한다. 기존 계정은 `person`, Brand onboarding을 제출한 계정은 `organization`으로 표시하고 Profile/Recipe/Recipeed JSON-LD 작성자 타입에도 그대로 전파한다. 기존 `profiles.role`이나 이름 문자열로 브랜드 여부를 추측하지 않는다.
 - Spoonie 홍보의 현금 예산은 0원이다. paid ads, 유료 인플루언서/크리에이터 게재, 협찬·노출비, 경품 구매, Spoonie 부담 쿠폰/할인 보조, 유료 acquisition tool 의존을 사용하지 않는다. 성과가 약하더라도 돈을 투입하는 방식으로 병목을 덮지 않고 타깃·메시지·콘텐츠·채널·제품 효용을 재설계한다.
 - 모든 홍보는 상대가 실제로 얻는 무상 효용을 먼저 명시한다. Creator에게는 기존 레시피의 구조화·검색 가능 아카이브·프로필 축적·참고/파생 관계의 출처 연결·owned 채널 배포, Brand에게는 자체 제품 활용 Recipe의 무료 self-serve 게시·활용법 축적·팬/응용 Recipe 관계 가능성, 일반 사용자/커뮤니티에는 완결성 있는 요리 정보와 전체 Recipe 접근을 제공한다.
-- 계약, 비용 집행, 독점/공식 파트너 표현, 법적·평판 리스크가 있는 조건은 사용자 승인 대상으로 올린다. 현재 zero-budget 정책상 비용 집행 제안 자체를 기본 해법으로 사용하지 않는다.
+- 계약, 비용 집행, 독점/공식 파트너 표현, 법적·평판 리스크가 있는 조건은 사용자 승인 대상으로 올린다. 수익화 전 현금 예산은 0원이다. 유료 서비스뿐 아니라 나중에 유료 전환을 전제로 하는 trial/freemium 인프라를 실행 의존성으로 추가하지 않는다. 기존 로컬 자원과 이미 운영 중인 무료 인프라를 우선한다.
 - owned Instagram의 주 역할은 Spoonie 자체를 반복 광고하는 것이 아니라 개별 Recipe의 유용성(분량·비율·대체재·실패 포인트·단계)을 배포해 특정 Recipe detail로 수요를 보내는 것이다. 서비스 소개형 게시물은 보조적으로만 쓴다.
 - 커뮤니티 배포는 `서비스 홍보`가 아니라 완결성 있는 요리 정보가 먼저여야 한다. 해당 커뮤니티 규칙이 허용할 때만 Spoonie Recipe를 전체 분량/과정의 원문 또는 보충 링크로 사용한다.
 - organic search는 현재 네트워크 규모와 무관하게 작동하는 핵심 demand 채널로 본다. Creator가 올린 Recipe의 검색 진입점이 누적되는지를 장기 성장 지표로 본다.
@@ -129,17 +131,17 @@
 - 설치 스크립트: python3 scripts/growth/install_growth_launchd.py
 - 실행기: scripts/growth/run_growth_automation.sh
 - 로컬 상태/로그: ~/.spoonie-growth-automation/
-- 예약은 한 개의 직렬 acquisition 잡이 아니라 lane별 launchd로 분리한다. lane별 lock을 사용하므로 서로 독립적인 홍보는 병렬 실행할 수 있다.
+- 예약은 한 개의 acquisition 잡이 아니라 lane별 launchd로 분리해 조사·Creator·Brand·Referral·Strategy·Community·Replywatch·Review의 책임을 독립적으로 유지한다. 다만 실제 로컬 모델 worker는 전역 lock으로 한 번에 하나만 실행한다. PRM/Gmail 상태 확인과 외부 행동 사이의 race, 로컬 모델 동시 실행 충돌, 일일 발송 상한 초과를 막기 위한 직렬화이며 각 lane의 의사결정·스케줄 자체는 분리 유지한다.
   - com.spoonie.growth.discovery: 매일 08:45 KST. 시간 비의존 조사/발굴. Creator 후보, 허용 커뮤니티, Recipe 검색 수요, 무료 배포 표면을 PRM에 축적한다.
   - com.spoonie.growth.creator: 월~금 10:30 KST. 공개 business contact를 쓰는 Creator lane. 최신 PRM `strategy_review`의 product-readiness gate가 열리기 전에는 새 자동 초기 셋업 오퍼를 발송하지 않고 long-tail Creator 조사·검증·큐잉만 수행한다. gate가 열려도 일일 총 outbound 상한과 중복/후속 규칙을 먼저 확인한다.
   - com.spoonie.growth.brand: 화·목 11:10 KST. 기존 제품 활용 Recipe·요리 미디어 자산이 있는 소형/D2C Brand를 조사한다. Brand account-owned 초기 셋업 intake가 production-live 되기 전에는 새 셋업 오퍼를 발송하지 않고 후보 큐만 만든다. live 후에도 rolling 비중과 최신 strategy override를 따른다.
   - com.spoonie.growth.referral: 매일 13:45 KST. 현금·쿠폰·경품 없이 기존 owned/approved 표면의 자연스러운 Recipe 공유 기회를 실행한다.
   - com.spoonie.growth.strategy: 매일 14:35 KST. 실행 lane과 병렬로 현재 성장 가설을 재검증한다. audience need → 무상 가치교환 → target → channel → message/creative → activation → second-Recipe retention 순서로 원점부터 점검하고, 근거가 바뀌면 PRM에 `strategy_review`를 남겨 다음 실행을 수정한다. 최신 evidence-backed `strategy_review`의 한시적 allocation/channel override는 기존 baseline보다 우선한다. 외부 게시/발송은 하지 않는다.
   - com.spoonie.growth.community: 매일 20:30 KST. 해당 커뮤니티 규칙이 명확히 허용하는 경우에만 완결성 있는 요리 콘텐츠를 먼저 제공하고 Recipe 원문 링크를 보조로 사용한다.
-  - com.spoonie.growth.replywatch: 매시 25분. PRM/Gmail/partner inquiry와 `creator_migration_requests`의 신규 제출·상태 변화를 확인하고 정상 온보딩 응답을 이어간다. migration 제출은 일반 문의보다 강한 intent 신호로 취급한다.
+  - com.spoonie.growth.replywatch: 매시 25분. PRM/Gmail/partner inquiry와 `content_onboarding_requests` / `content_onboarding_sources`의 신규 제출·상태 변화를 확인하고 정상 온보딩 응답을 이어간다. account-owned 초기 셋업 제출은 일반 문의보다 강한 intent 신호로 취급한다.
   - com.spoonie.growth.review: 매일 22:30 KST. 당일 evening distribution까지 포함해 PRM target/channel/action 이력과 GA4/GSC/Instagram/Supabase activation을 함께 보고 EXPAND/KEEP/CHANGE/PAUSE/STOP을 판정한다.
   - owned Instagram Recipe 공개/게시 자체는 기존 Netlify 11:30·18:30 KST 스케줄을 유지한다.
-- 모든 로컬 growth run은 시작 시 project_context_bootstrap으로 /Users/ojihun/DEV/spoonie 컨텍스트를 복원하고, 의미 있는 실행 뒤 project_context_checkpoint로 결과·결정·다음 행동을 .context에 남기는 것을 강제한다.
+- 모든 로컬 growth run은 worker lock 획득 후 PRM에서 KST 당일 실제 email sent 건수를 다시 계산해 기본 일일 신규 발송 상한 3건의 남은 수량을 실행 prompt에 하드 입력한다. 집계가 실패하거나 남은 수량이 0이면 새 outbound email은 발송하지 않는다. 이어서 project_context_bootstrap으로 /Users/ojihun/DEV/spoonie 컨텍스트를 복원하고, 의미 있는 실행 뒤 project_context_checkpoint로 결과·결정·다음 행동을 .context에 남기는 것을 강제한다.
 - 실행 lane과 전략 lane을 분리하되 서로 단절시키지 않는다. `strategy`는 활동량 보고가 아니라 현재 가정을 반증하려고 시도하고, `evidence → diagnosis → hypothesis → zero-cost experiment → expected signal → decision rule`을 PRM에 남긴다. 반복 실패 시 채널 증량보다 대상의 원래 니즈와 Spoonie가 무료로 줄 수 있는 가치로 원점회귀한다.
 - 이 lane은 외부 growth 운영 전용이다. 제품 코드·공개 사이트 카피 수정, Git commit/push/deploy는 하지 않는다. 제품 마찰을 발견하면 정상 개발 세션에 구체적인 수정안으로 넘긴다.
 - 폐업한 PremaMon과 Spoonie 사이의 브랜드/사업 연속성을 만들지 않는다. 기존 Instagram 팔로워 풀이 주방·요리 관심사와 겹친다는 점만 warm distribution asset으로 활용한다.

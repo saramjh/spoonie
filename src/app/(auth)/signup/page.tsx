@@ -98,8 +98,8 @@ export default function SignupPage() {
 
 	const emailSentBody = partnerSource
 		? partnerSource === "partner_creator"
-			? "메일의 인증 링크를 누르면 기존 레시피 작성 화면으로 바로 이어집니다."
-			: "메일의 인증 링크를 누르면 제품 활용 Recipe 작성 화면으로 바로 이어집니다."
+			? "메일의 인증 링크를 누르면 기존 콘텐츠 초기 셋업 화면으로 돌아옵니다."
+			: "메일의 인증 링크를 누르면 제품 활용 자료 초기 셋업 화면으로 돌아옵니다."
 		: "메일의 인증 링크를 누르면 가입이 완료됩니다."
 
 	return (
@@ -128,7 +128,7 @@ export default function SignupPage() {
 							<GoogleAuthButton
 								next={next}
 								partnerSource={partnerSource}
-								label={partnerSource ? "Google로 가입하고 Recipe 작성" : "Google로 계속하기"}
+								label={partnerSource ? "Google로 가입하고 초기 셋업" : "Google로 계속하기"}
 							/>
 
 							<div className="relative my-6">
@@ -182,7 +182,7 @@ export default function SignupPage() {
 									>
 										{form.formState.isSubmitting || isRedirecting ? (
 											<><Loader2 className="mr-2 h-5 w-5 animate-spin" aria-hidden />가입하는 중</>
-										) : partnerCopy ? "이메일로 가입하고 Recipe 작성" : "이메일로 회원가입"}
+										) : partnerCopy ? "이메일로 가입하고 초기 셋업" : "이메일로 회원가입"}
 									</Button>
 								</form>
 							</Form>

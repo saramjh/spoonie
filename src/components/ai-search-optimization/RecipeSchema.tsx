@@ -35,7 +35,7 @@ export default function RecipeSchema({ item, baseUrl }: { item: ItemDetail; base
     ...(item.image_urls?.length && { image: item.image_urls }),
     ...(authorName && {
       author: {
-        "@type": "Person",
+        "@type": item.author?.entity_type === "organization" ? "Organization" : "Person",
         name: authorName,
         ...(item.user_public_id && { url: `${baseUrl}/profile/${item.user_public_id}` }),
       },

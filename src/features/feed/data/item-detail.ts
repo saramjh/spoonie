@@ -40,7 +40,7 @@ export async function fetchItemDetail(supabase: SupabaseClient, itemId: string, 
 				.select(`
 					*,
 					cited_recipe_ids,
-					author:profiles!user_id(public_id, display_name, avatar_url, username)
+					author:profiles!user_id(public_id, display_name, avatar_url, username, entity_type)
 				`)
 				.eq("id", itemId)
 				.single(),
@@ -51,7 +51,7 @@ export async function fetchItemDetail(supabase: SupabaseClient, itemId: string, 
 				.from("comments")
 				.select(`
 				id, content, created_at, user_id, parent_comment_id, is_deleted,
-				user:profiles!user_id(public_id, display_name, avatar_url, username)
+				user:profiles!user_id(public_id, display_name, avatar_url, username, entity_type)
 			`)
 				.eq("item_id", itemId)
 				.order("created_at", { ascending: true }),
@@ -123,6 +123,7 @@ export async function fetchItemDetail(supabase: SupabaseClient, itemId: string, 
 					username: userProfile?.username || '',
 					display_name: userProfile?.display_name || '',
 					avatar_url: userProfile?.avatar_url || null,
+					entity_type: userProfile?.entity_type === 'organization' ? 'organization' : 'person',
 				},
 			}
 		})
