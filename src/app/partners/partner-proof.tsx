@@ -11,14 +11,12 @@ type PartnerProofProps = {
 
 const copy = {
   creator: {
-    title: "공개한 뒤에는 한 Recipe 링크로 다시 쓸 수 있습니다",
-    description:
-      "재료·분량·조리 단계와 사진이 한 페이지에 남습니다. 원본 Recipe를 바탕으로 만든 기록이나 새 Recipe가 생기면 작성자와 source 관계도 이어집니다.",
+    title: "실제 Recipe는 이렇게 보입니다",
+    description: "사진·분량·재료·조리 단계를 한 페이지에서 확인할 수 있습니다.",
   },
   brand: {
-    title: "제품 소개와 실제 조리법을 분리해 남깁니다",
-    description:
-      "제품을 실제 한 끼에 쓰는 재료·분량·순서를 독립 Recipe로 남길 수 있습니다. 같은 제품의 활용법이 늘어나면 브랜드 프로필에서 함께 쌓입니다.",
+    title: "제품 활용 Recipe 예시",
+    description: "제품 소개가 아니라 실제로 따라 만들 수 있는 조리 정보를 보여줍니다.",
   },
 } as const
 

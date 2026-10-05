@@ -5,13 +5,13 @@ import PartnerLanding from "../partner-landing"
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
 
 export const metadata: Metadata = {
-  title: "식품·주방 브랜드 초대 | Spoonie",
+  title: "식품·주방 브랜드를 위한 Spoonie",
   description:
-    "식품·주방 브랜드가 기존 제품 활용 레시피를 다시 입력하지 않고 Spoonie 첫 Recipe로 옮길 수 있는 초대 페이지입니다.",
+    "제품의 실제 활용법을 Recipe로 쌓고, 팬의 조리 기록과 응용 Recipe를 원본 활용법과 연결하는 Spoonie 활용법입니다.",
   alternates: { canonical: baseUrl + "/partners/brands" },
   openGraph: {
-    title: "식품·주방 브랜드 초대 | Spoonie",
-    description: "기존 제품 활용 레시피를 다시 입력하지 않고 Spoonie 첫 Recipe로 시작해 보세요.",
+    title: "식품·주방 브랜드를 위한 Spoonie",
+    description: "제품 소개를 넘어 실제 쓰는 방법을 Recipe로 쌓아보세요.",
     url: baseUrl + "/partners/brands",
     siteName: "Spoonie",
     type: "website",

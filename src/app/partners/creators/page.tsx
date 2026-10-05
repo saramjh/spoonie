@@ -5,13 +5,13 @@ import PartnerLanding from "../partner-landing"
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
 
 export const metadata: Metadata = {
-  title: "요리 크리에이터 초대 | Spoonie",
+  title: "요리 크리에이터를 위한 Spoonie",
   description:
-    "요리 크리에이터가 기존 Instagram 레시피를 다시 입력하지 않고 Spoonie 첫 Recipe로 옮길 수 있는 초대 페이지입니다.",
+    "레시피를 다시 만들 수 있는 Recipe로 쌓고, Recipeed와 참고·응용 관계를 통해 원본 Recipe와 작성자를 이어가는 Spoonie 활용법입니다.",
   alternates: { canonical: baseUrl + "/partners/creators" },
   openGraph: {
-    title: "요리 크리에이터 초대 | Spoonie",
-    description: "기존 Instagram 레시피를 다시 입력하지 않고 Spoonie 첫 Recipe로 시작해 보세요.",
+    title: "요리 크리에이터를 위한 Spoonie",
+    description: "피드에 묻히는 레시피를 다시 쓰이고 발견되는 Recipe로 남겨보세요.",
     url: baseUrl + "/partners/creators",
     siteName: "Spoonie",
     type: "website",
