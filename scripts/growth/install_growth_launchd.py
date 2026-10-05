@@ -12,13 +12,38 @@ LOGDIR.mkdir(parents=True, exist_ok=True)
 LA.mkdir(parents=True, exist_ok=True)
 
 jobs = {
-    "com.spoonie.growth.acquisition": (
-        ["/bin/zsh", RUNNER, "acquisition"],
-        {"Hour": 10, "Minute": 0},
+    "com.spoonie.growth.discovery": (
+        ["/bin/zsh", RUNNER, "discovery"],
+        {"Hour": 8, "Minute": 45},
+    ),
+    "com.spoonie.growth.creator": (
+        ["/bin/zsh", RUNNER, "creator"],
+        [
+            {"Weekday": 1, "Hour": 10, "Minute": 30},
+            {"Weekday": 2, "Hour": 10, "Minute": 30},
+            {"Weekday": 3, "Hour": 10, "Minute": 30},
+            {"Weekday": 4, "Hour": 10, "Minute": 30},
+            {"Weekday": 5, "Hour": 10, "Minute": 30},
+        ],
+    ),
+    "com.spoonie.growth.referral": (
+        ["/bin/zsh", RUNNER, "referral"],
+        {"Hour": 13, "Minute": 45},
+    ),
+    "com.spoonie.growth.brand": (
+        ["/bin/zsh", RUNNER, "brand"],
+        [
+            {"Weekday": 2, "Hour": 11, "Minute": 10},
+            {"Weekday": 4, "Hour": 11, "Minute": 10},
+        ],
+    ),
+    "com.spoonie.growth.community": (
+        ["/bin/zsh", RUNNER, "community"],
+        {"Hour": 20, "Minute": 30},
     ),
     "com.spoonie.growth.review": (
         ["/bin/zsh", RUNNER, "review"],
-        {"Hour": 19, "Minute": 0},
+        {"Hour": 22, "Minute": 30},
     ),
     "com.spoonie.growth.replywatch": (
         ["/bin/zsh", RUNNER, "replywatch"],
@@ -26,7 +51,23 @@ jobs = {
     ),
 }
 
+retired_labels = [
+    "com.spoonie.growth.acquisition",
+]
+
 uid = subprocess.check_output(["id", "-u"], text=True).strip()
+
+for label in retired_labels:
+    path = LA / f"{label}.plist"
+    subprocess.run(
+        ["launchctl", "bootout", f"gui/{uid}", str(path)],
+        check=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    if path.exists():
+        path.unlink()
+        print(f"retired {path}")
 
 for label, (args, calendar) in jobs.items():
     path = LA / f"{label}.plist"

@@ -129,10 +129,15 @@
 - 설치 스크립트: python3 scripts/growth/install_growth_launchd.py
 - 실행기: scripts/growth/run_growth_automation.sh
 - 로컬 상태/로그: ~/.spoonie-growth-automation/
-- 예약:
-  - com.spoonie.growth.acquisition: 매일 10:00 KST. `spoonie-growth` Promotion Ops 상태를 먼저 읽고, Creator supply와 Recipe demand distribution을 우선해 당일 가장 가치 있는 실제 acquisition action을 수행한다. Brand는 좁은 실험 슬롯에서만 다룬다.
-  - com.spoonie.growth.replywatch: 매시 25분. Gmail/CRM/partner inquiry의 답장·반송·전환을 확인하고 정상 온보딩 응답을 이어간다.
-  - com.spoonie.growth.review: 매일 19:00 KST. PRM `spoonie-growth`의 target/channel/action 이력과 GA4/GSC/Instagram/Supabase activation을 함께 보고 채널을 EXPAND/KEEP/CHANGE/PAUSE/STOP으로 판정한다. 특히 first Recipe→second Recipe와 Recipe 외부 유입을 본다.
+- 예약은 한 개의 직렬 acquisition 잡이 아니라 lane별 launchd로 분리한다. lane별 lock을 사용하므로 서로 독립적인 홍보는 병렬 실행할 수 있다.
+  - com.spoonie.growth.discovery: 매일 08:45 KST. 시간 비의존 조사/발굴. Creator 후보, 허용 커뮤니티, Recipe 검색 수요, 무료 배포 표면을 PRM에 축적한다.
+  - com.spoonie.growth.creator: 월~금 10:30 KST. 공개 business contact를 쓰는 Creator outreach. 일일 총 outbound 상한과 중복/후속 규칙을 먼저 확인한다.
+  - com.spoonie.growth.brand: 화·목 11:10 KST. rolling 10% 이내의 소형/D2C self-serve Brand 실험만 수행한다.
+  - com.spoonie.growth.referral: 매일 13:45 KST. 현금·쿠폰·경품 없이 기존 owned/approved 표면의 자연스러운 Recipe 공유 기회를 실행한다.
+  - com.spoonie.growth.community: 매일 20:30 KST. 해당 커뮤니티 규칙이 명확히 허용하는 경우에만 완결성 있는 요리 콘텐츠를 먼저 제공하고 Recipe 원문 링크를 보조로 사용한다.
+  - com.spoonie.growth.replywatch: 매시 25분. PRM/Gmail/partner inquiry의 답장·반송·전환을 확인하고 정상 온보딩 응답을 이어간다.
+  - com.spoonie.growth.review: 매일 22:30 KST. 당일 evening distribution까지 포함해 PRM target/channel/action 이력과 GA4/GSC/Instagram/Supabase activation을 함께 보고 EXPAND/KEEP/CHANGE/PAUSE/STOP을 판정한다.
+  - owned Instagram Recipe 공개/게시 자체는 기존 Netlify 11:30·18:30 KST 스케줄을 유지한다.
 - 모든 로컬 growth run은 시작 시 project_context_bootstrap으로 /Users/ojihun/DEV/spoonie 컨텍스트를 복원하고, 의미 있는 실행 뒤 project_context_checkpoint로 결과·결정·다음 행동을 .context에 남기는 것을 강제한다.
 - 이 lane은 외부 growth 운영 전용이다. 제품 코드·공개 사이트 카피 수정, Git commit/push/deploy는 하지 않는다. 제품 마찰을 발견하면 정상 개발 세션에 구체적인 수정안으로 넘긴다.
 - 폐업한 PremaMon과 Spoonie 사이의 브랜드/사업 연속성을 만들지 않는다. 기존 Instagram 팔로워 풀이 주방·요리 관심사와 겹친다는 점만 warm distribution asset으로 활용한다.

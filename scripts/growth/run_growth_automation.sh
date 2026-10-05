@@ -7,8 +7,8 @@ export PATH="/Users/ojihun/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:
 ROOT="/Users/ojihun/DEV/spoonie"
 STATE_ROOT="/Users/ojihun/.spoonie-growth-automation"
 LOGDIR="$STATE_ROOT/logs"
-LOCKDIR="/tmp/spoonie-growth-automation.lock"
-MODE="${1:-acquisition}"
+MODE="${1:-discovery}"
+LOCKDIR="/tmp/spoonie-growth-automation-${MODE}.lock"
 NOW_KST="$(TZ=Asia/Seoul date '+%Y-%m-%dT%H:%M:%S%z')"
 STAMP="$(TZ=Asia/Seoul date '+%Y%m%d-%H%M%S')"
 
@@ -26,7 +26,7 @@ fi
 trap 'rm -rf "$LOCKDIR"' EXIT INT TERM
 
 case "$MODE" in
-  acquisition|review|replywatch|smoke) ;;
+  acquisition|discovery|creator|community|referral|brand|review|replywatch|smoke) ;;
   *) echo "unknown mode: $MODE" >&2; exit 2 ;;
 esac
 
@@ -67,6 +67,30 @@ GROUND TRUTH:
 - Routine factual outreach/onboarding, deduped emails, permitted community posting, reply handling, and low-risk channel iteration do not require owner approval.
 
 MODE RULES:
+
+discovery:
+- This lane is time-insensitive and may run immediately. Research high-fit Creator prospects, permitted cooking/home-cooking communities, organic Recipe search opportunities, and zero-cost distribution surfaces.
+- Do not send email or publish community posts in discovery mode. Write verified candidate targets/channel evidence to PRM so time-sensitive lanes can act later without repeating research.
+- Prefer evidence that exposes an actual audience need Spoonie can satisfy: reusable back catalog, repeated quantity questions, adaptation/cook-along behavior, or communities requesting complete recipes.
+
+creator:
+- This is the time-sensitive Creator outreach lane. Use only legitimate public business/contact channels and only when the daily outbound ceiling and follow-up rules allow.
+- If today's outbound ceiling is already reached or email execution is unavailable, do not force a send. Convert the run into verified prospect research/queueing for the next eligible window.
+- First touch remains one immediate use plus one network benefit; one landing URL; no mass personalization template.
+
+community:
+- This is the time-sensitive community distribution lane. Post at most 1-2 times per run, only where self-promotion/link rules clearly allow it.
+- Lead with a complete useful cooking contribution; Spoonie is the source/full Recipe link, not the subject of the post.
+- If login, CAPTCHA, moderation, or rules are unclear, do not bypass; record the blocker/candidate and move on.
+
+referral:
+- This lane is zero-cost and time-insensitive. Use only existing owned/approved surfaces or natural Recipe sharing opportunities. No bounty, coupon, prize, fake engagement, vote manipulation, or unsolicited bulk DM.
+- Prefer sharing one concrete Recipe utility to a relevant audience over generic Spoonie promotion.
+- If there is no executable approved surface, record the blocker/opportunity and stop rather than fabricating distribution.
+
+brand:
+- This is a narrow <=10% experiment. Only contact small/D2C food or kitchen brands already publishing recipes/serving ideas when rolling allocation and the daily total outbound ceiling allow.
+- Do not use a brand action merely to fill quota. No creator-matching, brokerage, reach, or sales promises.
 
 acquisition:
 - Run growth as parallel zero-cost lanes where independently actionable: Creator supply outreach, owned Recipe distribution, organic search/discovery, content-first permitted communities, and referral/share. Do not serialize unrelated lanes behind email or replywatch blockers. Brand remains a narrow optional lane.
