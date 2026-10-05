@@ -11,12 +11,12 @@ type PartnerProofProps = {
 
 const copy = {
   creator: {
-    title: "실제 공개 Recipe 보기",
-    description: "재료·분량·조리 단계와 사진이 한 페이지에 정리된 실제 Spoonie Recipe입니다.",
+    title: "Recipe는 이렇게 읽힙니다",
+    description: "재료·분량·조리 단계와 사진을 한 페이지에서 바로 따라 볼 수 있습니다.",
   },
   brand: {
-    title: "Spoonie Recipe는 이렇게 보입니다",
-    description: "브랜드 성공 사례가 아니라, 제품 활용 요리를 올렸을 때 사용하게 될 실제 공개 Recipe 형식 예시입니다.",
+    title: "제품 활용 Recipe도 같은 형식입니다",
+    description: "제품 소개문 대신 재료·분량·조리 순서와 사진이 실제 요리 흐름으로 보입니다.",
   },
 } as const
 
@@ -32,16 +32,19 @@ export default function PartnerProof({ segment }: PartnerProofProps) {
     <section className="border-t border-border px-4 py-6" aria-labelledby={segment + "-proof-title"}>
       <h2 id={segment + "-proof-title"} className="text-heading text-ink">{text.title}</h2>
       <p className="mt-2 text-meta text-ink-soft">{text.description}</p>
-      <div className="mt-4 overflow-hidden border border-border bg-paper">
-        <Image
-          src="/partners/recipe-proof.jpg"
-          alt="Spoonie 실제 공개 Recipe 화면 — 스키야키"
-          width={780}
-          height={1240}
-          sizes="(max-width: 448px) calc(100vw - 56px), 392px"
-          className="h-72 w-full object-cover object-top"
-        />
-      </div>
+      <figure className="mt-4">
+        <div className="overflow-hidden border border-border bg-paper">
+          <Image
+            src="/partners/recipe-proof.jpg"
+            alt="Spoonie 실제 공개 Recipe 화면 — 스키야키"
+            width={780}
+            height={1240}
+            sizes="(max-width: 448px) calc(100vw - 56px), 392px"
+            className="h-72 w-full object-cover object-top"
+          />
+        </div>
+        <figcaption className="mt-2 text-meta text-ink-soft">실제 Spoonie 공개 Recipe 화면</figcaption>
+      </figure>
       <PartnerActionLink
         href={"/signup?next=%2Frecipes%2Fnew&from=partner_" + segment}
         segment={segment}

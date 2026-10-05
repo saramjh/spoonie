@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowRight, CookingPot, Users } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import LegacyPartnerHashRedirect from "./legacy-hash-redirect"
 import PartnerActionLink from "./partner-action-link"
@@ -36,35 +36,29 @@ export default function PartnersPage() {
             크리에이터는 기존 레시피를, 식품·주방 브랜드는 제품 활용 요리를 재료·분량·조리 순서가 남는 Recipe로 직접 올릴 수 있습니다.
           </p>
           <p className="mt-2 text-meta text-ink-soft">
-            Recipe는 혼자 쌓이지 않습니다. 누가 만들고 참고하고 이어갔는지 관계가 남고, 그 연결을 따라 다른 Recipe와 작성자가 발견됩니다.
+            참고한 Recipe와 작성자가 화면에 남고, 관계가 생기면 만들어 본 기록과 이어진 Recipe에서 다시 연결됩니다.
           </p>
         </section>
 
         <section id="creators" className="scroll-mt-16 border-t border-border px-4 py-6">
-          <div className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-ink" aria-hidden />
-            <h2 className="text-heading text-ink">요리 크리에이터</h2>
-          </div>
+          <h2 className="text-heading text-ink">요리 크리에이터</h2>
           <p className="mt-2 text-body text-ink-soft">
-            피드와 영상 속에 묻히는 기존 레시피 1~3개부터, 사람들이 다시 찾아 따라 만들 수 있게 남겨보세요.
+            기존 레시피 1~3개를 옮기고, 다른 사람이 만들거나 참고해 이어가도 바탕 Recipe와 작성자 연결을 남길 수 있습니다.
           </p>
           <PartnerActionLink
             href="/partners/creators"
             segment="hub"
             action="creator_segment_open"
-            className={buttonVariants({ variant: "default", size: "lg", className: "mt-4 w-full" })}
+            className={buttonVariants({ variant: "outline", size: "lg", className: "mt-4 w-full" })}
           >
-            크리에이터에게 맞는 이유 보기 <ArrowRight aria-hidden />
+            크리에이터용 안내 <ArrowRight aria-hidden />
           </PartnerActionLink>
         </section>
 
         <section id="brands" className="scroll-mt-16 border-t border-border px-4 py-6">
-          <div className="flex items-center gap-2">
-            <CookingPot className="h-5 w-5 text-ink" aria-hidden />
-            <h2 className="text-heading text-ink">식품·주방 브랜드</h2>
-          </div>
+          <h2 className="text-heading text-ink">식품·주방 브랜드</h2>
           <p className="mt-2 text-body text-ink-soft">
-            상품 설명만으로는 보이지 않는 실제 사용법을, 자사 제품으로 만드는 조리 가능한 Recipe로 쌓아보세요.
+            제품 활용 Recipe를 직접 올리고, 팬의 조리 기록이나 응용 Recipe가 생기면 같은 출처 연결을 활용할 수 있습니다.
           </p>
           <PartnerActionLink
             href="/partners/brands"
@@ -72,7 +66,7 @@ export default function PartnersPage() {
             action="brand_segment_open"
             className={buttonVariants({ variant: "outline", size: "lg", className: "mt-4 w-full" })}
           >
-            브랜드에게 맞는 이유 보기 <ArrowRight aria-hidden />
+            브랜드용 안내 <ArrowRight aria-hidden />
           </PartnerActionLink>
         </section>
       </article>

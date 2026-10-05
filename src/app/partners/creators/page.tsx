@@ -1,10 +1,8 @@
 import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
-import { buttonVariants } from "@/components/ui/button"
-import PartnerActionLink from "../partner-action-link"
 import PartnerProof from "../partner-proof"
-import PartnerNetworkFlow from "../partner-network-flow"
+import PartnerRelationProof from "../partner-relation-proof"
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
 
@@ -33,7 +31,7 @@ const startSteps = [
   },
   {
     title: "공개하고 다시 쓰기",
-    description: "프로필에 쌓아두고 링크로 공유하거나, 이후 새 Recipe·Recipeed가 참고한 원본으로 이어갈 수 있습니다.",
+    description: "프로필에 쌓아두고 링크로 공유하거나, 이후 새 Recipe·Recipeed가 참고한 바탕 Recipe로 이어갈 수 있습니다.",
   },
 ] as const
 
@@ -45,23 +43,14 @@ export default function CreatorPartnersPage() {
           <Link href="/" className="inline-flex" aria-label="Spoonie 홈">
             <Image src="/logo-full.svg" alt="Spoonie" width={100} height={32} priority />
           </Link>
-          <p className="mt-5 text-meta text-ink-soft">For Cooking Creators</p>
+          <p className="mt-5 text-meta text-ink-soft">요리 크리에이터</p>
           <h1 className="mt-2 text-display text-ink">피드에 묻히는 레시피를<br />다시 따라 만들 수 있게</h1>
           <p className="mt-4 text-body text-ink-soft">
             새 콘텐츠를 만들 필요 없습니다. SNS·블로그에 이미 올린 요리 중 1~3개부터 재료·분량·순서가 있는 Recipe로 옮겨보세요.
           </p>
-          <PartnerActionLink
-            href="/signup?next=%2Frecipes%2Fnew&from=partner_creator"
-            segment="creator"
-            action="signup_to_recipe"
-            className={buttonVariants({ variant: "default", size: "lg", className: "mt-5 w-full" })}
-          >
-            기존 레시피 1개 옮겨보기
-          </PartnerActionLink>
-          <p className="mt-2 text-center text-meta text-ink-soft">가입 → 기존 레시피 입력 → 공개</p>
         </section>
 
-        <PartnerNetworkFlow segment="creator" />
+        <PartnerRelationProof segment="creator" />
 
         <section className="border-t border-border px-4 py-6" aria-labelledby="creator-start">
           <h2 id="creator-start" className="text-heading text-ink">첫 Recipe는 이렇게 시작합니다</h2>

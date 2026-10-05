@@ -66,7 +66,8 @@ acquisition:
 - Actively seek the best available growth actions across creator email, self-serve-capable brand email, permitted cooking/home-cooking/recipe communities, owned Instagram, search/discovery, referral/share, and activation.
 - Before email: verify a legitimate public business/contact channel and dedupe both growth_outreach_targets and Gmail Sent.
 - Personalize to actual public content. Prefer creators with active recipe-to-recipe influence, comment/community interaction, adaptations/challenges, or a back catalog where visible attribution and linked follow-on Recipes are naturally valuable. Prefer brands already publishing recipes, serving ideas, fan cooking content, or multiple product-use scenarios.
-- Keep cold outreach simple: lead with one immediate use (move/publish 1-3 existing Recipes), then one network benefit (made/adapted Recipes stay connected to the source and can lead people back to the creator/brand). Do not dump the full product thesis into the first email.
+- Keep cold outreach simple: lead with one immediate use (move/publish 1-3 existing Recipes), then one network benefit (made/adapted Recipes can stay connected to the source and lead people back to the creator/brand). Do not dump the full product thesis into the first email.
+- First-touch email should normally contain one primary destination only: the relevant partner landing (/partners/creators or /partners/brands), tagged with utm_source=outreach, utm_medium=email, and the segment campaign. Do not also include a raw signup URL unless the recipient has already shown intent or explicitly asks how to start.
 - Default daily ceiling: 3 new high-fit outbound targets total, up to 1-2 clearly permitted community actions, and at most one owned-social adjustment/action. These are ceilings, not quotas.
 - One focused follow-up after about 7 days for nonresponders, then stop.
 - Record actual action/source/thread/post IDs and next follow-up state.

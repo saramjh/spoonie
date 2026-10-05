@@ -1,10 +1,8 @@
 import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
-import { buttonVariants } from "@/components/ui/button"
-import PartnerActionLink from "../partner-action-link"
 import PartnerProof from "../partner-proof"
-import PartnerNetworkFlow from "../partner-network-flow"
+import PartnerRelationProof from "../partner-relation-proof"
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
 
@@ -45,23 +43,14 @@ export default function BrandPartnersPage() {
           <Link href="/" className="inline-flex" aria-label="Spoonie 홈">
             <Image src="/logo-full.svg" alt="Spoonie" width={100} height={32} priority />
           </Link>
-          <p className="mt-5 text-meta text-ink-soft">For Food & Kitchen Brands</p>
+          <p className="mt-5 text-meta text-ink-soft">식품·주방 브랜드</p>
           <h1 className="mt-2 text-display text-ink">상품 페이지가 못 보여주는<br />실제 쓰는 법을 Recipe로</h1>
           <p className="mt-4 text-body text-ink-soft">
             자사 제품으로 실제로 만드는 요리 1~3개부터 직접 올려보세요. 별도 제휴 없이 일반 Recipe와 같은 작성 흐름으로 시작합니다.
           </p>
-          <PartnerActionLink
-            href="/signup?next=%2Frecipes%2Fnew&from=partner_brand"
-            segment="brand"
-            action="signup_to_recipe"
-            className={buttonVariants({ variant: "default", size: "lg", className: "mt-5 w-full" })}
-          >
-            제품 활용 Recipe 1개 올려보기
-          </PartnerActionLink>
-          <p className="mt-2 text-center text-meta text-ink-soft">가입 → Recipe 작성 → 프로필에 쌓임</p>
         </section>
 
-        <PartnerNetworkFlow segment="brand" />
+        <PartnerRelationProof segment="brand" />
 
         <section className="border-t border-border px-4 py-6" aria-labelledby="brand-start">
           <h2 id="brand-start" className="text-heading text-ink">첫 제품 활용 Recipe는 이렇게 시작합니다</h2>
