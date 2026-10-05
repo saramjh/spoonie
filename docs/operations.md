@@ -102,9 +102,9 @@
 - Creator/Brand 전용 랜딩은 실제 공개 Recipe 화면 캡처와 실제 Recipe/프로필 링크를 proof로 사용한다. 생성형 이미지로 제품 동작을 가장하지 않는다.
 - 파트너 가치 제안은 기능 이름에서 끝내지 않고 즉시 체감 효용부터 설명한다. Creator에게는 기존 SNS 콘텐츠 재입력 부담 감소, 반복되는 재료·분량 질문에 다시 쓸 수 있는 Recipe 링크, 피드가 지나간 뒤에도 프로필에 남는 백카탈로그가 1차 가치다. 참고·파생 관계는 누군가 실제로 만들거나 자기 버전을 올렸을 때 원본 Recipe와 작성자로 돌아오는 2차 가치로 설명한다. Brand에게는 흩어진 제품 활용법을 한곳에 누적하고 같은 조리법 링크를 다시 쓰며, 팬의 실제 사용·응용이 생겼을 때 원본 제품 활용 Recipe로 돌아올 수 있다는 효용을 먼저 설명한다.
 - provenance는 공포 마케팅이나 법적 보증으로 쓰지 않는다. 레시피 도용·소송을 랜딩/콜드메일의 훅으로 사용하지 않고, Spoonie가 저작권을 부여·판단·보호하거나 법적 소유권을 증명한다고 표현하지 않는다. 공개 이력과 사용자가 선택한 참고/파생 관계가 플랫폼 안에서 보존된다는 사실만 말한다.
-- 직접 작성 퍼널은 `partner_action` → `signup_submitted` → `partner_auth_complete` → `recipe_create` 순서로 본다. Creator migration 퍼널은 `migration_request_submit` → DB `submitted` → `drafts_ready` → `claimed` → `published` → 같은 작성자의 첫 native Recipe → 두 번째 native Recipe로 별도 측정한다. migration 요청은 서버 전용 `creator_migration_requests`에 저장하고, 제출된 URL에서 확인되지 않는 재료·분량·순서는 추정하지 않는다.
+- 직접 작성 퍼널은 `partner_action` → `signup_submitted` → `partner_auth_complete` → `recipe_create` 순서로 본다. 자동 초기 셋업 퍼널은 `account_ready` → `onboarding_sources_submitted` → `processing` → `private_drafts_ready` → `reviewed` → `published` → 같은 작성자의 첫 native Recipe → 두 번째 native Recipe로 측정한다. Creator/Brand 모두 계정 소유가 source 제출보다 먼저이며, 생성 초안은 처음부터 해당 사용자 `user_id` 소유다. 제출 source에서 확인되지 않는 재료·분량·순서는 추정하지 않는다.
 - 파트너 인증 화면은 전역 앱 내비게이션을 숨기고, Google 또는 이메일 가입/로그인과 비밀번호 복구가 모두 같은 `next`·partner source를 유지한다. 신규 파트너의 `display_name`이 비어 있으면 Recipe 작성 직전에 활동명/브랜드명 한 칸만 받고, 첫 partner Recipe 저장 후에는 홈이 아니라 방금 작성한 Recipe 상세를 보여준다.
-- Creator 랜딩의 주 CTA는 Instagram 게시물·릴스 URL 1~5개를 제출하는 migration 요청이다. `/api/creator-migration`만 service-role로 저장하고 `creator_migration_requests`는 RLS 활성화 + anon/authenticated 권한 없음으로 브라우저 직접 접근을 막는다. URL 제출은 migration 초안 준비에 대한 명시적 opt-in이지만 자동 공개 동의가 아니다. Brand는 self-serve Recipe 작성이 주 CTA다. 아웃리치 수신자는 기존 메일에 그대로 회신해도 된다.
+- Creator와 Brand 파트너 랜딩은 분리 유지한다. Creator는 기존 본인 요리 게시물·Reel을, Brand는 기존 제품 활용 Recipe·요리 미디어 자료를 자기 계정에 초기 셋업하는 오퍼를 사용한다. 공통 원칙은 `계정 생성/로그인 → source 제출 → 자동 구조화 → 본인 계정 private draft → 검수 → 공개`다. 영상은 source 분석에만 쓰고 Spoonie에는 동영상을 호스팅/게시하지 않는다. 현재 production이 이 account-owned 자동 처리 계약을 완전히 충족하기 전에는 외부 콜드메일에서 해당 자동화 완료를 약속하지 않고, Promotion Ops는 research/queue만 수행한다.
 - 기존 hash 링크는 브라우저에서 각각 전용 랜딩으로 `replace`하고, JavaScript가 없어도 허브의 동일 anchor에서 전용 페이지 CTA를 제공한다. 정정 메일은 보내지 않는다.
 - 파트너 랜딩은 운영정책·사업계획 설명서가 아니다. 각 타깃마다 `즉시 가치 → 현재 가능한 사용 예 → 한 가지 주 CTA`만 전면에 둔다. 미래 모델, 예외 조건, 정책 세부사항, 중복된 가치 설명은 랜딩에 누적하지 않고 운영 문서·약관·후속 응답으로 보낸다. 재귀 검토는 기본적으로 추가보다 삭제·통합을 우선한다.
 - 외부 후보는 공개된 사업/제휴 채널만 사용한다. 개인정보/CS 전용 주소를 마케팅 목적으로 우회 사용하지 않는다. Creator supply의 후보 범위는 팔로워 수로 자르지 않는다. 본인이 권리를 가진 요리·레시피·릴스·주방 콘텐츠를 이미 공개하고 있고, 그중 1~5개를 구조화 Recipe로 다시 쓸 실익이 있는 계정이면 long-tail creator도 잠재사용자다. 기존 Recipe 백카탈로그가 크거나 분량·재료 질문이 반복되는 계정은 우선순위를 높인다. 운영 자원은 최신 `strategy_review` override를 따르고, Brand는 이미 유용한 레시피/serving idea를 만드는 소형·D2C 중심으로 좁힌다.
@@ -131,8 +131,8 @@
 - 로컬 상태/로그: ~/.spoonie-growth-automation/
 - 예약은 한 개의 직렬 acquisition 잡이 아니라 lane별 launchd로 분리한다. lane별 lock을 사용하므로 서로 독립적인 홍보는 병렬 실행할 수 있다.
   - com.spoonie.growth.discovery: 매일 08:45 KST. 시간 비의존 조사/발굴. Creator 후보, 허용 커뮤니티, Recipe 검색 수요, 무료 배포 표면을 PRM에 축적한다.
-  - com.spoonie.growth.creator: 월~금 10:30 KST. 공개 business contact를 쓰는 Creator outreach. 일일 총 outbound 상한과 중복/후속 규칙을 먼저 확인한다.
-  - com.spoonie.growth.brand: 화·목 11:10 KST. rolling 10% 이내의 소형/D2C self-serve Brand 실험만 수행한다.
+  - com.spoonie.growth.creator: 월~금 10:30 KST. 공개 business contact를 쓰는 Creator lane. 최신 PRM `strategy_review`의 product-readiness gate가 열리기 전에는 새 자동 초기 셋업 오퍼를 발송하지 않고 long-tail Creator 조사·검증·큐잉만 수행한다. gate가 열려도 일일 총 outbound 상한과 중복/후속 규칙을 먼저 확인한다.
+  - com.spoonie.growth.brand: 화·목 11:10 KST. 기존 제품 활용 Recipe·요리 미디어 자산이 있는 소형/D2C Brand를 조사한다. Brand account-owned 초기 셋업 intake가 production-live 되기 전에는 새 셋업 오퍼를 발송하지 않고 후보 큐만 만든다. live 후에도 rolling 비중과 최신 strategy override를 따른다.
   - com.spoonie.growth.referral: 매일 13:45 KST. 현금·쿠폰·경품 없이 기존 owned/approved 표면의 자연스러운 Recipe 공유 기회를 실행한다.
   - com.spoonie.growth.strategy: 매일 14:35 KST. 실행 lane과 병렬로 현재 성장 가설을 재검증한다. audience need → 무상 가치교환 → target → channel → message/creative → activation → second-Recipe retention 순서로 원점부터 점검하고, 근거가 바뀌면 PRM에 `strategy_review`를 남겨 다음 실행을 수정한다. 최신 evidence-backed `strategy_review`의 한시적 allocation/channel override는 기존 baseline보다 우선한다. 외부 게시/발송은 하지 않는다.
   - com.spoonie.growth.community: 매일 20:30 KST. 해당 커뮤니티 규칙이 명확히 허용하는 경우에만 완결성 있는 요리 콘텐츠를 먼저 제공하고 Recipe 원문 링크를 보조로 사용한다.

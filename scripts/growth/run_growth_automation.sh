@@ -71,12 +71,12 @@ MODE RULES:
 discovery:
 - This lane is time-insensitive and may run immediately. Research high-fit Creator prospects, permitted cooking/home-cooking communities, organic Recipe search opportunities, and zero-cost distribution surfaces.
 - Do not send email or publish community posts in discovery mode. Write verified candidate targets/channel evidence to PRM so time-sensitive lanes can act later without repeating research.
-- Prefer evidence that exposes an actual audience need Spoonie can satisfy: original cooking/recipe/reel/kitchen content the creator can reuse, reusable back catalog, repeated quantity questions, adaptation/cook-along behavior, or communities requesting complete recipes. Do not use follower count as an eligibility floor; long-tail creators with owned content are valid migration prospects.
+- Prefer evidence that exposes an actual audience need Spoonie can satisfy. Creator discovery has no follower floor: any account with owned reusable cooking/recipe/reel/kitchen content is eligible, with reusable back catalog, repeated quantity questions, adaptation/cook-along behavior and recent publishing as priority signals. In parallel, build a Brand queue from food/kitchen brands already holding owned product-use recipes, serving ideas, cooking posts or media. Record whether each prospect fits Creator migration or Brand initial-library setup, but do not contact them merely because they fit.
 
 creator:
 - This is the time-sensitive Creator outreach lane. Use only legitimate public business/contact channels and only when the daily outbound ceiling and follow-up rules allow.
 - If today's outbound ceiling is already reached or email execution is unavailable, do not force a send. Convert the run into verified prospect research/queueing for the next eligible window.
-- First touch remains one immediate use plus one network benefit; one landing URL; no mass personalization template. For Instagram-first creators, the immediate use is now usually the migration concierge: choose 1-5 existing post/reel URLs and Spoonie prepares reviewable Recipe drafts, so they do not have to re-enter the archive manually. If migration is not a fit, fall back to direct 1-3 Recipe self-entry.
+- First touch remains one immediate use plus one secondary network benefit; one landing URL; no mass personalization template. Read the latest PRM product-readiness gate first. Until account-owned source intake and processing are production-verified, do not send a migration-automation promise; convert the run to prospect research/queueing. Once live, the Creator offer is: create/login to their own Spoonie account, choose owned posts/reels, receive reviewable private Recipe drafts owned by that account, then approve/publish. Never imply Spoonie official owns or posts their Recipe, and never imply Spoonie hosts video.
 
 community:
 - This is the time-sensitive community distribution lane. Post at most 1-2 times per run, only where self-promotion/link rules clearly allow it.
@@ -90,8 +90,8 @@ referral:
 - If there is no executable approved surface, record the blocker/opportunity and stop rather than fabricating distribution.
 
 brand:
-- This is a narrow <=10% experiment. Only contact small/D2C food or kitchen brands already publishing recipes/serving ideas when rolling allocation and the daily total outbound ceiling allow.
-- Do not use a brand action merely to fill quota. No creator-matching, brokerage, reach, or sales promises.
+- This lane researches small/D2C food or kitchen brands that already hold useful product-use recipes, cooking posts, serving ideas or owned media. Read the latest PRM product-readiness gate before any contact. Until Brand account-owned initial-library setup is production-live, do not send that setup promise; only verify and queue prospects.
+- Once live and strategy permits a pilot, the Brand offer is account first -> submit existing owned product-use materials -> private Recipe library drafts in the Brand account -> review/publish. Do not use a brand action merely to fill quota. No creator-matching, brokerage, reach, sales, or video-hosting promises.
 
 strategy:
 - This lane is time-insensitive and runs in parallel with execution. Its job is not to summarize activity; it must challenge the current growth thesis and improve the next execution loop.
@@ -132,7 +132,7 @@ smoke:
 - Perform startup/context restoration only, verify the operating rules and connected local execution environment, take no external marketing action, make no code/product changes, then checkpoint the scheduler verification.
 
 GENERAL:
-- Before choosing a lane action, check the latest completed PRM strategy_review. Its evidence-backed temporary channel/allocation override takes precedence over the baseline mix and static session preset until superseded or expired.
+- Before choosing a lane action, check the latest completed PRM strategy_review. Its evidence-backed temporary channel/allocation override and product-readiness gates take precedence over the baseline mix and static session preset until superseded or expired. Research/queueing may proceed behind a closed product gate; the gated external promise may not.
 - Do not modify Spoonie product code or public-site copy in unattended growth runs. Surface product changes for a normal development session.
 - Do not commit/push/deploy from this unattended lane.
 - Keep reports concise and factual: actions actually taken, verified evidence, blockers, next smallest compounding action.
