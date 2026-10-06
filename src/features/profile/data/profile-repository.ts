@@ -5,6 +5,11 @@ import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 export const PUBLIC_PROFILE_COLUMNS =
 	"id, username, display_name, avatar_url, entity_type, bio, profile_message, created_at, updated_at, public_id, is_profile_public, show_follower_count, show_join_date, username_changed_count"
 
+// 공개 프로필 조회의 호환 입력: UUID는 내부 id, 나머지는 public_id로 찾는다.
+export function profileIdentifierColumn(identifier: string): "id" | "public_id" {
+	return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier) ? "id" : "public_id"
+}
+
 /**
  * 프로필 화면 데이터 조회. 서버 컴포넌트(공개 데이터 초기 렌더링)와
  * ProfilePageClient(로그인 사용자 기준 갱신)가 함께 사용한다. supabase를 넘기지 않으면 브라우저 클라이언트를 쓴다.
@@ -27,17 +32,12 @@ export const fetchProfile = async (identifier: string, supabase: SupabaseClient 
 	if (!identifier) {
 		throw new Error("Profile identifier is required.")
 	}
-	// Check if identifier is a UUID
-	const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier)
-
-	const column = isUUID ? "id" : "public_id"
+	const column = profileIdentifierColumn(identifier)
 
 	// 공개 컬럼만 조회한다 (email 등 개인정보 컬럼은 조회 권한이 없다)
 	const { data, error } = await supabase.from("profiles").select(PUBLIC_PROFILE_COLUMNS).eq(column, identifier).single()
 
 	if (error) {
-		// If it was a UUID and it failed, maybe it's a public_id that looks like a UUID? Unlikely.
-		// For now, just throw the error.
 		throw new Error(error.message)
 	}
 	if (!data) {

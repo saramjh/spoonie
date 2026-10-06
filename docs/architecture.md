@@ -14,6 +14,8 @@
 
 미리 만드는 페이지는 로그인 정보를 읽지 않는다 (`shared/infra/supabase-public.ts`). 그래서 방문마다 서버 함수가 돌지 않는다. 내 좋아요·저장·비공개 글은 브라우저가 채운다.
 
+공개 프로필의 canonical identity는 `profiles.public_id`이며 주소는 `/profile/{public_id}`다. 본문·메타데이터·브라우저 조회는 `profile-repository.ts`의 `profileIdentifierColumn`으로 UUID 호환 입력과 public_id를 구분한다. canonical과 OpenGraph URL은 조회된 public_id를 사용한다. `/profile/{UUID}`는 기존 200 호환 화면을 유지하되 noindex이며 public_id canonical을 제공한다. 이 경로의 메타데이터는 색인 판정용 공개 활동을 조회하지 않는다. 308 전환은 loading 경계와 기존 UX 검증이 필요한 별도 작업으로 보류했다(2026-10-06 승인 범위).
+
 ## 코드 구조 (2026-10 리팩토링)
 
 기능마다 같은 세 층으로 나눈다. 화면은 domain과 data만 부르고, DB·저장소는 data만 만진다.

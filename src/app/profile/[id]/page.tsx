@@ -3,7 +3,7 @@ import { Metadata } from 'next'
 import { createSupabasePublicClient } from '@/shared/infra/supabase-public'
 import { notFound } from 'next/navigation'
 import ProfilePageClient from './ProfilePageClient'
-import { fetchUserItems, fetchFollowCounts, PUBLIC_PROFILE_COLUMNS, type UserProfile } from '@/features/profile/data/profile-repository'
+import { fetchUserItems, fetchFollowCounts, profileIdentifierColumn, PUBLIC_PROFILE_COLUMNS, type UserProfile } from '@/features/profile/data/profile-repository'
 import BreadcrumbSchema, { createBreadcrumbs } from '@/components/ai-search-optimization/BreadcrumbSchema'
 import { isNormalPublicRecipeed, isSearchIndexableProfile } from '@/features/discovery/domain/search-exposure'
 import { fetchAllPublicDiscoveryItems } from '@/features/discovery/data/public-assets'
@@ -14,6 +14,8 @@ interface Props {
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
+  const profileColumn = profileIdentifierColumn(params.id)
+  const isLegacyId = profileColumn === 'id'
   try {
     const supabase = createSupabasePublicClient()
     
@@ -30,10 +32,10 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         is_profile_public,
         created_at
       `)
-      .eq('public_id', params.id)
+      .eq(profileColumn, params.id)
       .single()
 
-    if (error || !profile) {
+    if (error || !profile?.public_id) {
       return { 
         title: '프로필 - Spoonie',
         description: '요리를 사랑하는 사람들의 프로필을 확인해보세요.',
@@ -43,22 +45,29 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
     // Profile 자체의 identity + 정상 공개 활동을 판정한다.
     // Recipeed의 index boolean을 그대로 승계하지 않아 두 정책이 독립적으로 조정될 수 있다.
-    const publicItems = await fetchAllPublicDiscoveryItems({ userId: profile.id }, supabase)
+    // UUID 호환 URL은 noindex다. canonical identity를 확인한 뒤 색인 판정용 활동 조회는 생략한다.
+    const publicItems = isLegacyId ? [] : await fetchAllPublicDiscoveryItems({ userId: profile.id }, supabase)
     const publicRecipes = publicItems.filter((item) => item.item_type === 'recipe').length
     const publicPosts = publicItems.filter((item) => item.item_type === 'post')
     const normalPublicPosts = publicPosts.filter(isNormalPublicRecipeed).length
-    const hasSearchContent = isSearchIndexableProfile(profile, publicRecipes, normalPublicPosts)
+    const hasSearchContent = !isLegacyId && isSearchIndexableProfile(profile, publicRecipes, normalPublicPosts)
 
     // 표시 이름이 있으면 그것을 (공식 계정 "Spoonie 주방"), 없으면 사용자 이름
     const displayName = profile.display_name || profile.username || '익명'
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'
+    const profileUrl = `${baseUrl}/profile/${profile.public_id}`
     const profileImageUrl = profile.avatar_url || `${baseUrl}/og-default.png`
     const isOrganization = profile.entity_type === 'organization'
     
     // 프로필 설명 생성 (profile_message 우선, 없으면 통계 기반)
     let profileDescription = ''
     const intro = profile.profile_message
-    if (intro) {
+    if (isLegacyId) {
+      // 활동 통계는 실제로 조회한 canonical URL에서만 표시한다.
+      profileDescription = intro
+        ? intro.replace(/\n/g, ' ').slice(0, 120)
+        : `${displayName}님의 Spoonie 프로필. 공개 요리 기록을 볼 수 있어요.`
+    } else if (intro) {
       profileDescription = `${intro.replace(/\n/g, ' ').slice(0, 120)} — 공개 레시피 ${publicRecipes}개 · 레시피드 ${publicPosts.length}개`
     } else {
       profileDescription = `${displayName}님이 Spoonie에 올린 공개 레시피 ${publicRecipes}개와 레시피드 ${publicPosts.length}개. 요리법과 음식·주방의 경험 기록을 볼 수 있어요.`
@@ -86,6 +95,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       keywords,
       
       openGraph: {
+        url: profileUrl,
         title: `${displayName} - Spoonie`,
         description: profileDescription,
         images: [{ 
@@ -105,10 +115,10 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       
       robots: hasSearchContent
         ? { index: true, follow: true, googleBot: { 'max-image-preview': 'large', 'max-snippet': -1 } }
-        : { index: false, follow: true },
+        : { index: false, follow: true, ...(isLegacyId && { googleBot: { index: false, follow: true } }) },
       
       alternates: {
-        canonical: `${baseUrl}/profile/${params.id}`,
+        canonical: profileUrl,
       },
       
       // 추가 프로필 정보
@@ -123,6 +133,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     return { 
       title: '프로필 - Spoonie',
       description: '요리를 사랑하는 사람들의 프로필을 확인해보세요.',
+      robots: { index: false, follow: true },
     }
   }
 }
@@ -139,8 +150,7 @@ export async function generateStaticParams() {
 async function loadInitialProfileData(identifier: string) {
   try {
     const supabase = createSupabasePublicClient()
-    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier)
-    const { data: profile, error } = await supabase.from('profiles').select(PUBLIC_PROFILE_COLUMNS).eq(isUUID ? 'id' : 'public_id', identifier).maybeSingle()
+    const { data: profile, error } = await supabase.from('profiles').select(PUBLIC_PROFILE_COLUMNS).eq(profileIdentifierColumn(identifier), identifier).maybeSingle()
     if (error) throw error
     if (!profile) return 'not_found' as const
     const [items, followCounts] = await Promise.all([

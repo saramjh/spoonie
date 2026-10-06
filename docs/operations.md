@@ -71,6 +71,7 @@
 - GA4: 속성 `properties/499223400`. 태그는 `components/analytics/GoogleAnalytics.tsx` (gtag 표준 설치, 화면 이동은 향상된 측정이 센다). `shared/infra/events.ts`가 feed impression과 social/growth funnel 이벤트를 GA4에도 보낸다. 홈 카드 노출은 고빈도라 Supabase에 저장하지 않는다.
 - 서치 콘솔(`sc-domain:spoonie.kr`, DNS 확인), 빙 웹마스터, 네이버 서치어드바이저에 `https://spoonie.kr/sitemap.xml` 제출됨.
 - 색인 범위: 공개 Recipe는 기본 index, 정상 공개 Recipeed도 기본 index 후보다. 빈 글·placeholder·반복/링크 스팸만 자동 제외한다. Topic과 Profile은 별도 gate를 사용한다 (`docs/discovery-and-behavior.md`).
+- 프로필 메타데이터 검증: `/profile/{public_id}`와 기존 `/profile/{UUID}` 모두 canonical·`og:url`·ProfilePage/mainEntity·마지막 breadcrumb가 같은 public_id 주소인지 확인한다. UUID는 200 + noindex 호환 경로다. 308은 현재 완료 조건에 포함하지 않으며, loading 구조·600초 ISR·편집 경로를 그대로 유지한다. public_id의 기존 색인 판정은 바꾸지 않는다.
 - 서치 콘솔·GA·빙 조회는 Composio CLI로 할 수 있다 (`composio execute <도구> -d '{…}'`).
 
 ## DB 변경
