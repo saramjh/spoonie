@@ -14,7 +14,9 @@
 
 미리 만드는 페이지는 로그인 정보를 읽지 않는다 (`shared/infra/supabase-public.ts`). 그래서 방문마다 서버 함수가 돌지 않는다. 내 좋아요·저장·비공개 글은 브라우저가 채운다.
 
-공개 프로필의 canonical identity는 `profiles.public_id`이며 주소는 `/profile/{public_id}`다. 본문·메타데이터·브라우저 조회는 `profile-repository.ts`의 `profileIdentifierColumn`으로 UUID 호환 입력과 public_id를 구분한다. canonical과 OpenGraph URL은 조회된 public_id를 사용한다. `/profile/{UUID}`는 기존 200 호환 화면을 유지하되 noindex이며 public_id canonical을 제공한다. 이 경로의 메타데이터는 색인 판정용 공개 활동을 조회하지 않는다. 308 전환은 loading 경계와 기존 UX 검증이 필요한 별도 작업으로 보류했다(2026-10-06 승인 범위).
+공개 프로필의 canonical identity는 `profiles.public_id`이며 주소는 `/profile/{public_id}`다. 본문·메타데이터·브라우저 조회는 `profile-repository.ts`의 `profileIdentifierColumn`으로 UUID 호환 입력과 public_id를 구분한다. canonical과 OpenGraph URL은 조회된 public_id를 사용한다. Netlify에서는 `netlify/edge-functions/profile-redirect.js`가 정확한 `/profile/{UUID}` GET/HEAD 요청만 받아 익명 권한으로 public_id 한 컬럼을 조회하고 public_id 주소로 308을 반환한다. 성공한 응답은 기존 CDN에서 600초간 캐시되어 캐시 적중 시 함수 실행·DB 조회·UUID 화면 렌더를 생략한다. 쿼리는 보존하며 CDN 캐시 키에도 포함한다. public_id·편집·Recipe/Post는 이 함수의 대상이 아니며 App Router/loading 구조와 public_id ISR 600초는 그대로다(2026-10-06 승인한 좁은 Edge 경로 예외).
+
+조회 실패·없는 사용자·잘못된 public_id는 캐시하지 않고 기존 UUID 200 + noindex 호환 화면으로 이어진다. 이 화면도 public_id canonical을 제공하고 메타데이터의 공개 활동 조회를 생략한다. Netlify Edge를 실행하지 않는 `next dev/start`에서는 이 호환 화면이 동작한다. 별도 DB/캐시 인프라나 Next.js Proxy는 없다.
 
 ## 코드 구조 (2026-10 리팩토링)
 
