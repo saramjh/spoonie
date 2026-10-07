@@ -69,10 +69,12 @@
 ## 분석과 검색 노출
 
 - GA4: 속성 `properties/499223400`. 태그는 `components/analytics/GoogleAnalytics.tsx` (gtag 표준 설치, 화면 이동은 향상된 측정이 센다). `shared/infra/events.ts`가 feed impression과 social/growth funnel 이벤트를 GA4에도 보낸다. 홈 카드 노출은 고빈도라 Supabase에 저장하지 않는다.
+- 공개 링크 검증: 홈·검색·프로필·Recipe/Post HTML의 공개 상세 href에는 이동용 `?from=`이 없어야 한다. 검색 → 상세 → 뒤로가기와 편집의 복귀 정보를 확인한다. 기존 `?from=` 방문은 계속 지원하고 공유 버튼은 쿼리·fragment 없는 콘텐츠 URL을 전달한다. 외부 유입 UTM은 방문 URL에 남기며 내부 QA는 `utm_source=internal_qa&utm_medium=qa`로 실제 캠페인과 구분한다.
 - 서치 콘솔(`sc-domain:spoonie.kr`, DNS 확인), 빙 웹마스터, 네이버 서치어드바이저에 `https://spoonie.kr/sitemap.xml` 제출됨.
 - 색인 범위: 공개 Recipe는 기본 index, 정상 공개 Recipeed도 기본 index 후보다. 빈 글·placeholder·반복/링크 스팸만 자동 제외한다. Topic과 Profile은 별도 gate를 사용한다 (`docs/discovery-and-behavior.md`).
 - 프로필 URL 검증: Netlify에서 `/profile/{UUID}`는 public_id로 HTTP 308 + Location 한 개를 반환하고 반복 요청의 `Cache-Status`에서 Edge hit를 확인한다. 리다이렉트 TTL은 600초이며 배포 시 무효화된다. 새 CDN 노드·만료·서로 다른 쿼리에서는 public_id 한 컬럼을 다시 조회할 수 있다. 캐시 적중은 함수 실행을 생략하지만 최종 프로필의 이미지/JS 전송량까지 줄이지는 않는다. `/profile/{public_id}`의 canonical·`og:url`·ProfilePage/mainEntity·마지막 breadcrumb가 같은 public_id 주소인지, 기존 600초 ISR·색인 판정·`/profile/{UUID}/edit`와 loading이 유지되는지 확인한다. 없는 사용자나 조회 실패는 캐시하지 않는 200 + noindex 호환 경로로 이어진다. Edge 런타임에는 기존 `NEXT_PUBLIC_SUPABASE_URL`·`NEXT_PUBLIC_SUPABASE_ANON_KEY`의 Functions 환경 범위가 필요하다.
 - 서치 콘솔·GA·빙 조회는 Composio CLI로 할 수 있다 (`composio execute <도구> -d '{…}'`).
+- UUID CDN 캐시 검증은 `Netlify-Vary: query`와 실제 Location을 함께 확인한다. 서로 다른 프로필로 clean → query → clean, query → clean → other query → clean 순서를 모두 검사한다. 첫 요청이 쿼리를 포함해도 다음 요청에 그 값이 새면 실패다. 변경 배포가 이전 캐시를 무효화한 뒤 반복 요청의 Edge hit도 확인한다. 구조가 정상이라는 사실과 Google의 재크롤링·canonical 선택·GA4 유입/전환·AI 인용 성과는 별도로 판정한다.
 
 ## DB 변경
 

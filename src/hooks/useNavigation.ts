@@ -6,7 +6,7 @@ import { useRouter } from "@/shared/lib/navigation"
 import { previousPath } from "@/shared/lib/surface"
 
 /**
- * 작성·수정 화면을 마친 뒤 돌아갈 곳과, 상세로 가는 링크에 "어디서 왔는지"를 붙이는 일.
+ * 작성·수정 화면을 마친 뒤 돌아갈 곳을 정한다. 공개 상세 링크는 canonical 경로를 쓴다.
  * 직전 화면은 ClientLayoutWrapper가 기억한다 (lib/surface).
  */
 
@@ -38,6 +38,8 @@ export function useNavigation() {
 
 	const createLinkWithOrigin = useCallback(
 		(path: string, currentPath?: string): string => {
+			// 공개 링크에는 이동 상태를 붙이지 않는다. 편집 경로는 기존 복귀 정보를 유지한다.
+			if (/^\/(?:(?:recipes|posts)\/[0-9a-f-]{36}|profile\/[^/?#]+)\/?(?:[?#]|$)/i.test(path)) return path
 			const origin = currentPath || pathname
 			if (!origin || origin === path) return path
 			const separator = path.includes("?") ? "&" : "?"

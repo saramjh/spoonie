@@ -330,7 +330,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	// 모든 상태는 optimisticLikeUpdate, optimisticCommentUpdate에서 즉시 처리됨
 
 	const handleShare = () => {
-		const url = window.location.href
+		const url = new URL(window.location.pathname, window.location.origin).href
 		const shareData = {
 			    title: `Spoonie에서 ${isRecipe ? item.title : (item.username || "사용자") + "님의 레시피드"} 보기`,
 			text: isRecipe ? item.description || "" : item.content || "",

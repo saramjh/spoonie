@@ -16,7 +16,9 @@
 
 공개 프로필의 canonical identity는 `profiles.public_id`이며 주소는 `/profile/{public_id}`다. 본문·메타데이터·브라우저 조회는 `profile-repository.ts`의 `profileIdentifierColumn`으로 UUID 호환 입력과 public_id를 구분한다. canonical과 OpenGraph URL은 조회된 public_id를 사용한다. Netlify에서는 `netlify/edge-functions/profile-redirect.js`가 정확한 `/profile/{UUID}` GET/HEAD 요청만 받아 익명 권한으로 public_id 한 컬럼을 조회하고 public_id 주소로 308을 반환한다. 성공한 응답은 기존 CDN에서 600초간 캐시되어 캐시 적중 시 함수 실행·DB 조회·UUID 화면 렌더를 생략한다. 쿼리는 보존하며 CDN 캐시 키에도 포함한다. public_id·편집·Recipe/Post는 이 함수의 대상이 아니며 App Router/loading 구조와 public_id ISR 600초는 그대로다(2026-10-06 승인한 좁은 Edge 경로 예외).
 
-조회 실패·없는 사용자·잘못된 public_id는 캐시하지 않고 기존 UUID 200 + noindex 호환 화면으로 이어진다. 이 화면도 public_id canonical을 제공하고 메타데이터의 공개 활동 조회를 생략한다. Netlify Edge를 실행하지 않는 `next dev/start`에서는 이 호환 화면이 동작한다. 별도 DB/캐시 인프라나 Next.js Proxy는 없다.
+조회 실패·없는 사용자·잘못된 public_id는 캐시하지 않고 기존 UUID 200 + noindex 호환 화면으로 이어진다. 확인 가능한 프로필의 호환 화면은 public_id canonical을 제공하고 메타데이터의 공개 활동 조회를 생략한다. Netlify Edge를 실행하지 않는 `next dev/start`에서는 이 호환 화면이 동작한다. 별도 DB/캐시 인프라나 Next.js Proxy는 없다. 리다이렉트와 폴백 모두 `Netlify-Vary: query`를 명시한다. 기본 캐시 키가 쿼리를 분리한다는 문서만으로 안전성을 판단하지 않으며, 쿼리 요청이 캐시를 처음 채우는 순서까지 운영에서 검증한다.
+
+공개 Recipe/Post/Profile 링크는 `useNavigation.createLinkWithOrigin`에서 이동 상태용 `from`을 추가하지 않는다. 편집 경로의 복귀용 `from`과 기존 링크의 호환 해석은 유지한다. 상세의 뒤로가기는 브라우저 이력, 행동 분석의 origin은 기존 `surface.ts` 화면 기록을 사용한다. 상세 공유는 현재 origin과 pathname으로 콘텐츠 주소를 만들며 방문자의 `from`·UTM·fragment를 다른 사람에게 복사하지 않는다. 외부 방문의 UTM과 GA4 태그·이벤트 정의는 바꾸지 않는다.
 
 ## 코드 구조 (2026-10 리팩토링)
 
