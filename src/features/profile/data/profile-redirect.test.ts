@@ -33,6 +33,7 @@ describe("UUID profile CDN redirect", () => {
 		expect(response?.headers.get("Location")).toBe("/profile/6a7e51f9")
 		expect(await response?.text()).toBe("")
 		expect(response?.headers.get("Netlify-CDN-Cache-Control")).toBe("public, s-maxage=600")
+		expect(response?.headers.get("Netlify-Vary")).toBe("query")
 		expect(response?.headers.get("Cache-Control")).toBe("public, max-age=0, must-revalidate")
 		expect(response?.headers.has("Set-Cookie")).toBe(false)
 		expect(fetchMock).toHaveBeenCalledTimes(1)
@@ -47,6 +48,15 @@ describe("UUID profile CDN redirect", () => {
 		const response = await redirect(request(`/profile/${uuid.toUpperCase()}/?from=feed&_rsc=abc`), { next })
 		expect(response?.headers.get("Location")).toBe("/profile/6a7e51f9?from=feed&_rsc=abc")
 		expect(fetchMock.mock.calls[0][0].searchParams.get("id")).toBe(`eq.${uuid}`)
+	})
+
+	it("declares query variation regardless of which URL fills the cache first", async () => {
+		fetchMock.mockImplementation(async () => new Response(JSON.stringify([{ public_id: "6a7e51f9" }])))
+		for (const query of ["?audit=first", "", "?audit=second", ""]) {
+			const response = await redirect(request(`/profile/${uuid}${query}`), { next })
+			expect(response?.headers.get("Location")).toBe(`/profile/6a7e51f9${query}`)
+			expect(response?.headers.get("Netlify-Vary")).toBe("query")
+		}
 	})
 	it("handles HEAD without rendering the profile", async () => {
 		expect((await redirect(request(undefined, "HEAD"), { next }))?.status).toBe(308)
@@ -68,6 +78,7 @@ describe("UUID profile CDN redirect", () => {
 		expect(await response?.text()).toBe("compatibility page")
 		expect(response?.headers.get("Netlify-CDN-Cache-Control")).toBe("no-store")
 		expect(response?.headers.get("Cache-Control")).toBe("private, no-store")
+		expect(response?.headers.get("Netlify-Vary")).toBe("query")
 	})
 	it.each([new Response(null, { status: 503 }), new Response("invalid json")])("falls back without caching DB errors", async result => {
 		fetchMock.mockResolvedValue(result)

@@ -29,6 +29,7 @@ export default async function profileRedirect(request, context) {
               Location: `/profile/${publicId}${url.search}`,
               "Cache-Control": "public, max-age=0, must-revalidate",
               "Netlify-CDN-Cache-Control": "public, s-maxage=600",
+              "Netlify-Vary": "query",
             },
           });
         }
@@ -42,5 +43,6 @@ export default async function profileRedirect(request, context) {
   const response = new Response(fallback.body, fallback);
   response.headers.set("Cache-Control", "private, no-store");
   response.headers.set("Netlify-CDN-Cache-Control", "no-store");
+  response.headers.set("Netlify-Vary", "query");
   return response;
 }
