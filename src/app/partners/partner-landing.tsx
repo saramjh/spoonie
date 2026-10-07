@@ -90,6 +90,18 @@ export default async function PartnerLanding({ segment }: { segment: Segment }) 
           <p className="mt-5 text-meta text-ink-soft">{text.eyebrow}</p>
           <h1 className="mt-2 whitespace-pre-line text-display text-ink">{text.title}</h1>
           <p className="mt-3 text-body text-ink-soft">{text.description}</p>
+          <PartnerActionLink
+            href={directHref}
+            segment={segment}
+            action={user ? "hero_recipe_create_open" : "hero_signup_to_recipe"}
+            className={buttonVariants({
+              variant: "default",
+              size: "lg",
+              className: "mt-4 w-full",
+            })}
+          >
+            {text.directCta}
+          </PartnerActionLink>
         </section>
 
         <PartnerProductTour segment={segment} />
