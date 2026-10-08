@@ -7,6 +7,7 @@ const {
   _instagramFailurePlan: instagramFailurePlan,
   _instagramPendingPath: instagramPendingPath,
   _instagramPostGap: instagramPostGap,
+  _newestInstagramPostAt: newestInstagramPostAt,
   _serializeInstagramError: serializeInstagramError,
 } = require("../../../netlify/functions/release-queued-recipes.js")
 
@@ -66,6 +67,21 @@ describe("Instagram scheduled publishing retries", () => {
 
 
 describe("Instagram publishing cadence", () => {
+  it("includes independently published PRM Reels and campaigns in the gap", () => {
+    const latest = newestInstagramPostAt("2026-10-08T09:30:51Z", [
+      { timestamp: "2026-10-08T12:35:14Z" },
+      { timestamp: "2026-10-08T02:30:57Z" },
+    ])
+    expect(latest).toBe("2026-10-08T12:35:14.000Z")
+    expect(instagramPostGap(latest, new Date("2026-10-08T13:30:00Z"))).toEqual({
+      blocked: true,
+      nextEligibleAt: "2026-10-08T15:35:14.000Z",
+    })
+  })
+
+  it("falls back to Supabase release history for an empty live Instagram feed", () => {
+    expect(newestInstagramPostAt("2026-10-08T09:30:51Z", [])).toBe("2026-10-08T09:30:51.000Z")
+  })
   it("blocks another successful post inside the three-hour gap", () => {
     expect(
       instagramPostGap("2026-10-04T09:00:00.000Z", new Date("2026-10-04T11:59:00.000Z"))

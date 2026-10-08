@@ -1,5 +1,5 @@
 /**
- * 나눠서 공개하기 (하루 두 번, netlify.toml의 schedule)
+ * 나눠서 공개하기 (하루 세 번, netlify.toml의 schedule)
  *
  * release_queue(supabase/release_queue.sql)의 맨 앞 하나를 공개한다.
  * 공개하는 순간을 글의 작성 시각으로 삼는다: 비공개로 미리 올려 둔 날짜가 아니라 실제로 사람들에게 보인 때다
@@ -201,6 +201,16 @@ function instagramPendingPath(now = new Date()) {
     '&order=release_order.asc&limit=1';
 }
 
+// Use both this recipe release queue and *all* recent Instagram Feed/Reel posts.
+// PRM campaigns and Reels are published outside release_queue; ignoring those
+// can violate the 3-hour policy and make simultaneous growth lanes collide.
+function newestInstagramPostAt(releaseAt, liveMedia) {
+  const times = [releaseAt, ...(liveMedia || []).map(item => item.timestamp)]
+    .map(value => Date.parse(value || ''))
+    .filter(Number.isFinite);
+  return times.length ? new Date(Math.max(...times)).toISOString() : null;
+}
+
 // 공개됐지만 인스타그램에 아직 안 올라간 레시피 하나를 올린다 (만들다 만 컨테이너가 있으면 그것부터)
 async function postPendingToInstagram(token) {
   const now = new Date();
@@ -208,7 +218,13 @@ async function postPendingToInstagram(token) {
     'GET',
     'release_queue?select=instagram_published_at&instagram_published_at=not.is.null&order=instagram_published_at.desc&limit=1'
   );
-  const gap = instagramPostGap(lastPublished?.instagram_published_at, now);
+  // Live Graph reads are fail-closed: a transport/API error cannot authorize
+  // another post when a different PRM lane may have published minutes ago.
+  const liveMedia = await ig('GET', '/me/media', {
+    fields: 'id,timestamp,media_type', limit: '10', access_token: token,
+  });
+  const latestAt = newestInstagramPostAt(lastPublished?.instagram_published_at, liveMedia.data);
+  const gap = instagramPostGap(latestAt, now);
   if (gap.blocked) return { skipped: 'post gap', nextEligibleAt: gap.nextEligibleAt };
 
   const [row] = await call('GET', instagramPendingPath(now));
@@ -330,5 +346,6 @@ exports._serializeInstagramError = serializeInstagramError;
 exports._InstagramApiError = InstagramApiError;
 exports._instagramPendingPath = instagramPendingPath;
 exports._instagramPostGap = instagramPostGap;
+exports._newestInstagramPostAt = newestInstagramPostAt;
 exports._call = call;
 exports._ig = ig;
