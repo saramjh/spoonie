@@ -13,13 +13,14 @@ import useSWRInfinite from "swr/infinite"
 import { useRecipeStore } from "@/features/recipe/store/recipeStore"
 import RecipeCard from "@/features/recipe/components/RecipeCard"
 import RecipeCardSkeleton from "@/features/recipe/components/RecipeCardSkeleton"
+import RecipeBookGuest from "@/features/recipe/components/RecipeBookGuest"
 import FilterModal, { hasActiveRecipeFilter } from "@/features/recipe/components/FilterModal"
 import RecipeListCard from "@/features/recipe/components/RecipeListCard"
 import type { User } from "@supabase/supabase-js"
 import type { Item } from "@/types/item"
 import { useToast } from "@/hooks/use-toast"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
-import { Sheet, StateSheet, UnderlineTabs } from "@/components/kit"
+import { Sheet, UnderlineTabs } from "@/components/kit"
 import { cacheManager } from "@/shared/infra/unified-cache-manager"
 import { revalidateItemPage } from "@/shared/infra/revalidate-item"
 import { collectItemImageUrls, removeItemImages } from "@/shared/infra/item-images"
@@ -200,11 +201,9 @@ export default function RecipesPage() {
 	const isGuest = !currentUser && !userLoading
 
 	return (
-		<div className="flex flex-col w-full h-screen text-ink relative overflow-hidden">
+		<div className={isGuest ? "w-full text-ink" : "flex flex-col w-full h-screen text-ink relative overflow-hidden"}>
 			{isGuest ? (
-				<div className="px-3 pt-3">
-					<StateSheet headingLevel="h1" title="레시피북은 회원이 쓰는 공간이에요" body="내 레시피를 기록하고 색상 라벨로 정리해 두었다가 요리할 때 다시 꺼내 볼 수 있어요." action={<Button asChild><Link href="/login?next=/recipes">로그인하고 레시피북 열기</Link></Button>} />
-				</div>
+				<RecipeBookGuest />
 			) : (
 			<div className="flex flex-col h-full">
 				<UnderlineTabs
