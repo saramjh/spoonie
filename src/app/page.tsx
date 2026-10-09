@@ -75,13 +75,6 @@ export default async function HomePage() {
 	return (
 		<div className="min-h-screen">
 			<h1 className="sr-only">Spoonie - 레시피와 요리 이야기를 나누는 커뮤니티</h1>
-			<a href="/early-cooks" className="mx-3 my-3 flex min-h-16 items-center justify-between gap-3 rounded-[3px] bg-paper px-4 py-3 text-ink shadow-sheet focus-visible:outline-offset-2">
-				<span>
-					<strong className="block text-label">오늘 만든 한 끼도 내 첫 기록으로</strong>
-					<span className="mt-0.5 block text-meta text-ink-soft">사진 한 장부터 시작하는 Recipeed</span>
-				</span>
-				<span className="shrink-0 text-heading" aria-hidden>→</span>
-			</a>
 			<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(websiteSchema) }} />
 			<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(organizationSchema) }} />
 			<Suspense fallback={<ItemListSkeleton />}>

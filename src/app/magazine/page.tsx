@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 
 export default function MagazinePage() {
   return (
-    <Sheet as="main" className="mx-3 mb-24 mt-3 px-4 pb-7 pt-5 text-ink sm:px-6">
+    <Sheet className="mx-3 mb-24 mt-3 px-4 pb-7 pt-5 text-ink sm:px-6">
       <header className="border-b border-border pb-6">
         <Link href="/" className="text-label text-ink-soft underline underline-offset-4">
           Spoonie 홈

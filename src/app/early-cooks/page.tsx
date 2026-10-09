@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 
 export default function EarlyCooksPage() {
   return (
-    <Sheet as="main" className="mx-3 mb-24 mt-3 px-4 pb-7 pt-5 text-ink sm:px-6">
+    <Sheet className="mx-3 mb-24 mt-3 px-4 pb-7 pt-5 text-ink sm:px-6">
       <header className="border-b border-border pb-7">
         <Link href="/" className="text-label text-ink-soft underline underline-offset-4">Spoonie 홈</Link>
         <h1 className="mt-6 text-display leading-tight">
@@ -100,21 +100,10 @@ export default function EarlyCooksPage() {
         </p>
       </section>
 
-      <section className="border-t border-border py-6">
-        <h2 className="text-heading">오늘 만든 한 끼부터 시작해 보세요</h2>
-        <p className="mt-2 text-read leading-relaxed">
-          사진 한 장과 짧은 이야기로도 내 요리 경험을 남길 수 있습니다.
-        </p>
-        <EarlyCookActionLink action="start_recipeed" href="/posts/new"
-          className="mt-2 inline-flex min-h-11 items-center text-label font-semibold text-ink underline underline-offset-4">
-          Recipeed 쓰러 가기 →
-        </EarlyCookActionLink>
-      </section>
       <footer className="mt-4 border-t border-border pt-5 text-meta text-ink-soft">
         <p>초기 참여에 따른 유료 혜택이나 우대 노출은 제공하지 않습니다.</p>
         <p className="mt-3">레시피를 따라 만든 기록 방법은{" "}
         <Link className="underline underline-offset-4" href="/magazine/after-cooking">Spoonie Magazine 안내</Link>에서 자세히 볼 수 있습니다.</p>
-        <p className="mt-3">크리에이터·브랜드는 <Link href="/partners/creators">크리에이터 안내</Link> 및 <Link href="/partners/brands">브랜드 안내</Link>를 확인하세요.</p>
       </footer>
     </Sheet>
   )

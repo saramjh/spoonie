@@ -36,7 +36,7 @@ const structured = {
 
 export default function AfterCookingMagazinePage() {
   return (
-    <Sheet as="main" className="mx-3 mb-24 mt-3 px-4 pb-7 pt-5 text-ink sm:px-6">
+    <Sheet className="mx-3 mb-24 mt-3 px-4 pb-7 pt-5 text-ink sm:px-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(structured) }} />
       <nav aria-label="현재 위치" className="text-label text-ink-soft">
         <Link href="/magazine" className="underline underline-offset-4">Spoonie Magazine</Link>
@@ -83,9 +83,6 @@ export default function AfterCookingMagazinePage() {
             <li className="border-t border-border pt-4">
               <p className="text-label font-semibold">01 · 공개 Recipe에서 시작하기</p>
               <p className="mt-2 text-read leading-relaxed">재료와 조리 순서를 확인합니다. 먼저 레시피를 읽는 데는 로그인이 필요하지 않습니다.</p>
-              <Link href={sample} className="mt-2 inline-flex min-h-11 items-center text-label font-semibold text-ink underline underline-offset-4">
-                실제 공개 Recipe 살펴보기 →
-              </Link>
             </li>
             <li className="border-t border-border pt-4">
               <p className="text-label font-semibold">02 · 내가 직접 요리한 장면 남기기</p>
@@ -125,9 +122,9 @@ export default function AfterCookingMagazinePage() {
             단순히 레시피를 저장하는 데서 멈추지 말고,
             만들어 본 결과도 나만의 요리 기록으로 남겨보세요.
           </p>
-          <Link href="/early-cooks"
+          <Link href={sample}
             className="mt-4 inline-flex min-h-11 items-center text-label font-semibold text-ink underline underline-offset-4">
-            Spoonie에서 첫 Recipeed 남기는 방법 →
+            실제 공개 Recipe에서 시작하기 →
           </Link>
         </section>
       </article>
