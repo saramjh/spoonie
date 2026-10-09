@@ -2,7 +2,6 @@
 
 // React hooks removed - not used in this component
 import { useRouter } from "@/shared/lib/navigation"
-import { Bookmark } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import PostCard from "@/components/items/PostCard"
 import PostCardSkeleton from "@/components/items/PostCardSkeleton"
@@ -10,7 +9,8 @@ import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { useSessionStore } from "@/store/sessionStore"
 import type { Item, Profile } from "@/types/item"
 import useSWR from "swr"
-import { PageHeader, Sheet } from "@/components/kit"
+import Link from "next/link"
+import { PageHeader, Sheet, StateSheet } from "@/components/kit"
 
 // 북마크 데이터 fetcher (SWR용)
 const fetchBookmarks = async (userId: string): Promise<Item[]> => {
@@ -133,12 +133,22 @@ export default function BookmarksPage() {
 
   if (!session) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Bookmark className="w-16 h-16 text-ink-soft/60 mx-auto mb-4" />
-          <h2 className="text-title text-ink mb-2">로그인이 필요합니다</h2>
-          <p className="text-ink-soft mb-4">북마크 기능을 사용하려면 로그인해주세요.</p>
-          <Button onClick={() => router.push("/login")}>로그인하기</Button>
+      <div>
+        <PageHeader title="저장한 글" />
+        <div className="px-3 pt-3">
+          <StateSheet
+            headingLevel="h2"
+            title="마음에 드는 요리를 나중에 다시 꺼내 보세요."
+            body="레시피와 레시피드를 저장해 두면 ‘저장한 글’에서 모아 볼 수 있어요. 로그인한 뒤 원하는 글에서 저장 버튼을 눌러 주세요."
+            action={
+              <div className="w-full">
+                <Button asChild className="w-full"><Link href="/login?next=%2Fbookmarks">로그인하고 저장한 글 보기</Link></Button>
+                <p className="mt-3 text-center text-label text-ink-soft">
+                  처음이라면 <Link href="/signup?next=%2Fbookmarks" className="font-semibold text-ink underline underline-offset-4">계정 만들기</Link>
+                </p>
+              </div>
+            }
+          />
         </div>
       </div>
     )

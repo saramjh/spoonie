@@ -9,26 +9,31 @@ interface LoginPromptSheetProps {
 	isOpen: boolean
 	onClose: () => void
 	action: "follow" | "like" | "bookmark" | "comment" | "notification"
-	targetName?: string
 }
 
-const ACTION_MESSAGES = {
-	follow: {
-		title: "팔로우하기",
-	},
-	like: {
-		title: "좋아요 누르기", 
-	},
-	bookmark: {
-		title: "북마크하기",
-	},
-	comment: {
-		title: "댓글 작성하기",
-	},
-	notification: {
-		title: "알림 확인하기",
-	},
-}
+// 어떤 행동이 로그인 후 가능해지는지를 알려준다. 로그인했다고 원래 행동이 자동 실행되지는 않는다.
+export const ACTION_MESSAGES = {
+  follow: {
+    title: "이 사람의 요리를 계속 보고 싶다면",
+    body: "팔로우하면 새로 공개한 요리를 ‘팔로우 중’ 피드에서 모아 볼 수 있어요.",
+  },
+  like: {
+    title: "마음에 드는 요리에 공감하기",
+    body: "로그인하면 이 글에 좋아요를 남길 수 있어요.",
+  },
+  bookmark: {
+    title: "다음에 볼 요리를 저장해 두세요",
+    body: "레시피와 레시피드를 저장해 두면 ‘저장한 글’에서 다시 찾을 수 있어요.",
+  },
+  comment: {
+    title: "요리에 관한 이야기를 나눠 보세요",
+    body: "궁금한 점이나 직접 바꿔 만든 경험을 댓글로 남길 수 있어요.",
+  },
+  notification: {
+    title: "내 요리에 관한 소식을 확인하세요",
+    body: "내 글에 달린 댓글, 좋아요, 레시피를 참고한 기록을 알림에서 볼 수 있어요.",
+  },
+} as const
 
 export default function LoginPromptSheet({ 
 	isOpen, 
@@ -102,7 +107,7 @@ export default function LoginPromptSheet({
 		onClose()
 	}
 
-			return (
+	return (
 		<Drawer 
 			open={isOpen} 
 			onOpenChange={onClose}
@@ -113,14 +118,14 @@ export default function LoginPromptSheet({
 			>
 				<DrawerHeader className="px-5 pb-2 pt-5 text-left">
 					<DrawerTitle className="text-title text-ink">{actionInfo.title}</DrawerTitle>
-					<DrawerDescription className="text-label text-ink-soft">로그인하면 지금 보던 화면으로 바로 돌아와요.</DrawerDescription>
+					<DrawerDescription className="text-label leading-relaxed text-ink-soft">{actionInfo.body} 로그인 후 현재 화면으로 돌아옵니다.</DrawerDescription>
 				</DrawerHeader>
 				<div className="space-y-2 px-5 pb-6 pt-3">
 					<Button ref={loginButtonRef} onClick={handleLogin} className="h-12 w-full text-body">
 						로그인
 					</Button>
 					<Button onClick={handleSignup} variant="outline" className="h-12 w-full text-body">
-						처음이에요, 가입할게요
+						처음이라면 계정 만들기
 					</Button>
 				</div>
 			</DrawerContent>

@@ -11,6 +11,7 @@ import { ko } from 'date-fns/locale'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useRouter } from '@/shared/lib/navigation'
+import Link from 'next/link'
 import PushNotificationSettings from '@/features/notification/components/PushNotificationSettings'
 import { NOTIFICATION_RECEIVED_EVENT } from '@/shared/infra/realtime-events';
 import { CheckBox, PageHeader, Sheet, StateSheet } from "@/components/kit"
@@ -45,7 +46,7 @@ export default function NotificationsPage() {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      toast({ title: '로그인 필요', description: '알림을 보려면 로그인이 필요합니다.', variant: 'destructive' });
+      // 비로그인 방문은 예상된 상태다. 오류 토스트 대신 가치 안내 화면을 보여 준다.
       return;
     }
     setCurrentUser(user);
@@ -325,6 +326,29 @@ export default function NotificationsPage() {
         </div>
       </div>
     );
+  }
+
+  if (!currentUser) {
+    return (
+      <div>
+        <PageHeader title="알림" />
+        <div className="px-3 pt-3">
+          <StateSheet
+            headingLevel="h2"
+            title="내 요리에 관한 소식을 확인하세요."
+            body="댓글, 좋아요, 다른 사람이 내 레시피를 참고한 기록을 알림에서 확인할 수 있어요."
+            action={
+              <div className="w-full">
+                <Button asChild className="w-full"><Link href="/login?next=%2Fnotifications">로그인하고 알림 보기</Link></Button>
+                <p className="mt-3 text-center text-label text-ink-soft">
+                  처음이라면 <Link href="/signup?next=%2Fnotifications" className="font-semibold text-ink underline underline-offset-4">계정 만들기</Link>
+                </p>
+              </div>
+            }
+          />
+        </div>
+      </div>
+    )
   }
 
   const allSelected = notifications.length > 0 && selectedIds.size === notifications.length
