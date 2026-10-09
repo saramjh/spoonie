@@ -8,6 +8,7 @@ import {
 	editDefaults,
 	forkDefaults,
 	reorderIngredients,
+  removeInstructionPhoto,
 	toIngredientRows,
 	toInstructionRows,
 } from "./recipe-form"
@@ -107,4 +108,13 @@ describe("social-state", () => {
 		expect(setBookmarked(false)({ ...base, bookmarks_count: 0 } as Item)).toEqual({ is_bookmarked: false, bookmarks_count: 0 })
 	})
 	it("팔로우 수", () => expect(shiftCount({ followers: 0, following: 2 }, "followers", -1)).toEqual({ followers: 0, following: 2 }))
+})
+
+describe("조리 단계 삭제 시 사진 연결", () => {
+  it("중간 단계를 삭제하면 같은 위치 사진만 제거하고 이후 사진은 당겨 온다", () => {
+    const photos = ["one.jpg", null, "three.jpg", "four.jpg"]
+    expect(removeInstructionPhoto(photos, 1)).toEqual(["one.jpg", "three.jpg", "four.jpg"])
+    expect(removeInstructionPhoto(photos, 0)).toEqual([null, "three.jpg", "four.jpg"])
+    expect(photos).toHaveLength(4) // 원본은 변하지 않아야 한다.
+  })
 })

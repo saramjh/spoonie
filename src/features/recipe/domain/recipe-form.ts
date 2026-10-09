@@ -120,3 +120,8 @@ export function toIngredientRows(ingredients: RecipeIngredientInput[], itemId: s
 export function toInstructionRows<T extends RecipeInstructionInput>(instructions: T[], itemId: string) {
 	return instructions.map((inst, index) => ({ ...inst, item_id: itemId, step_number: index + 1 }))
 }
+
+// 조리 단계와 사진은 같은 인덱스로 저장된다. 중간 단계 삭제 시 반드시 함께 이동한다.
+export function removeInstructionPhoto<T>(images: T[], index: number): T[] {
+  return images.filter((_, position) => position !== index)
+}

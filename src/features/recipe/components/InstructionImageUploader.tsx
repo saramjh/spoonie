@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useCallback, useId } from "react"
+import { useRef, useCallback, useId } from "react"
 import Image from "next/image"
 
 import { X, Camera } from "lucide-react"
@@ -18,8 +18,7 @@ export default function InstructionImageUploader({ imageUrl, onImageChange, plac
   const fileInputId = useId();
   const { toast } = useToast();
 
-  const [selectedPreview, setSelectedPreview] = useState<string | null | undefined>(undefined);
-  const preview = selectedPreview === undefined ? imageUrl : selectedPreview || undefined;
+  const preview = imageUrl;
 
   const handleFileSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,7 +38,6 @@ export default function InstructionImageUploader({ imageUrl, onImageChange, plac
 
       try {
         const [optimizedImage] = await optimizeImages([file]);
-        setSelectedPreview(optimizedImage.preview);
         onImageChange(optimizedImage);
         toast({ title: "이미지 업로드 완료" });
       } catch (error) {
@@ -59,7 +57,6 @@ export default function InstructionImageUploader({ imageUrl, onImageChange, plac
   );
 
   const removeImage = useCallback(() => {
-    setSelectedPreview(null);
     onImageChange(null);
   }, [onImageChange]);
 

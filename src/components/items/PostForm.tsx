@@ -370,8 +370,8 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 		<div className="min-h-screen pb-28">
 			<PageHeader onCancel={() => { void draft.leave(() => router.back()) }} leading="cancel" title={isEditMode ? "레시피드 수정" : sourceRecipeId ? "만들어 본 기록" : "레시피드 쓰기"} />
 
-      <p role="status" className={`px-4 pt-2 text-meta ${draft.status === "error" ? "text-destructive" : "text-ink-soft"}`}>
-        {draft.status === "saved" ? "이 기기에 임시 저장됨" : draft.status === "pending" ? "임시 저장 중…" : draft.status === "error" ? "임시 저장 실패 · 화면을 닫지 마세요" : "입력한 내용은 이 기기에 자동 저장돼요"}
+      <p role="status" className={`px-4 pt-2 text-meta ${draft.status === "error" || draft.status === "conflict" ? "text-destructive" : "text-ink-soft"}`}>
+        {draft.status === "saved" ? "이 기기에 임시 저장됨" : draft.status === "pending" ? "임시 저장 중…" : draft.status === "conflict" ? "다른 탭에서 같은 글을 수정했습니다 · 이 탭에서 나가지 말고 내용을 복사해 주세요" : draft.status === "error" ? "임시 저장 실패 · 화면을 닫지 마세요" : "입력한 내용은 이 기기에 자동 저장돼요"}
       </p>
 			<form id="post-form" onSubmit={form.handleSubmit(onSubmit, onError)} className="space-y-3 px-3 pt-3">
 				<Sheet>

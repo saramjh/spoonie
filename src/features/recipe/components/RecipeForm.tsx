@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useRouter } from "@/shared/lib/navigation"
 import { useForm, useFieldArray, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -31,7 +31,7 @@ import { mutate as globalMutate } from "swr"
 import { ColorLabelPicker, PageHeader, PageLoading, SectionHeading, Sheet, SourceRow, StateSheet } from "@/components/kit"
 import { revalidateItemPage } from "@/shared/infra/revalidate-item"
 import { removeDroppedImages } from "@/shared/infra/item-images"
-import { attachInstructionImages, buildRecipeItemPayload, editDefaults, forkDefaults, reorderIngredients } from "@/features/recipe/domain/recipe-form"
+import { attachInstructionImages, buildRecipeItemPayload, editDefaults, forkDefaults, removeInstructionPhoto, reorderIngredients } from "@/features/recipe/domain/recipe-form"
 import { fetchCitedRecipes, saveRecipeRows, uploadInstructionImages } from "@/features/recipe/data/recipe-repository"
 import type { RecipeFormProps } from "@/features/recipe/contracts"
 import { onboardingRecipeDefaults } from "@/features/onboarding/domain/review"
@@ -134,6 +134,7 @@ export default function RecipeForm({
 		}
 	}, [isEditMode, initialData?.id, supabase.auth])
 	const [instructionImages, setInstructionImages] = useState<(OptimizedImage | null)[]>([])
+  const sourceImageRestoreGuard = useRef(false)
 	const [selectedCitedRecipes, setSelectedCitedRecipes] = useState<Item[]>([])
 
 	const form = useForm<RecipeFormValues>({
@@ -222,7 +223,7 @@ export default function RecipeForm({
 				const extension = blob.type === "image/png" ? "png" : blob.type === "image/webp" ? "webp" : "jpg"
 				const file = new File([blob], "onboarding-source." + extension, { type: blob.type })
 				const images = await optimizeImages([file])
-				if (!cancelled) setMainImages(images)
+				if (!cancelled && !sourceImageRestoreGuard.current) setMainImages((current) => current.length ? current : images)
 			} catch (error) {
 				console.error("Onboarding source image preload failed:", error)
 			}
@@ -256,10 +257,19 @@ export default function RecipeForm({
 	}
 
 	const handleInstructionImageChange = (index: number, image: OptimizedImage | null) => {
-		const newInstructionImages = [...instructionImages]
-		newInstructionImages[index] = image
-		setInstructionImages(newInstructionImages)
-	}
+    setInstructionImages((previous) => {
+      const next = [...previous]
+      next[index] = image
+      return next
+    })
+    // A deleted server photo must not reappear via the form field fallback.
+    if (!image) form.setValue(`instructions.${index}.image_url`, "", { shouldDirty: true })
+  }
+
+  const handleRemoveInstruction = (index: number) => {
+    removeInstruction(index)
+    setInstructionImages((previous) => removeInstructionPhoto(previous, index))
+  }
 
 	const handleSelectedCitedRecipesChange = (recipes: Item[]) => {
 		setSelectedCitedRecipes(recipes)
@@ -278,6 +288,7 @@ export default function RecipeForm({
     },
     snapshot: () => ({ values: form.getValues(), mainImages, instructionImages, thumbnailIndex }),
     restore: (state) => {
+      sourceImageRestoreGuard.current = true
       form.reset(state.values)
       setMainImages(state.mainImages)
       setInstructionImages(state.instructionImages ?? [])
@@ -717,12 +728,12 @@ export default function RecipeForm({
 										{errors.instructions?.[index]?.description && <p className={errorText}>{errors.instructions[index].description.message}</p>}
 										<div className="flex items-start justify-between gap-2">
 											<div className="min-w-0 flex-1">
-												<InstructionImageUploader imageUrl={instructionImages[index]?.preview ?? field.image_url} onImageChange={(image) => handleInstructionImageChange(index, image)} />
+												<InstructionImageUploader imageUrl={instructionImages[index]?.preview} onImageChange={(image) => handleInstructionImageChange(index, image)} />
 											</div>
 											{instructions.length > 1 && (
 												<button
 													type="button"
-													onClick={() => removeInstruction(index)}
+													onClick={() => handleRemoveInstruction(index)}
 													className="h-11 flex-shrink-0 px-1 text-meta text-ink-soft underline underline-offset-4 hover:text-destructive"
 												>
 													단계 지우기

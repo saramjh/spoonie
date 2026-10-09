@@ -14,7 +14,7 @@ interface Snapshot<T> {
   thumbnailIndex: number
 }
 
-type Status = "idle" | "pending" | "saved" | "error"
+type Status = "idle" | "pending" | "saved" | "error" | "conflict"
 
 export function useComposerDraft<T>({
   key, subscribe, snapshot, restore,
@@ -39,12 +39,19 @@ export function useComposerDraft<T>({
   const [status, setStatus] = useState<Status>("idle")
   const baseline = useRef("")
   const lastSaved = useRef("")
+  const revision = useRef(0)
+  const blocked = useRef(false)
   const canSave = useRef(false)
   const disposed = useRef(false)
   const pending = useRef<Promise<void>>(Promise.resolve())
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const signature = useCallback((state: Snapshot<T>) => JSON.stringify(state, (_k, value) => {
+  const signature = useCallback((state: Snapshot<T>) => JSON.stringify({
+    values: state.values,
+    mainImages: state.mainImages,
+    instructionImages: state.instructionImages ?? [],
+    thumbnailIndex: state.thumbnailIndex,
+  }, (_k, value) => {
     if (typeof File !== "undefined" && value instanceof File) {
       return { name: value.name, size: value.size, modified: value.lastModified }
     }
@@ -52,7 +59,7 @@ export function useComposerDraft<T>({
   }), [])
 
   const saveNow = useCallback((): Promise<void> => {
-    if (!canSave.current || disposed.current) return Promise.resolve()
+    if (!canSave.current || disposed.current || blocked.current) return Promise.resolve()
     if (timer.current) clearTimeout(timer.current)
     timer.current = null
     const state = latest.current()
@@ -67,19 +74,23 @@ export function useComposerDraft<T>({
       savedAt: Date.now(),
     }
     setStatus("pending")
-    const write = pending.current.catch(() => {}).then(() => writeComposerDraft(key, draft))
+    const write = pending.current.catch(() => {}).then(async () => {
+      const next = await writeComposerDraft(key, draft, revision.current)
+      revision.current = next
+    })
     pending.current = write
     void write.then(() => {
       lastSaved.current = current
       if (!disposed.current && signature(latest.current()) === current) setStatus("saved")
-    }).catch(() => {
-      if (!disposed.current) setStatus("error")
+    }).catch((error: unknown) => {
+      if (error instanceof Error && error.message.includes("다른 탭")) blocked.current = true
+      if (!disposed.current) setStatus(blocked.current ? "conflict" : "error")
     })
     return write
   }, [key, signature])
 
   const scheduleSave = useCallback(() => {
-    if (!canSave.current || disposed.current) return
+    if (!canSave.current || disposed.current || blocked.current) return
     const current = signature(latest.current())
     if (current === lastSaved.current || (current === baseline.current && !lastSaved.current)) return
     setStatus("pending")
@@ -92,6 +103,8 @@ export function useComposerDraft<T>({
     disposed.current = false
     canSave.current = false
     lastSaved.current = ""
+    revision.current = 0
+    blocked.current = false
     // 키가 바뀔 때 초기화는 microtask로 실행해 렌더 중첩을 피한다.
     void Promise.resolve().then(() => {
       if (!active) return
@@ -102,7 +115,10 @@ export function useComposerDraft<T>({
     void readComposerDraft<T>(key).then((existing) => {
       if (!active) return
       baseline.current = signature(latest.current())
-      if (existing) setRecovery(existing)
+      if (existing) {
+        revision.current = existing.revision ?? 0
+        setRecovery(existing)
+      }
       else { canSave.current = true; setReady(true) }
     }).catch(() => {
       if (!active) return
@@ -136,8 +152,9 @@ export function useComposerDraft<T>({
       thumbnailIndex: recovery.thumbnailIndex,
     }
     restorer.current(state)
-    baseline.current = signature(latest.current())
-    lastSaved.current = ""
+    // React state updates commit later; use the recovered snapshot as the baseline.
+    baseline.current = signature(state)
+    lastSaved.current = baseline.current
     setRecovery(null)
     canSave.current = true
     setReady(true)
@@ -146,13 +163,14 @@ export function useComposerDraft<T>({
   const startFresh = useCallback(async () => {
     if (!recovery) return
     try {
-      await deleteComposerDraft(key)
+      await deleteComposerDraft(key, revision.current)
     } catch {
       setStatus("error")
       return
     }
     baseline.current = signature(latest.current())
     lastSaved.current = ""
+    revision.current = 0
     setRecovery(null)
     canSave.current = true
     setReady(true)
@@ -164,7 +182,7 @@ export function useComposerDraft<T>({
     timer.current = null
     await pending.current.catch(() => {})
     try {
-      await deleteComposerDraft(key)
+      await deleteComposerDraft(key, revision.current)
     } catch {
       // 발행은 이미 성공했다. 불필요한 복원 안내만 남길 수 있으므로 보고한다.
       setStatus("error")
@@ -174,6 +192,7 @@ export function useComposerDraft<T>({
   const leave = useCallback(async (navigate: () => void) => {
     if (!ready) return
     const hasChanges = signature(latest.current()) !== baseline.current
+    if (blocked.current) { setStatus("conflict"); return }
     if (hasChanges && !window.confirm("작성 중인 내용을 이 기기에 보관하고 나갈까요?")) return
     if (hasChanges) {
       try { await saveNow() } catch { setStatus("error"); return }
@@ -187,7 +206,7 @@ export function useComposerDraft<T>({
     }
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
       const current = signature(latest.current())
-      if (canSave.current && current !== baseline.current && current !== lastSaved.current) {
+      if (canSave.current && (blocked.current || (current !== baseline.current && current !== lastSaved.current))) {
         void saveNow().catch(() => {})
         event.preventDefault()
         event.returnValue = ""

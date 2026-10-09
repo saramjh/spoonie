@@ -15,6 +15,7 @@ export interface ComposerDraft<T> {
   instructionImages: (StoredImage | null)[]
   thumbnailIndex: number
   savedAt: number
+  revision?: number
 }
 
 const DB_NAME = "spoonie-composer"
@@ -80,10 +81,60 @@ export async function readComposerDraft<T>(key: string): Promise<ComposerDraft<T
   return transact("readonly", (store) => store.get(key))
 }
 
-export async function writeComposerDraft<T>(key: string, draft: ComposerDraft<T>): Promise<void> {
-  await transact("readwrite", (store) => store.put(draft, key))
+// Concurrent tabs must never silently overwrite the same draft.
+// Read and compare the revision inside the *same* IndexedDB transaction.
+export async function writeComposerDraft<T>(
+  key: string, draft: ComposerDraft<T>, expectedRevision = 0,
+): Promise<number> {
+  const db = await openDrafts()
+  try {
+    return await new Promise<number>((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, "readwrite")
+      const store = tx.objectStore(STORE_NAME)
+      const request = store.get(key)
+      request.onsuccess = () => {
+        const previous = request.result as ComposerDraft<T> | undefined
+        if ((previous?.revision ?? 0) !== expectedRevision) {
+          tx.abort()
+          reject(new Error("다른 탭에서 이 글의 임시 저장본이 변경됐습니다. 내용을 복사한 뒤 다시 열어 주세요."))
+          return
+        }
+        store.put({ ...draft, revision: expectedRevision + 1 }, key)
+      }
+      tx.oncomplete = () => resolve(expectedRevision + 1)
+      tx.onerror = () => reject(tx.error || new Error("임시 저장에 실패했습니다."))
+      tx.onabort = () => reject(tx.error || new Error("임시 저장이 중단됐습니다."))
+    })
+  } finally {
+    db.close()
+  }
 }
 
-export async function deleteComposerDraft(key: string): Promise<void> {
-  await transact("readwrite", (store) => store.delete(key))
+export async function deleteComposerDraft(key: string, expectedRevision?: number): Promise<void> {
+  if (expectedRevision === undefined) {
+    await transact("readwrite", (store) => store.delete(key))
+    return
+  }
+  const db = await openDrafts()
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, "readwrite")
+      const store = tx.objectStore(STORE_NAME)
+      const request = store.get(key)
+      request.onsuccess = () => {
+        const previous = request.result as ComposerDraft<unknown> | undefined
+        if ((previous?.revision ?? 0) !== expectedRevision) {
+          tx.abort()
+          reject(new Error("다른 탭에 더 최신 임시 저장본이 있어 삭제하지 않았습니다."))
+          return
+        }
+        store.delete(key)
+      }
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error || new Error("임시 저장 삭제 실패"))
+      tx.onabort = () => reject(tx.error || new Error("임시 저장 삭제 중단"))
+    })
+  } finally {
+    db.close()
+  }
 }
