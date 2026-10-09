@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import Image from "next/image"
 import EarlyCookActionLink from "./early-cook-action-link"
+import InviteAnotherCook from "./invite-another-cook"
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
 const sample = "/recipes/554ae9ef-15a1-4806-944e-170884d17a96"
@@ -88,6 +89,8 @@ export default function EarlyCooksPage() {
           원본과 기록 연결 버튼 직접 확인하기 →
         </EarlyCookActionLink>
       </section>
+
+      <InviteAnotherCook />
 
       <section className="space-y-3 border-t border-border py-7">
         <h2 className="text-heading">첫 사용 후 솔직한 의견도 듣고 있습니다</h2>
