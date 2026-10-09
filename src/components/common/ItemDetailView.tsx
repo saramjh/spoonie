@@ -13,6 +13,7 @@ import { BookmarkButton } from "@/components/items/BookmarkButton"
 import FollowButton from "@/components/items/FollowButton"
 import CommentsSection from "@/components/items/CommentsSection"
 import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
+import BottomNavBar from "@/components/layout/BottomNavBar"
 import ImageCarousel from "@/components/common/ImageCarousel"
 import { publicContentTitle } from "@/features/discovery/domain/search-exposure"
 import RecipeContentView from "@/features/recipe/components/RecipeContentView"
@@ -442,8 +443,12 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		)
 	}
 
+	// 공유 링크로 들어온 비회원은 뒤로 가기만으로 사이트를 탐색할 수 없으므로 하단 탭을 제공한다.
+	// 회원의 상세 읽기 집중 화면과 실제 작성 화면의 네비게이션 정책은 유지한다.
+	const guestNavigation = !isAuthLoading && !currentUser && item.is_public
+
 	return (
-		<div className="flex flex-col h-full relative">
+		<div className={cn("flex flex-col h-full relative", guestNavigation && "pb-20")}>
 			<article>
 				<header className="sticky top-0 z-20 flex h-14 items-center gap-1 border-b border-border bg-paper px-1">
 					<Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => router.back()} aria-label="뒤로 가기">
@@ -667,6 +672,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 				onClose={() => setShowLoginPrompt(false)}
 				action="like"
 			/>
+			{guestNavigation && <BottomNavBar />}
 		</div>
 	)
 }
