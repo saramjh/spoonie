@@ -120,6 +120,7 @@ export default function EarlyCooksPage() {
       <footer className="mt-6 text-meta text-ink-soft">
         레시피를 따라 만든 기록 방법은{" "}
         <Link className="underline underline-offset-4" href="/magazine/after-cooking">Spoonie Magazine 안내</Link>에서 자세히 볼 수 있습니다.
+        <p className="mt-3">크리에이터·브랜드는 <Link href="/partners/creators">크리에이터 안내</Link> 및 <Link href="/partners/brands">브랜드 안내</Link>를 확인하세요.</p>
       </footer>
     </main>
   )

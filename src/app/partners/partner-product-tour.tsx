@@ -5,14 +5,15 @@ import { Minus, Plus } from "lucide-react"
 
 import { Photo } from "@/components/kit/Photo"
 import { cn } from "@/lib/utils"
+import styles from "./partner-product-tour.module.css"
 
 type Segment = "creator" | "brand"
 type Stage = "recipe" | "cook" | "relation" | "profile"
 
 const stages: Array<{ key: Stage; label: string }> = [
+  { key: "relation", label: "연결" },
   { key: "recipe", label: "Recipe" },
   { key: "cook", label: "요리하기" },
-  { key: "relation", label: "이어짐" },
   { key: "profile", label: "쌓임" },
 ]
 
@@ -33,7 +34,7 @@ const creatorRecipes = [
 
 const copy = {
   creator: {
-    intro: "실제 Spoonie Recipe가 어떻게 다시 쓰이는지 눌러 보세요.",
+    intro: "레시피를 따라 만든 기록이 원본으로 돌아오는 구조부터 살펴보세요.",
     consequence: {
       recipe: "인분을 바꾸면 재료 양이 같이 바뀌어, 게시물을 다시 계산하지 않고 바로 요리에 씁니다.",
       cook: "보는 사람은 원문을 다시 뒤지지 않고 Recipe 안에서 한 단계씩 따라갑니다.",
@@ -56,7 +57,7 @@ const copy = {
     ],
   },
   brand: {
-    intro: "제품 활용법이 광고 문구가 아니라 실제 조리 경험으로 이어지는 흐름입니다.",
+    intro: "제품이 실제 조리 기록과 연결될 수 있는 구조부터 확인해보세요.",
     consequence: {
       recipe: "상품 소개문이 아니라 사용자가 양을 바꾸며 따라 만드는 제품 활용법이 됩니다.",
       cook: "사용자는 제품을 얼마만큼, 어떤 순서로 쓰는지 Recipe 안에서 따라갑니다.",
@@ -82,7 +83,7 @@ const copy = {
 
 export default function PartnerProductTour({ segment }: { segment: Segment }) {
   const text = copy[segment]
-  const [stage, setStage] = useState<Stage>("recipe")
+  const [stage, setStage] = useState<Stage>("relation")
   const [servings, setServings] = useState(2)
   const [cookStep, setCookStep] = useState(0)
 
@@ -106,8 +107,8 @@ export default function PartnerProductTour({ segment }: { segment: Segment }) {
 
       <div className="mx-4 overflow-hidden rounded-[3px] border border-border bg-paper-tint">
         <div className="flex min-h-11 items-center justify-between gap-3 border-b border-border px-3">
-          <p className="text-label font-semibold text-ink">기능 시연</p>
-          <p className="text-meta text-ink-soft">직접 눌러보세요</p>
+          <p className="text-label font-semibold text-ink">사용 흐름 예시</p>
+          <p className="text-meta text-ink-soft">연결 → 활용 → 축적</p>
         </div>
 
         <div
@@ -329,16 +330,16 @@ function RelationDemo({ segment, sourceTitle }: { segment: Segment; sourceTitle:
         <p className="mt-1 text-heading text-ink">{sourceTitle}</p>
       </div>
 
-      <div className="relative py-5">
-        <span className="absolute bottom-0 left-5 top-0 w-px bg-border" aria-hidden />
-        <div className="relative ml-10 border-y border-border py-3">
+      <div className="relative py-5" aria-label="Recipe에서 파생된 기록의 관계 흐름 예시">
+        <span className={cn("absolute bottom-0 left-5 top-0 w-px bg-border", styles.lineDraw)} aria-hidden />
+        <div className={cn("relative ml-10 border-y border-border py-3", styles.nodeFirst)}>
           <span className="absolute -left-[25px] top-5 h-3 w-3 rounded-full border-2 border-paper bg-ink" aria-hidden />
           <p className="text-meta text-ink-soft">
             {segment === "creator" ? "내 Recipe로 만들었어요" : "이 Recipe로 만들었어요"}
           </p>
           <p className="mt-0.5 text-label font-semibold text-ink">만들어 본 기록</p>
         </div>
-        <div className="relative ml-10 border-b border-border py-3">
+        <div className={cn("relative ml-10 border-b border-border py-3", styles.nodeSecond)}>
           <span className="absolute -left-[25px] top-5 h-3 w-3 rounded-full border-2 border-paper bg-ink" aria-hidden />
           <p className="text-meta text-ink-soft">
             참고한 레시피 · {segment === "creator" ? "원본 작성자" : "브랜드"}
@@ -349,7 +350,7 @@ function RelationDemo({ segment, sourceTitle }: { segment: Segment; sourceTitle:
         </div>
       </div>
 
-      <p className="text-meta text-ink-soft">만든 기록이나 참고가 생긴 경우에만 이 관계가 표시됩니다.</p>
+      <p className="text-meta text-ink-soft">연결 구조를 설명하는 예시입니다. 실제 공개 기록이나 참고가 생긴 경우에만 관계가 표시됩니다.</p>
     </div>
   )
 }

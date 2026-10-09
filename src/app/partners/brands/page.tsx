@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [{ url: baseUrl + "/og-default.png", width: 1200, height: 630, alt: "Spoonie" }],
   },
-  robots: { index: false, follow: true },
+  robots: { index: true, follow: true },
 }
 
 export default function Page() {

@@ -31,9 +31,9 @@ const copy: Record<
 > = {
   creator: {
     eyebrow: "Spoonie × 요리 크리에이터",
-    title: "내 레시피가\n실제로 다시 쓰이게",
+    title: "내 레시피가\n누군가의 한 끼로 이어질 때",
     description:
-      "보는 사람이 양을 바꾸고, 요리하고, 만든 기록을 남겨도 원본 Recipe와 작성자로 돌아오는 길이 이어집니다.",
+      "피드에서 지나간 레시피를 누군가 참고해 요리한 뒤 기록하면, 그 이야기가 원본 Recipe와 다시 연결됩니다.",
     directCta: "가입하고 내 Recipe 올려보기",
     setupTitle: "옮겨 적는 게 먼저 걸린다면",
     setupDescription:
@@ -44,9 +44,9 @@ const copy: Record<
   },
   brand: {
     eyebrow: "Spoonie × 식품·주방 브랜드",
-    title: "제품 활용법을\n실제로 쓰는 Recipe로",
+    title: "제품 사진을 넘어\n실제 요리 방법으로",
     description:
-      "제품을 소개하는 글을 넘어, 사용자가 양과 순서를 따라 요리하고 활용 기록을 원본 Recipe와 이어 남길 수 있습니다.",
+      "고객이 제품으로 무엇을 만들 수 있는지 활용 Recipe로 직접 보여주세요. 따라 만든 기록이 생기면 원본과 이어집니다.",
     directCta: "가입하고 활용 Recipe 올려보기",
     setupTitle: "기존 활용 자료부터 옮기고 싶다면",
     setupDescription:

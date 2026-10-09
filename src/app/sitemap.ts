@@ -96,6 +96,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 		{ url: `${baseUrl}/magazine` },
 		{ url: `${baseUrl}/magazine/after-cooking` },
 		{ url: `${baseUrl}/early-cooks` },
+		{ url: `${baseUrl}/partners/creators` },
+		{ url: `${baseUrl}/partners/brands` },
 	]
 
 	try {

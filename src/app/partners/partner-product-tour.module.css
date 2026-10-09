@@ -1,0 +1,9 @@
+/* An actual cause-and-effect trace, not an ornamental graph or fake user stats. */
+.lineDraw{transform-origin:top;animation:relation-draw 1.15s cubic-bezier(.22,.8,.3,1) both}
+.nodeFirst{animation:relation-enter .55s .38s ease-out both}
+.nodeSecond{animation:relation-enter .55s .84s ease-out both}
+@keyframes relation-draw{from{transform:scaleY(.05);opacity:.3}to{transform:scaleY(1);opacity:1}}
+@keyframes relation-enter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){
+ .lineDraw,.nodeFirst,.nodeSecond{animation:none}
+}
