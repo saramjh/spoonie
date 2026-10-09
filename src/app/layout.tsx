@@ -46,7 +46,7 @@ export const metadata: Metadata = {
 	verification: {
 		other: {
 			"naver-site-verification": "0626924727da0c005739ca94edae9591d26a53bc",
-			"saaskr-verification": "saaskr-verify-78fa73cf461e5131138fc03b",
+			"saaskr-verification": "saaskr-verify-c731cc86859c0e1ba52bbbbd",
 		},
 	},
 	robots: {
