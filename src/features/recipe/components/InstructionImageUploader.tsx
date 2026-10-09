@@ -3,7 +3,6 @@
 import { useState, useRef, useCallback, useId } from "react"
 import Image from "next/image"
 
-import { Input } from "@/components/ui/input"
 import { X, Camera } from "lucide-react"
 import { optimizeImages, isValidImageType, isValidFileSize, OptimizedImage } from "@/shared/infra/image-utils"
 import { useToast } from "@/hooks/use-toast"
@@ -98,7 +97,7 @@ export default function InstructionImageUploader({ imageUrl, onImageChange, plac
           {placeholder}
         </label>
       )}
-      <Input id={fileInputId} ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="sr-only" tabIndex={-1} />
+      <input id={fileInputId} ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="sr-only" tabIndex={-1} />
     </div>
   );
 }

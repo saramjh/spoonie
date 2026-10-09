@@ -2,7 +2,6 @@
 
 import { useState, useRef, useCallback, useEffect, useId } from "react"
 import Image from "next/image"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ImagePlus, X, Camera } from "lucide-react"
 import { optimizeImages, isValidImageType, isValidFileSize, OptimizedImage } from "@/shared/infra/image-utils"
@@ -185,7 +184,7 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 				</label>
 			)}
 
-			<Input id={fileInputId} ref={fileInputRef} type="file" accept="image/*" multiple disabled={isProcessing} onChange={handleFileSelect} className="sr-only" tabIndex={-1} />
+			<input id={fileInputId} ref={fileInputRef} type="file" accept="image/*" multiple disabled={isProcessing} onChange={handleFileSelect} className="sr-only" tabIndex={-1} />
 		</div>
 	)
 }

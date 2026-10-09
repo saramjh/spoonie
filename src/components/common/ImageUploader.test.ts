@@ -12,7 +12,10 @@ describe("mobile file picker before hydration", () => {
       expect(id).toBeTruthy()
       expect(html).toContain(`id="${id}"`)
       expect(html).toContain('accept="image/*"')
-      expect(html).toMatch(/class="[^"]*\bsr-only\b[^"]*"/)
+      const input = html.match(/<input[^>]*type="file"[^>]*>/)?.[0]
+      expect(input).toBeTruthy()
+      expect(input).toContain('class="sr-only"')
+      expect(input).not.toContain('w-full')
     }
   })
 
@@ -21,5 +24,8 @@ describe("mobile file picker before hydration", () => {
     const id = html.match(/<label[^>]*for="([^"]+)"/)?.[1]
     expect(id).toBeTruthy()
     expect(html).toContain(`id="${id}"`)
+    const input = html.match(/<input[^>]*type="file"[^>]*>/)?.[0]
+    expect(input).toContain('class="sr-only"')
+    expect(input).not.toContain('w-full')
   })
 })
