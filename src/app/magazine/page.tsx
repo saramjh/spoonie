@@ -105,6 +105,9 @@ export default function MagazinePage() {
 
       <footer className="mt-10 border-t border-border pt-6">
         <p className="text-meta text-ink-soft">Spoonie Magazine · 집밥에 바로 쓰는 이야기</p>
+        <Link href="/magazine/after-cooking" className="mt-4 inline-flex min-h-11 items-center text-label font-semibold text-ink underline underline-offset-4">
+          따라 만든 요리, 내 기록으로 이어서 남기는 방법 →
+        </Link>
         <p className="mt-2 text-label text-ink-soft">
           이 매거진은 공개로 읽을 수 있습니다. 이메일 구독 신청·정기 발송은 아직 제공하지 않습니다.
         </p>
