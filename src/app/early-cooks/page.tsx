@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import Image from "next/image"
+import { Sheet } from "@/components/kit"
 import EarlyCookActionLink from "./early-cook-action-link"
 import InviteAnotherCook from "./invite-another-cook"
 
@@ -22,17 +23,15 @@ export const metadata: Metadata = {
 
 export default function EarlyCooksPage() {
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 pb-24 pt-7 text-ink">
-      <header className="border-b border-border pb-8">
+    <Sheet as="main" className="mx-3 mb-24 mt-3 px-4 pb-7 pt-5 text-ink sm:px-6">
+      <header className="border-b border-border pb-7">
         <Link href="/" className="text-label text-ink-soft underline underline-offset-4">Spoonie 홈</Link>
-        <p className="mt-7 text-meta font-semibold tracking-wide text-ink-soft">EARLY COOKS · SPOONIE</p>
-        <h1 className="mt-4 text-display leading-tight">
-          새로운 요리 SNS,<br />구경보다 첫 한 끼.
+        <h1 className="mt-6 text-display leading-tight">
+          오늘 만든 한 끼,<br />내 첫 요리 기록으로.
         </h1>
         <p className="mt-5 text-read leading-relaxed text-ink-soft">
-          이미 요리한 사진이 있다면 전문 레시피 작가가 아니어도 괜찮습니다.
-          내가 만든 한 끼부터 기록하는 사람들과 Spoonie의 시작을 만들어가고 싶습니다.
-          지금은 첫 20명의 실제 활동자를 찾고 있는 초기 단계입니다.
+          잘 만든 요리법이 없어도 괜찮습니다. 오늘 만든 음식 사진과 짧은 이야기부터
+          Recipeed로 남겨보세요. Spoonie는 함께 요리하고 기록할 첫 사용자들을 찾고 있습니다.
         </p>
         <EarlyCookActionLink
           action="start_recipeed"
@@ -40,49 +39,44 @@ export default function EarlyCooksPage() {
           className="mt-6 inline-flex min-h-12 items-center justify-center rounded-md bg-ink px-5 py-3 text-label font-semibold text-paper">
           내 첫 Recipeed 쓰기 →
         </EarlyCookActionLink>
-        <p className="mt-3 text-meta text-ink-soft">
-          글을 공개하려면 로그인이 필요합니다. 유료 혜택이나 초기 이용자 우대 노출을 약속하는 모집이 아닙니다.
-        </p>
+        <p className="mt-3 text-meta text-ink-soft">글을 공개하려면 로그인이 필요합니다.</p>
       </header>
 
-      <section className="space-y-5 py-7">
-        <h2 className="text-heading">참여 방법은 어렵지 않습니다</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="border border-border bg-paper-tint p-4">
-            <p className="text-meta text-ink-soft">START 01</p>
-            <h3 className="mt-2 text-label font-semibold">오늘 만든 집밥이 있다면</h3>
-            <p className="mt-3 text-read leading-relaxed">
-              사진 한 장과 어떤 음식인지, 오늘 바꾼 재료가 무엇인지 남겨보세요.
-              정식 Recipe의 계량과 조리 단계를 모두 작성할 필요는 없습니다.
+      <section className="py-7" aria-labelledby="start-recording">
+        <h2 id="start-recording" className="text-heading">어떤 요리부터 남길까요?</h2>
+        <div className="mt-4 divide-y divide-border border-y border-border">
+          <div className="py-4">
+            <h3 className="text-label font-semibold">오늘 만든 집밥</h3>
+            <p className="mt-2 text-read leading-relaxed">
+              음식 사진 한 장과 바꿔 넣은 재료, 다음에도 기억하고 싶은 점을 남겨보세요.
+              계량과 조리 순서를 모두 적을 필요는 없습니다.
             </p>
           </div>
-          <div className="border border-border bg-paper-tint p-4">
-            <p className="text-meta text-ink-soft">START 02</p>
-            <h3 className="mt-2 text-label font-semibold">따라 만든 레시피가 있다면</h3>
-            <p className="mt-3 text-read leading-relaxed">
-              Spoonie의 Recipe 상세에서 ‘이 레시피로 만들었어요’를 선택하면
-              참고한 원본과 내 Recipeed를 이어 기록할 수 있습니다.
+          <div className="py-4">
+            <h3 className="text-label font-semibold">누군가의 Recipe를 따라 만든 요리</h3>
+            <p className="mt-2 text-read leading-relaxed">
+              Recipe 상세에서 ‘이 레시피로 만들었어요’를 누르면
+              원본을 참고한 Recipeed를 이어서 작성할 수 있습니다.
             </p>
           </div>
         </div>
       </section>
 
       <section className="space-y-4 border-t border-border py-7">
-        <h2 className="text-heading">보고 끝나는 것과 직접 만드는 것은 다릅니다</h2>
+        <h2 className="text-heading">내가 만든 결과도 원본과 이어집니다</h2>
         <figure>
-          <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-paper-tint">
+          <div className="relative aspect-[4/3] overflow-hidden rounded-[3px] bg-paper-tint">
             <Image src={image} alt="실제 Spoonie 공개 Recipe인 아보카도 게살 그라탕" fill
               sizes="(max-width: 768px) 100vw, 672px" className="object-cover" />
           </div>
           <figcaption className="mt-2 text-meta text-ink-soft">
-            실제 공개 Recipe 예시 · 다른 사용자의 따라 만들기 기록이 이미 존재한다는 뜻은 아닙니다.
+            Spoonie에 공개된 아보카도 게살 그라탕 Recipe
           </figcaption>
         </figure>
         <p className="text-read leading-relaxed">
-          누군가의 레시피를 참고해 만든 결과가 원본에 연결될 때, 단순한 저장을 넘어
-          조리 경험도 남습니다. Spoonie에는 원본 Recipe의 ‘만들어 본 기록’과
-          ‘이어진 레시피’를 표시하는 구조가 있습니다. 아직 형성되지 않은 인맥이나
-          확산 지표를 있는 것처럼 보여주는 서비스는 아닙니다.
+          원본 Recipe를 참고해 만든 음식은 Recipeed로 기록할 수 있습니다.
+          직접 만든 사진과 달라진 점을 남기면, 원본과 내 요리 경험이 연결됩니다.
+          관련 기록이 있을 때만 원본의 ‘만들어 본 기록’에서 확인할 수 있습니다.
         </p>
         <EarlyCookActionLink action="view_reference" href={sample}
           className="inline-flex min-h-11 items-center text-label font-semibold text-ink underline underline-offset-4">
@@ -106,22 +100,22 @@ export default function EarlyCooksPage() {
         </p>
       </section>
 
-      <section className="border-t border-border bg-paper-tint px-4 py-6">
-        <p className="text-label font-semibold">오늘 만든 한 끼부터</p>
+      <section className="border-t border-border py-6">
+        <h2 className="text-heading">오늘 만든 한 끼부터 시작해 보세요</h2>
         <p className="mt-2 text-read leading-relaxed">
-          첫 20명이라는 목표보다 중요한 것은, 직접 요리하고 다시 돌아오는 사람들이
-          이 공간을 어떻게 사용할지 확인하는 일입니다.
+          사진 한 장과 짧은 이야기로도 내 요리 경험을 남길 수 있습니다.
         </p>
         <EarlyCookActionLink action="start_recipeed" href="/posts/new"
-          className="mt-4 inline-flex min-h-12 items-center justify-center rounded-md bg-ink px-5 py-3 text-label font-semibold text-paper">
-          첫 요리 기록 남기기 →
+          className="mt-2 inline-flex min-h-11 items-center text-label font-semibold text-ink underline underline-offset-4">
+          Recipeed 쓰러 가기 →
         </EarlyCookActionLink>
       </section>
-      <footer className="mt-6 text-meta text-ink-soft">
-        레시피를 따라 만든 기록 방법은{" "}
-        <Link className="underline underline-offset-4" href="/magazine/after-cooking">Spoonie Magazine 안내</Link>에서 자세히 볼 수 있습니다.
+      <footer className="mt-4 border-t border-border pt-5 text-meta text-ink-soft">
+        <p>초기 참여에 따른 유료 혜택이나 우대 노출은 제공하지 않습니다.</p>
+        <p className="mt-3">레시피를 따라 만든 기록 방법은{" "}
+        <Link className="underline underline-offset-4" href="/magazine/after-cooking">Spoonie Magazine 안내</Link>에서 자세히 볼 수 있습니다.</p>
         <p className="mt-3">크리에이터·브랜드는 <Link href="/partners/creators">크리에이터 안내</Link> 및 <Link href="/partners/brands">브랜드 안내</Link>를 확인하세요.</p>
       </footer>
-    </main>
+    </Sheet>
   )
 }

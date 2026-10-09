@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import Image from "next/image"
+import { Sheet } from "@/components/kit"
 import { serializeJsonLd } from "@/shared/lib/json-ld"
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
@@ -35,7 +36,7 @@ const structured = {
 
 export default function AfterCookingMagazinePage() {
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 pb-24 pt-7 text-ink">
+    <Sheet as="main" className="mx-3 mb-24 mt-3 px-4 pb-7 pt-5 text-ink sm:px-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(structured) }} />
       <nav aria-label="현재 위치" className="text-label text-ink-soft">
         <Link href="/magazine" className="underline underline-offset-4">Spoonie Magazine</Link>
@@ -43,9 +44,8 @@ export default function AfterCookingMagazinePage() {
         요리 기록
       </nav>
 
-      <header className="mt-8 border-b border-border pb-8">
-        <p className="text-meta font-semibold tracking-wide text-ink-soft">COOKING STORY · SPOONIE</p>
-        <h1 className="mt-4 text-display leading-tight">{title}</h1>
+      <header className="mt-7 border-b border-border pb-7">
+        <h1 className="text-display leading-tight">{title}</h1>
         <p className="mt-4 text-read leading-relaxed text-ink-soft">
           마음에 든 레시피를 보고 한 끼를 완성했습니다. 그런데 만든 사진은 휴대폰 앨범에 남고,
           원본 레시피는 다른 곳에 저장됩니다. 이 두 기록을 다시 연결한다면 어떨까요?
@@ -54,12 +54,12 @@ export default function AfterCookingMagazinePage() {
 
       <article className="space-y-9 pt-7">
         <figure>
-          <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-paper-tint">
+          <div className="relative aspect-[4/3] overflow-hidden rounded-[3px] bg-paper-tint">
             <Image src={photo} alt="공개된 Spoonie Recipe, 아보카도 게살 그라탕" fill priority
               sizes="(max-width: 768px) 100vw, 672px" className="object-cover" />
           </div>
           <figcaption className="mt-2 text-meta text-ink-soft">
-            실제 공개 Recipe 예시. 다른 사용자가 이 음식을 따라 만들었다는 뜻은 아닙니다.
+            Spoonie에 공개된 아보카도 게살 그라탕 Recipe
           </figcaption>
         </figure>
 
@@ -80,14 +80,14 @@ export default function AfterCookingMagazinePage() {
         <section className="space-y-4" aria-labelledby="record-steps">
           <h2 id="record-steps" className="text-heading">원본과 내 요리 기록이 이어지는 과정</h2>
           <ol className="space-y-5">
-            <li className="border-l-2 border-border pl-4">
+            <li className="border-t border-border pt-4">
               <p className="text-label font-semibold">01 · 공개 Recipe에서 시작하기</p>
               <p className="mt-2 text-read leading-relaxed">재료와 조리 순서를 확인합니다. 먼저 레시피를 읽는 데는 로그인이 필요하지 않습니다.</p>
               <Link href={sample} className="mt-2 inline-flex min-h-11 items-center text-label font-semibold text-ink underline underline-offset-4">
                 실제 공개 Recipe 살펴보기 →
               </Link>
             </li>
-            <li className="border-l-2 border-border pl-4">
+            <li className="border-t border-border pt-4">
               <p className="text-label font-semibold">02 · 내가 직접 요리한 장면 남기기</p>
               <p className="mt-2 text-read leading-relaxed">
                 Recipe 상세의 <strong>‘이 레시피로 만들었어요’</strong>를 선택하면
@@ -95,7 +95,7 @@ export default function AfterCookingMagazinePage() {
                 글을 공개하려면 Spoonie 계정 로그인이 필요합니다.
               </p>
             </li>
-            <li className="border-l-2 border-border pl-4">
+            <li className="border-t border-border pt-4">
               <p className="text-label font-semibold">03 · 원본과 내 기록의 관계 살펴보기</p>
               <p className="mt-2 text-read leading-relaxed">
                 참고 관계를 포함해 공개한 기록은 원본의 <strong>‘만들어 본 기록’</strong> 흐름에서
@@ -119,7 +119,7 @@ export default function AfterCookingMagazinePage() {
           </p>
         </section>
 
-        <section className="border-y border-border bg-paper-tint px-4 py-6">
+        <section className="border-t border-border pt-6">
           <h2 className="text-heading">오늘 요리한 한 끼가 있다면</h2>
           <p className="mt-3 text-read leading-relaxed">
             단순히 레시피를 저장하는 데서 멈추지 말고,
@@ -132,10 +132,6 @@ export default function AfterCookingMagazinePage() {
         </section>
       </article>
 
-      <footer className="mt-8 text-meta text-ink-soft">
-        실제 구현된 공개 Recipe 참조 흐름을 바탕으로 작성한 안내입니다.
-        서비스의 초기 이용자 수나 개인별 영향력 분석을 의미하지 않습니다.
-      </footer>
-    </main>
+    </Sheet>
   )
 }

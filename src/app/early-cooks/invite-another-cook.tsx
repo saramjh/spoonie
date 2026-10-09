@@ -51,9 +51,9 @@ export default function InviteAnotherCook() {
       </p>
       <div className="mt-4 flex flex-wrap gap-3">
         <button type="button" onClick={() => { void share() }}
-          className="min-h-12 rounded-md bg-ink px-5 py-3 text-label font-semibold text-paper">친구에게 공유하기</button>
+          className="min-h-12 rounded-md border border-border bg-paper px-5 py-3 text-label font-semibold text-ink">친구에게 공유하기</button>
         <button type="button" onClick={() => { track("attempt"); void copy() }}
-          className="min-h-12 rounded-md border border-border px-5 py-3 text-label font-semibold text-ink">초대 링크 복사</button>
+          className="min-h-12 px-2 py-3 text-label font-semibold text-ink underline underline-offset-4">초대 링크 복사</button>
       </div>
       <p role="status" aria-live="polite" className="mt-3 text-meta text-ink-soft">{message}</p>
       {manual && (

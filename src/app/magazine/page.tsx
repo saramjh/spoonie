@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
+import { Sheet } from "@/components/kit"
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
 const cover =
@@ -23,13 +24,12 @@ export const metadata: Metadata = {
 
 export default function MagazinePage() {
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 pb-24 pt-7 text-ink">
+    <Sheet as="main" className="mx-3 mb-24 mt-3 px-4 pb-7 pt-5 text-ink sm:px-6">
       <header className="border-b border-border pb-6">
         <Link href="/" className="text-label text-ink-soft underline underline-offset-4">
           Spoonie 홈
         </Link>
-        <p className="mt-6 text-meta tracking-wide text-ink-soft">SPOONIE MAGAZINE · 01</p>
-        <h1 className="mt-3 text-display leading-tight">
+        <h1 className="mt-7 text-display leading-tight">
           2인분을 4인분으로,
           <br />
           어디까지 두 배로 늘릴까?
@@ -42,7 +42,7 @@ export default function MagazinePage() {
 
       <article className="space-y-8 pt-6">
         <figure>
-          <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-paper-tint">
+          <div className="relative aspect-[4/3] overflow-hidden rounded-[3px] bg-paper-tint">
             <Image
               src={cover}
               alt="Spoonie에 실제로 등록된 2인분 아보카도 게살 그라탕"
@@ -118,6 +118,6 @@ export default function MagazinePage() {
           다른 Recipe와 Recipeed 둘러보기 →
         </Link>
       </footer>
-    </main>
+    </Sheet>
   )
 }
