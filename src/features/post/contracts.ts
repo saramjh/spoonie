@@ -18,6 +18,7 @@ export interface PostDraft {
 
 // 화면 계약: PostForm의 Props
 export interface PostFormProps {
+  userId?: string // 신규 작성 화면에서 인증 확인 후 전달; 수정은 initialData.user_id
 	isEditMode?: boolean
 	initialData?: Item
 	onNavigateBack?: (itemId?: string, options?: { replace?: boolean }) => void

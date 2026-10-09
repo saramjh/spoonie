@@ -13,9 +13,10 @@ interface PageHeaderProps {
 	trailing?: ReactNode
 	titleAlign?: "center" | "start"
 	className?: string
+	onCancel?: () => void
 }
 
-export function PageHeader({ title, leading = "back", trailing, titleAlign = "center", className }: PageHeaderProps) {
+export function PageHeader({ title, leading = "back", trailing, titleAlign = "center", className, onCancel }: PageHeaderProps) {
 	const router = useRouter()
 	const back =
 		leading === "back" ? (
@@ -23,7 +24,7 @@ export function PageHeader({ title, leading = "back", trailing, titleAlign = "ce
 				<ArrowLeft className="!size-6" aria-hidden />
 			</Button>
 		) : leading === "cancel" ? (
-			<Button type="button" variant="ghost" onClick={() => router.back()} className="px-3">
+			<Button type="button" variant="ghost" onClick={onCancel ?? (() => router.back())} className="px-3">
 				취소
 			</Button>
 		) : null

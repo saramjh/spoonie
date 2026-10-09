@@ -19,6 +19,7 @@ import CitedRecipeSearch from "@/features/recipe/components/CitedRecipeSearch"
 import DraggableIngredientList, { DraggableIngredient } from "@/features/recipe/components/DraggableIngredientList"
 import { OptimizedImage, optimizeImages } from "@/shared/infra/image-utils"
 import { useToast } from "@/hooks/use-toast"
+import { useComposerDraft } from "@/hooks/useComposerDraft"
 
 
 import type { Item } from "@/types/item"
@@ -27,7 +28,7 @@ import { cacheManager } from "@/shared/infra/unified-cache-manager"
 import { notificationService } from "@/features/notification/data/notification-service"
 import { logEvent } from "@/shared/infra/events"
 import { mutate as globalMutate } from "swr"
-import { ColorLabelPicker, PageHeader, SectionHeading, Sheet, SourceRow } from "@/components/kit"
+import { ColorLabelPicker, PageHeader, PageLoading, SectionHeading, Sheet, SourceRow, StateSheet } from "@/components/kit"
 import { revalidateItemPage } from "@/shared/infra/revalidate-item"
 import { removeDroppedImages } from "@/shared/infra/item-images"
 import { attachInstructionImages, buildRecipeItemPayload, editDefaults, forkDefaults, reorderIngredients } from "@/features/recipe/domain/recipe-form"
@@ -87,6 +88,7 @@ const onboardingFieldLabels: Record<string, string> = {
 }
 
 export default function RecipeForm({
+  userId,
 	initialData,
 	onNavigateBack,
 	forkFrom = null,
@@ -267,6 +269,30 @@ export default function RecipeForm({
 		)
 	}
 
+  const draft = useComposerDraft<RecipeFormValues>({
+    key: `v1:${userId ?? initialData?.user_id ?? "unknown"}:recipe:${initialData?.id ?? "new"}:${onboardingDraft?.id ?? forkFrom?.id ?? "default"}`,
+    subscribe: (changed) => {
+      // eslint-disable-next-line react-hooks/incompatible-library
+      const subscription = form.watch(() => changed())
+      return () => subscription.unsubscribe()
+    },
+    snapshot: () => ({ values: form.getValues(), mainImages, instructionImages, thumbnailIndex }),
+    restore: (state) => {
+      form.reset(state.values)
+      setMainImages(state.mainImages)
+      setInstructionImages(state.instructionImages ?? [])
+      setThumbnailIndex(state.thumbnailIndex)
+      const ids = state.values.cited_recipe_ids ?? []
+      if (ids.length) {
+        void fetchCitedRecipes(supabase, ids).then((recipes) => {
+          if (recipes) setSelectedCitedRecipes(recipes)
+        })
+      } else setSelectedCitedRecipes([])
+    },
+  })
+  const scheduleDraft = draft.scheduleSave
+  useEffect(() => { scheduleDraft() }, [mainImages, instructionImages, thumbnailIndex, scheduleDraft])
+
 	const onSubmit = async (values: RecipeFormValues) => {
 		if (mainImages.length === 0) {
 			toast({ title: "이미지 필요", description: "레시피 대표 이미지를 최소 1개 업로드해주세요.", variant: "destructive" })
@@ -345,6 +371,8 @@ export default function RecipeForm({
 				ingredients: values.ingredients,
 				instructions: instructionsWithImages,
 			})
+
+      await draft.finishPublish() // DB 트랜잭션 성공 후에만 임시 원고 제거
 
 			if (isEditMode) {
 				
@@ -491,14 +519,30 @@ export default function RecipeForm({
 	const fieldLabel = "text-label font-medium text-ink"
 	const errorText = "mt-1 text-meta text-destructive"
 
+  if (draft.recovery) return (
+    <div className="px-3 pt-3">
+      <PageHeader leading="none" title="이전 작성 내용" />
+      <StateSheet title="작성하던 내용을 찾았어요" body="이 기기에 저장된 글과 사진을 이어서 사용할 수 있어요."
+        action={<>
+          <Button type="button" onClick={draft.restorePrevious}>이어서 쓰기</Button>
+          <Button type="button" variant="outline" onClick={() => { void draft.startFresh() }}>새로 시작</Button>
+        </>} />
+    </div>
+  )
+  if (!draft.ready) return <PageLoading />
+
 	// 쓰는 순서 = 읽는 순서: 사진 → 제목 → 분량·시간 → 설명 → 재료 → 만드는 법 → 참고 → 내 정리 (DESIGN.md Interface Grammar)
 	return (
 		<div className="min-h-screen pb-28">
 			<PageHeader
+        onCancel={() => { void draft.leave(() => router.back()) }}
 				leading="cancel"
 				title={isEditMode ? "레시피 수정" : onboardingDraft ? "Recipe 초안 검수" : forkFrom ? "내 버전으로 고쳐 쓰기" : "레시피 쓰기"}
 			/>
 
+      <p role="status" className={`px-4 pt-2 text-meta ${draft.status === "error" ? "text-destructive" : "text-ink-soft"}`}>
+        {draft.status === "saved" ? "이 기기에 임시 저장됨" : draft.status === "pending" ? "임시 저장 중…" : draft.status === "error" ? "임시 저장 실패 · 화면을 닫지 마세요" : "입력한 내용은 이 기기에 자동 저장돼요"}
+      </p>
 			{/* @ts-expect-error - form 핸들러 타입 변환 처리 */}
 			<form id="recipe-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 px-3 pt-3">
 				{!isEditMode && onboardingDraft && (
@@ -634,7 +678,6 @@ export default function RecipeForm({
 							<DraggableIngredientList
 								ingredients={ingredients.map((field, index) => {
 									// React Compiler는 켜 두지 않았다(next.config). 이 컴포넌트는 react-hook-form watch 때문에 컴파일 대상에서 빠지는데, 바꾸면 다른 규칙 위반이 드러나 따로 다룬다
-									// eslint-disable-next-line react-hooks/incompatible-library
 									const watchedIngredient = form.watch(`ingredients.${index}`)
 									return {
 										id: field.id,
@@ -674,7 +717,7 @@ export default function RecipeForm({
 										{errors.instructions?.[index]?.description && <p className={errorText}>{errors.instructions[index].description.message}</p>}
 										<div className="flex items-start justify-between gap-2">
 											<div className="min-w-0 flex-1">
-												<InstructionImageUploader imageUrl={field.image_url} onImageChange={(image) => handleInstructionImageChange(index, image)} />
+												<InstructionImageUploader imageUrl={instructionImages[index]?.preview ?? field.image_url} onImageChange={(image) => handleInstructionImageChange(index, image)} />
 											</div>
 											{instructions.length > 1 && (
 												<button

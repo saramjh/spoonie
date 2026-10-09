@@ -11,57 +11,48 @@ export interface OptimizedImage {
  * 이미지 파일을 최적화하여 품질과 크기를 조절합니다
  */
 const optimizeImage = (file: File, maxSide = 1280, quality = 0.8): Promise<OptimizedImage> => {
-	return new Promise((resolve, reject) => {
-		const canvas = document.createElement("canvas")
-		const ctx = canvas.getContext("2d")
-		const img = new Image()
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    const releaseSource = () => URL.revokeObjectURL(url)
 
-		img.onload = () => {
-			// 비율 유지하며 크기 조절
-			const { width, height } = calculateNewDimensions(img.width, img.height, maxSide)
-
-			canvas.width = width
-			canvas.height = height
-
-			if (!ctx) {
-				reject(new Error("Canvas context not available"))
-				return
-			}
-
-			// 고품질 이미지 렌더링
-			ctx.imageSmoothingEnabled = true
-			ctx.imageSmoothingQuality = "high"
-			ctx.drawImage(img, 0, 0, width, height)
-
-			canvas.toBlob(
-				(blob) => {
-					if (!blob) {
-						reject(new Error("Failed to create blob"))
-						return
-					}
-
-					const optimizedFile = new File([blob], file.name, {
-						type: "image/jpeg",
-						lastModified: Date.now(),
-					})
-
-					const preview = URL.createObjectURL(optimizedFile)
-
-					resolve({
-						file: optimizedFile,
-						preview,
-						width,
-						height,
-					})
-				},
-				"image/jpeg",
-				quality
-			)
-		}
-
-		img.onerror = () => reject(new Error("Failed to load image"))
-		img.src = URL.createObjectURL(file)
-	})
+    img.onerror = () => {
+      releaseSource()
+      reject(new Error("이미지를 열 수 없습니다. 다른 사진 또는 JPG 파일을 선택해 주세요."))
+    }
+    img.onload = () => {
+      releaseSource()
+      try {
+        const { width, height } = calculateNewDimensions(img.width, img.height, maxSide)
+        if (width < 1 || height < 1) throw new Error("이미지 크기를 확인할 수 없습니다.")
+        const canvas = document.createElement("canvas")
+        const ctx = canvas.getContext("2d")
+        if (!ctx) throw new Error("이미지 처리 기능을 사용할 수 없습니다.")
+        canvas.width = width
+        canvas.height = height
+        ctx.imageSmoothingEnabled = true
+        ctx.imageSmoothingQuality = "high"
+        ctx.drawImage(img, 0, 0, width, height)
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            reject(new Error("사진 변환에 실패했습니다."))
+            return
+          }
+          try {
+            const optimizedFile = new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", {
+              type: "image/jpeg", lastModified: Date.now(),
+            })
+            resolve({ file: optimizedFile, preview: URL.createObjectURL(optimizedFile), width, height })
+          } catch (error) {
+            reject(error)
+          }
+        }, "image/jpeg", quality)
+      } catch (error) {
+        reject(error)
+      }
+    }
+    img.src = url
+  })
 }
 
 /**
@@ -92,7 +83,7 @@ export const optimizeImages = async (files: File[], maxSide = 1280, quality = 0.
  * 이미지 MIME 타입 확인
  */
 export const isValidImageType = (file: File): boolean => {
-	const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
+	const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/heic", "image/heif"]
 	return validTypes.includes(file.type)
 }
 

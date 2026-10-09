@@ -15,7 +15,12 @@ export default function ServiceWorkerUpdater() {
 			const hadController = !!navigator.serviceWorker.controller
 			let reloadPending = false
 			const reloadWhenHidden = () => {
-				if (reloadPending && document.visibilityState === 'hidden') window.location.reload()
+				// 작성 폼을 벗어나기 전에는 새 버전이 와도 자동 새로고침하지 않는다.
+				// 카메라/사진 선택기를 열 때 hidden 상태로 전환될 수 있다.
+				const path = window.location.pathname
+				const composing = /^\/(?:recipes|posts)\/new\/?$/.test(path)
+					|| /^\/(?:recipes|posts)\/[^/]+\/edit\/?$/.test(path)
+				if (reloadPending && !composing && document.visibilityState === 'hidden') window.location.reload()
 			}
 			const handleControllerChange = () => {
 				if (!hadController) return

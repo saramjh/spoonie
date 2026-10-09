@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef, useCallback, useId } from "react"
 import Image from "next/image"
 
 import { Input } from "@/components/ui/input"
@@ -16,19 +16,22 @@ interface InstructionImageUploaderProps {
 
 export default function InstructionImageUploader({ imageUrl, onImageChange, placeholder = "단계 사진 추가 (선택)" }: InstructionImageUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputId = useId();
   const { toast } = useToast();
 
-  const [preview, setPreview] = useState<string | undefined>(imageUrl);
+  const [selectedPreview, setSelectedPreview] = useState<string | null | undefined>(undefined);
+  const preview = selectedPreview === undefined ? imageUrl : selectedPreview || undefined;
 
   const handleFileSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
+      e.target.value = "";
       if (!file) return;
 
       if (!isValidImageType(file) || !isValidFileSize(file)) {
         toast({
           title: "파일 형식 오류",
-          description: "JPG, PNG, WEBP 형식의 10MB 이하 이미지만 업로드 가능합니다.",
+          description: "JPG, PNG, WEBP 또는 기기에서 열 수 있는 HEIC 사진(10MB 이하)을 선택해 주세요.",
           variant: "destructive",
         });
         return;
@@ -37,7 +40,7 @@ export default function InstructionImageUploader({ imageUrl, onImageChange, plac
 
       try {
         const [optimizedImage] = await optimizeImages([file]);
-        setPreview(optimizedImage.preview);
+        setSelectedPreview(optimizedImage.preview);
         onImageChange(optimizedImage);
         toast({ title: "이미지 업로드 완료" });
       } catch (error) {
@@ -57,7 +60,7 @@ export default function InstructionImageUploader({ imageUrl, onImageChange, plac
   );
 
   const removeImage = useCallback(() => {
-    setPreview(undefined);
+    setSelectedPreview(null);
     onImageChange(null);
   }, [onImageChange]);
 
@@ -79,16 +82,23 @@ export default function InstructionImageUploader({ imageUrl, onImageChange, plac
           </button>
         </div>
       ) : (
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="inline-flex h-11 items-center gap-2 rounded-lg border border-dashed border-ink/30 px-3 text-meta text-ink-soft"
+        <label
+          htmlFor={fileInputId}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault()
+              fileInputRef.current?.click()
+            }
+          }}
+          className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg border border-dashed border-ink/30 px-3 text-meta text-ink-soft"
         >
           <Camera className="h-4 w-4" aria-hidden />
           {placeholder}
-        </button>
+        </label>
       )}
-      <Input ref={fileInputRef} type="file" accept="image/jpeg,image/jpg,image/png,image/webp" onChange={handleFileSelect} className="hidden" />
+      <Input id={fileInputId} ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="sr-only" tabIndex={-1} />
     </div>
   );
 }

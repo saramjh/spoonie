@@ -45,6 +45,7 @@ export type RecipeFormInput = Omit<RecipeDraft, "tags"> & { tags: string }
 
 // ── 화면 계약: RecipeForm의 Props (지금 컴포넌트 안의 선언과 같다) ──
 export interface RecipeFormProps {
+  userId?: string // 신규 작성 화면에서 인증 확인 후 전달; 수정은 initialData.user_id
 	initialData?: Item | null
 	// "참고해서 내 레시피 만들기": 원본의 분량·재료·단계를 미리 채우고 출처를 자동으로 남긴다
 	forkFrom?: ItemDetail | null

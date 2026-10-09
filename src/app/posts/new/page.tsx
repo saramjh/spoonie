@@ -39,5 +39,5 @@ export default function NewPostPage() {
 
 	// 로그인 확인이 끝난 뒤(브라우저)에만 그리므로 주소를 바로 읽는다
 	const source = readPostSource(window.location.search)
-	return <PostForm onNavigateBack={navigateBack} sourceRecipeId={source.id} sourceOrigin={source.origin} />
+	return <PostForm userId={user.id} onNavigateBack={navigateBack} sourceRecipeId={source.id} sourceOrigin={source.origin} />
 }

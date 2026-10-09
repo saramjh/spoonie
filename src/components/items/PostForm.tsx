@@ -14,6 +14,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import ImageUploader from "@/components/common/ImageUploader"
 import { OptimizedImage } from "@/shared/infra/image-utils"
 import { useToast } from "@/hooks/use-toast"
+import { useComposerDraft } from "@/hooks/useComposerDraft"
 import type { Item } from "@/types/item"
 import CitedRecipeSearch from "@/features/recipe/components/CitedRecipeSearch"
 
@@ -22,7 +23,7 @@ import { cacheManager } from "@/shared/infra/unified-cache-manager"
 import { notificationService } from "@/features/notification/data/notification-service"
 import { logEvent } from "@/shared/infra/events"
 import { mutate as globalMutate } from "swr"
-import { PageHeader, SectionHeading, Sheet, SourceRow } from "@/components/kit"
+import { PageHeader, PageLoading, SectionHeading, Sheet, SourceRow, StateSheet } from "@/components/kit"
 import { revalidateItemPage } from "@/shared/infra/revalidate-item"
 import { removeDroppedImages } from "@/shared/infra/item-images"
 import type { PostFormProps } from "@/features/post/contracts"
@@ -48,7 +49,7 @@ type PostFormValues = z.infer<typeof postSchema>
  * @param isEditMode - 수정 모드 여부 (true: 수정, false: 생성)
  * @param initialData - 수정 시 초기 데이터 (FeedItem 타입)
  */
-export default function PostForm({ isEditMode = false, initialData, onNavigateBack, sourceRecipeId = null, sourceOrigin = null }: PostFormProps) {
+export default function PostForm({ userId, isEditMode = false, initialData, onNavigateBack, sourceRecipeId = null, sourceOrigin = null }: PostFormProps) {
 	const router = useRouter()
 	const { toast } = useToast()
 	const supabase = createSupabaseBrowserClient()
@@ -111,6 +112,26 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 			variant: "destructive"
 		})
 	}
+
+  const draft = useComposerDraft<PostFormValues>({
+    key: `v1:${userId ?? initialData?.user_id ?? "unknown"}:post:${initialData?.id ?? "new"}:${sourceRecipeId ?? "default"}`,
+    subscribe: (changed) => {
+      // eslint-disable-next-line react-hooks/incompatible-library
+      const subscription = form.watch(() => changed())
+      return () => subscription.unsubscribe()
+    },
+    snapshot: () => ({ values: form.getValues(), mainImages, thumbnailIndex }),
+    restore: (state) => {
+      form.reset(state.values)
+      setMainImages(state.mainImages)
+      setThumbnailIndex(state.thumbnailIndex)
+      const ids = state.values.cited_recipe_ids ?? []
+      if (ids.length) void loadCitedRecipes(ids).then(setSelectedCitedRecipes)
+      else setSelectedCitedRecipes([])
+    },
+  })
+  const scheduleDraft = draft.scheduleSave
+  useEffect(() => { scheduleDraft() }, [mainImages, thumbnailIndex, scheduleDraft])
 
 	const onSubmit = async (values: PostFormValues) => {
 	
@@ -207,6 +228,7 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 			
 
 			const { itemId } = await savePostRow(supabase, { existingId: isEditMode && initialData ? initialData.id : null, itemPayload })
+      await draft.finishPublish() // DB 저장 성공 후에만 초안을 제거
 
 
 			
@@ -331,11 +353,26 @@ export default function PostForm({ isEditMode = false, initialData, onNavigateBa
 		</section>
 	)
 
+  if (draft.recovery) return (
+    <div className="px-3 pt-3">
+      <PageHeader leading="none" title="이전 작성 내용" />
+      <StateSheet title="작성하던 내용을 찾았어요" body="이 기기에 저장된 글과 사진을 이어서 사용할 수 있어요."
+        action={<>
+          <Button type="button" onClick={draft.restorePrevious}>이어서 쓰기</Button>
+          <Button type="button" variant="outline" onClick={() => { void draft.startFresh() }}>새로 시작</Button>
+        </>} />
+    </div>
+  )
+  if (!draft.ready) return <PageLoading />
+
 	// 레시피드는 출처가 맨 위 첫 줄, 그다음 사진과 글 (DESIGN.md Interface Grammar 1)
 	return (
 		<div className="min-h-screen pb-28">
-			<PageHeader leading="cancel" title={isEditMode ? "레시피드 수정" : sourceRecipeId ? "만들어 본 기록" : "레시피드 쓰기"} />
+			<PageHeader onCancel={() => { void draft.leave(() => router.back()) }} leading="cancel" title={isEditMode ? "레시피드 수정" : sourceRecipeId ? "만들어 본 기록" : "레시피드 쓰기"} />
 
+      <p role="status" className={`px-4 pt-2 text-meta ${draft.status === "error" ? "text-destructive" : "text-ink-soft"}`}>
+        {draft.status === "saved" ? "이 기기에 임시 저장됨" : draft.status === "pending" ? "임시 저장 중…" : draft.status === "error" ? "임시 저장 실패 · 화면을 닫지 마세요" : "입력한 내용은 이 기기에 자동 저장돼요"}
+      </p>
 			<form id="post-form" onSubmit={form.handleSubmit(onSubmit, onError)} className="space-y-3 px-3 pt-3">
 				<Sheet>
 					{sourceRecipes.length > 0 && (

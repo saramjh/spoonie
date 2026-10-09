@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useCallback, useEffect } from "react"
+import { useState, useRef, useCallback, useEffect, useId } from "react"
 import Image from "next/image"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -24,12 +24,21 @@ interface ImageUploaderProps {
 
 export default function ImageUploader({ images, onImagesChange, maxImages = 5, label = "이미지 업로드", placeholder = "이미지를 추가해주세요", thumbnailIndex = 0, onThumbnailChange, showThumbnailSelector = true, frame = "recipeed" }: ImageUploaderProps) {
 	const fileInputRef = useRef<HTMLInputElement>(null)
+  const fileInputId = useId()
+  const onPickerKeyDown = (event: React.KeyboardEvent<HTMLLabelElement>) => {
+    if ((event.key === "Enter" || event.key === " ") && !isProcessing) {
+      event.preventDefault()
+      fileInputRef.current?.click()
+    }
+  }
 	const { toast } = useToast()
 	const [isProcessing, setIsProcessing] = useState(false)
 	
 	const handleFileSelect = useCallback(
 		async (e: React.ChangeEvent<HTMLInputElement>) => {
 			const files = Array.from(e.target.files || [])
+			// 같은 사진을 다시 골라도 change 이벤트가 발생하도록 먼저 비운다.
+			e.target.value = ""
 			if (files.length === 0) return
 
 			if (images.length + files.length > maxImages) {
@@ -45,7 +54,7 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 			if (invalidFiles.length > 0) {
 				toast({
 					title: "파일 형식 오류",
-					description: "JPG, PNG, WEBP 형식의 10MB 이하 이미지만 업로드 가능합니다.",
+					description: "JPG, PNG, WEBP 또는 기기에서 열 수 있는 HEIC 사진(10MB 이하)을 선택해 주세요.",
 					variant: "destructive",
 				})
 				return
@@ -71,7 +80,7 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 				fileInputRef.current.value = ""
 			}
 		},
-		[images, maxImages, onImagesChange, toast]
+		[images, maxImages, onImagesChange, toast, setIsProcessing]
 	)
 
 	const removeImage = useCallback(
@@ -94,10 +103,14 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 		[onThumbnailChange]
 	)
 
+	const previousPreviews = useRef<Set<string>>(new Set())
 	useEffect(() => {
-		return () => {
-			images.forEach((img) => URL.revokeObjectURL(img.preview))
-		}
+		const current = new Set(images.map((img) => img.preview).filter((url) => url.startsWith("blob:")))
+		// 유지 중인 사진의 URL은 해제하지 않는다. 제거된 사진만 정리한다.
+		previousPreviews.current.forEach((url) => {
+			if (!current.has(url)) URL.revokeObjectURL(url)
+		})
+		previousPreviews.current = current
 	}, [images])
 
 	return (
@@ -141,34 +154,38 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 						})}
 						{images.length < maxImages && (
 							<li className="h-24 w-24 flex-shrink-0">
-								<button
-									type="button"
-									onClick={() => fileInputRef.current?.click()}
-									disabled={isProcessing}
-									className="flex h-full w-full flex-col items-center justify-center gap-1 rounded-[3px] border border-dashed border-ink/30 text-meta text-ink-soft"
+								<label
+                  htmlFor={fileInputId}
+                  role="button"
+                  tabIndex={isProcessing ? -1 : 0}
+                  aria-disabled={isProcessing}
+                  onKeyDown={onPickerKeyDown}
+									className={`flex h-full w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-[3px] border border-dashed border-ink/30 text-meta text-ink-soft ${isProcessing ? "pointer-events-none opacity-60" : ""}`}
 								>
 									<ImagePlus className="h-5 w-5" aria-hidden />
 									{isProcessing ? "줄이는 중" : "추가"}
-								</button>
+								</label>
 							</li>
 						)}
 					</ul>
 					{showThumbnailSelector && images.length > 1 && <p className="mt-1 text-meta text-ink-soft">사진을 누르면 대표 사진이 돼요.</p>}
 				</>
 			) : (
-				<button
-					type="button"
-					onClick={() => fileInputRef.current?.click()}
-					disabled={isProcessing}
-					className={`mt-2 flex w-full flex-col items-center justify-center gap-2 rounded-[3px] border border-dashed border-ink/30 bg-muted text-ink-soft ${frame === "recipe" ? "aspect-[4/3]" : "aspect-square"}`}
+				<label
+          htmlFor={fileInputId}
+          role="button"
+          tabIndex={isProcessing ? -1 : 0}
+          aria-disabled={isProcessing}
+          onKeyDown={onPickerKeyDown}
+					className={`mt-2 flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-[3px] border border-dashed border-ink/30 bg-muted text-ink-soft ${frame === "recipe" ? "aspect-[4/3]" : "aspect-square"} ${isProcessing ? "pointer-events-none opacity-60" : ""}`}
 				>
 					<Camera className="h-8 w-8" aria-hidden />
 					<span className="text-label font-medium text-ink">{isProcessing ? "사진을 줄이는 중" : placeholder}</span>
 					<span className="text-meta">최대 {maxImages}장, 올릴 때 자동으로 줄여요</span>
-				</button>
+				</label>
 			)}
 
-			<Input ref={fileInputRef} type="file" accept="image/jpeg,image/jpg,image/png,image/webp" multiple onChange={handleFileSelect} className="hidden" />
+			<Input id={fileInputId} ref={fileInputRef} type="file" accept="image/*" multiple disabled={isProcessing} onChange={handleFileSelect} className="sr-only" tabIndex={-1} />
 		</div>
 	)
 }

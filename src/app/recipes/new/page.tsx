@@ -150,6 +150,7 @@ export default function NewRecipePage() {
 
   return (
     <RecipeForm
+      userId={user.id}
       onNavigateBack={navigateBack}
       forkFrom={forkFrom}
       entrySource={partnerSource}
