@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect, useId } from "react"
 import Image from "next/image"
 import { Label } from "@/components/ui/label"
 import { ImagePlus, X, Camera } from "lucide-react"
-import { optimizeImages, isValidImageType, isValidFileSize, OptimizedImage } from "@/shared/infra/image-utils"
+import { optimizeImages, isValidImageType, isValidFileSize, getImageProcessingMessage, OptimizedImage } from "@/shared/infra/image-utils"
 import { useToast } from "@/hooks/use-toast"
 
 interface ImageUploaderProps {
@@ -74,7 +74,7 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 				console.error("Image optimization failed:", error)
 				toast({
 					title: "이미지 처리 실패",
-					description: "이미지 처리 중 오류가 발생했습니다.",
+					description: getImageProcessingMessage(error),
 					variant: "destructive",
 				})
 			} finally {

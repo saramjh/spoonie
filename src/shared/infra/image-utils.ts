@@ -1,5 +1,13 @@
 // 이미지 품질 및 사이즈 최적화 유틸리티
 
+const IMAGE_DECODE_ERROR = "이미지를 열 수 없습니다. 다른 사진 또는 JPG 파일을 선택해 주세요."
+
+export function getImageProcessingMessage(error: unknown): string {
+  return error instanceof Error && error.message === IMAGE_DECODE_ERROR
+    ? "이 브라우저에서 사진을 열 수 없습니다. HEIC 사진이라면 JPG로 변환해 다시 선택해 주세요."
+    : "이미지 처리 중 오류가 발생했습니다."
+}
+
 export interface OptimizedImage {
 	file: File
 	preview: string
@@ -18,7 +26,7 @@ const optimizeImage = (file: File, maxSide = 1280, quality = 0.8): Promise<Optim
 
     img.onerror = () => {
       releaseSource()
-      reject(new Error("이미지를 열 수 없습니다. 다른 사진 또는 JPG 파일을 선택해 주세요."))
+      reject(new Error(IMAGE_DECODE_ERROR))
     }
     img.onload = () => {
       releaseSource()
