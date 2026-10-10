@@ -126,6 +126,12 @@ export default function AfterCookingMagazinePage() {
             className="mt-4 inline-flex min-h-11 items-center text-label font-semibold text-ink underline underline-offset-4">
             실제 공개 Recipe에서 시작하기 →
           </Link>
+          <p className="mt-3 text-read leading-relaxed text-ink-soft">
+            원본 Recipe 없이 오늘 만든 집밥부터 기록하고 싶다면{" "}
+            <Link href="/early-cooks" className="font-semibold underline underline-offset-4">
+              첫 요리 기록 안내
+            </Link>를 참고하세요.
+          </p>
         </section>
       </article>
 

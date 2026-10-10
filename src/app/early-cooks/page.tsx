@@ -31,13 +31,14 @@ export default function EarlyCooksPage() {
         </h1>
         <p className="mt-5 text-read leading-relaxed text-ink-soft">
           잘 만든 요리법이 없어도 괜찮습니다. 오늘 만든 음식 사진과 짧은 이야기부터
-          Recipeed로 남겨보세요. Spoonie는 함께 요리하고 기록할 첫 사용자들을 찾고 있습니다.
+          내 요리 기록으로 남겨보세요. Spoonie에서는 이런 기록을 Recipeed라고 부릅니다.
+          함께 요리하고 기록할 첫 사용자들을 찾고 있습니다.
         </p>
         <EarlyCookActionLink
           action="start_recipeed"
           href="/posts/new"
           className="mt-6 inline-flex min-h-12 items-center justify-center rounded-md bg-ink px-5 py-3 text-label font-semibold text-paper">
-          내 첫 Recipeed 쓰기 →
+          첫 요리 기록 시작하기 →
         </EarlyCookActionLink>
         <p className="mt-3 text-meta text-ink-soft">글을 공개하려면 로그인이 필요합니다.</p>
       </header>
