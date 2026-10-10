@@ -9,9 +9,9 @@ import useSWR from 'swr';
 import { useRealtimeRefresh } from '@/hooks/useRealtimeRefresh';
 import { NOTIFICATION_RECEIVED_EVENT } from '@/shared/infra/realtime-events';
 import { useEffect, useState } from 'react';
-import type { User } from '@supabase/supabase-js';
 import { default as NextImage } from 'next/image';
 import LoginPromptSheet from "@/components/auth/LoginPromptSheet";
+import { useSessionStore } from "@/store/sessionStore";
 
 const fetchUnreadNotificationsCount = async (userId: string) => {
   if (!userId) return 0;
@@ -31,19 +31,11 @@ const fetchUnreadNotificationsCount = async (userId: string) => {
 
 export default function Header() {
   const router = useRouter();
-  const supabase = createSupabaseBrowserClient();
-  const [user, setUser] = useState<User | null>(null);
+  // 로그인·로그아웃은 공통 레이아웃이 한 번 조회하고 세션 스토어로 전달한다.
+  const user = useSessionStore((state) => state.session);
   const isShaking = false; // No animation state needed currently
   const [showBookmarkPrompt, setShowBookmarkPrompt] = useState(false);
   const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
-
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-    };
-    getUser();
-  }, [supabase]);
 
   const { data: unreadCount, mutate } = useSWR(
     user ? `unread_notifications_count_${user.id}` : null,

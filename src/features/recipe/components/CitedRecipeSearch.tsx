@@ -5,6 +5,7 @@ import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, Command
 
 import { X, ChefHat, Search } from "lucide-react";
 import { createSupabaseBrowserClient } from '@/shared/infra/supabase-client';
+import { searchCitableRecipes } from '@/features/recipe/data/recipe-repository';
 import type { Item } from '@/types/item';
 import { format } from 'date-fns'; // 날짜 포맷팅을 위해 date-fns 임포트
 import { Photo } from "@/components/kit"
@@ -22,22 +23,28 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
   const [isLoading, setIsLoading] = useState(false);
   const [showSearch, setShowSearch] = useState(false); // 검색 표시 상태 추가
   const inputRef = useRef<HTMLInputElement>(null); // input 참조
+  const requestVersion = useRef(0);
+  const activeController = useRef<AbortController | null>(null);
+
+  const cancelSearch = useCallback(() => {
+    requestVersion.current++;
+    activeController.current?.abort();
+    activeController.current = null;
+  }, []);
+
+  useEffect(() => () => {
+    requestVersion.current++;
+    activeController.current?.abort();
+  }, []);
 
   const handleSearch = useCallback(async (query: string) => {
+    cancelSearch();
 
-    if (query.length < 2) {
-      setSearchResults([]);
-      return;
-    }
-    setIsLoading(true);
-
-    // 검색어 정리: 특수문자 제거 및 정규화
+    // PostgREST or() 필터의 구분 문자를 제거해 입력을 검색어로만 다룬다.
     const cleanQuery = query
-      .replace(/[,;|\[\]{}()"']/g, ' ') // 특수문자를 공백으로 변경
-      .replace(/\s+/g, ' ') // 연속된 공백을 하나로 정리
-      .trim(); // 앞뒤 공백 제거
-
-
+      .replace(/[^\p{L}\p{N}\s-]/gu, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
 
     if (cleanQuery.length < 2) {
       setSearchResults([]);
@@ -45,91 +52,34 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
       return;
     }
 
-    // 1. profiles 테이블에서 검색어에 해당하는 user_id 가져오기
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('id')
-              .ilike('username', `%${cleanQuery}%`)
-      .limit(10);
-
-    
-
-    if (profileError) {
-      console.error('Error searching profiles:', profileError);
-      setSearchResults([]);
-      setIsLoading(false);
-      return;
+    const version = requestVersion.current;
+    const controller = new AbortController();
+    activeController.current = controller;
+    setIsLoading(true);
+    try {
+      const results = await searchCitableRecipes(supabase, cleanQuery, controller.signal);
+      if (requestVersion.current === version) setSearchResults(results);
+    } catch (error) {
+      if (requestVersion.current === version) {
+        console.error('Error searching cited recipes:', error);
+        setSearchResults([]);
+      }
+    } finally {
+      if (requestVersion.current === version) {
+        activeController.current = null;
+        setIsLoading(false);
+      }
     }
-
-    const matchingUserIds = profileData.map(p => p.id);
-    
-
-    // 2. items 테이블에서 레시피명 또는 user_id로 검색
-    let itemQuery = `title.ilike.%${cleanQuery}%`;
-    if (matchingUserIds.length > 0) {
-      itemQuery += `,user_id.in.(${matchingUserIds.join(',')})`;
-    }
-
-    const { data: itemData, error: itemError } = await supabase
-      .from('items')
-      .select(
-        `
-        id, title, created_at, item_type, image_urls, user_id, cited_recipe_ids,
-        author:profiles!items_user_id_fkey(username, public_id, avatar_url)
-        `
-      )
-      .eq('item_type', 'recipe')
-      .or(itemQuery)
-      .limit(10);
-
-    
-
-    if (itemError) {
-      console.error('Error searching items:', itemError);
-      setSearchResults([]);
-    } else {
-      // Item 타입에 맞게 데이터 변환
-      // Supabase 관계 조회는 한 건이어도 배열로 올 수 있다
-      const authorOf = (row: { author?: unknown }) => (Array.isArray(row.author) ? row.author[0] : row.author) as { username?: string; avatar_url?: string | null; public_id?: string | null } | undefined
-      const formattedData: Item[] = itemData.map(item => ({
-        id: item.id,
-        item_id: item.id,
-        user_id: item.user_id,
-        item_type: item.item_type,
-        created_at: item.created_at,
-        is_public: true, // 검색 결과에서는 is_public이 항상 true라고 가정
-        username: authorOf(item)?.username || "익명",
-        avatar_url: authorOf(item)?.avatar_url || null,
-        user_public_id: authorOf(item)?.public_id || null,
-        user_email: null, // 이메일은 가져오지 않음
-        title: item.title,
-        content: null, // 게시물이 아니므로 null
-        description: null, // 게시물이 아니므로 null
-        image_urls: item.image_urls,
-        thumbnail_index: 0, // 기본값
-        tags: [], // 검색 결과에서는 태그를 가져오지 않음
-        color_label: null, // 레시피가 아니므로 null
-        servings: null, // 레시피가 아니므로 null
-        cooking_time_minutes: null, // 레시피가 아니므로 null
-        recipe_id: null, // 레시피가 아니므로 null
-        likes_count: 0, // 검색 결과에서는 좋아요 수 가져오지 않음
-        comments_count: 0, // 검색 결과에서는 댓글 수 가져오지 않음
-        is_liked: false, // 검색 결과에서는 좋아요 여부 가져오지 않음
-        is_following: false, // 검색 결과에서는 팔로우 여부 가져오지 않음
-        cited_recipe_ids: item.cited_recipe_ids || [],
-      }));
-  
-      setSearchResults(formattedData);
-    }
-    setIsLoading(false);
-  }, [supabase]);
+  }, [supabase, cancelSearch]);
 
   const handleSelectRecipe = (recipe: Item) => {
     if (selectedRecipes.length < maxSelection && !selectedRecipes.some(r => r.item_id === recipe.item_id)) {
       onSelectedRecipesChange([...selectedRecipes, recipe]);
     }
+    cancelSearch();
     setSearchTerm('');
     setSearchResults([]);
+    setIsLoading(false);
   };
 
   const handleRemoveRecipe = (recipeId: string) => {
@@ -138,11 +88,9 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
 
   // 검색창 표시될 때 자동 포커스
   useEffect(() => {
-    if (showSearch && inputRef.current) {
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100); // 렌더링 완료 후 포커스
-    }
+    if (!showSearch) return;
+    const timer = setTimeout(() => inputRef.current?.focus(), 100);
+    return () => clearTimeout(timer);
   }, [showSearch]);
 
   return (

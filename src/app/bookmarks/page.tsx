@@ -22,7 +22,6 @@ export default function BookmarksPage() {
     {
       revalidateOnFocus: true,
       revalidateOnReconnect: true,
-      refreshInterval: 30000, // 30초마다 자동 새로고침
     }
   )
 

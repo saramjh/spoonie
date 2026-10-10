@@ -118,7 +118,6 @@ export const fetchBookmarks = async (userId: string): Promise<Item[]> => {
       is_liked: publicStats.get(item.id)?.is_liked ?? userLikesMap.get(item.id) ?? false,
       is_following: userFollowsMap.get(item.user_id) || false,
       is_bookmarked: true, // 북마크 페이지이므로 항상 true
-      bookmarks_count: 0, // TODO: 집계 쿼리로 가져올 예정
       author: profileData
     } as Item
   })
