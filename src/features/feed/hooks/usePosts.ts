@@ -1,12 +1,11 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useCallback, useMemo } from "react"
 import useSWRInfinite from "swr/infinite"
-import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
-import type { User } from "@supabase/supabase-js"
 import type { Item } from "@/types/item"
 import type { ServerFeedData } from "@/features/feed/data/server-data"
 import { fetchHomeFeedPage } from "@/features/feed/data/home-feed-repository"
+import { useSessionStore } from "@/store/sessionStore"
 import { diversifyRecentFeed, HOME_FEED_PAGE_SIZE } from "@/features/feed/domain/feed-order"
 
 const PAGE_SIZE = HOME_FEED_PAGE_SIZE
@@ -19,21 +18,12 @@ const getKey = (pageIndex: number, previousPageData: Item[] | null, userId: stri
 const fetcher = fetchHomeFeedPage
 
 export function usePosts(initialData?: ServerFeedData | null) {
-  const [user, setUser] = useState<User | null>(initialData?.currentUser || null)
-  const [loadingUser, setLoadingUser] = useState(!initialData)
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const supabase = createSupabaseBrowserClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-      setLoadingUser(false)
-    }
-    fetchUser()
-  }, [])
+  // ClientLayoutWrapper가 소유하는 로그인 상태를 사용한다. 인증 확인 전 게스트 재조회는 하지 않는다.
+  const user = useSessionStore((state) => state.session)
+  const loadingUser = useSessionStore((state) => state.isInitialLoad)
 
   const { data, error, size, setSize, mutate, isValidating } = useSWRInfinite(
-    (pageIndex, previousPageData) => getKey(pageIndex, previousPageData, user?.id ?? null),
+    (pageIndex, previousPageData) => loadingUser ? null : getKey(pageIndex, previousPageData, user?.id ?? null),
     fetcher,
     {
       revalidateFirstPage: false,
@@ -51,7 +41,7 @@ export function usePosts(initialData?: ServerFeedData | null) {
     [data]
   )
 
-  const isLoading = loadingUser || (isValidating && feedItems.length === 0)
+  const isLoading = (loadingUser && !initialData) || (isValidating && feedItems.length === 0)
   const isEmpty = data?.[0]?.length === 0
   const isReachingEnd = isEmpty || (data && data[data.length - 1]?.length < PAGE_SIZE)
 

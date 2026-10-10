@@ -11,7 +11,7 @@ import PostCardSkeleton from "./PostCardSkeleton"
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import type { User } from "@supabase/supabase-js"
+import { useSessionStore } from "@/store/sessionStore"
 import type { ServerFeedData } from "@/features/feed/data/server-data"
 import { usePageVisibility } from "@/hooks/usePageVisibility"
 import { shouldSignalNewFeedItem } from "@/features/feed/domain/feed-realtime"
@@ -125,17 +125,8 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
 
 
   // 사용자 상태. 가입은 스크롤 도중이 아니라 좋아요·기록처럼 행동하는 순간에만 권한다 (PRODUCT.md 비회원 정책)
-  const [currentUser, setCurrentUser] = useState<User | null>(initialData?.currentUser || null)
-
-  // 사용자 상태 확인: 홈 HTML은 공개 피드로 정적 생성되므로 로그인 여부는 항상 브라우저에서 확인한다
-  useEffect(() => {
-    if (initialData?.currentUser) return
-    const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setCurrentUser(user)
-    }
-    checkUser()
-  }, [supabase, initialData])
+  // 공통 레이아웃의 로그인 이벤트를 그대로 받는다. 홈에서 중복 인증 조회를 하지 않는다.
+  const currentUser = useSessionStore((state) => state.session)
 
   const handleShowNewItems = useCallback(async () => {
     if (isRefreshingLatest) return

@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { useRouter } from "@/shared/lib/navigation"
 import { useForm, useFieldArray, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -35,48 +34,8 @@ import { attachInstructionImages, buildRecipeItemPayload, editDefaults, forkDefa
 import { fetchCitedRecipes, saveRecipeRows, uploadInstructionImages } from "@/features/recipe/data/recipe-repository"
 import type { RecipeFormProps } from "@/features/recipe/contracts"
 import { onboardingRecipeDefaults } from "@/features/onboarding/domain/review"
-
-// Zod 스키마 업데이트
-const recipeSchema = z.object({
-	title: z.string().min(3, "제목은 3글자 이상이어야 합니다."),
-	description: z.string().optional(),
-	servings: z.coerce.number().min(1, "인분은 1 이상이어야 합니다."),
-	cooking_time_minutes: z.coerce.number().min(1, "조리시간은 1분 이상이어야 합니다."),
-	is_public: z.boolean(),
-	ingredients: z
-		.array(
-			z.object({
-				name: z.string().min(1, "재료 이름을 입력하세요."),
-				amount: z.coerce.number().positive("수량은 0보다 커야 합니다."),
-				unit: z.string().min(1, "단위를 입력하세요."),
-			})
-		)
-		.min(1, "재료를 하나 이상 추가해주세요."),
-	instructions: z
-		.array(
-			z.object({
-				description: z.string().min(1, "조리법 설명을 입력하세요."),
-				image_url: z.string().optional(), // 조리법 이미지 URL
-			})
-		)
-		.min(1, "조리법을 하나 이상 추가해주세요."),
-	color_label: z.string().nullable().optional(),
-	tags: z
-		.string()
-		.optional()
-		.transform((str) =>
-			str
-				? str
-						.split(",")
-						.map((tag) => tag.trim())
-						.filter((tag) => tag.length > 0)
-				: []
-		)
-		.pipe(z.array(z.string())),
-	cited_recipe_ids: z.array(z.string()).optional(), // 참고 레시피 ID 배열
-})
-
-export type RecipeFormValues = z.infer<typeof recipeSchema>
+import { recipeSchema } from "@/features/recipe/domain/recipe-schema"
+import type { RecipeFormValues, RecipeSubmitValues } from "@/features/recipe/domain/recipe-schema"
 
 const onboardingFieldLabels: Record<string, string> = {
 	title: "제목",
@@ -137,8 +96,7 @@ export default function RecipeForm({
   const sourceImageRestoreGuard = useRef(false)
 	const [selectedCitedRecipes, setSelectedCitedRecipes] = useState<Item[]>([])
 
-	const form = useForm<RecipeFormValues>({
-		// @ts-expect-error - 복잡한 타입 변환으로 인한 일시적 타입 에러 무시
+	const form = useForm<RecipeFormValues, unknown, RecipeSubmitValues>({
 		resolver: zodResolver(recipeSchema),
 		mode: "onChange",
 		defaultValues: {
@@ -150,7 +108,6 @@ export default function RecipeForm({
 			ingredients: [{ name: "", amount: 1, unit: "개" }],
 			instructions: [{ description: "", image_url: "" }],
 			color_label: null,
-			// @ts-expect-error - tags 기본값 타입 변환
 			tags: "",
 			cited_recipe_ids: [],
 		},
@@ -158,7 +115,7 @@ export default function RecipeForm({
 
 	useEffect(() => {
 		if (isEditMode && initialData) {
-			form.reset(editDefaults(initialData) as unknown as RecipeFormValues)
+			form.reset(editDefaults(initialData))
 
 			if (initialData.image_urls && initialData.image_urls.length > 0) {
 				const fetchedImages = initialData.image_urls.map((url) => ({
@@ -201,13 +158,13 @@ export default function RecipeForm({
 	// fork: 사진과 색상 라벨은 가져오지 않는다 (내가 만든 요리의 사진, 내 정리 기준을 쓴다)
 	useEffect(() => {
 		if (isEditMode || !forkFrom) return
-		form.reset(forkDefaults(forkFrom) as unknown as RecipeFormValues)
+		form.reset(forkDefaults(forkFrom))
 		setSelectedCitedRecipes([{ ...forkFrom, item_id: forkFrom.id } as Item])
 	}, [isEditMode, forkFrom, form])
 
 	useEffect(() => {
 		if (isEditMode || !onboardingDraft) return
-		form.reset(onboardingRecipeDefaults(onboardingDraft) as unknown as RecipeFormValues)
+		form.reset(onboardingRecipeDefaults(onboardingDraft))
 
 		if (!onboardingDraft.sourceImageEndpoint) return
 		let cancelled = false
@@ -246,7 +203,7 @@ export default function RecipeForm({
 
 		
 		// newIngredients 순서에 맞게 currentValues 재정렬 (칸 id로 원래 값을 찾는다)
-		const reorderedValues = reorderIngredients(newIngredients, ingredients.map((field) => field.id), currentValues)
+		const reorderedValues = reorderIngredients(newIngredients, ingredients.map((field) => field.id), currentValues.map((ingredient) => ({ ...ingredient, amount: Number(ingredient.amount) })))
 		
 
 		
@@ -304,7 +261,7 @@ export default function RecipeForm({
   const scheduleDraft = draft.scheduleSave
   useEffect(() => { scheduleDraft() }, [mainImages, instructionImages, thumbnailIndex, scheduleDraft])
 
-	const onSubmit = async (values: RecipeFormValues) => {
+	const onSubmit = async (values: RecipeSubmitValues) => {
 		if (mainImages.length === 0) {
 			toast({ title: "이미지 필요", description: "레시피 대표 이미지를 최소 1개 업로드해주세요.", variant: "destructive" })
 			return
@@ -554,7 +511,6 @@ export default function RecipeForm({
       <p role="status" className={`px-4 pt-2 text-meta ${draft.status === "error" || draft.status === "conflict" ? "text-destructive" : "text-ink-soft"}`}>
         {draft.status === "saved" ? "이 기기에 임시 저장됨" : draft.status === "pending" ? "임시 저장 중…" : draft.status === "conflict" ? "다른 탭에서 같은 글을 수정했습니다 · 이 탭에서 나가지 말고 내용을 복사해 주세요" : draft.status === "error" ? "임시 저장 실패 · 화면을 닫지 마세요" : "입력한 내용은 이 기기에 자동 저장돼요"}
       </p>
-			{/* @ts-expect-error - form 핸들러 타입 변환 처리 */}
 			<form id="recipe-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 px-3 pt-3">
 				{!isEditMode && onboardingDraft && (
 					<Sheet>
@@ -693,7 +649,7 @@ export default function RecipeForm({
 									return {
 										id: field.id,
 										name: watchedIngredient?.name || "",
-										amount: watchedIngredient?.amount || 0,
+										amount: Number(watchedIngredient?.amount) || 0,
 										unit: watchedIngredient?.unit || "",
 									}
 								})}

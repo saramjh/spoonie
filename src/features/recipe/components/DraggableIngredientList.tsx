@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import type { RecipeFormValues } from "@/features/recipe/components/RecipeForm"
+import type { RecipeFormValues } from "@/features/recipe/domain/recipe-schema"
 import { createPortal } from "react-dom"
 import {
   DndContext,

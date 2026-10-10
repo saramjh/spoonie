@@ -253,11 +253,11 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 
 				await cacheManager.updateItem(itemId, fullItemPayload)
 				
-				// 개별 item 갱신 뒤 홈 목록 key도 한 번 재검증한다.
-				setTimeout(async () => {
-
-					await cacheManager.revalidateHomeFeed()
-				}, 200)
+				// 저장된 item 캐시가 반영된 뒤 바로 재검증한다. 타이머와 실패 누락을 남기지 않는다.
+				// 서버 저장 성공 후의 캐시 갱신 실패는 작성 실패로 보고하지 않는다.
+				void cacheManager.revalidateHomeFeed().catch((error: unknown) => {
+					console.warn("PostForm: home feed revalidation failed:", error)
+				})
 				
 
 			} else {
