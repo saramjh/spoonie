@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 const store = vi.hoisted(() => ({
   uploads: [] as string[],
   removed: [] as string[],
+  failedOriginal: 0,
+  originalCount: 0,
 }))
 
 vi.mock("@/shared/infra/supabase-client", () => ({
@@ -11,6 +13,10 @@ vi.mock("@/shared/infra/supabase-client", () => ({
       from(bucket: string) {
         return {
           async upload(filePath: string) {
+            if (!filePath.includes(".w400.jpg") && !filePath.includes(".w800.jpg")) {
+              store.originalCount++
+              if (store.originalCount === store.failedOriginal) return { error: new Error("simulated source failure") }
+            }
             store.uploads.push(filePath)
             return { error: null }
           },
@@ -45,6 +51,8 @@ const photo = (contents: string) => ({
 beforeEach(() => {
   store.uploads.length = 0
   store.removed.length = 0
+  store.originalCount = 0
+  store.failedOriginal = 0
 })
 
 describe("image upload ownership and lifecycle", () => {
@@ -90,4 +98,22 @@ describe("image upload ownership and lifecycle", () => {
     expect(store.uploads).toContain(original + ".w400.jpg")
     expect(store.uploads).toContain(original + ".w800.jpg")
   })
+
+  it("removes already uploaded sources and variants when one photo in a batch fails", async () => {
+    store.failedOriginal = 2
+    const result = await uploadImagesOptimized(
+      [photo(crypto.randomUUID()), photo(crypto.randomUUID()), photo(crypto.randomUUID())],
+      "owner", "item-images",
+    )
+    expect(result.some((item) => !item.success)).toBe(true)
+    const successful = result.filter((item) => item.success)
+    expect(successful).toHaveLength(2)
+    for (const item of successful) {
+      const path = item.url.split("/item-images/")[1]
+      expect(store.removed).toContain(path)
+      expect(store.removed).toContain(path + ".w400.jpg")
+      expect(store.removed).toContain(path + ".w800.jpg")
+    }
+  })
+
 })

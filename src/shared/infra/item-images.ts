@@ -19,6 +19,14 @@ function toPaths(urls: Array<string | null | undefined>): string[] {
 	return [...paths]
 }
 
+/** 실패한 업로드 배치처럼 즉시 정리가 필요할 때 완료까지 기다린다. */
+export async function removeUploadedImages(urls: Array<string | null | undefined>, supabase: ReturnType<typeof createSupabaseBrowserClient> = createSupabaseBrowserClient()): Promise<void> {
+	const paths = toPaths(urls)
+	if (paths.length === 0) return
+	const { error } = await supabase.storage.from(BUCKET).remove(paths)
+	if (error) throw error
+}
+
 export function removeItemImages(urls: Array<string | null | undefined>) {
 	const paths = toPaths(urls)
 	if (paths.length === 0) return

@@ -8,6 +8,7 @@
 import type { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { uploadVariants } from "@/shared/infra/image-optimization"
 import { VARIANT_WIDTHS, variantPath } from "@/shared/infra/image-variants"
+import { removeUploadedImages } from "@/shared/infra/item-images"
 import type { OptimizedImage } from "@/shared/infra/image-utils"
 import type { Item } from "@/types/item"
 import type { RecipeActivity } from "../contracts"
@@ -112,7 +113,7 @@ export async function fetchCitedRecipes(supabase: Db, ids: string[]): Promise<It
 
 // 단계 사진: 새 사진은 올리고(크기별 버전 포함) 주소를, 기존 사진은 그 주소를, 없으면 null
 export async function uploadInstructionImages(supabase: Db, bucketId: string, userId: string, instructionImages: (OptimizedImage | null)[]) {
-	return Promise.all(
+	const settled = await Promise.allSettled(
 		instructionImages.map(async (image, index) => {
 			if (image && image.file.size > 0) {
 				const fileName = `${userId}/${Date.now()}-instruction-${index}-${Math.random().toString(36).slice(2, 10)}.jpg`
@@ -133,6 +134,21 @@ export async function uploadInstructionImages(supabase: Db, bucketId: string, us
 			}
 		})
 	)
+	const failure = settled.find((result) => result.status === "rejected")
+	if (failure && failure.status === "rejected") {
+		// 다른 단계의 업로드가 끝날 때까지 기다려 삭제 대상을 확정한다.
+		const newUrls = settled.flatMap((result, index) =>
+			result.status === "fulfilled" && result.value && instructionImages[index]?.file.size
+				? [result.value] : []
+		)
+		try {
+			await removeUploadedImages(newUrls, supabase)
+		} catch (error) {
+			console.error("Failed to clean up partially uploaded instruction images:", error)
+		}
+		throw failure.reason
+	}
+	return settled.map((result) => result.status === "fulfilled" ? result.value : null)
 }
 
 // 레시피 본체·재료·단계를 DB RPC 한 트랜잭션으로 저장한다.

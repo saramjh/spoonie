@@ -1,6 +1,7 @@
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { OptimizedImage, optimizeImages } from "@/shared/infra/image-utils"
 import { VARIANT_WIDTHS, variantPath } from "@/shared/infra/image-variants"
+import { removeUploadedImages } from "@/shared/infra/item-images"
 
 /**
  * 이미지 업로드 최적화 유틸리티
@@ -121,6 +122,15 @@ export async function uploadImagesOptimized(
 
 
 
+	// 실패한 배치에서는 이미 성공한 사진도 게시물에 연결되지 않는다.
+	// 이 요청에서 새로 만든 URL만 삭제하고 원래의 실패 결과를 호출자에게 보낸다.
+	if (results.some((result) => !result.success)) {
+		try {
+			await removeUploadedImages(results.filter((result) => result.success).map((result) => result.url))
+		} catch (error) {
+			console.error("Failed to clean up partially uploaded images:", error)
+		}
+	}
 	return results
 }
 
