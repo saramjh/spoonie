@@ -32,6 +32,8 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
   }
 	const { toast } = useToast()
 	const [isProcessing, setIsProcessing] = useState(false)
+	const previousPreviews = useRef<Set<string>>(new Set())
+	const mounted = useRef(false)
 	
 	const handleFileSelect = useCallback(
 		async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,6 +64,10 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 			setIsProcessing(true)
 			try {
 				const optimizedImages = await optimizeImages(files)
+				if (!mounted.current) {
+					optimizedImages.forEach((image) => URL.revokeObjectURL(image.preview))
+					return
+				}
 				// 사진은 저장할 때 올라간다. 여기서는 줄여서 미리 보여 주기만 하므로 알림을 띄우지 않는다 (나타난 사진이 피드백)
 				onImagesChange([...images, ...optimizedImages])
 			} catch (error) {
@@ -72,7 +78,7 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 					variant: "destructive",
 				})
 			} finally {
-				setIsProcessing(false)
+				if (mounted.current) setIsProcessing(false)
 			}
 
 			if (fileInputRef.current) {
@@ -102,7 +108,19 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 		[onThumbnailChange]
 	)
 
-	const previousPreviews = useRef<Set<string>>(new Set())
+	// React Strict Mode의 개발용 effect 재실행에서 살아 있는 미리보기를 해제하지 않는다.
+	useEffect(() => {
+		mounted.current = true
+		return () => {
+			mounted.current = false
+			queueMicrotask(() => {
+				if (mounted.current) return
+				previousPreviews.current.forEach((url) => URL.revokeObjectURL(url))
+				previousPreviews.current.clear()
+			})
+		}
+	}, [])
+
 	useEffect(() => {
 		const current = new Set(images.map((img) => img.preview).filter((url) => url.startsWith("blob:")))
 		// 유지 중인 사진의 URL은 해제하지 않는다. 제거된 사진만 정리한다.

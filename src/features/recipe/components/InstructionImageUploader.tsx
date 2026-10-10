@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useCallback, useId } from "react"
+import { useRef, useCallback, useId, useEffect } from "react"
 import Image from "next/image"
 
 import { X, Camera } from "lucide-react"
@@ -17,6 +17,22 @@ export default function InstructionImageUploader({ imageUrl, onImageChange, plac
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fileInputId = useId();
   const { toast } = useToast();
+  const mounted = useRef(false);
+  const currentPreview = useRef(imageUrl);
+
+  useEffect(() => {
+    mounted.current = true;
+    currentPreview.current = imageUrl;
+    return () => {
+      mounted.current = false;
+      if (imageUrl?.startsWith("blob:")) {
+        // 이미지 교체와 실제 언마운트는 해제하되 Strict Mode의 일시적 cleanup은 제외한다.
+        queueMicrotask(() => {
+          if (!mounted.current || currentPreview.current !== imageUrl) URL.revokeObjectURL(imageUrl);
+        });
+      }
+    };
+  }, [imageUrl]);
 
   const preview = imageUrl;
 
@@ -38,6 +54,10 @@ export default function InstructionImageUploader({ imageUrl, onImageChange, plac
 
       try {
         const [optimizedImage] = await optimizeImages([file]);
+        if (!mounted.current) {
+          URL.revokeObjectURL(optimizedImage.preview);
+          return;
+        }
         onImageChange(optimizedImage);
         toast({ title: "이미지 업로드 완료" });
       } catch (error) {
