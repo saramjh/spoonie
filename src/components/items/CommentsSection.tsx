@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
 import { cacheManager } from "@/shared/infra/unified-cache-manager"
-import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
+import { addComment, fetchComments, softDeleteComment } from "@/features/social/data/comment-repository"
 import { Send, Trash2, CornerUpLeft } from "lucide-react"
 import { Comment } from "@/types/item"
 import { timeAgo } from "@/lib/utils"
@@ -36,52 +36,11 @@ export default function CommentsSection({
   const [isSubmittingReply, setIsSubmittingReply] = useState<Record<string, boolean>>({})
   
   const { toast } = useToast()
-  const supabase = createSupabaseBrowserClient()
 
   // 댓글 데이터 로드 (itemId가 없으면 요청하지 않음)
   const { data: comments, mutate: mutateComments } = useSWR(
     itemId ? `comments_${itemId}` : null,
-    async () => {
-      const { data, error } = await supabase
-        .from('comments')
-        .select(`
-          id, content, created_at, user_id, parent_comment_id, is_deleted,
-          user:profiles!user_id(
-            id,
-            username,
-            display_name,
-            avatar_url,
-            public_id
-          )
-        `)
-        .eq('item_id', itemId)
-        .order('created_at', { ascending: true })
-
-      if (error) {
-        console.error('❌ CommentsSection: 댓글 로딩 실패:', error)
-        throw error
-      }
-      
-      // 데이터 변환 (user 배열을 단일 객체로 변환)
-      return (data || []).map(comment => {
-        const userProfile = Array.isArray(comment.user) ? comment.user[0] : comment.user
-        return {
-          id: comment.id,
-          content: comment.content,
-          created_at: comment.created_at,
-          user_id: comment.user_id,
-          parent_comment_id: comment.parent_comment_id,
-          is_deleted: comment.is_deleted,
-          user: {
-            id: comment.user_id,
-            public_id: userProfile?.public_id || '',
-            username: userProfile?.username || '',
-            display_name: userProfile?.username || '',
-            avatar_url: userProfile?.avatar_url || null,
-          },
-        }
-      }) as Comment[]
-    }
+    () => fetchComments(itemId)
   )
 
   // 이 게시물의 댓글 추가/삭제(소프트 삭제는 UPDATE)를 구독해 다른 사용자의 댓글을 즉시 반영한다.
@@ -115,14 +74,7 @@ export default function CommentsSection({
 
     try {
       // DB mutation은 화면 반영 뒤 수행한다.
-      const { error } = await supabase.from('comments').insert({
-        item_id: itemId,
-        user_id: currentUserId,
-        content: commentContent,
-        parent_comment_id: null // 최상위 댓글
-      })
-
-      if (error) throw error
+      await addComment(itemId, currentUserId, commentContent, null)
 
       // 댓글 목록 새로고침
       mutateComments()
@@ -170,14 +122,7 @@ export default function CommentsSection({
 
     try {
       // DB mutation은 화면 반영 뒤 수행한다.
-      const { error } = await supabase.from('comments').insert({
-        item_id: itemId,
-        user_id: currentUserId,
-        content: replyText,
-        parent_comment_id: parentCommentId // 대댓글
-      })
-
-      if (error) throw error
+      await addComment(itemId, currentUserId, replyText, parentCommentId)
 
       // 댓글 목록 새로고침
       mutateComments()
@@ -214,13 +159,7 @@ export default function CommentsSection({
 
     try {
       // DB mutation은 화면 반영 뒤 수행한다.
-      const { error } = await supabase
-        .from('comments')
-        .update({ is_deleted: true })
-        .eq('id', commentId)
-        .eq('user_id', currentUserId)
-
-      if (error) throw error
+      await softDeleteComment(commentId, currentUserId)
 
       // 댓글 목록 새로고침
       mutateComments()
