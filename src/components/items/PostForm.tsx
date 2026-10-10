@@ -25,7 +25,7 @@ import { logEvent } from "@/shared/infra/events"
 import { mutate as globalMutate } from "swr"
 import { PageHeader, PageLoading, SectionHeading, Sheet, SourceRow, StateSheet } from "@/components/kit"
 import { revalidateItemPage } from "@/shared/infra/revalidate-item"
-import { removeDroppedImages } from "@/shared/infra/item-images"
+import { cleanupUncommittedImages, removeDroppedImages } from "@/shared/infra/item-images"
 import type { PostFormProps } from "@/features/post/contracts"
 import { buildPostItemPayload, citedIdsFromRecipes, postFormDefaults, returnToSourcePath } from "@/features/post/domain/post-form"
 import { loadCitedRecipesForPost, savePostRow } from "@/features/post/data/post-repository"
@@ -137,6 +137,9 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 	
 		
 		setIsSubmitting(true)
+		const newUploadUrls: string[] = []
+		let dbSaveStarted = false
+		let dbCommitted = false
 		try {
 			const {
 				data: { user },
@@ -184,6 +187,7 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 				})
 				
 				// 기존 이미지와 새 업로드 이미지 병합 (이미 썸네일 순서로 정렬됨)
+				newUploadUrls.push(...newUploadedUrls)
 				uploadedImageUrls = [...existingImageUrls, ...newUploadedUrls]
 			} else {
 				// 새로 업로드할 이미지가 없는 경우 - 기존 이미지만 재정렬
@@ -209,6 +213,7 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 					}
 					return result.url
 				})
+				newUploadUrls.push(...uploadedImageUrls)
 			}
 		}
 
@@ -227,7 +232,9 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 			})
 			
 
+			dbSaveStarted = true
 			const { itemId } = await savePostRow(supabase, { existingId: isEditMode && initialData ? initialData.id : null, itemPayload })
+			dbCommitted = true
       await draft.finishPublish() // DB 저장 성공 후에만 초안을 제거
 
 
@@ -319,6 +326,7 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 				router.push("/")
 			}
 		} catch (error) {
+			await cleanupUncommittedImages(newUploadUrls, { dbSaveStarted, dbCommitted, error }, supabase)
 			console.error("Post submission error:", error)
 			toast({
 				title: `레시피드 ${isEditMode ? "수정" : "작성"} 실패`,

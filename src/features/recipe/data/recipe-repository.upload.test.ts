@@ -9,7 +9,7 @@ vi.mock("@/shared/infra/image-optimization", () => ({
   uploadVariants: async () => {},
 }))
 
-import { uploadInstructionImages } from "./recipe-repository"
+import { saveRecipeRows, uploadInstructionImages } from "./recipe-repository"
 
 describe("recipe step photo upload failure safety", () => {
   it("waits for other steps and removes all new sources + variants after one fails", async () => {
@@ -49,5 +49,16 @@ describe("recipe step photo upload failure safety", () => {
       expect(fixture.removed).toContain(path + ".w400.jpg")
       expect(fixture.removed).toContain(path + ".w800.jpg")
     }
+  })
+})
+
+describe("recipe database rejection provenance", () => {
+  it("preserves the SQLSTATE for safe cleanup decisions", async () => {
+    const error = { code: "23505", message: "unique constraint rejected" }
+    const supabase = {
+      async rpc() { return { data: null, error } },
+    } as unknown as Parameters<typeof saveRecipeRows>[0]
+    await expect(saveRecipeRows(supabase, { existingId: null, itemPayload: {}, ingredients: [], instructions: [] }))
+      .rejects.toMatchObject({ cause: error })
   })
 })

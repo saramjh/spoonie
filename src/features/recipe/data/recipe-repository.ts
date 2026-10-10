@@ -165,7 +165,7 @@ export async function saveRecipeRows<P extends object, I extends RecipeInstructi
 		p_ingredients: ingredients,
 		p_instructions: instructions,
 	})
-	if (error) throw new Error(`레시피 ${args.existingId ? "수정" : "생성"} 실패: ${error.message}`)
+	if (error) throw new Error(`레시피 ${args.existingId ? "수정" : "생성"} 실패: ${error.message}`, { cause: error })
 	if (!data) throw new Error("레시피 저장 결과를 확인할 수 없습니다.")
 	const itemId = String(data)
 	const ingredientsToInsert = ingredients.map((ingredient) => ({ ...ingredient, item_id: itemId }))

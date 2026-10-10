@@ -29,7 +29,7 @@ import { logEvent } from "@/shared/infra/events"
 import { mutate as globalMutate } from "swr"
 import { ColorLabelPicker, PageHeader, PageLoading, SectionHeading, Sheet, SourceRow, StateSheet } from "@/components/kit"
 import { revalidateItemPage } from "@/shared/infra/revalidate-item"
-import { removeDroppedImages } from "@/shared/infra/item-images"
+import { cleanupUncommittedImages, removeDroppedImages } from "@/shared/infra/item-images"
 import { attachInstructionImages, buildRecipeItemPayload, editDefaults, forkDefaults, removeInstructionPhoto, reorderIngredients } from "@/features/recipe/domain/recipe-form"
 import { fetchCitedRecipes, saveRecipeRows, uploadInstructionImages } from "@/features/recipe/data/recipe-repository"
 import type { RecipeFormProps } from "@/features/recipe/contracts"
@@ -268,6 +268,9 @@ export default function RecipeForm({
 		}
 
 		setIsSubmitting(true)
+		const newUploadUrls: string[] = []
+		let dbSaveStarted = false
+		let dbCommitted = false
 
 		try {
 			const {
@@ -309,6 +312,7 @@ export default function RecipeForm({
 				}
 				return result.url
 			})
+			newUploadUrls.push(...uploadedImageUrls)
 
 
 			
@@ -319,6 +323,9 @@ export default function RecipeForm({
 
 			// Instruction images upload
 			const uploadedInstructionImageUrls = await uploadInstructionImages(supabase, bucketId, user.id, instructionImages)
+			newUploadUrls.push(...uploadedInstructionImageUrls.flatMap((url, index) =>
+				url && instructionImages[index]?.file.size ? [url] : []
+			))
 
 			const instructionsWithImages = attachInstructionImages(values.instructions, uploadedInstructionImageUrls)
 
@@ -333,12 +340,14 @@ export default function RecipeForm({
 				onboardingDraftId: onboardingDraft?.id,
 			})
 
+			dbSaveStarted = true
 			const { itemId, ingredientsToInsert } = await saveRecipeRows(supabase, {
 				existingId: isEditMode && initialData ? initialData.id : null,
 				itemPayload,
 				ingredients: values.ingredients,
 				instructions: instructionsWithImages,
 			})
+			dbCommitted = true
 
       await draft.finishPublish() // DB 트랜잭션 성공 후에만 임시 원고 제거
 
@@ -475,6 +484,7 @@ export default function RecipeForm({
 			router.push("/")
 		}
 	} catch (error: unknown) {
+			await cleanupUncommittedImages(newUploadUrls, { dbSaveStarted, dbCommitted, error }, supabase)
 			const errorMessage = error instanceof Error ? error.message : "오류가 발생했습니다."
 			toast({ title: `레시피 ${isEditMode ? "수정" : "작성"} 실패`, description: errorMessage, variant: "destructive" })
 		} finally {

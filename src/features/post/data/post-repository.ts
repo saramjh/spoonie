@@ -17,10 +17,10 @@ export async function loadCitedRecipesForPost(supabase: Db, ids: string[]): Prom
 export async function savePostRow(supabase: Db, args: { existingId: string | null; itemPayload: object }): Promise<{ itemId: string }> {
 	if (args.existingId) {
 		const { data: updatedItem, error: itemError } = await supabase.from("items").update(args.itemPayload).eq("id", args.existingId).select("*").single()
-		if (itemError) throw new Error(`레시피드 수정 실패: ${itemError.message}`)
+		if (itemError) throw new Error(`레시피드 수정 실패: ${itemError.message}`, { cause: itemError })
 		return { itemId: updatedItem.id }
 	}
 	const { data: newItem, error: itemError } = await supabase.from("items").insert(args.itemPayload).select("*").single()
-	if (itemError) throw new Error(`레시피드 생성 실패: ${itemError.message}`)
+	if (itemError) throw new Error(`레시피드 생성 실패: ${itemError.message}`, { cause: itemError })
 	return { itemId: newItem.id }
 }

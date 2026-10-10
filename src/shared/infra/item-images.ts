@@ -27,6 +27,30 @@ export async function removeUploadedImages(urls: Array<string | null | undefined
 	if (error) throw error
 }
 
+/** DB 저장이 완료되지 않은 경우 이번 요청의 신규 사진만 제거한다. */
+export async function cleanupUncommittedImages(
+  newUrls: string[],
+  state: { dbSaveStarted: boolean; dbCommitted: boolean; error: unknown },
+  supabase: ReturnType<typeof createSupabaseBrowserClient>,
+): Promise<void> {
+  if (state.dbCommitted || newUrls.length === 0) return
+  // 커밋 후 응답이 유실됐을 수 있다. DB의 명시적 SQLSTATE 거절인 경우에만 정리한다.
+  if (state.dbSaveStarted) {
+    const cause = state.error instanceof Error ? state.error.cause : null
+    const code = (cause as { code?: unknown } | null)?.code
+    if (typeof code !== "string" || !/^(?:[0-9A-OQ-Z][0-9A-Z]{4}|P[0-9][0-9A-Z]{3})$/.test(code)) {
+      console.warn("Keeping uploaded images after an uncertain database response")
+      return
+    }
+  }
+  try {
+    await removeUploadedImages(newUrls, supabase)
+  } catch (error) {
+    // 저장소 정리 실패가 작성 오류나 IndexedDB 초안 복원을 가리지 않게 한다.
+    console.error("Failed to clean up images after saving failed:", error)
+  }
+}
+
 export function removeItemImages(urls: Array<string | null | undefined>) {
 	const paths = toPaths(urls)
 	if (paths.length === 0) return
