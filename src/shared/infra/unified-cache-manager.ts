@@ -61,13 +61,22 @@ const queues = new Map<string, Promise<unknown>>()
 function inOrder<T>(key: string, task: () => Promise<T>): Promise<T> {
 	const previous = queues.get(key) ?? Promise.resolve()
 	const next = previous.catch(() => undefined).then(task)
-	queues.set(
-		key,
-		next.finally(() => {
-			if (queues.get(key) === next) queues.delete(key)
-		})
-	)
+	queues.set(key, next)
+	const cleanup = () => { if (queues.get(key) === next) queues.delete(key) }
+	void next.then(cleanup, cleanup)
 	return next
+}
+
+// 연속 조작마다 마지막 서버 재확인 하나만 유지한다. 이전 응답은 캐시에 적용하지 않는다.
+const pendingLikeSyncs = new Map<string, { timer?: ReturnType<typeof setTimeout> }>()
+
+function reconcileLike(itemId: string, userId: string, sync: object) {
+	return fetchLikeServerState(itemId, userId).then((state) => {
+		if (!state) return
+		return inOrder(`like|${itemId}`, async () => {
+			if (pendingLikeSyncs.get(itemId) === sync) await patchItem(itemId, () => state)
+		})
+	})
 }
 
 const changeFollowCounts = (userId: string, field: "followers" | "following", by: number) =>
@@ -79,16 +88,34 @@ const changeFollowCounts = (userId: string, field: "followers" | "following", by
 
 export const cacheManager = {
 	/** 좋아요 / 취소. DB가 실패하면 화면을 되돌리고 던진다. 3초 뒤 서버 값으로 한 번 더 맞춘다 */
-	like: (itemId: string, userId: string, liked: boolean, seed?: Partial<Item>) =>
-		inOrder(`like|${itemId}`, async () => {
-			await patchItem(itemId, setLiked(liked), seed)
-			const { error } = await writeLike(itemId, userId, liked)
-			if (error) {
-				await patchItem(itemId, setLiked(!liked))
+	like: (itemId: string, userId: string, liked: boolean, seed?: Partial<Item>) => {
+		const previous = pendingLikeSyncs.get(itemId)
+		if (previous?.timer) clearTimeout(previous.timer)
+		const sync: { timer?: ReturnType<typeof setTimeout> } = {}
+		pendingLikeSyncs.set(itemId, sync)
+		return inOrder(`like|${itemId}`, async () => {
+			try {
+				await patchItem(itemId, setLiked(liked), seed)
+				const { error } = await writeLike(itemId, userId, liked)
+				if (error) {
+					await patchItem(itemId, setLiked(!liked))
+					throw error
+				}
+				if (pendingLikeSyncs.get(itemId) === sync) {
+					sync.timer = setTimeout(() => {
+						void reconcileLike(itemId, userId, sync)
+							.catch((error: unknown) => console.warn("좋아요 상태 재확인 실패:", error))
+							.finally(() => {
+								if (pendingLikeSyncs.get(itemId) === sync) pendingLikeSyncs.delete(itemId)
+							})
+					}, 3000)
+				}
+			} catch (error) {
+				if (pendingLikeSyncs.get(itemId) === sync) pendingLikeSyncs.delete(itemId)
 				throw error
 			}
-			setTimeout(() => void syncLikesFromServer(itemId, userId), 3000)
-		}),
+		})
+	},
 
 	/** 저장 / 취소. DB가 실패하면 화면을 되돌리고 던진다 */
 	bookmark: (itemId: string, userId: string, bookmarked: boolean, seed?: Partial<Item>) =>
@@ -170,11 +197,4 @@ export const cacheManager = {
 	revalidateHomeFeed: async () => {
 		await revalidateStartingWith(["items|"])
 	},
-}
-
-// 좋아요 수와 내가 눌렀는지를 서버 값으로 덮는다 (몇 번 실행돼도 결과가 같다)
-async function syncLikesFromServer(itemId: string, userId: string) {
-	const state = await fetchLikeServerState(itemId, userId)
-	if (!state) return
-	await patchItem(itemId, () => state)
 }

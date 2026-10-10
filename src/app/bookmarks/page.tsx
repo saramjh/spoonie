@@ -5,116 +5,11 @@ import { useRouter } from "@/shared/lib/navigation"
 import { Button } from "@/components/ui/button"
 import PostCard from "@/components/items/PostCard"
 import PostCardSkeleton from "@/components/items/PostCardSkeleton"
-import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
+import { fetchBookmarks } from "@/features/social/data/bookmark-repository"
 import { useSessionStore } from "@/store/sessionStore"
-import type { Item, Profile } from "@/types/item"
 import useSWR from "swr"
 import Link from "next/link"
 import { PageHeader, Sheet, StateSheet } from "@/components/kit"
-
-// 북마크 데이터 fetcher (SWR용)
-const fetchBookmarks = async (userId: string): Promise<Item[]> => {
-  const supabase = createSupabaseBrowserClient()
-  
-  // 북마크된 아이템들을 가져오기 (items + profiles 조인)
-  const { data: bookmarksData, error: bookmarksError } = await supabase
-    .from('bookmarks')
-    .select(`
-      created_at,
-      items (
-        *,
-        profiles!user_id (
-          username,
-          display_name,
-          avatar_url,
-          public_id
-        )
-      )
-    `)
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-
-  if (bookmarksError) throw bookmarksError
-  if (!bookmarksData || bookmarksData.length === 0) return []
-
-  // Supabase 관계 조회는 한 건이어도 배열로 올 수 있다
-  type BookmarkedItem = Item & { profiles?: Profile | Profile[] | null }
-  const itemOf = (bookmark: { items: unknown }) => (Array.isArray(bookmark.items) ? bookmark.items[0] : bookmark.items) as BookmarkedItem
-
-  // 북마크된 아이템들의 현재 좋아요/팔로우 상태 확인
-  const itemIds = bookmarksData.map(bookmark => itemOf(bookmark).id)
-  const userLikesMap = new Map<string, boolean>()
-  const userFollowsMap = new Map<string, boolean>()
-
-  if (itemIds.length > 0) {
-    // 좋아요 상태 확인
-    const { data: likesData } = await supabase
-      .from('likes')
-      .select('item_id')
-      .eq('user_id', userId)
-      .in('item_id', itemIds)
-
-    likesData?.forEach(like => {
-      userLikesMap.set(like.item_id, true)
-    })
-
-    // 팔로우 상태 확인
-    const authorIds = bookmarksData
-      .map(bookmark => itemOf(bookmark).user_id)
-      .filter(authorUserId => authorUserId !== userId)
-    
-    if (authorIds.length > 0) {
-      const { data: followsData } = await supabase
-        .from('follows')
-        .select('following_id')
-        .eq('follower_id', userId)
-        .in('following_id', authorIds)
-
-      followsData?.forEach(follow => {
-        userFollowsMap.set(follow.following_id, true)
-      })
-    }
-  }
-
-  // 데이터 변환 (기존 피드와 동일한 형식)
-  const transformedItems: Item[] = bookmarksData.map(bookmark => {
-    const item = itemOf(bookmark)
-    const profileData = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
-
-    return {
-      id: item.id,
-      item_id: item.id,
-      user_id: item.user_id,
-      item_type: item.item_type as "post" | "recipe",
-      created_at: item.created_at,
-      is_public: item.is_public,
-      display_name: profileData?.display_name || null,
-      username: profileData?.username || null,
-      avatar_url: profileData?.avatar_url || null,
-      user_public_id: profileData?.public_id || null,
-      title: item.title,
-      content: item.content,
-      description: item.description,
-      image_urls: item.image_urls,
-      thumbnail_index: item.thumbnail_index,
-      tags: item.tags,
-      color_label: item.color_label,
-      servings: item.servings,
-      cooking_time_minutes: item.cooking_time_minutes,
-      recipe_id: item.recipe_id,
-      cited_recipe_ids: item.cited_recipe_ids,
-      likes_count: 0, // TODO: 집계 쿼리로 가져올 예정
-      comments_count: 0, // TODO: 집계 쿼리로 가져올 예정
-      is_liked: userLikesMap.get(item.id) || false,
-      is_following: userFollowsMap.get(item.user_id) || false,
-      is_bookmarked: true, // 북마크 페이지이므로 항상 true
-      bookmarks_count: 0, // TODO: 집계 쿼리로 가져올 예정
-      author: profileData
-    } as Item
-  })
-
-  return transformedItems
-}
 
 export default function BookmarksPage() {
   const router = useRouter()
