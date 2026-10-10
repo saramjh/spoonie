@@ -7,14 +7,14 @@ import { getPublicFeedData } from "@/features/feed/data/server-data"
 export const revalidate = 300
 
 export const metadata: Metadata = {
-  title: "Spoonie - 레시피 공유 플랫폼 | 홈쿠킹 커뮤니티",
-  description: "맛있는 레시피와 요리 이야기를 공유하세요. 개인 레시피북 관리, 요리법 검색, 팔로우 기능으로 요리 커뮤니티에 참여하세요.",
+  title: "집밥 레시피 검색·재료량 조절·요리 기록 | Spoonie",
+  description: "직접 만든 집밥 레시피를 찾고, 인분별 재료량을 확인하며 요리해 보세요. 완성한 음식 사진과 경험은 원본 Recipe에 연결된 Recipeed로 기록할 수 있습니다.",
   keywords: "레시피 공유, 요리 커뮤니티, 홈쿠킹, 요리법, 레시피북, 요리 레시피, 음식, 요리 일상, 레시피드",
   
   openGraph: {
     siteName: 'Spoonie',
-    title: "Spoonie - 레시피 공유 플랫폼",
-    description: "맛있는 레시피와 요리 이야기를 공유하는 커뮤니티에 참여하세요.",
+    title: "Spoonie - 집밥 레시피 검색과 요리 기록",
+    description: "인분별 재료량 조절과 단계별 요리, 직접 만든 결과를 남기는 Spoonie 집밥 커뮤니티.",
     url: process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr',
     type: 'website',
     images: [
@@ -29,8 +29,8 @@ export const metadata: Metadata = {
 
   twitter: {
     card: 'summary_large_image',
-    title: "Spoonie - 레시피 공유 플랫폼",
-    description: "맛있는 레시피와 요리 이야기를 공유하는 커뮤니티",
+    title: "Spoonie - 집밥 레시피 검색과 요리 기록",
+    description: "집밥 레시피를 찾아 인분을 조절하고, 직접 만든 요리 사진과 경험을 기록하세요.",
     images: [`${process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'}/og-default.png`],
   },
 
@@ -61,7 +61,7 @@ const organizationSchema = {
   alternateName: ["스푸니"],
   url: (process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr") + "/",
   logo: (process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr") + "/android-chrome-512x512.png",
-  sameAs: ["https://www.instagram.com/spoonie.kitchen/"],
+  sameAs: ["https://www.instagram.com/spoonie.kitchen/", "https://www.threads.com/@spoonie.kitchen"],
 }
 import PostCardSkeleton from "@/components/items/PostCardSkeleton"
 
@@ -74,7 +74,7 @@ export default async function HomePage() {
 
 	return (
 		<div className="min-h-screen">
-			<h1 className="sr-only">Spoonie - 레시피와 요리 이야기를 나누는 커뮤니티</h1>
+			<h1 className="sr-only">Spoonie - 집밥 레시피 검색부터 인분별 재료량 조절과 요리 기록까지</h1>
 			<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(websiteSchema) }} />
 			<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(organizationSchema) }} />
 			<Suspense fallback={<ItemListSkeleton />}>

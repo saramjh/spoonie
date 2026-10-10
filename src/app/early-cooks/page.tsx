@@ -10,7 +10,7 @@ const sample = "/recipes/554ae9ef-15a1-4806-944e-170884d17a96"
 const image = "https://dtyiyzfftsewpckfkqmo.supabase.co/storage/v1/object/public/item-images/8f5c5a40-17e5-424a-9da6-656a852e762d/1790995251540-07a0720e.jpg"
 
 export const metadata: Metadata = {
-  title: "새로운 요리 SNS에서 첫 Recipeed 남기기 | Spoonie",
+  title: "오늘 만든 요리 기록하기 - 첫 집밥 사진과 이야기 | Spoonie",
   description: "요리를 잘해야만 참여할 수 있는 건 아닙니다. 집밥 사진 한 장, 따라 만든 한 끼부터 Spoonie의 첫 Recipeed를 남겨보세요. 초기 사용 경험에 관한 솔직한 의견도 받고 있습니다.",
   alternates: { canonical: baseUrl + "/early-cooks" },
   openGraph: {
