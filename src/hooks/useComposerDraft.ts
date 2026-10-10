@@ -45,6 +45,8 @@ export function useComposerDraft<T>({
   const disposed = useRef(false)
   const pending = useRef<Promise<void>>(Promise.resolve())
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const nextCheckpointAt = useRef<number | null>(null)
+  const lastCheckpointAt = useRef<number | null>(null)
 
   const signature = useCallback((state: Snapshot<T>) => JSON.stringify({
     values: state.values,
@@ -62,10 +64,12 @@ export function useComposerDraft<T>({
     if (!canSave.current || disposed.current || blocked.current) return Promise.resolve()
     if (timer.current) clearTimeout(timer.current)
     timer.current = null
+    nextCheckpointAt.current = null
     const state = latest.current()
     const current = signature(state)
     if (current === lastSaved.current) return pending.current
     if (current === baseline.current && !lastSaved.current) return pending.current
+    lastCheckpointAt.current = Date.now()
     const draft: ComposerDraft<T> = {
       values: state.values,
       mainImages: state.mainImages.map(packImage),
@@ -94,8 +98,18 @@ export function useComposerDraft<T>({
     const current = signature(latest.current())
     if (current === lastSaved.current || (current === baseline.current && !lastSaved.current)) return
     setStatus("pending")
+    // 첫 수정은 빠르게 보존한다. 이후에는 650ms마다 모아 저장해 사진 Blob 복사를 억제한다.
+    const now = Date.now()
+    if (nextCheckpointAt.current === null) {
+      nextCheckpointAt.current = lastCheckpointAt.current === null
+        ? now + 100
+        : Math.max(now, lastCheckpointAt.current + 650)
+    }
     if (timer.current) clearTimeout(timer.current)
-    timer.current = setTimeout(() => { void saveNow().catch(() => {}) }, 650)
+    timer.current = setTimeout(
+      () => { void saveNow().catch(() => {}) },
+      Math.max(0, nextCheckpointAt.current - now),
+    )
   }, [saveNow, signature])
 
   useEffect(() => {
@@ -104,6 +118,8 @@ export function useComposerDraft<T>({
     canSave.current = false
     lastSaved.current = ""
     revision.current = 0
+    nextCheckpointAt.current = null
+    lastCheckpointAt.current = null
     blocked.current = false
     // 키가 바뀔 때 초기화는 microtask로 실행해 렌더 중첩을 피한다.
     void Promise.resolve().then(() => {
