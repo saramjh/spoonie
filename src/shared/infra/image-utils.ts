@@ -75,8 +75,16 @@ const calculateNewDimensions = (originalWidth: number, originalHeight: number, m
  * 여러 이미지 파일을 최적화
  */
 export const optimizeImages = async (files: File[], maxSide = 1280, quality = 0.8): Promise<OptimizedImage[]> => {
-	const promises = files.map((file) => optimizeImage(file, maxSide, quality))
-	return Promise.all(promises)
+	const results = await Promise.allSettled(files.map((file) => optimizeImage(file, maxSide, quality)))
+	const failed = results.find((result) => result.status === "rejected")
+	if (failed && failed.status === "rejected") {
+		// 한 장이 실패해도 나머지 변환을 기다려, 사용되지 않을 미리보기 URL을 전부 해제한다.
+		for (const result of results) {
+			if (result.status === "fulfilled") URL.revokeObjectURL(result.value.preview)
+		}
+		throw failed.reason
+	}
+	return results.flatMap((result) => result.status === "fulfilled" ? [result.value] : [])
 }
 
 /**
