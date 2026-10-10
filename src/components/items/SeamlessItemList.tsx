@@ -47,7 +47,7 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
     const subscribe = () => {
       if (document.hidden || channel) return
 
-      channel = supabase
+      const activeChannel = supabase
         .channel("home-feed:new-items")
         .on(
           "postgres_changes",
@@ -67,7 +67,35 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
             }
           }
         )
-        .subscribe()
+
+      channel = activeChannel
+      activeChannel.subscribe((status, error) => {
+        if (status === "SUBSCRIBED") {
+          // 첫 연결·자동 재연결 때 한 행만 확인한다. WebSocket이 끊긴 동안의 이벤트는 재생되지 않는다.
+          // 기준 피드가 아직 로드되지 않았으면 비교하지 않아 첫 방문의 오탐을 막는다.
+          if (document.hidden || !newestKnownCreatedAt.current) return
+          void supabase
+            .from("items")
+            .select("created_at")
+            .eq("is_public", true)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle()
+            .then(({ data, error: queryError }) => {
+              if (queryError) {
+                console.warn("Home feed: latest item check failed:", queryError.message)
+                return
+              }
+              if (channel !== activeChannel || document.hidden || !data) return
+              if (shouldSignalNewFeedItem("UPDATE", { is_public: true, created_at: data.created_at }, newestKnownCreatedAt.current)) {
+                setHasNewItems(true)
+              }
+            })
+        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          // Realtime SDK가 채널을 자동 재연결한다. 성공 시 위 단건 확인으로 누락을 복구한다.
+          console.warn("Home feed: realtime connection interrupted:", status, error?.message ?? "")
+        }
+      })
     }
 
     const unsubscribe = () => {
@@ -82,8 +110,7 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
         return
       }
 
-      // usePageVisibility가 같은 시점에 최신 피드를 다시 받으므로 오래된 신호는 버린다.
-      setHasNewItems(false)
+      // 기존에 받은 알림은 사용자가 최신 피드를 실제로 열 때만 지운다.
       subscribe()
     }
 
@@ -177,17 +204,17 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
       <div className="sr-only" aria-live="polite">{hasNewItems ? "새 글이 있습니다." : ""}</div>
 
       {hasNewItems && (
-        <div className="sticky top-3 z-40 flex h-0 justify-center px-3">
+        <div className="pointer-events-none fixed left-1/2 top-16 z-40 -translate-x-1/2">
           <Button
             type="button"
             variant="outline"
             size="sm"
-            className="translate-y-3 bg-paper shadow-sm"
+            className="pointer-events-auto min-h-11 border-border bg-paper shadow-sheet"
             onClick={handleShowNewItems}
             disabled={isRefreshingLatest}
             aria-label="새 글이 있습니다. 최신 글 보기"
           >
-            {isRefreshingLatest ? "새 글 불러오는 중" : "새 글 보기"}
+            {isRefreshingLatest ? "새 글 불러오는 중" : "새 글이 올라왔어요 · 보기"}
           </Button>
         </div>
       )}
