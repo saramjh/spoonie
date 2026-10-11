@@ -32,6 +32,8 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
   }
 	const { toast } = useToast()
 	const [isProcessing, setIsProcessing] = useState(false)
+	const latestImages = useRef(images)
+	useEffect(() => { latestImages.current = images }, [images])
 	const previousPreviews = useRef<Set<string>>(new Set())
 	const mounted = useRef(false)
 	
@@ -42,7 +44,7 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 			e.target.value = ""
 			if (files.length === 0) return
 
-			if (images.length + files.length > maxImages) {
+			if (latestImages.current.length + files.length > maxImages) {
 				toast({
 					title: "업로드 제한",
 					description: `최대 ${maxImages}개의 이미지만 업로드할 수 있습니다.`,
@@ -69,7 +71,9 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 					return
 				}
 				// 사진은 저장할 때 올라간다. 여기서는 줄여서 미리 보여 주기만 하므로 알림을 띄우지 않는다 (나타난 사진이 피드백)
-				onImagesChange([...images, ...optimizedImages])
+				const nextImages = [...latestImages.current, ...optimizedImages]
+				latestImages.current = nextImages
+				onImagesChange(nextImages)
 			} catch (error) {
 				console.error("Image optimization failed:", error)
 				toast({
@@ -85,19 +89,20 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 				fileInputRef.current.value = ""
 			}
 		},
-		[images, maxImages, onImagesChange, toast, setIsProcessing]
+		[maxImages, onImagesChange, toast, setIsProcessing]
 	)
 
 	const removeImage = useCallback(
 		(index: number) => {
-			const newImages = images.filter((_, i) => i !== index)
+			const newImages = latestImages.current.filter((_, i) => i !== index)
+			latestImages.current = newImages
 			onImagesChange(newImages)
 
 					if (onThumbnailChange && thumbnailIndex >= newImages.length && newImages.length > 0) {
 			onThumbnailChange(0)
 		}
 	},
-	[images, onImagesChange, thumbnailIndex, onThumbnailChange]
+	[onImagesChange, thumbnailIndex, onThumbnailChange]
 	)
 
 	const setThumbnail = useCallback(
