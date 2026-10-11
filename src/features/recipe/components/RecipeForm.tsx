@@ -30,6 +30,7 @@ import { mutate as globalMutate } from "swr"
 import { ColorLabelPicker, PageHeader, PageLoading, SectionHeading, Sheet, SourceRow, StateSheet } from "@/components/kit"
 import { revalidateItemPage } from "@/shared/infra/revalidate-item"
 import { cleanupUncommittedImages, removeDroppedImages } from "@/shared/infra/item-images"
+import { afterCommit } from "@/shared/infra/post-commit"
 import { attachInstructionImages, buildRecipeItemPayload, editDefaults, forkDefaults, removeInstructionPhoto, reorderIngredients } from "@/features/recipe/domain/recipe-form"
 import { fetchCitedRecipes, saveRecipeRows, uploadInstructionImages } from "@/features/recipe/data/recipe-repository"
 import type { RecipeFormProps } from "@/features/recipe/contracts"
@@ -251,6 +252,8 @@ export default function RecipeForm({
 		const newUploadUrls: string[] = []
 		let dbSaveStarted = false
 		let dbCommitted = false
+		let savedItemId: string | null = null
+		let successNotified = false
 
 		try {
 			const {
@@ -305,8 +308,9 @@ export default function RecipeForm({
 				instructions: instructionsWithImages,
 			})
 			dbCommitted = true
+			savedItemId = itemId
 
-      await draft.finishPublish() // DB 트랜잭션 성공 후에만 임시 원고 제거
+      await afterCommit("draft", () => draft.finishPublish()) // DB 성공 후 초안 정리
 
 			if (isEditMode) {
 				
@@ -346,7 +350,7 @@ export default function RecipeForm({
 				}
 				
 				// 중요: 모든 캐시 즉시 갱신 (홈피드, 프로필, 레시피북 등)
-				await cacheManager.updateItem(itemId, fullItemPayload)
+				await afterCommit("cache", () => cacheManager.updateItem(itemId, fullItemPayload))
 			
 					} else {
 				
@@ -384,15 +388,16 @@ export default function RecipeForm({
 					is_following: false,
 					created_at: new Date().toISOString(),
 				}
-				await cacheManager.addNewItem(fullItemPayload as Item)
+				await afterCommit("cache", () => cacheManager.addNewItem(fullItemPayload as Item))
 			}
 
 		
 
 		toast({ title: `레시피 ${isEditMode ? "수정" : "작성"} 완료`, description: `성공적으로 ${isEditMode ? "수정" : "등록"}되었습니다.` })
-		if (!isEditMode) await logEvent("recipe_create", itemId, entrySource ?? (forkFrom ? "fork" : "recipe_form"))
-		if (!isEditMode && forkFrom) logEvent("derived_create", itemId, "fork")
-		await revalidateItemPage(itemId, initialData?.tags ?? []) // 상세 + sitemap/topic/profile 검색 자산을 즉시 갱신
+		successNotified = true
+		if (!isEditMode) await afterCommit("analytics", () => logEvent("recipe_create", itemId, entrySource ?? (forkFrom ? "fork" : "recipe_form")))
+		if (!isEditMode && forkFrom) void afterCommit("analytics", () => logEvent("derived_create", itemId, "fork"))
+		await afterCommit("revalidate", () => revalidateItemPage(itemId, initialData?.tags ?? [])) // 상세 + sitemap/topic/profile 검색 자산을 즉시 갱신
 		// 고치면서 빠진 사진(대표·단계) 파일을 저장소에서 지운다
 		if (isEditMode && initialData) {
 			removeDroppedImages(
@@ -441,6 +446,14 @@ export default function RecipeForm({
 			router.push("/")
 		}
 	} catch (error: unknown) {
+			if (dbCommitted) {
+				console.warn("Recipe saved, but a follow-up action failed:", error)
+				if (!successNotified) toast({ title: "레시피 저장 완료", description: "글은 저장됐습니다. 일부 화면 갱신이 지연될 수 있습니다." })
+				if (savedItemId) {
+					try { router.replace("/recipes/" + savedItemId) } catch (navigationError) { console.warn("Recipe navigation failed:", navigationError) }
+				}
+				return
+			}
 			await cleanupUncommittedImages(newUploadUrls, { dbSaveStarted, dbCommitted, error }, supabase)
 			const errorMessage = error instanceof Error ? error.message : "오류가 발생했습니다."
 			toast({ title: `레시피 ${isEditMode ? "수정" : "작성"} 실패`, description: errorMessage, variant: "destructive" })

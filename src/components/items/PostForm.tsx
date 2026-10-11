@@ -26,6 +26,7 @@ import { mutate as globalMutate } from "swr"
 import { PageHeader, PageLoading, SectionHeading, Sheet, SourceRow, StateSheet } from "@/components/kit"
 import { revalidateItemPage } from "@/shared/infra/revalidate-item"
 import { cleanupUncommittedImages, removeDroppedImages } from "@/shared/infra/item-images"
+import { afterCommit } from "@/shared/infra/post-commit"
 import type { PostFormProps } from "@/features/post/contracts"
 import { buildPostItemPayload, citedIdsFromRecipes, postFormDefaults, returnToSourcePath } from "@/features/post/domain/post-form"
 import { loadCitedRecipesForPost, savePostRow } from "@/features/post/data/post-repository"
@@ -136,6 +137,8 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 		const newUploadUrls: string[] = []
 		let dbSaveStarted = false
 		let dbCommitted = false
+		let savedItemId: string | null = null
+		let successNotified = false
 		try {
 			const {
 				data: { user },
@@ -179,7 +182,8 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 			dbSaveStarted = true
 			const { itemId } = await savePostRow(supabase, { existingId: isEditMode && initialData ? initialData.id : null, itemPayload })
 			dbCommitted = true
-      await draft.finishPublish() // DB 저장 성공 후에만 초안을 제거
+			savedItemId = itemId
+      await afterCommit("draft", () => draft.finishPublish()) // DB 성공 후 초안 정리
 
 
 			
@@ -202,7 +206,7 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 			
 			if (isEditMode) {
 
-				await cacheManager.updateItem(itemId, fullItemPayload)
+				await afterCommit("cache", () => cacheManager.updateItem(itemId, fullItemPayload))
 				
 				// 저장된 item 캐시가 반영된 뒤 바로 재검증한다. 타이머와 실패 누락을 남기지 않는다.
 				// 서버 저장 성공 후의 캐시 갱신 실패는 작성 실패로 보고하지 않는다.
@@ -212,7 +216,7 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 				
 
 			} else {
-				await cacheManager.addNewItem(fullItemPayload as Item)
+				await afterCommit("cache", () => cacheManager.addNewItem(fullItemPayload as Item))
 			}
 			
 
@@ -227,12 +231,13 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 			title: `레시피드 ${isEditMode ? "수정" : "작성"} 완료!`,
 			description: "레시피드가 성공적으로 처리되었습니다.",
 		})
+			successNotified = true
 			
 			if (!isEditMode) {
 				const creationOrigin = sourceRecipeId && sourceOrigin ? `${sourceOrigin}:${sourceRecipeId}` : "manual"
-				logEvent("recipeed_create", itemId, creationOrigin)
+				void afterCommit("analytics", () => logEvent("recipeed_create", itemId, creationOrigin))
 			}
-			await revalidateItemPage(itemId, initialData?.tags ?? []) // 상세 + sitemap/topic/profile 검색 자산을 즉시 갱신
+			await afterCommit("revalidate", () => revalidateItemPage(itemId, initialData?.tags ?? [])) // 상세 + sitemap/topic/profile 검색 자산을 즉시 갱신
 			// 고치면서 빠진 사진 파일을 저장소에서 지운다
 			if (isEditMode && initialData) removeDroppedImages(initialData.image_urls || [], uploadedImageUrls)
 			// 레시피 상세의 "만들어 본 기록"이 바로 보이도록 관계 캐시를 비운다
@@ -270,6 +275,14 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 				router.push("/")
 			}
 		} catch (error) {
+			if (dbCommitted) {
+				console.warn("Recipeed saved, but a follow-up action failed:", error)
+				if (!successNotified) toast({ title: "레시피드 저장 완료", description: "글은 저장됐습니다. 일부 화면 갱신이 지연될 수 있습니다." })
+				if (savedItemId) {
+					try { router.replace("/posts/" + savedItemId) } catch (navigationError) { console.warn("Recipeed navigation failed:", navigationError) }
+				}
+				return
+			}
 			await cleanupUncommittedImages(newUploadUrls, { dbSaveStarted, dbCommitted, error }, supabase)
 			console.error("Post submission error:", error)
 			toast({
