@@ -64,6 +64,7 @@ export default function RecipeForm({
 
 
 	const [isSubmitting, setIsSubmitting] = useState(false)
+	const submitLock = useRef(false)
 	const [mainImages, setMainImages] = useState<OptimizedImage[]>([])
 	const [thumbnailIndex, setThumbnailIndex] = useState(0)
 	
@@ -248,6 +249,9 @@ export default function RecipeForm({
 			return
 		}
 
+		// isSubmitting은 다음 React 렌더 전에는 갱신되지 않는다.
+		if (submitLock.current) return
+		submitLock.current = true
 		setIsSubmitting(true)
 		const newUploadUrls: string[] = []
 		let dbSaveStarted = false
@@ -458,7 +462,11 @@ export default function RecipeForm({
 			const errorMessage = error instanceof Error ? error.message : "오류가 발생했습니다."
 			toast({ title: `레시피 ${isEditMode ? "수정" : "작성"} 실패`, description: errorMessage, variant: "destructive" })
 		} finally {
-			setIsSubmitting(false)
+			// 이미 발행된 글은 화면 이동 전까지 다시 저장하지 못하게 유지한다.
+			if (!dbCommitted) {
+				submitLock.current = false
+				setIsSubmitting(false)
+			}
 		}
 	}
 

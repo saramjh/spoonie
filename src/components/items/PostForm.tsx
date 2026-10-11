@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useRouter } from "@/shared/lib/navigation"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -56,6 +56,7 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 	const supabase = createSupabaseBrowserClient()
 
 	const [isSubmitting, setIsSubmitting] = useState(false)
+	const submitLock = useRef(false)
 	// 수정할 때의 처음 값: 이미 올린 사진과 대표 사진 (수정 화면은 initialData가 준비된 뒤에만 이 폼을 그린다)
 	const editing = isEditMode && initialData ? initialData : null
 	const [mainImages, setMainImages] = useState<OptimizedImage[]>(() =>
@@ -133,6 +134,9 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 	const onSubmit = async (values: PostFormValues) => {
 	
 		
+		// isSubmitting은 다음 React 렌더 전에는 갱신되지 않는다.
+		if (submitLock.current) return
+		submitLock.current = true
 		setIsSubmitting(true)
 		const newUploadUrls: string[] = []
 		let dbSaveStarted = false
@@ -291,7 +295,11 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 				variant: "destructive",
 			})
 		} finally {
-			setIsSubmitting(false)
+			// 이미 발행된 글은 화면 이동 전까지 다시 저장하지 못하게 유지한다.
+			if (!dbCommitted) {
+				submitLock.current = false
+				setIsSubmitting(false)
+			}
 		}
 	}
 
