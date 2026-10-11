@@ -19,6 +19,7 @@ export default function InstructionImageUploader({ imageUrl, onImageChange, plac
   const { toast } = useToast();
   const mounted = useRef(false);
   const currentPreview = useRef(imageUrl);
+  const selectionVersion = useRef(0);
 
   useEffect(() => {
     mounted.current = true;
@@ -41,6 +42,7 @@ export default function InstructionImageUploader({ imageUrl, onImageChange, plac
       const file = e.target.files?.[0];
       e.target.value = "";
       if (!file) return;
+      const version = ++selectionVersion.current;
 
       if (!isValidImageType(file) || !isValidFileSize(file)) {
         toast({
@@ -54,13 +56,15 @@ export default function InstructionImageUploader({ imageUrl, onImageChange, plac
 
       try {
         const [optimizedImage] = await optimizeImages([file]);
-        if (!mounted.current) {
+        // 늦게 완료된 이전 선택은 현재 단계의 사진을 덮어쓰면 안 된다.
+        if (!mounted.current || version !== selectionVersion.current) {
           URL.revokeObjectURL(optimizedImage.preview);
           return;
         }
         onImageChange(optimizedImage);
         toast({ title: "이미지 업로드 완료" });
       } catch (error) {
+        if (!mounted.current || version !== selectionVersion.current) return;
         console.error("Image optimization failed:", error);
         toast({
           title: "이미지 처리 실패",
@@ -77,6 +81,8 @@ export default function InstructionImageUploader({ imageUrl, onImageChange, plac
   );
 
   const removeImage = useCallback(() => {
+    // 선택 취소 이후 끝난 사진 변환은 다시 표시하지 않는다.
+    selectionVersion.current++;
     onImageChange(null);
   }, [onImageChange]);
 
