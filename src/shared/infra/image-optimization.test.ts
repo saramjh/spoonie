@@ -39,7 +39,7 @@ vi.mock("@/shared/infra/image-utils", () => ({
   })),
 }))
 
-import { uploadImagesOptimized } from "./image-optimization"
+import { resolveImageUploadOrder, uploadImagesOptimized } from "./image-optimization"
 
 const photo = (contents: string) => ({
   file: new File([contents], "meal.jpg", { type: "image/jpeg" }),
@@ -116,4 +116,47 @@ describe("image upload ownership and lifecycle", () => {
     }
   })
 
+})
+
+
+describe("ordered photos for Recipe/Recipeed edits", () => {
+  const old = (url: string) => ({
+    file: new File([], "existing.jpg"), preview: url, width: 8, height: 8,
+  })
+
+  it("preserves the editor's interleaved existing/new order and cover index", () => {
+    const images = [old("old-a"), photo("fresh-1"), old("old-b"), photo("fresh-2")]
+    const result = resolveImageUploadOrder(images, [
+      { url: "new-1", success: true },
+      { url: "new-2", success: true },
+    ])
+    expect(result).toEqual({
+      imageUrls: ["old-a", "new-1", "old-b", "new-2"],
+      newUrls: ["new-1", "new-2"],
+    })
+    expect(result.imageUrls[1]).toBe("new-1")
+  })
+
+  it("keeps a newly selected cover as first photo on edit", () => {
+    const images = [photo("new-cover"), old("old-a"), old("old-b")]
+    expect(resolveImageUploadOrder(images, [{ url: "new-cover-url", success: true }])).toEqual({
+      imageUrls: ["new-cover-url", "old-a", "old-b"],
+      newUrls: ["new-cover-url"],
+    })
+  })
+
+  it("preserves untouched existing photos and all-new photos", () => {
+    expect(resolveImageUploadOrder([old("old-a"), old("old-b")], [])).toEqual({
+      imageUrls: ["old-a", "old-b"], newUrls: [],
+    })
+    expect(resolveImageUploadOrder([photo("a"), photo("b")], [
+      { url: "a-url", success: true }, { url: "b-url", success: true },
+    ])).toEqual({ imageUrls: ["a-url", "b-url"], newUrls: ["a-url", "b-url"] })
+  })
+
+  it("does not emit an apparently successful image order if upload failed", () => {
+    expect(() => resolveImageUploadOrder([old("old"), photo("new")], [
+      { url: "", success: false, error: "storage rejected" },
+    ])).toThrow("storage rejected")
+  })
 })

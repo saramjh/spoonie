@@ -22,7 +22,7 @@ import { useComposerDraft } from "@/hooks/useComposerDraft"
 
 
 import type { Item } from "@/types/item"
-import { uploadImagesOptimized } from "@/shared/infra/image-optimization"
+import { resolveImageUploadOrder, uploadImagesOptimized } from "@/shared/infra/image-optimization"
 import { cacheManager } from "@/shared/infra/unified-cache-manager"
 import { notificationService } from "@/features/notification/data/notification-service"
 import { logEvent } from "@/shared/infra/events"
@@ -271,35 +271,12 @@ export default function RecipeForm({
 		
 
 		const newImageFiles = mainImages.filter((img) => img.file.size > 0)
-		const existingImageUrls = mainImages.filter((img) => !newImageFiles.includes(img)).map((img) => img.preview)
-		
-		let uploadedImageUrls: string[] = []
-		if (newImageFiles.length > 0) {
-			
-			const uploadResults = await uploadImagesOptimized(
-				newImageFiles, 
-				user.id, 
-				bucketId,
-				() => {
-					// Progress tracking not implemented yet
-				}
-			)
-
-			// 결과 검증 및 URL 추출
-			uploadedImageUrls = uploadResults.map(result => {
-				if (!result.success) {
-					throw new Error(result.error || '레시피 이미지 업로드에 실패했습니다.')
-				}
-				return result.url
-			})
-			newUploadUrls.push(...uploadedImageUrls)
-
-
-			
-		}
-		
-					// 원본 순서 유지로 최종 URL 배열 생성
-			const finalImageUrls = [...existingImageUrls, ...uploadedImageUrls]
+		const uploadResults = newImageFiles.length > 0
+			? await uploadImagesOptimized(newImageFiles, user.id, bucketId)
+			: []
+		// 저장 전 보이는 사진의 순서가 DB image_urls 순서와 동일해야 한다.
+		const { imageUrls: finalImageUrls, newUrls: uploadedImageUrls } = resolveImageUploadOrder(mainImages, uploadResults)
+		newUploadUrls.push(...uploadedImageUrls)
 
 			// Instruction images upload
 			const uploadedInstructionImageUrls = await uploadInstructionImages(supabase, bucketId, user.id, instructionImages)

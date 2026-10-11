@@ -26,6 +26,8 @@ describe("Recipe/Recipeed cover change save boundary", () => {
   ] as const) {
     it(kind + " selection changes only local preview; cache updates after DB succeeds", () => {
       const { handler, source } = readCoverHandler(filename)
+      // 업로드 후 사진 병합도 원래 UI 순서를 사용해야 index가 같은 사진을 가리킨다.
+      expect(source).toContain("resolveImageUploadOrder(mainImages, uploadResults)")
       expect(handler).toContain("setThumbnailIndex(newIndex)")
       expect(handler).not.toContain("cacheManager.updateItem")
       expect(handler).not.toContain("supabase.auth.getUser")

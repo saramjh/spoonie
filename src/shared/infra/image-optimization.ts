@@ -14,6 +14,26 @@ interface UploadResult {
 	error?: string
 }
 
+/** 편집 화면의 사진 순서를 유지하며 새 업로드 결과를 같은 슬롯에 끼운다. */
+export function resolveImageUploadOrder(
+  images: OptimizedImage[],
+  uploads: UploadResult[],
+): { imageUrls: string[]; newUrls: string[] } {
+  const newUrls: string[] = []
+  let uploadedIndex = 0
+  const imageUrls = images.map((image) => {
+    if (image.file.size === 0) return image.preview
+    const result = uploads[uploadedIndex++]
+    if (!result?.success || !result.url) {
+      throw new Error(result?.error || "이미지 업로드에 실패했습니다.")
+    }
+    newUrls.push(result.url)
+    return result.url
+  })
+  if (uploadedIndex !== uploads.length) throw new Error("이미지 업로드 결과 개수가 맞지 않습니다.")
+  return { imageUrls, newUrls }
+}
+
 interface UploadProgress {
 	uploaded: number
 	total: number

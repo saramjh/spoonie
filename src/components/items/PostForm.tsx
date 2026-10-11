@@ -18,7 +18,7 @@ import { useComposerDraft } from "@/hooks/useComposerDraft"
 import type { Item } from "@/types/item"
 import CitedRecipeSearch from "@/features/recipe/components/CitedRecipeSearch"
 
-import { uploadImagesOptimized } from "@/shared/infra/image-optimization"
+import { resolveImageUploadOrder, uploadImagesOptimized } from "@/shared/infra/image-optimization"
 import { cacheManager } from "@/shared/infra/unified-cache-manager"
 import { notificationService } from "@/features/notification/data/notification-service"
 import { logEvent } from "@/shared/infra/events"
@@ -158,65 +158,13 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 		// image_urls 순서와 thumbnail_index는 함께 저장되어야 한다.
 		
 
-		let uploadedImageUrls: string[] = []
-
-		if (isEditMode && initialData) {
-			// 수정 모드: 기존 이미지와 새 이미지 구분 처리 (원본 순서 유지)
-			const newImageFiles = mainImages.filter((img) => img.file.size > 0)
-			const existingImageUrls = mainImages.filter((img) => !newImageFiles.includes(img)).map((img) => img.preview)
-			
-			if (newImageFiles.length > 0) {
-
-				const uploadResults = await uploadImagesOptimized(
-					newImageFiles, 
-					user.id, 
-					bucketId,
-
-				)
-
-				// 업로드 결과 검증 및 URL 추출
-				const newUploadedUrls = uploadResults.map(result => {
-					if (!result.success) {
-						throw new Error(result.error || '이미지 업로드에 실패했습니다.')
-					}
-					return result.url
-				})
-				
-				// 기존 이미지와 새 업로드 이미지 병합 (이미 썸네일 순서로 정렬됨)
-				newUploadUrls.push(...newUploadedUrls)
-				uploadedImageUrls = [...existingImageUrls, ...newUploadedUrls]
-			} else {
-				// 새로 업로드할 이미지가 없는 경우 - 기존 이미지만 재정렬
-				uploadedImageUrls = existingImageUrls
-			}
-		} else {
-			// 생성 모드: 모든 이미지를 새로 업로드 (원본 순서 유지)
-			const imagesToUpload = mainImages.filter(img => img.file.size > 0)
-			
-			if (imagesToUpload.length > 0) {
-
-				const uploadResults = await uploadImagesOptimized(
-					imagesToUpload, 
-					user.id, 
-					bucketId,
-
-				)
-
-				// 결과 검증 및 URL 추출
-				uploadedImageUrls = uploadResults.map(result => {
-					if (!result.success) {
-						throw new Error(result.error || '이미지 업로드에 실패했습니다.')
-					}
-					return result.url
-				})
-				newUploadUrls.push(...uploadedImageUrls)
-			}
-		}
-
-
-
-
-
+		const newImageFiles = mainImages.filter((image) => image.file.size > 0)
+		const uploadResults = newImageFiles.length > 0
+			? await uploadImagesOptimized(newImageFiles, user.id, bucketId)
+			: []
+		// 기존 사진과 새 사진을 섞어 선택해도 사용자가 보는 순서를 그대로 저장한다.
+		const { imageUrls: uploadedImageUrls, newUrls } = resolveImageUploadOrder(mainImages, uploadResults)
+		newUploadUrls.push(...newUrls)
 
 			const itemPayload = buildPostItemPayload(values, {
 				userId: user.id,
