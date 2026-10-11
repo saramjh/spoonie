@@ -13,6 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Sheet } from "@/components/kit"
 import GoogleAuthButton from "@/components/auth/GoogleAuthButton"
 import { useToast } from "@/hooks/use-toast"
+import { useHydrationReady } from "@/hooks/useHydrationReady"
 import { useRouter } from "@/shared/lib/navigation"
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { logEvent } from "@/shared/infra/events"
@@ -44,6 +45,7 @@ type Props = {
 export default function SignupClient({ next, partnerSource }: Props) {
 	const router = useRouter()
 	const supabase = createSupabaseBrowserClient()
+	const isHydrated = useHydrationReady()
 	const { toast } = useToast()
 	const partnerCopy = partnerSource ? partnerEntryCopy[partnerSource] : null
 	const loginHref = authEntryHref("/login", next, partnerSource)
@@ -166,7 +168,7 @@ export default function SignupClient({ next, partnerSource }: Props) {
 									/>
 									<Button
 										type="submit"
-										disabled={form.formState.isSubmitting || isRedirecting}
+										disabled={!isHydrated || form.formState.isSubmitting || isRedirecting}
 										className="h-12 w-full text-body"
 									>
 										{form.formState.isSubmitting || isRedirecting ? (

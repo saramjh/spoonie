@@ -12,6 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Sheet } from "@/components/kit"
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { useToast } from "@/hooks/use-toast"
+import { useHydrationReady } from "@/hooks/useHydrationReady"
 import { authEntryHref, type PartnerEntrySource } from "@/shared/lib/partner-entry"
 
 const formSchema = z
@@ -32,6 +33,7 @@ type Props = {
 export default function ResetPasswordClient({ next, partnerSource }: Props) {
 	const router = useRouter()
 	const supabase = createSupabaseBrowserClient()
+	const isHydrated = useHydrationReady()
 	const { toast } = useToast()
 	const loginHref = authEntryHref("/login", next, partnerSource)
 
@@ -92,7 +94,7 @@ export default function ResetPasswordClient({ next, partnerSource }: Props) {
 									</FormItem>
 								)}
 							/>
-							<Button type="submit" className="h-12 w-full text-body">비밀번호 재설정</Button>
+							<Button type="submit" disabled={!isHydrated} className="h-12 w-full text-body">비밀번호 재설정</Button>
 						</form>
 					</Form>
 

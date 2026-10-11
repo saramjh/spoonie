@@ -15,6 +15,7 @@ import GoogleAuthButton from "@/components/auth/GoogleAuthButton"
 import { useRouter } from "@/shared/lib/navigation"
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { useToast } from "@/hooks/use-toast"
+import { useHydrationReady } from "@/hooks/useHydrationReady"
 import {
 	authEntryHref,
 	partnerEntryCopy,
@@ -35,6 +36,7 @@ type Props = {
 export default function LoginClient({ next, partnerSource }: Props) {
 	const router = useRouter()
 	const supabase = createSupabaseBrowserClient()
+	const isHydrated = useHydrationReady()
 	const { toast } = useToast()
 	const [isRedirecting, setIsRedirecting] = useState(false)
 	const partnerCopy = partnerSource ? partnerEntryCopy[partnerSource] : null
@@ -94,7 +96,7 @@ export default function LoginClient({ next, partnerSource }: Props) {
 									</FormItem>
 								)}
 							/>
-							<Button type="submit" disabled={form.formState.isSubmitting || isRedirecting} className="h-12 w-full text-body">
+							<Button type="submit" disabled={!isHydrated || form.formState.isSubmitting || isRedirecting} className="h-12 w-full text-body">
 								{form.formState.isSubmitting || isRedirecting ? (
 									<><Loader2 className="mr-2 h-5 w-5 animate-spin" aria-hidden />로그인 중</>
 								) : "로그인"}

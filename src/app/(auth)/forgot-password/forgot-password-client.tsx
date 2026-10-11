@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Sheet } from "@/components/kit"
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { useToast } from "@/hooks/use-toast"
+import { useHydrationReady } from "@/hooks/useHydrationReady"
 import { authEntryHref, type PartnerEntrySource } from "@/shared/lib/partner-entry"
 
 const formSchema = z.object({
@@ -24,6 +25,7 @@ type Props = {
 
 export default function ForgotPasswordClient({ next, partnerSource }: Props) {
 	const supabase = createSupabaseBrowserClient()
+	const isHydrated = useHydrationReady()
 	const { toast } = useToast()
 	const loginHref = authEntryHref("/login", next, partnerSource)
 
@@ -79,7 +81,7 @@ export default function ForgotPasswordClient({ next, partnerSource }: Props) {
 									</FormItem>
 								)}
 							/>
-							<Button type="submit" className="h-12 w-full text-body">재설정 링크 보내기</Button>
+							<Button type="submit" disabled={!isHydrated} className="h-12 w-full text-body">재설정 링크 보내기</Button>
 						</form>
 					</Form>
 
