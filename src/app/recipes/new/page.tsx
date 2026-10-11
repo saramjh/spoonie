@@ -6,6 +6,7 @@ import type { User } from "@supabase/supabase-js"
 import CreateContentAuthPrompt from "@/components/auth/CreateContentAuthPrompt"
 import PartnerIdentityStep from "@/components/auth/PartnerIdentityStep"
 import { PageLoading, StateSheet } from "@/components/kit"
+import { Button } from "@/components/ui/button"
 import type { OnboardingReviewDraft } from "@/features/onboarding/contracts"
 import { fetchItemDetail } from "@/features/feed/data/item-detail"
 import RecipeForm from "@/features/recipe/components/RecipeForm"
@@ -22,6 +23,7 @@ import type { ItemDetail } from "@/types/item"
 export default function NewRecipePage() {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [authError, setAuthError] = useState(false)
   const [forkFrom, setForkFrom] = useState<ItemDetail | null>(null)
   const [partnerSource, setPartnerSource] = useState<PartnerEntrySource | null>(null)
   const [onboardingDraft, setOnboardingDraft] = useState<OnboardingReviewDraft | null>(null)
@@ -34,12 +36,17 @@ export default function NewRecipePage() {
 
   useEffect(() => {
     let active = true
+    let authChecked = false
 
     const checkUser = async () => {
       const {
         data: { user: currentUser },
+        error,
       } = await supabase.auth.getUser()
+      // 비로그인 세션 없음과 인증 서버/네트워크 장애를 구분한다.
+      if (error && error.name !== "AuthSessionMissingError") throw error
       if (!active) return
+      authChecked = true
       setUser(currentUser)
 
       const params = new URLSearchParams(window.location.search)
@@ -112,7 +119,8 @@ export default function NewRecipePage() {
     checkUser().catch((error) => {
       console.error("Recipe entry initialization failed:", error)
       if (active) {
-        setOnboardingError("Recipe 작성 화면을 준비하지 못했습니다.")
+        if (authChecked) setOnboardingError("Recipe 작성 화면을 준비하지 못했습니다.")
+        else setAuthError(true)
         setIsLoading(false)
       }
     })
@@ -123,6 +131,18 @@ export default function NewRecipePage() {
   }, [router, supabase])
 
   if (isLoading) return <PageLoading />
+  if (authError) {
+    return (
+      <div className="px-3 pt-3">
+        <StateSheet
+          headingLevel="h1"
+          title="로그인 상태를 확인할 수 없습니다"
+          body="인터넷 연결을 확인하고 다시 시도해 주세요."
+          action={<Button type="button" onClick={() => window.location.reload()}>다시 시도</Button>}
+        />
+      </div>
+    )
+  }
   if (!user) return <CreateContentAuthPrompt contentType="recipe" />
 
   if (onboardingError) {
