@@ -1,10 +1,12 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 const store = vi.hoisted(() => ({
   uploads: [] as string[],
   removed: [] as string[],
   failedOriginal: 0,
   originalCount: 0,
+  failedVariantAttempts: 0,
+  variantAttempts: 0,
 }))
 
 vi.mock("@/shared/infra/supabase-client", () => ({
@@ -13,6 +15,10 @@ vi.mock("@/shared/infra/supabase-client", () => ({
       from(bucket: string) {
         return {
           async upload(filePath: string) {
+            if (filePath.includes(".w400.jpg")) {
+              store.variantAttempts++
+              if (store.variantAttempts <= store.failedVariantAttempts) return { error: new Error("retry variant upload") }
+            }
             if (!filePath.includes(".w400.jpg") && !filePath.includes(".w800.jpg")) {
               store.originalCount++
               if (store.originalCount === store.failedOriginal) return { error: new Error("simulated source failure") }
@@ -39,7 +45,7 @@ vi.mock("@/shared/infra/image-utils", () => ({
   })),
 }))
 
-import { resolveImageUploadOrder, uploadImagesOptimized } from "./image-optimization"
+import { resolveImageUploadOrder, uploadImagesOptimized, uploadVariants } from "./image-optimization"
 
 const photo = (contents: string) => ({
   file: new File([contents], "meal.jpg", { type: "image/jpeg" }),
@@ -53,7 +59,10 @@ beforeEach(() => {
   store.removed.length = 0
   store.originalCount = 0
   store.failedOriginal = 0
+  store.variantAttempts = 0
+  store.failedVariantAttempts = 0
 })
+afterEach(() => { vi.restoreAllMocks() })
 
 describe("image upload ownership and lifecycle", () => {
   it("never substitutes another account's URL for identical file bytes", async () => {
@@ -158,5 +167,35 @@ describe("ordered photos for Recipe/Recipeed edits", () => {
     expect(() => resolveImageUploadOrder([old("old"), photo("new")], [
       { url: "", success: false, error: "storage rejected" },
     ])).toThrow("storage rejected")
+  })
+})
+
+describe("responsive photo upload temporary previews", () => {
+  it("releases both 400px and 800px generated previews after successful uploads", async () => {
+    const revoke = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {})
+    await uploadVariants("item-images", "owner/preview-test.jpg", photo("source").file)
+    expect(store.uploads).toContain("owner/preview-test.jpg.w400.jpg")
+    expect(store.uploads).toContain("owner/preview-test.jpg.w800.jpg")
+    expect(revoke).toHaveBeenCalledTimes(2)
+    expect(revoke).toHaveBeenNthCalledWith(1, "blob:local-preview")
+    expect(revoke).toHaveBeenNthCalledWith(2, "blob:local-preview")
+  })
+
+  it("releases temporary previews on failed upload attempts and eventual retry", async () => {
+    const revoke = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {})
+    store.failedVariantAttempts = 1
+    await uploadVariants("item-images", "owner/retry-test.jpg", photo("source").file)
+    expect(store.variantAttempts).toBe(2)
+    expect(revoke).toHaveBeenCalledTimes(3)
+  })
+
+  it("does not keep preview blobs when responsive variant upload never succeeds", async () => {
+    const revoke = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {})
+    const log = vi.spyOn(console, "error").mockImplementation(() => {})
+    store.failedVariantAttempts = 3
+    await expect(uploadVariants("item-images", "owner/rejected.jpg", photo("source").file))
+      .rejects.toThrow("이미지 최적화 버전 생성 실패")
+    expect(revoke).toHaveBeenCalledTimes(4)
+    expect(log).toHaveBeenCalled()
   })
 })

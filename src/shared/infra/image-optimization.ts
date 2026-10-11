@@ -169,13 +169,18 @@ export async function uploadVariants(bucketId: string, path: string, file: File)
 			for (let attempt = 1; attempt <= 3; attempt += 1) {
 				try {
 					const [variant] = await optimizeImages([file], width, 0.78)
-					const { error } = await supabase.storage.from(bucketId).upload(variantPath(path, width), variant.file, {
-						cacheControl: "31536000",
-						contentType: "image/jpeg",
-						upsert: true,
-					})
-					if (error) throw error
-					return
+					try {
+						const { error } = await supabase.storage.from(bucketId).upload(variantPath(path, width), variant.file, {
+							cacheControl: "31536000",
+							contentType: "image/jpeg",
+							upsert: true,
+						})
+						if (error) throw error
+						return
+					} finally {
+						// 이미지 변환 중 생성된 URL은 업로드에 쓰이지 않아 즉시 해제한다.
+						URL.revokeObjectURL(variant.preview)
+					}
 				} catch (error) {
 					lastError = error
 					if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 150 * attempt))

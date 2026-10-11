@@ -26,7 +26,13 @@ function actualSubmitHandler(
   return new Function(...Object.keys(scope), compiled + "\nreturn onSubmit;")(...Object.values(scope)) as (values: Record<string, unknown>) => Promise<void>
 }
 
-function setup(kind: "recipe" | "post", options: { failFirstSave?: boolean; missingAuthFirst?: boolean } = {}) {
+function setup(kind: "recipe" | "post", options: {
+  failFirstSave?: boolean
+  missingAuthFirst?: boolean
+  withPhotos?: boolean
+  dbFailure?: "rejected" | "uncertain"
+  stepUploadFailure?: boolean
+} = {}) {
   const calls: string[] = []
   let releaseAuth!: () => void
   const authWait = new Promise<void>((resolve) => { releaseAuth = resolve })
@@ -43,27 +49,45 @@ function setup(kind: "recipe" | "post", options: { failFirstSave?: boolean; miss
       authCalls++
       return { data: { user: options.missingAuthFirst && authCalls === 1 ? null : user }, error: null }
     } } },
-    mainImages: kind === "recipe" ? [{ file: new File([], "saved.jpg"), preview: "https://cdn.invalid/saved.jpg" }] : [],
-    instructionImages: [],
+    mainImages: options.withPhotos
+      ? [{ file: new File(["new"], "new.jpg", { type: "image/jpeg" }), preview: "blob:new" }]
+      : kind === "recipe" ? [{ file: new File([], "saved.jpg"), preview: "https://cdn.invalid/saved.jpg" }] : [],
+    instructionImages: options.withPhotos && kind === "recipe"
+      ? [{ file: new File(["step"], "step.jpg", { type: "image/jpeg" }), preview: "blob:step" }]
+      : [],
     thumbnailIndex: 0,
     isEditMode: false,
     initialData: null,
     bucketId: "isolated-bucket",
-    uploadImagesOptimized: vi.fn(async () => []),
-    resolveImageUploadOrder: vi.fn(() => ({ imageUrls: kind === "recipe" ? ["https://cdn.invalid/saved.jpg"] : [], newUrls: [] })),
-    uploadInstructionImages: vi.fn(async () => []),
+    uploadImagesOptimized: vi.fn(async () => options.withPhotos
+      ? [{ success: true, url: "https://cdn.invalid/storage/v1/object/public/item-images/isolated-fake-user/new.jpg" }]
+      : []),
+    resolveImageUploadOrder: vi.fn(() => options.withPhotos ? {
+      imageUrls: ["https://cdn.invalid/storage/v1/object/public/item-images/isolated-fake-user/new.jpg"],
+      newUrls: ["https://cdn.invalid/storage/v1/object/public/item-images/isolated-fake-user/new.jpg"],
+    } : { imageUrls: kind === "recipe" ? ["https://cdn.invalid/saved.jpg"] : [], newUrls: [] }),
+    uploadInstructionImages: vi.fn(async () => {
+      if (options.stepUploadFailure) throw Error("step image upload rejected")
+      return options.withPhotos ? ["https://cdn.invalid/storage/v1/object/public/item-images/isolated-fake-user/step.jpg"] : []
+    }),
     attachInstructionImages: vi.fn(() => []),
     buildRecipeItemPayload: vi.fn(() => ({ title: "test recipe" })),
     buildPostItemPayload: vi.fn(() => ({ content: "test post" })),
     saveRecipeRows: vi.fn(async () => {
       calls.push("recipe-db-attempt")
       if (options.failFirstSave && calls.filter((x) => x === "recipe-db-attempt").length === 1) throw Error("explicit database rejection")
+      if (options.dbFailure) throw Object.assign(new Error("mock database error"), {
+        ...(options.dbFailure === "rejected" ? { cause: { code: "23505" } } : {}),
+      })
       calls.push("recipe-db-commit")
       return { itemId: "mock-id", ingredientsToInsert: [] }
     }),
     savePostRow: vi.fn(async () => {
       calls.push("post-db-attempt")
       if (options.failFirstSave && calls.filter((x) => x === "post-db-attempt").length === 1) throw Error("explicit database rejection")
+      if (options.dbFailure) throw Object.assign(new Error("mock database error"), {
+        ...(options.dbFailure === "rejected" ? { cause: { code: "23505" } } : {}),
+      })
       calls.push("post-db-commit")
       return { itemId: "mock-id" }
     }),
@@ -135,6 +159,41 @@ describe("real Recipe/Recipeed onSubmit bodies - mocked auth/storage/DB", () => 
       expect(calls.filter((call) => call.endsWith("db-commit"))).toHaveLength(0)
       await submit(value)
       expect(calls.filter((call) => call.endsWith("db-commit"))).toHaveLength(1)
+    })
+
+    it(kind + " preserves draft and newly uploaded photo ledger after explicit DB rejection", async () => {
+      const { scope, submit, releaseAuth, calls } = setup(kind, { withPhotos: true, dbFailure: "rejected" })
+      const value = kind === "recipe"
+        ? { title: "New", ingredients: [], instructions: [{ description: "Step" }], cited_recipe_ids: [] }
+        : { content: "New", cited_recipe_ids: [], is_public: true }
+      const pending = submit(value)
+      releaseAuth()
+      await pending
+      expect(calls).toContain(kind + "-db-attempt")
+      expect(calls).not.toContain("draft-finished")
+      const clean = scope.cleanupUncommittedImages as ReturnType<typeof vi.fn>
+      expect(clean).toHaveBeenCalledOnce()
+      expect(clean.mock.calls[0]?.[0]).toEqual(kind === "recipe"
+        ? ["https://cdn.invalid/storage/v1/object/public/item-images/isolated-fake-user/new.jpg",
+            "https://cdn.invalid/storage/v1/object/public/item-images/isolated-fake-user/step.jpg"]
+        : ["https://cdn.invalid/storage/v1/object/public/item-images/isolated-fake-user/new.jpg"])
+      expect(clean.mock.calls[0]?.[1]).toMatchObject({ dbSaveStarted: true, dbCommitted: false, error: { cause: { code: "23505" } } })
+      expect(scope.submitLock).toEqual({ current: false })
+    })
+
+    it(kind + " records an uncertain DB outcome without falsely clearing the draft", async () => {
+      const { scope, submit, releaseAuth, calls } = setup(kind, { withPhotos: true, dbFailure: "uncertain" })
+      const value = kind === "recipe"
+        ? { title: "New", ingredients: [], instructions: [{ description: "Step" }], cited_recipe_ids: [] }
+        : { content: "New", cited_recipe_ids: [], is_public: true }
+      const pending = submit(value)
+      releaseAuth()
+      await pending
+      expect(calls).not.toContain("draft-finished")
+      const clean = scope.cleanupUncommittedImages as ReturnType<typeof vi.fn>
+      expect(clean).toHaveBeenCalledOnce()
+      expect(clean.mock.calls[0]?.[1]).toMatchObject({ dbSaveStarted: true, dbCommitted: false })
+      expect(clean.mock.calls[0]?.[1].error.cause).toBeUndefined()
     })
 
     it(kind + " permits resubmission after missing login", async () => {
