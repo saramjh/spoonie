@@ -66,32 +66,12 @@ export default function RecipeForm({
 	const [mainImages, setMainImages] = useState<OptimizedImage[]>([])
 	const [thumbnailIndex, setThumbnailIndex] = useState(0)
 	
-	const handleThumbnailChange = useCallback(async (newIndex: number) => {
-
+	// 작성 화면 안에서는 대표 사진의 로컬 선택만 바꾼다.
+	// 피드 캐시는 DB 저장 성공 후 fullItemPayload로 갱신한다.
+	const handleThumbnailChange = useCallback((newIndex: number) => {
 		setThumbnailIndex(newIndex)
-		
-		// 수정 모드이고 itemId가 있는 경우에만 즉시 캐시 업데이트
-		if (isEditMode && initialData?.id) {
-			try {
-				const { data: { user } } = await supabase.auth.getUser()
-				if (user) {
-					const partialUpdate = {
-						thumbnail_index: newIndex,
-						// 기본 정보는 그대로 유지
-						id: initialData.id,
-						item_id: initialData.id,
-					}
-					
-					await cacheManager.updateItem(initialData.id, partialUpdate)
-					
+	}, [])
 
-				}
-			} catch (error) {
-				console.error(`❌ RecipeForm: Failed to update thumbnail cache:`, error)
-				// 캐시 업데이트 실패해도 UI 상태는 유지
-			}
-		}
-	}, [isEditMode, initialData?.id, supabase.auth])
 	const [instructionImages, setInstructionImages] = useState<(OptimizedImage | null)[]>([])
   const sourceImageRestoreGuard = useRef(false)
 	const [selectedCitedRecipes, setSelectedCitedRecipes] = useState<Item[]>([])

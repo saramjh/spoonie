@@ -62,3 +62,31 @@ describe("recipe database rejection provenance", () => {
       .rejects.toMatchObject({ cause: error })
   })
 })
+
+describe("recipe cover index is committed with ordered photos and recipe rows", () => {
+  it("passes edit cover and image order in the same save_recipe_atomic RPC", async () => {
+    const saved = { image_urls: ["https://cdn.example/a.jpg", "https://cdn.example/b.jpg"], thumbnail_index: 1 }
+    const params: unknown[] = []
+    const supabase = {
+      async rpc(name: string, args: object) {
+        expect(name).toBe("save_recipe_atomic")
+        params.push(args)
+        return { data: "existing-recipe", error: null }
+      },
+    } as unknown as Parameters<typeof saveRecipeRows>[0]
+    const result = await saveRecipeRows(supabase, {
+      existingId: "existing-recipe",
+      itemPayload: saved,
+      ingredients: [{ name: "salt", amount: 1, unit: "g" }],
+      instructions: [{ description: "add salt", image_url: undefined }],
+    })
+    expect(result.itemId).toBe("existing-recipe")
+    expect(result.ingredientsToInsert[0]).toMatchObject({ item_id: "existing-recipe", order_index: 1 })
+    expect(params).toEqual([expect.objectContaining({
+      p_existing_id: "existing-recipe",
+      p_item: saved,
+      p_ingredients: [expect.objectContaining({ name: "salt", order_index: 1 })],
+      p_instructions: [expect.objectContaining({ description: "add salt", step_number: 1 })],
+    })])
+  })
+})

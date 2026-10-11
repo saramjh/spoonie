@@ -62,15 +62,11 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 	)
 	const [thumbnailIndex, setThumbnailIndex] = useState(() => Math.max(0, Math.min(editing?.thumbnail_index ?? 0, (editing?.image_urls?.length ?? 1) - 1)))
 	
-	// 대표 사진을 바꾸면 수정 중인 글의 화면 캐시도 바로 바꾼다
-	const editItemId = editing?.id
+	// 대표 사진 선택은 로컬 미리보기만 변경한다.
+	// 피드 캐시는 DB 저장 성공 후 fullItemPayload로 갱신한다.
 	const handleThumbnailChange = useCallback((newIndex: number) => {
 		setThumbnailIndex(newIndex)
-		if (!editItemId) return
-		cacheManager.updateItem(editItemId, { thumbnail_index: newIndex, id: editItemId, item_id: editItemId }).catch((error) => {
-			console.error("❌ PostForm: Failed to update thumbnail cache:", error)
-		})
-	}, [editItemId])
+	}, [])
 	const [selectedCitedRecipes, setSelectedCitedRecipes] = useState<Item[]>([])
 
 	const form = useForm<PostFormValues>({
