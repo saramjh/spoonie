@@ -1,19 +1,21 @@
 import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
+import { serializeJsonLd } from "@/shared/lib/json-ld"
 import { Sheet } from "@/components/kit"
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
+const articleTitle = "2인분을 4인분으로, 어디까지 두 배로 늘릴까?"
+const articleDescription = "인분을 늘릴 때 재료 배수만큼 달라지지 않는 양념, 팬 크기, 조리 시간을 확인하는 실용 가이드. 실제 Spoonie Recipe로 분량도 바꿔보세요."
 const cover =
   "https://dtyiyzfftsewpckfkqmo.supabase.co/storage/v1/object/public/item-images/8f5c5a40-17e5-424a-9da6-656a852e762d/1790995251540-07a0720e.jpg"
 
 export const metadata: Metadata = {
   title: "2인분 레시피를 4인분으로 늘릴 때 | Spoonie Magazine",
-  description:
-    "인분을 늘릴 때 재료 배수만큼 달라지지 않는 양념, 팬 크기, 조리 시간을 확인하는 실용 가이드. 실제 Spoonie Recipe로 분량도 바꿔보세요.",
+  description: articleDescription,
   alternates: { canonical: baseUrl + "/magazine" },
   openGraph: {
-    title: "2인분을 4인분으로, 어디까지 두 배로 늘릴까?",
+    title: articleTitle,
     description: "양념·팬 크기·조리 시간까지 함께 확인하는 집밥 가이드.",
     url: baseUrl + "/magazine",
     siteName: "Spoonie",
@@ -22,14 +24,31 @@ export const metadata: Metadata = {
   },
 }
 
+// 실제 2026-10-08에 처음 발행한 공개 매거진 원문. 허구의 리뷰·평점·전문가 권위는 포함하지 않는다.
+const articleSchema = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  headline: articleTitle,
+  description: articleDescription,
+  mainEntityOfPage: baseUrl + "/magazine",
+  inLanguage: "ko-KR",
+  image: [cover],
+  datePublished: "2026-10-08",
+  dateModified: "2026-10-12",
+  author: { "@id": baseUrl + "/#organization" },
+  publisher: { "@id": baseUrl + "/#organization" },
+}
+
 export default function MagazinePage() {
   return (
     <Sheet className="mx-3 mb-24 mt-3 px-4 pb-7 pt-5 text-ink sm:px-6">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(articleSchema) }} />
       <header className="border-b border-border pb-6">
         <Link href="/" className="text-label text-ink-soft underline underline-offset-4">
           Spoonie 홈
         </Link>
-        <h1 className="mt-7 text-display leading-tight">
+        <p className="mt-6 text-meta tracking-wide text-ink-soft">SPOONIE MAGAZINE · 2026.10.08 발행</p>
+        <h1 className="mt-3 text-display leading-tight">
           2인분을 4인분으로,
           <br />
           어디까지 두 배로 늘릴까?
@@ -58,7 +77,7 @@ export default function MagazinePage() {
         </figure>
 
         <section className="space-y-3">
-          <h2 className="text-heading">먼저, 기준 분량을 확인하기</h2>
+          <h2 className="text-heading">2인분을 4인분으로 늘리면 재료량도 모두 두 배인가요?</h2>
           <p className="text-read leading-relaxed">
             2인분을 4인분으로 만들 때 계산상의 배수는 2입니다.
             주재료와 계량된 기본 재료는 이 배수를 출발점으로 삼을 수 있습니다.
@@ -67,19 +86,18 @@ export default function MagazinePage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-heading">양념은 마지막에 맛으로 맞추기</h2>
+          <h2 className="text-heading">인분을 늘릴 때 양념도 정확히 두 배인가요?</h2>
           <p className="text-read leading-relaxed">
-            소금, 간장, 고춧가루, 식초 같은 재료는 모두 같은 강도로 느껴지지 않습니다.
-            일단 기존 레시피의 비율을 참고하되, 추가분은 나누어 넣고
-            조리 중에 맛을 확인하는 편이 안전합니다. 특히 졸이거나 끓이는 요리는
+            양념은 처음부터 모두 두 배로 넣기보다 나누어 넣고 맛을 확인하세요. 소금, 간장, 고춧가루, 식초 같은 재료는 모두 같은 강도로 느껴지지 않습니다.
+            기존 레시피의 비율을 참고하면서 조리 중에 맛을 확인하는 편이 안전합니다. 특히 졸이거나 끓이는 요리는
             수분이 줄면서 간이 달라질 수 있습니다.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-heading">조리 시간은 두 배가 아니다</h2>
+          <h2 className="text-heading">4인분 조리는 2인분보다 시간이 두 배 걸리나요?</h2>
           <p className="text-read leading-relaxed">
-            같은 팬에 재료를 두 배 넣으면 서로 겹쳐 수분이 잘 날아가지 않거나
+            아닙니다. 조리 시간은 인분에 단순 비례하지 않습니다. 같은 팬에 재료를 두 배 넣으면 서로 겹쳐 수분이 잘 날아가지 않거나
             고르게 익지 않을 수 있습니다. 볶음 요리는 팬을 나누어 사용하고,
             오븐 요리는 음식의 두께와 중심부 익힘 상태를 기준으로 판단하세요.
             레시피의 원래 시간은 출발점이지 보장된 완료 시간이 아닙니다.
@@ -87,7 +105,7 @@ export default function MagazinePage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-heading">계량과 요리를 한 화면에서 이어보기</h2>
+          <h2 className="text-heading">Spoonie에서 인분별 재료량을 어떻게 확인하나요?</h2>
           <p className="text-read leading-relaxed">
             종이에 다시 계산하기보다 Spoonie의 인분 조절을 사용하면
             해당 Recipe의 재료량을 선택한 분량에 맞춰 확인할 수 있습니다.

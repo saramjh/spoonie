@@ -8,6 +8,10 @@ import { formatAmount } from "@/features/recipe/domain/recipe-amount"
  */
 export default function RecipeSchema({ item, baseUrl }: { item: ItemDetail; baseUrl: string }) {
   const authorName = item.display_name || item.username
+  // 대표 이미지(og:image)와 검색 JSON-LD의 첫 사진을 동일하게 유지한다.
+  const images = [...new Set((item.image_urls ?? []).filter(Boolean))]
+  const cover = item.image_urls?.[item.thumbnail_index ?? 0] || images[0]
+  const orderedImages = cover ? [cover, ...images.filter((url) => url !== cover)] : []
   const ingredients = (item.ingredients ?? [])
     .map((i) => [i.name, [formatAmount(Number(i.amount), i.unit), i.unit].filter(Boolean).join("")].filter(Boolean).join(" ").trim())
     .filter(Boolean)
@@ -19,7 +23,6 @@ export default function RecipeSchema({ item, baseUrl }: { item: ItemDetail; base
     .map((s) => ({
       "@type": "HowToStep",
       position: s.number,
-      name: `${s.number}단계`,
       url: `${baseUrl}/recipes/${item.id}#step-${s.number}`,
       text: s.description,
       ...(s.image_url && { image: s.image_url }),
@@ -32,7 +35,7 @@ export default function RecipeSchema({ item, baseUrl }: { item: ItemDetail; base
     url: `${baseUrl}/recipes/${item.id}`,
     datePublished: item.created_at,
     ...(item.description && { description: item.description }),
-    ...(item.image_urls?.length && { image: item.image_urls }),
+    ...(orderedImages.length && { image: orderedImages }),
     ...(authorName && {
       author: {
         "@type": item.author?.entity_type === "organization" ? "Organization" : "Person",
