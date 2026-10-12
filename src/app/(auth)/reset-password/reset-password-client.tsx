@@ -60,7 +60,7 @@ export default function ResetPasswordClient({ next, partnerSource }: Props) {
 
 	return (
 		<div className="min-h-screen flex flex-col items-center justify-start p-4">
-			<main className="w-full max-w-sm mx-auto pt-12">
+			<div className="w-full max-w-sm mx-auto pt-12">
 				<div className="text-center mb-6">
 					<Link href="/" className="inline-flex" aria-label="Spoonie 홈">
 						<Image src="/logo-full.svg" alt="Spoonie" width={100} height={32} priority />
@@ -104,7 +104,7 @@ export default function ResetPasswordClient({ next, partnerSource }: Props) {
 						</Link>
 					</div>
 				</Sheet>
-			</main>
+			</div>
 		</div>
 	)
 }

@@ -62,7 +62,7 @@ export default function LoginClient({ next, partnerSource }: Props) {
 
 	return (
 		<div className="min-h-screen flex flex-col items-center justify-start p-4">
-			<main className="w-full max-w-sm mx-auto pt-8">
+			<div className="w-full max-w-sm mx-auto pt-8">
 				<div className="text-center mb-6">
 					<Link href="/" className="inline-flex" aria-label="Spoonie 홈">
 						<Image src="/logo-full.svg" alt="Spoonie" width={100} height={32} priority />
@@ -128,7 +128,7 @@ export default function LoginClient({ next, partnerSource }: Props) {
 					<span className="text-meta text-ink-soft/60">|</span>
 					<Link href="/legal/policy" className="text-meta text-ink-soft hover:text-ink transition-colors duration-200">운영정책</Link>
 				</div>
-			</main>
+			</div>
 		</div>
 	)
 }
