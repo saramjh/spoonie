@@ -3,6 +3,37 @@
  * 기본 PWA Service Worker에 추가되는 커스텀 코드
  */
 
+/**
+ * 2026-10-13: previously published, owner-rejected homepage section is no longer on the server.
+ * Existing installed PWAs may still hold its old homepage HTML/RSC in Workbox runtime
+ * caches and replay it offline. On this service worker's activation, remove ONLY cached
+ * home responses with that exact revoked section ID; leave recipes, photos, authored
+ * drafts, auth, offline fallback, and otherwise valid homepage caches untouched.
+ */
+self.addEventListener('activate', function(event) {
+  event.waitUntil((async () => {
+    try {
+      const homeCacheNames = ['start-url', 'pages', 'pages-rsc', 'pages-rsc-prefetch'];
+      const existing = await caches.keys();
+      for (const name of homeCacheNames) {
+        if (!existing.includes(name)) continue;
+        const store = await caches.open(name);
+        for (const request of await store.keys()) {
+          const url = new URL(request.url);
+          if (url.origin !== self.location.origin || url.pathname !== '/') continue;
+          const response = await store.match(request);
+          if (!response) continue;
+          if ((await response.clone().text()).includes('recent-recipeed-heading')) {
+            await store.delete(request);
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Spoonie: skipped stale home cache cleanup', error);
+    }
+  })());
+});
+
 // 푸시 메시지 수신 처리
 self.addEventListener('push', function(event) {
 
