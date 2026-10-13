@@ -1,7 +1,6 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js"
 import { createSupabasePublicClient } from "@/shared/infra/supabase-public"
 import type { Item } from "@/types/item"
-import { isSearchIndexableRecipeed, publicContentTitle } from "@/features/discovery/domain/search-exposure"
 import { HOME_FEED_PAGE_SIZE } from "@/features/feed/domain/feed-order"
 
 export interface ServerFeedData {
@@ -50,23 +49,4 @@ async function loadFeed(supabase: SupabaseClient): Promise<ServerFeedData> {
     console.error("❌ Server: Failed to fetch initial feed data:", error)
     return { items: [], currentUser: null }
   }
-}
-
-/** 최근 실제 공개 요리 기록으로 이동하는 서버 렌더링 링크.
- * 검색에 내보내는 Recipeed와 같은 적격성 정책을 사용하며 피드 정렬은 건드리지 않는다.
- */
-export async function getRecentPublicRecipeedLinks(supabase: SupabaseClient = createSupabasePublicClient()) {
-  const { data, error } = await supabase
-    .from("items")
-    .select("id, title, content, tags, image_urls")
-    .eq("is_public", true)
-    .eq("item_type", "post")
-    .order("created_at", { ascending: false })
-    .limit(30)
-
-  if (error) throw error
-  return (data ?? [])
-    .filter(isSearchIndexableRecipeed)
-    .slice(0, 6)
-    .map((item) => ({ href: `/posts/${item.id}`, title: publicContentTitle(item) }))
 }

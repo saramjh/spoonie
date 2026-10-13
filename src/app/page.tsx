@@ -1,7 +1,6 @@
 import { Metadata } from 'next'
 import SeamlessItemList from "@/components/items/SeamlessItemList"
-import Link from "next/link"
-import { getPublicFeedData, getRecentPublicRecipeedLinks } from "@/features/feed/data/server-data"
+import { getPublicFeedData } from "@/features/feed/data/server-data"
 
 // 홈 HTML은 공개 피드로 정적 생성해 CDN에서 바로 보낸다 (스플래시가 즉시 보이도록).
 // 5분마다 다시 만든다(엣지 캐시가 오래 남아 첫 접속이 빠르다). 새 글과 로그인 사용자 정보는 클라이언트가 스플래시 동안 채운다.
@@ -68,38 +67,16 @@ import PostCardSkeleton from "@/components/items/PostCardSkeleton"
 
 export default async function HomePage() {
 	// 서버에서 공개 피드 첫 페이지를 받아 HTML에 넣는다. 실패하면 브라우저가 이어서 받는다
-	const [initialData, recentRecipeedLinks] = await Promise.all([
-		getPublicFeedData().catch((error) => {
-			console.error("❌ HomePage: initial feed failed:", error)
-			return null
-		}),
-		getRecentPublicRecipeedLinks().catch((error) => {
-			console.error("HomePage: public Recipeed links unavailable:", error)
-			return []
-		}),
-	])
+	const initialData = await getPublicFeedData().catch((error) => {
+		console.error("❌ HomePage: initial feed failed:", error)
+		return null
+	})
 
 	return (
 		<div className="min-h-screen">
 			<h1 className="sr-only">Spoonie - 집밥 레시피 검색부터 인분별 재료량 조절과 요리 기록까지</h1>
 			<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(websiteSchema) }} />
 			<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(organizationSchema) }} />
-			{recentRecipeedLinks.length > 0 && (
-				<section aria-labelledby="recent-recipeed-heading" className="border-b border-border bg-paper px-4 py-4">
-					<h2 id="recent-recipeed-heading" className="text-heading text-ink">최근 요리 기록</h2>
-					<p className="mt-1 text-meta text-ink-soft">공개된 레시피드에서 음식·주방 이야기를 살펴보세요.</p>
-					<ul className="mt-3 divide-y divide-border">
-						{recentRecipeedLinks.map((item) => (
-							<li key={item.href}>
-								<Link href={item.href} className="flex min-h-10 items-center justify-between gap-3 py-2 text-label text-ink hover:text-orange-ink focus-visible:rounded-sm">
-									<span className="min-w-0 line-clamp-2">{item.title}</span>
-									<span aria-hidden="true" className="shrink-0 text-ink-soft">→</span>
-								</Link>
-							</li>
-						))}
-					</ul>
-				</section>
-			)}
 			<Suspense fallback={<ItemListSkeleton />}>
 				<SeamlessItemList initialData={initialData} />
 			</Suspense>
