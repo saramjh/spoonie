@@ -27,6 +27,9 @@ const INSTAGRAM_MAX_ATTEMPTS = 5;
 const INSTAGRAM_RETRY_DELAYS_MS = [15 * 60 * 1000, 60 * 60 * 1000, 6 * 60 * 60 * 1000, 24 * 60 * 60 * 1000];
 const INSTAGRAM_PERMANENT_CODES = new Set([10, 190, 200]);
 const INSTAGRAM_MIN_POST_GAP_MS = 3 * 60 * 60 * 1000;
+// P0 owner quality stop: Recipe publication is independent from social release.
+// Only SCO-approved assets dispatched by PRM may publish to Instagram.
+const LEGACY_RECIPE_INSTAGRAM_SOCIAL_HOLD = true;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr';
 const headers = { apikey: SECRET_KEY, Authorization: `Bearer ${SECRET_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=representation' };
 
@@ -213,6 +216,7 @@ function newestInstagramPostAt(releaseAt, liveMedia) {
 
 // 공개됐지만 인스타그램에 아직 안 올라간 레시피 하나를 올린다 (만들다 만 컨테이너가 있으면 그것부터)
 async function postPendingToInstagram(token) {
+  if (LEGACY_RECIPE_INSTAGRAM_SOCIAL_HOLD) return { skipped: 'prm_editorial_approval_required' };
   const now = new Date();
   const [lastPublished] = await call(
     'GET',
@@ -292,6 +296,8 @@ async function postPendingToInstagram(token) {
 
 // 같은 예약이 재시도돼 두 번 공개하지 않게: 마지막 공개가 50분 안이면 이번 공개는 건너뛴다
 async function drainInstagramQueue(startedAt = Date.now(), maxItems = 2) {
+  // Also covers retry-instagram-posts, which imports this function directly.
+  if (LEGACY_RECIPE_INSTAGRAM_SOCIAL_HOLD) return [{ skipped: 'prm_editorial_approval_required' }];
   const token = await instagramToken();
   if (!token) return [{ skipped: 'no token' }];
 
@@ -328,7 +334,9 @@ exports.handler = async () => {
 
     // 인스타그램: 공개됐지만 아직 안 올라간 것 하나 (실패해도 공개는 되돌리지 않는다)
     // 한 번에 하나만 올려 backlog가 연속 게시되지 않게 한다.
-    const results = await drainInstagramQueue(startedAt, 1);
+    const results = LEGACY_RECIPE_INSTAGRAM_SOCIAL_HOLD
+      ? [{ skipped: 'prm_editorial_approval_required' }]
+      : await drainInstagramQueue(startedAt, 1);
     console.log('instagram', JSON.stringify(results));
     return { statusCode: 200, body: JSON.stringify({ released: next ? next.item_id : null, instagram: results }) };
   } catch (error) {
