@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import SeamlessItemList from "@/components/items/SeamlessItemList"
+import Link from "next/link"
 import { getPublicFeedData } from "@/features/feed/data/server-data"
 
 // 홈 HTML은 공개 피드로 정적 생성해 CDN에서 바로 보낸다 (스플래시가 즉시 보이도록).
@@ -77,6 +78,17 @@ export default async function HomePage() {
 			<h1 className="sr-only">Spoonie - 집밥 레시피 검색부터 인분별 재료량 조절과 요리 기록까지</h1>
 			<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(websiteSchema) }} />
 			<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(organizationSchema) }} />
+			<section aria-labelledby="first-cook-home-entry" className="border-b border-border bg-paper px-4 py-4 sm:py-5">
+				<div className="mx-auto flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+					<div className="min-w-0">
+						<h2 id="first-cook-home-entry" className="text-label font-semibold text-ink">오늘 만든 한 끼, 사진으로 남겨보세요.</h2>
+						<p className="mt-1 text-meta leading-relaxed text-ink-soft">따라 만든 요리와 바꿔 넣은 재료, 다음에 기억할 점까지 짧게 기록할 수 있어요.</p>
+					</div>
+					<Link href="/early-cooks" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-md bg-ink px-4 py-2.5 text-label font-semibold text-paper focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink">
+						첫 요리기록 시작하기 <span aria-hidden="true">→</span>
+					</Link>
+				</div>
+			</section>
 			<Suspense fallback={<ItemListSkeleton />}>
 				<SeamlessItemList initialData={initialData} />
 			</Suspense>
