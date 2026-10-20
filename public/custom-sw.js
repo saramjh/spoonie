@@ -4,7 +4,7 @@
  */
 
 /**
- * 2026-10-13: previously published, owner-rejected homepage section is no longer on the server.
+ * 2026-10-13 and 2026-10-20: owner-rejected homepage sections were removed from the server.
  * Existing installed PWAs may still hold its old homepage HTML/RSC in Workbox runtime
  * caches and replay it offline. On this service worker's activation, remove ONLY cached
  * home responses with that exact revoked section ID; leave recipes, photos, authored
@@ -23,7 +23,8 @@ self.addEventListener('activate', function(event) {
           if (url.origin !== self.location.origin || url.pathname !== '/') continue;
           const response = await store.match(request);
           if (!response) continue;
-          if ((await response.clone().text()).includes('recent-recipeed-heading')) {
+          const responseText = await response.clone().text();
+          if (['recent-recipeed-heading', 'first-cook-home-entry'].some((marker) => (responseText).includes(marker))) {
             await store.delete(request);
           }
         }

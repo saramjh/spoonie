@@ -65,6 +65,25 @@ describe("service worker revoked homepage HTML cleanup", () => {
     expect(h.cachesByName.get("spoonie-photos")?.size).toBe(1)
   })
 
+  it("purges the rejected first-cook promotion from root document and RSC caches only", async () => {
+    const old = '<section aria-labelledby="first-cook-home-entry">첫 요리기록 시작하기</section>'
+    const h = activationHarness({
+      "pages": [
+        { url: "https://spoonie.kr/", text: old },
+        { url: "https://spoonie.kr/recipes/abc", text: old },
+      ],
+      "pages-rsc-prefetch": [{ url: "https://spoonie.kr/?_rsc=abc", text: old }],
+      "spoonie-photos": [{ url: "https://spoonie.kr/", text: old }],
+    })
+    await h.activate()
+    expect(h.removals).toEqual([
+      ["pages", "https://spoonie.kr/"],
+      ["pages-rsc-prefetch", "https://spoonie.kr/?_rsc=abc"],
+    ])
+    expect(h.cachesByName.get("pages")?.has("https://spoonie.kr/recipes/abc")).toBe(true)
+    expect(h.cachesByName.get("spoonie-photos")?.size).toBe(1)
+  })
+
   it("leaves current homepage and unrelated caches alone", async () => {
     const h = activationHarness({
       "start-url": [{ url: "https://spoonie.kr/", text: '<main id="feed">Recipes</main>' }],
