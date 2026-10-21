@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import type { RecipeFormValues } from "@/features/recipe/domain/recipe-schema"
 import { createPortal } from "react-dom"
 import {
@@ -32,6 +32,7 @@ import { Trash2 } from "lucide-react"
 import { UseFormRegister, FieldErrors } from "react-hook-form"
 import { Ingredient } from "@/types/item"
 import { Sheet } from "@/components/kit"
+import { lockDragBodyScroll } from "@/features/recipe/domain/drag-scroll-lock"
 
 // 드래그앤드롭용 확장 타입 (id 필드 추가)
 export interface DraggableIngredient extends Ingredient {
@@ -204,6 +205,12 @@ export default function DraggableIngredientList({
   onRemove
 }: DraggableIngredientListProps) {
   const [activeId, setActiveId] = useState<string | null>(null)
+  const releaseDragScroll = useRef<(() => void) | null>(null)
+  const restoreScroll = useCallback(() => {
+    releaseDragScroll.current?.()
+    releaseDragScroll.current = null
+  }, [])
+  useEffect(() => () => restoreScroll(), [restoreScroll])
 
   // 드래그 센서 설정
   const sensors = useSensors(
@@ -231,10 +238,10 @@ export default function DraggableIngredientList({
       navigator.vibrate(50) // 50ms 햅틱 피드백
     }
     
-    // 드래그 중 스크롤 차단
+    // Only this drag can hold the body lock; release it on cancel or unmount.
     if (typeof document !== 'undefined') {
-      document.body.style.overflow = 'hidden'
-      document.body.style.touchAction = 'none'
+      restoreScroll()
+      releaseDragScroll.current = lockDragBodyScroll(document.body)
     }
   }
 
@@ -266,12 +273,12 @@ export default function DraggableIngredientList({
     }
 
     setActiveId(null)
-    
-    // 스크롤 복원
-    if (typeof document !== 'undefined') {
-      document.body.style.overflow = ''
-      document.body.style.touchAction = ''
-    }
+    restoreScroll()
+  }
+
+  function handleDragCancel() {
+    setActiveId(null)
+    restoreScroll()
   }
 
   const activeIngredient = activeId ? ingredients.find(item => item.id === activeId) : null
@@ -286,6 +293,7 @@ export default function DraggableIngredientList({
         collisionDetection={pointerWithin}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
       >
         <SortableContext items={ingredients.map(item => item.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-3">

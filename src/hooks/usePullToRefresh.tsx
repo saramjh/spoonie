@@ -27,7 +27,7 @@ function startsInsideScrolledArea(target: EventTarget | null): boolean {
  * - 처음 10px은 지켜본다. 아래로 곧게 내려갔을 때만 당기기로 정하고, 위·옆이면 이번 터치는 스크롤에 넘긴다.
  * - 당기는 중에 페이지가 맨 위를 벗어나면 바로 그만둔다.
  */
-export const usePullToRefresh = () => {
+export const usePullToRefresh = (enabled = true) => {
     const [pullDistance, setPullDistance] = useState(0);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const gesture = useRef<{ x: number; y: number; state: "idle" | "deciding" | "pulling" }>({ x: 0, y: 0, state: "idle" });
@@ -35,6 +35,12 @@ export const usePullToRefresh = () => {
     const refreshingRef = useRef(false);
 
     useEffect(() => {
+        // Writing screens must never register global scroll-intercepting listeners.
+        if (!enabled) {
+            gesture.current.state = "idle";
+            distanceRef.current = 0;
+            return;
+        }
         const setDistance = (d: number) => {
             distanceRef.current = d;
             setPullDistance(d);
@@ -104,8 +110,9 @@ export const usePullToRefresh = () => {
             window.removeEventListener("touchmove", onMove);
             window.removeEventListener("touchend", onEnd);
             window.removeEventListener("touchcancel", reset);
+            reset();
         };
-    }, []);
+    }, [enabled]);
 
     const PullToRefreshIndicator = () => {
         if (isRefreshing) {
