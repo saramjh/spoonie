@@ -42,8 +42,11 @@ export function usePosts(initialData?: ServerFeedData | null) {
   )
 
   const isLoading = (loadingUser && !initialData) || (isValidating && feedItems.length === 0)
+  // After the first page, the existing isLoading is intentionally false while cards
+  // remain visible. Track the next-page request separately to prevent observer storms.
+  const isLoadingMore = size > (data?.length ?? 0)
   const isEmpty = data?.[0]?.length === 0
-  const isReachingEnd = isEmpty || (data && data[data.length - 1]?.length < PAGE_SIZE)
+  const isReachingEnd = Boolean(isEmpty || (data && data[data.length - 1]?.length < PAGE_SIZE))
 
   const customMutate = useCallback(() => mutate(), [mutate])
 
@@ -56,6 +59,7 @@ export function usePosts(initialData?: ServerFeedData | null) {
   return {
     feedItems,
     isLoading,
+    isLoadingMore,
     isError: !!error,
     size,
     setSize,

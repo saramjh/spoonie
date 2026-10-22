@@ -16,6 +16,7 @@ import type { ServerFeedData } from "@/features/feed/data/server-data"
 import { usePageVisibility } from "@/hooks/usePageVisibility"
 import { shouldSignalNewFeedItem } from "@/features/feed/domain/feed-realtime"
 import { scrollHomeToTop } from "@/shared/lib/home-scroll"
+import { shouldRequestNextFeedPage } from "@/features/feed/domain/feed-pagination"
 
 interface SeamlessItemListProps {
   // null이면 브라우저가 첫 페이지를 조회한다.
@@ -25,8 +26,13 @@ interface SeamlessItemListProps {
 export default function SeamlessItemList({ initialData }: SeamlessItemListProps) {
   // 시간 덩어리 이름의 "오늘"은 화면이 뜬 뒤 기준으로 (미리 만든 홈과의 불일치 방지)
   const now = useHydrated() ? new Date() : null
-  const { feedItems, isLoading, isError, size, setSize, isReachingEnd, mutate: swrMutate, refreshLatest } = usePosts(initialData)
+  const { feedItems, isLoading, isLoadingMore, isError, setSize, isReachingEnd, mutate: swrMutate, refreshLatest } = usePosts(initialData)
   const observerElem = useRef<HTMLDivElement>(null)
+  // IntersectionObserver can re-fire before SWR has committed its next-page size.
+  const pageRequestPending = useRef(false)
+  useEffect(() => {
+    if (!isLoadingMore) pageRequestPending.current = false
+  }, [isLoadingMore, feedItems.length])
   const newestKnownCreatedAt = useRef<string | null>(feedItems[0]?.created_at ?? null)
   const [hasNewItems, setHasNewItems] = useState(false)
   const [isRefreshingLatest, setIsRefreshingLatest] = useState(false)
@@ -146,11 +152,12 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
       const target = entries[0]
-      if (target.isIntersecting && !isReachingEnd && !isLoading) {
-        setSize(size + 1)
+      if (shouldRequestNextFeedPage(target.isIntersecting, isReachingEnd, isLoadingMore || isLoading, pageRequestPending.current)) {
+        pageRequestPending.current = true
+        void setSize((currentSize) => currentSize + 1)
       }
     },
-    [setSize, isReachingEnd, isLoading, size]
+    [setSize, isReachingEnd, isLoadingMore, isLoading]
   )
 
   useEffect(() => {
@@ -235,7 +242,7 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
       {/* 무한 스크롤 로딩 */}
       {!isReachingEnd && (
         <div ref={observerElem} className="flex justify-center py-8">
-          {isLoading ? (
+          {isLoading || isLoadingMore ? (
             <div className="space-y-4 w-full">
               {Array.from({ length: 3 }).map((_, i) => (
                 <PostCardSkeleton key={i} />
