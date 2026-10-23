@@ -1,4 +1,5 @@
 import { serializeJsonLd } from "@/shared/lib/json-ld"
+import { buildProfileSchema } from '@/features/profile/domain/profile-schema'
 import { Metadata } from 'next'
 import { createSupabasePublicClient } from '@/shared/infra/supabase-public'
 import { notFound } from 'next/navigation'
@@ -176,29 +177,7 @@ export default async function ProfilePage(props: Props) {
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'
   const p = initial ? initial.profile : null
-  const profileSchema = p?.public_id
-    ? {
-        '@context': 'https://schema.org',
-        '@type': 'ProfilePage',
-        url: `${baseUrl}/profile/${p.public_id}`,
-        ...(p.created_at && { dateCreated: p.created_at }),
-        mainEntity: {
-          '@type': p.entity_type === 'organization' ? 'Organization' : 'Person',
-          name: p.display_name || p.username,
-          alternateName: p.username,
-          identifier: p.public_id,
-          url: `${baseUrl}/profile/${p.public_id}`,
-          ...(p.profile_message && { description: p.profile_message.slice(0, 300) }),
-          ...(p.avatar_url && { image: p.avatar_url }),
-        },
-        ...(initial?.items?.length && {
-          hasPart: initial.items.slice(0, 12).map((item) => ({
-            '@type': item.item_type === 'recipe' ? 'Recipe' : 'SocialMediaPosting',
-            url: `${baseUrl}/${item.item_type === 'recipe' ? 'recipes' : 'posts'}/${item.item_id || item.id}`,
-          })),
-        }),
-      }
-    : null
+  const profileSchema = p?.public_id ? buildProfileSchema(p, baseUrl) : null
 
   return (
     <>

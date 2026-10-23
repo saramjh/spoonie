@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { generateMetadata, generateStaticParams, revalidate } from "./page"
+import { buildProfileSchema } from "@/features/profile/domain/profile-schema"
 import { createSupabasePublicClient } from "@/shared/infra/supabase-public"
 import { fetchProfile, profileIdentifierColumn } from "@/features/profile/data/profile-repository"
 import { fetchAllPublicDiscoveryItems } from "@/features/discovery/data/public-assets"
@@ -115,4 +116,28 @@ describe("profile metadata canonical identity", () => {
 		expect(revalidate).toBe(600)
 		expect(await generateStaticParams()).toEqual([])
 	})
+})
+
+
+describe("profile structured data: Recipe rich-result boundary", () => {
+  it("links to the profile entity without fabricating incomplete Recipe items", () => {
+    const schema = buildProfileSchema(profile as Parameters<typeof buildProfileSchema>[0], "https://spoonie.kr")
+    expect(schema).toMatchObject({
+      "@context": "https://schema.org",
+      "@type": "ProfilePage",
+      url: "https://spoonie.kr/profile/sp1a2b3c",
+      mainEntity: { "@type": "Person", name: "집밥 기록", identifier: "sp1a2b3c" },
+    })
+    expect(schema).not.toHaveProperty("hasPart")
+    expect(JSON.stringify(schema)).not.toContain('"@type":"Recipe"')
+  })
+
+  it("preserves organization identities and does not invent unsupported profile fields", () => {
+    const schema = buildProfileSchema({
+      ...profile, entity_type: "organization", profile_message: null, avatar_url: null,
+    } as Parameters<typeof buildProfileSchema>[0], "https://spoonie.kr")
+    expect(schema.mainEntity).toMatchObject({ "@type": "Organization", name: "집밥 기록" })
+    expect(schema.mainEntity).not.toHaveProperty("image")
+    expect(schema.mainEntity).not.toHaveProperty("description")
+  })
 })
