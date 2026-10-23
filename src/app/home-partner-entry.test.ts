@@ -22,6 +22,8 @@ describe("home partner entry discoverability", () => {
     expect(navStart).toBeGreaterThan(-1)
     expect(creatorLink).toBeGreaterThan(navStart)
     expect(brandLink).toBeGreaterThan(creatorLink)
+    // Text remains a large enough keyboard/touch target without adding banners.
+    expect(markup.match(/class="inline-flex min-h-11 items-center/g)).toHaveLength(2)
     expect(markup).toContain("요리 크리에이터 안내")
     expect(markup).toContain("식품·주방 브랜드 안내")
   })

@@ -78,11 +78,11 @@ export default async function HomePage() {
 			<h1 className="sr-only">Spoonie - 레시피와 요리 이야기를 나누는 커뮤니티</h1>
 			<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(websiteSchema) }} />
 			<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(organizationSchema) }} />
-			<nav aria-label="Spoonie 크리에이터와 브랜드 이용 안내" className="flex items-center gap-4 border-b border-border px-4 py-2 text-meta text-ink-soft">
-				<Link href="/partners/creators" className="underline-offset-2 hover:text-ink hover:underline focus-visible:underline">
+			<nav aria-label="Spoonie 크리에이터와 브랜드 이용 안내" className="flex items-center gap-4 border-b border-border px-4 py-1 text-meta text-ink-soft">
+				<Link href="/partners/creators" className="inline-flex min-h-11 items-center underline-offset-2 hover:text-ink hover:underline focus-visible:underline">
 					요리 크리에이터 안내
 				</Link>
-				<Link href="/partners/brands" className="underline-offset-2 hover:text-ink hover:underline focus-visible:underline">
+				<Link href="/partners/brands" className="inline-flex min-h-11 items-center underline-offset-2 hover:text-ink hover:underline focus-visible:underline">
 					식품·주방 브랜드 안내
 				</Link>
 			</nav>
