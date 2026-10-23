@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import SeamlessItemList from "@/components/items/SeamlessItemList"
+import Link from "next/link"
 import { getPublicFeedData } from "@/features/feed/data/server-data"
 
 // 홈 HTML은 공개 피드로 정적 생성해 CDN에서 바로 보낸다 (스플래시가 즉시 보이도록).
@@ -77,6 +78,14 @@ export default async function HomePage() {
 			<h1 className="sr-only">Spoonie - 레시피와 요리 이야기를 나누는 커뮤니티</h1>
 			<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(websiteSchema) }} />
 			<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(organizationSchema) }} />
+			<nav aria-label="Spoonie 크리에이터와 브랜드 이용 안내" className="flex items-center gap-4 border-b border-border px-4 py-2 text-meta text-ink-soft">
+				<Link href="/partners/creators" className="underline-offset-2 hover:text-ink hover:underline focus-visible:underline">
+					요리 크리에이터 안내
+				</Link>
+				<Link href="/partners/brands" className="underline-offset-2 hover:text-ink hover:underline focus-visible:underline">
+					식품·주방 브랜드 안내
+				</Link>
+			</nav>
 			<Suspense fallback={<ItemListSkeleton />}>
 				<SeamlessItemList initialData={initialData} />
 			</Suspense>
