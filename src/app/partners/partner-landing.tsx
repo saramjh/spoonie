@@ -35,10 +35,10 @@ const copy: Record<
     description:
       "피드에서 지나간 레시피를 누군가 참고해 요리한 뒤 기록하면, 그 이야기가 원본 Recipe와 다시 연결됩니다.",
     directCta: "가입하고 내 Recipe 올려보기",
-    setupTitle: "옮겨 적는 게 먼저 걸린다면",
+    setupTitle: "기존에 올린 내 레시피로 시작한다면",
     setupDescription:
-      "가입 후 기존 Instagram 게시물·릴스 1~5개 주소를 보내세요. 접수된 자료는 매시간 한 번씩 일괄 확인·처리하며, 확인되는 정보만 내 계정의 비공개 Recipe 초안으로 정리합니다. 내가 검수한 뒤 공개합니다.",
-    setupCta: "가입하고 첫 Recipe 도움받기",
+      "가입한 뒤 내가 올린 Instagram 레시피 게시물·릴스 주소 1~5개를 선택적으로 제출할 수 있습니다. 확인되는 정보는 내 계정의 비공개 Recipe 초안에 정리되며, 빠진 내용은 내가 보완하고 공개 여부도 직접 결정합니다.",
+    setupCta: "가입하고 기존 레시피 가져오기",
     sourcePath: "/partners/creators",
     entry: "partner_creator",
   },
@@ -50,8 +50,8 @@ const copy: Record<
     directCta: "가입하고 활용 Recipe 올려보기",
     setupTitle: "기존 활용 자료부터 옮기고 싶다면",
     setupDescription:
-      "가입 후 자사몰·SNS의 활용 자료 1~5개 주소를 보내세요. 접수된 자료는 매시간 한 번씩 일괄 확인·처리하며, 따라 만들 수 있다고 확인되는 정보만 브랜드 계정의 비공개 Recipe 초안으로 정리합니다.",
-    setupCta: "가입하고 첫 Recipe 도움받기",
+      "가입 후 내가 사용 권한을 가진 자사몰·SNS 활용 자료 주소 1~5개를 선택적으로 제출할 수 있습니다. 확인되는 내용은 브랜드 계정의 비공개 Recipe 초안에 정리되며, 보완과 공개 여부는 계정 운영자가 직접 결정합니다.",
+    setupCta: "가입하고 기존 활용 자료 가져오기",
     sourcePath: "/partners/brands",
     entry: "partner_brand",
   },
@@ -144,7 +144,7 @@ export default async function PartnerLanding({ segment }: { segment: Segment }) 
           className="scroll-mt-4 border-t border-border px-4 py-6"
           aria-labelledby={segment + "-setup-title"}
         >
-          <p className="text-micro font-medium text-ink-soft">선택 사항 · 첫 작성 부담 줄이기</p>
+          <p className="text-micro font-medium text-ink-soft">선택 사항 · 내가 가진 콘텐츠 가져오기</p>
           <h2 id={segment + "-setup-title"} className="mt-1 text-heading text-ink">
             {text.setupTitle}
           </h2>
