@@ -1,6 +1,7 @@
 "use client"
 
 import { useRouter } from "@/shared/lib/navigation"
+import { logEvent } from "@/shared/infra/events"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { Button } from "@/components/ui/button"
 import { BookPlus, ImagePlus } from "lucide-react"
@@ -16,6 +17,12 @@ export default function CreateOptionsModal({ isOpen, onClose }: CreateOptionsMod
 	const handleNavigation = (path: string) => {
 		router.push(path)
 		onClose()
+	}
+
+	const handleCreatorGuide = () => {
+		// GA4 측정만 수행하며, 비로그인 클릭을 Supabase 이벤트 원장에 저장하지 않는다.
+		void logEvent("creator_guide_click", null, "compose_drawer")
+		handleNavigation("/partners/creators")
 	}
 
 	// 레시피가 자산이고 레시피드는 그 위의 활동이다 (DESIGN.md Interface Grammar 1, 6).
@@ -59,7 +66,7 @@ export default function CreateOptionsModal({ isOpen, onClose }: CreateOptionsMod
 							</p>
 							<button
 								type="button"
-								onClick={() => handleNavigation("/partners/creators")}
+								onClick={handleCreatorGuide}
 								className="inline-flex min-h-11 items-center rounded-md px-1 text-label text-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 							>
 								크리에이터 시작 안내

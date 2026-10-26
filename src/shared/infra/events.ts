@@ -21,6 +21,7 @@ export type EventType =
 	| "signup_submitted"
 	| "partner_auth_complete"
 	| "recipe_create"
+	| "creator_guide_click"
 
 type GtagWindow = Window & {
 	gtag?: (command: "event", eventName: string, params?: Record<string, string | number | boolean | undefined>) => void
@@ -41,7 +42,7 @@ export async function logEvent(type: EventType, itemId?: string | null, origin?:
 
 	// 피드 노출은 빈도가 너무 높아 DB row-per-card로 저장하지 않는다.
 	// GA4에서 집계하고, Supabase에는 의도가 강한 저빈도 행동만 남긴다.
-	if (type === "feed_impression") return
+	if (type === "feed_impression" || type === "creator_guide_click") return
 
 	try {
 		const supabase = createSupabaseBrowserClient()
