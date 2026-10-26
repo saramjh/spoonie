@@ -53,6 +53,18 @@ export default function CreateOptionsModal({ isOpen, onClose }: CreateOptionsMod
 						<p className="px-1 pt-1 text-meta text-ink-soft">
 							다른 사람의 레시피로 만들었다면 그 레시피 화면의 &lsquo;이 레시피로 만들었어요&rsquo;로 남겨 주세요. 원래 레시피와 이어지고 작성자에게도 알려져요.
 						</p>
+						<div className="border-t border-border pt-2">
+							<p className="px-1 text-meta text-ink-soft">
+								이미 다른 곳에 올린 레시피가 있나요?
+							</p>
+							<button
+								type="button"
+								onClick={() => handleNavigation("/partners/creators")}
+								className="inline-flex min-h-11 items-center rounded-md px-1 text-label text-orange-ink underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+							>
+								크리에이터 시작 안내
+							</button>
+						</div>
 					</div>
 					<div className="p-4">
 						<Button onClick={onClose} variant="ghost" className="w-full">
