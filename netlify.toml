@@ -23,6 +23,12 @@
   pattern = "^/profile/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/?$"
   cache = "manual"
 
+# Encoded legacy creator link: Netlify route matching uses encoded URL paths.
+[[redirects]]
+  from = "/partners/creators%EC%97%90%EC%84%9C"
+  to = "/partners/creators"
+  status = 301
+
 # /api/* 는 Next.js 런타임이 처리하므로 별도 리다이렉트를 두지 않는다.
 # (이전의 /api/* → /.netlify/functions/:splat 규칙 때문에 모든 API 라우트가 404였다)
 
