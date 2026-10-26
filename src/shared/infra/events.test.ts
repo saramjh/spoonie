@@ -15,7 +15,8 @@ it("counts a compose creator-guide click via the existing GA4 client without tou
 	const event = vi.fn()
 	vi.stubGlobal("window", { gtag: event })
 	await logEvent("creator_guide_click", null, "compose_drawer")
-	expect(event).toHaveBeenCalledExactlyOnceWith("event", "creator_guide_click", {
+	expect(event).toHaveBeenCalledTimes(1)
+	expect(event).toHaveBeenCalledWith("event", "creator_guide_click", {
 		item_id: undefined,
 		origin: "compose_drawer",
 	})
