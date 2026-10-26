@@ -84,11 +84,6 @@ const nextConfig = {
 			},
 			// Keep published legacy partner links usable without changing onboarding.
 			{
-				source: '/partners/creators에서',
-				destination: '/partners/creators',
-				permanent: true,
-			},
-			{
 				source: '/partners/creators/import',
 				destination: '/partners/creators',
 				permanent: true,
