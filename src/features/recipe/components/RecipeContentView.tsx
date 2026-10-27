@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Check, Minus, Plus } from "lucide-react"
+import Link from "next/link"
 import { Ingredient, RecipeStep } from "@/types/item"
 import { formatAmount } from "@/features/recipe/domain/recipe-amount"
 import { cn } from "@/lib/utils"
@@ -125,6 +126,13 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 						<button type="button" onClick={resetScale} className="font-medium text-ink underline underline-offset-4">
 							원래대로
 						</button>
+					</p>
+				)}
+
+				{scaled.length > 0 && (
+					<p className="mt-2 text-meta text-ink-soft">
+						양념·조리 시간은 재료량과 같은 비율로 늘지 않을 수 있어요.{" "}
+						<Link href="/magazine" className="font-medium text-ink underline underline-offset-4">인분 늘리기 안내</Link>
 					</p>
 				)}
 

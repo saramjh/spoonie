@@ -126,6 +126,12 @@ export default function MagazinePage() {
         <Link href="/magazine/after-cooking" className="mt-4 inline-flex min-h-11 items-center text-label font-semibold text-ink underline underline-offset-4">
           따라 만든 요리, 내 기록으로 이어서 남기는 방법 →
         </Link>
+        <p className="mt-3 text-label text-ink-soft">
+          레시피를 공유하는 분은{" "}
+          <Link href="/partners/creators" className="text-ink underline underline-offset-4">크리에이터 안내</Link>,{" "}
+          식품·주방 제품을 소개하는 분은{" "}
+          <Link href="/partners/brands" className="text-ink underline underline-offset-4">브랜드 안내</Link>를 확인할 수 있습니다.
+        </p>
         <p className="mt-2 text-label text-ink-soft">
           이 매거진은 공개로 읽을 수 있습니다. 이메일 구독 신청·정기 발송은 아직 제공하지 않습니다.
         </p>
