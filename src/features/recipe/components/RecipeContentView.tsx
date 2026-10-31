@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Check, CircleDot, Circle, Minus, Plus, CircleHelp, Undo2, RotateCcw } from "lucide-react"
+import { Check, CircleDot, Circle, Minus, Plus, CircleHelp, Scale, Undo2, RotateCcw } from "lucide-react"
 import Link from "next/link"
 import { Ingredient, RecipeStep } from "@/types/item"
 import { formatAmount } from "@/features/recipe/domain/recipe-amount"
@@ -178,13 +178,19 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 				</div>
 
 				{adjustableCount > 0 && ingredients.length > 1 && !adjusting && (
-					<button
-						type="button"
-						onClick={beginAdjusting}
-						className="mt-2 inline-flex min-h-11 items-center rounded-md border border-border px-3 text-label font-medium text-ink"
-					>
-						가진 재료 양에 맞추기
-					</button>
+					<div className="mt-2">
+						<button
+							type="button"
+							onClick={beginAdjusting}
+							aria-label="보유량 기준으로 전체 재료량 맞추기"
+							aria-describedby="ingredient-adjustment-entry-help"
+							className="inline-flex min-h-11 items-center gap-1.5 rounded-md px-1 text-label font-medium text-ink underline decoration-ink-soft/60 underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+						>
+							<Scale className="h-4 w-4 flex-shrink-0" aria-hidden />
+							보유량 기준
+						</button>
+						<p id="ingredient-adjustment-entry-help" className="ml-1 text-meta text-ink-soft">재료 하나의 양으로 전체 분량을 맞춰요.</p>
+					</div>
 				)}
 				{adjusting && (
 					<p className="mt-2 text-meta text-ink-soft">기준 재료 하나를 선택하고 보유한 양을 입력하세요. 다른 재료는 자동으로 계산됩니다.</p>

@@ -9,7 +9,10 @@ it("shows a discoverable quantity adjust entry, accessible help and preparation 
     ingredients: [{name:"감자",amount:300,unit:"g"},{name:"밀가루",amount:50,unit:"g"}],
     steps: [],
   }))
-  expect(html).toContain("가진 재료 양에 맞추기")
+  expect(html).toContain("보유량 기준")
+  expect(html).toContain('aria-label="보유량 기준으로 전체 재료량 맞추기"')
+  expect(html).toContain("재료 하나의 양으로 전체 분량을 맞춰요.")
+  expect(html).not.toContain("가진 재료 양에 맞추기")
   expect(html).toContain("재료 준비 0/2")
   expect(html).toContain('aria-label="인분 늘리기 안내"')
   expect(html).toContain("2인분")
@@ -23,5 +26,5 @@ it("does not offer a ratio adjustment without a second ingredient or a positive 
     ingredients: [{name:"소금",amount:0,unit:"약간"}],
     steps: [],
   }))
-  expect(html).not.toContain("가진 재료 양에 맞추기")
+  expect(html).not.toContain("보유량 기준")
 })
