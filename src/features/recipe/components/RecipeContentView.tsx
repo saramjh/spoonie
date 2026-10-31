@@ -250,7 +250,7 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 											{!selected && <span className="text-meta text-ink-soft">{ing.unit}</span>}
 										</button>
 										{selected && (
-											<div className="ml-9 mb-2 mt-1 flex items-center gap-2">
+											<div className="ml-9 mb-2 mt-1 grid grid-cols-[auto_minmax(0,7rem)_minmax(0,1fr)] items-center gap-x-2 gap-y-1">
 												<label htmlFor="adjust-reference-amount" className="text-meta text-ink-soft">보유량</label>
 												<input
 													id="adjust-reference-amount"
@@ -262,10 +262,10 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 													value={draftAmount}
 													onChange={(event) => changeAmount(event.target.value)}
 													onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur() }}
-													className="h-11 w-28 min-w-0 rounded-md border border-border bg-paper px-2 text-right text-heading tabular-nums text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+													className={cn("h-11 w-full min-w-0 rounded-md border bg-paper px-2 text-right text-heading tabular-nums text-ink focus-visible:outline-none focus-visible:ring-2", invalidAmount ? "border-destructive focus-visible:ring-destructive" : "border-border focus-visible:ring-ring")}
 												/>
-												<span className="text-meta text-ink-soft">{ing.unit}</span>
-												{invalidAmount && <span id="adjustment-error" role="alert" className="text-meta text-destructive">수량을 확인하세요. 0보다 큰 적절한 숫자가 필요해요.</span>}
+												<span className="min-w-0 break-words text-meta text-ink-soft">{ing.unit}</span>
+												{invalidAmount && <span id="adjustment-error" role="alert" className="col-start-2 col-span-2 text-meta text-destructive">수량을 다시 입력해 주세요.</span>}
 											</div>
 										)}
 									</li>
