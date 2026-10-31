@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Check, CircleDot, Circle, Minus, Plus, CircleHelp, Scale, Undo2, RotateCcw } from "lucide-react"
+import { Check, CircleDot, Circle, Minus, Plus, CircleHelp, Scale, ChevronRight, Undo2, RotateCcw } from "lucide-react"
 import Link from "next/link"
 import { Ingredient, RecipeStep } from "@/types/item"
 import { formatAmount } from "@/features/recipe/domain/recipe-amount"
@@ -178,22 +178,23 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 				</div>
 
 				{adjustableCount > 0 && ingredients.length > 1 && !adjusting && (
-					<div className="mt-2">
+					<div className="mt-3">
 						<button
 							type="button"
 							onClick={beginAdjusting}
-							aria-label="보유량 기준으로 전체 재료량 맞추기"
-							aria-describedby="ingredient-adjustment-entry-help"
-							className="inline-flex min-h-11 items-center gap-1.5 rounded-md px-1 text-label font-medium text-ink underline decoration-ink-soft/60 underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+							className="flex min-h-[4.25rem] w-full items-center gap-3 rounded-lg border border-border bg-paper px-3 py-2.5 text-left transition-colors hover:bg-paper-tint active:bg-paper-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 						>
-							<Scale className="h-4 w-4 flex-shrink-0" aria-hidden />
-							보유량 기준
+							<Scale className="h-5 w-5 flex-shrink-0 text-ink" aria-hidden />
+							<span className="min-w-0 flex-1">
+								<span className="block text-label font-semibold text-ink">보유량으로 재료량 맞추기</span>
+								<span className="mt-1 block text-label leading-5 text-ink-soft"><span className="block">한 재료의 양만 입력하면</span><span className="block">나머지도 자동 계산돼요.</span></span>
+							</span>
+							<ChevronRight className="h-5 w-5 flex-shrink-0 text-ink-soft" aria-hidden />
 						</button>
-						<p id="ingredient-adjustment-entry-help" className="ml-1 text-meta text-ink-soft">재료 하나의 양으로 전체 분량을 맞춰요.</p>
 					</div>
 				)}
 				{adjusting && (
-					<p className="mt-2 text-meta text-ink-soft">기준 재료 하나를 선택하고 보유한 양을 입력하세요. 다른 재료는 자동으로 계산됩니다.</p>
+					<p className="mt-3 text-label text-ink-soft">재료 하나를 선택하고, 지금 가진 양을 입력하세요. 나머지 재료는 자동으로 계산돼요.</p>
 				)}
 				{isScaled && !adjusting && (
 					<p className="mt-2 text-meta text-ink-soft">
@@ -229,7 +230,7 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 					</div>
 				)}
 				{scaled.length > 0 ? (
-					<ul aria-label={adjusting ? "계산 기준 재료 선택" : undefined} className="mt-3 divide-y divide-border">
+					<ul aria-label={adjusting ? "계산할 재료 선택" : undefined} className="mt-3 divide-y divide-border">
 						{scaled.map((ing, index) => {
 							const isChecked = checked.has(index)
 							const amountText = formatAmount(ing.amount, ing.unit)
@@ -248,16 +249,15 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 											aria-pressed={selected}
 											disabled={!selectable}
 											onClick={() => chooseReference(index)}
-											className={cn("flex min-h-12 w-full items-center gap-2 rounded-md px-2 text-left disabled:opacity-65", selected && "bg-paper-tint")}
+											className={cn("flex min-h-12 w-full items-center gap-2 rounded-md border border-transparent px-2 text-left disabled:opacity-65", selected && "border-border bg-paper-tint")}
 										>
 											{selected ? <CircleDot className="h-5 w-5 flex-shrink-0 text-ink" aria-hidden /> : <Circle className="h-5 w-5 flex-shrink-0 text-ink-soft" aria-hidden />}
 											<span className="min-w-0 flex-1 text-read text-ink">{ing.name}</span>
-											<span className="text-heading tabular-nums text-ink">{selected ? "기준" : amountText}</span>
-											{!selected && <span className="text-meta text-ink-soft">{ing.unit}</span>}
+											{!selected && <span className="flex-shrink-0 text-right"><span className="text-heading tabular-nums text-ink">{amountText}</span>{ing.unit && <span className="ml-1 text-meta text-ink-soft">{ing.unit}</span>}</span>}
 										</button>
 										{selected && (
-											<div className="ml-9 mb-2 mt-1 grid grid-cols-[auto_minmax(0,7rem)_minmax(0,1fr)] items-center gap-x-2 gap-y-1">
-												<label htmlFor="adjust-reference-amount" className="text-meta text-ink-soft">보유량</label>
+											<div className="ml-9 mb-2 mt-1 grid grid-cols-[3rem_7rem_minmax(0,1fr)] items-center gap-x-2 gap-y-1">
+												<label htmlFor="adjust-reference-amount" className="text-label text-ink-soft">보유량</label>
 												<input
 													id="adjust-reference-amount"
 													aria-label={`${ing.name} 보유량`}
@@ -270,7 +270,7 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 													onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur() }}
 													className={cn("h-11 w-full min-w-0 rounded-md border bg-paper px-2 text-right text-heading tabular-nums text-ink focus-visible:outline-none focus-visible:ring-2", invalidAmount ? "border-destructive focus-visible:ring-destructive" : "border-border focus-visible:ring-ring")}
 												/>
-												<span className="min-w-0 break-words text-meta text-ink-soft">{ing.unit}</span>
+												<span className="min-w-0 break-words text-label text-ink-soft">{ing.unit}</span>
 												{invalidAmount && <span id="adjustment-error" role="alert" className="col-start-2 col-span-2 text-meta text-destructive">수량을 다시 입력해 주세요.</span>}
 											</div>
 										)}
