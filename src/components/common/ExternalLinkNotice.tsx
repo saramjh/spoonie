@@ -36,10 +36,11 @@ export default function ExternalLinkNotice() {
       </p>
       <AlertDialogFooter>
         <AlertDialogCancel>취소</AlertDialogCancel>
-        <AlertDialogAction asChild>
-          <a href={destination?.href ?? '#'} target="_blank" rel="noopener noreferrer nofollow" data-external-confirm>
-            사이트로 이동
-          </a>
+        <AlertDialogAction onClick={() => {
+          // Closing the dialog updates the anchor before its native navigation; use the confirmed URL directly.
+          if (destination) window.location.assign(destination.href)
+        }}>
+          사이트로 이동
         </AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>
