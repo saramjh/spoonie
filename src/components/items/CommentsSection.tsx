@@ -1,5 +1,6 @@
-
 "use client"
+
+import LinkifiedText from "@/components/common/LinkifiedText"
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -235,7 +236,7 @@ export default function CommentsSection({
                   ) : (
                     <>
                       <p className="text-ink text-label whitespace-pre-wrap mt-1 break-words">
-                        {comment.content}
+                        <LinkifiedText text={comment.content} />
                       </p>
 
                       {/* 답글 버튼 (삭제되지 않은 댓글만) */}
@@ -337,7 +338,7 @@ export default function CommentsSection({
                             </p>
                           ) : (
                             <p className="text-ink text-meta whitespace-pre-wrap mt-1 break-words">
-                              {reply.content}
+                              <LinkifiedText text={reply.content} />
                             </p>
                           )}
                         </div>

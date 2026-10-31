@@ -15,6 +15,7 @@ import CommentsSection from "@/components/items/CommentsSection"
 import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
 import BottomNavBar from "@/components/layout/BottomNavBar"
 import ImageCarousel from "@/components/common/ImageCarousel"
+import LinkifiedText from "@/components/common/LinkifiedText"
 import { publicContentTitle } from "@/features/discovery/domain/search-exposure"
 import RecipeContentView from "@/features/recipe/components/RecipeContentView"
 import { RecipeActivity } from "@/features/recipe/components/RecipeActivity"
@@ -22,6 +23,7 @@ import { isWithinNewRecipePhotoPromptWindow } from "@/features/recipe/domain/rec
 import RecipeCard from "@/features/recipe/components/RecipeCard"
 import { cn } from "@/lib/utils"
 import { formatCookingTime } from "@/features/recipe/domain/recipe-amount"
+import { splitKitchenEditorialFooter } from "@/features/recipe/domain/editorial-footer"
 import { useShare } from "@/hooks/useShare"
 import { useNavigation } from "@/hooks/useNavigation"
 import { useToast } from "@/hooks/use-toast"
@@ -362,6 +364,9 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 
 
 	const authorName = item.username || "사용자"
+	const editorial = isRecipe && item.user_public_id === "6a7e51f9"
+		? splitKitchenEditorialFooter(item.description)
+		: { body: item.description, note: null }
 	const cookingTime = formatCookingTime(item.cooking_time_minutes)
 	const ingredientCount = item.ingredients?.length || 0
 
@@ -553,7 +558,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 										</a>
 									)}
 									<RecipeActivity recipeId={stableItemId} userId={currentUser?.id} />
-									{item.description && <p className="mt-4 whitespace-pre-wrap break-words text-body text-ink">{item.description}</p>}
+									{editorial.body && <p className="mt-4 whitespace-pre-wrap break-words text-body text-ink"><LinkifiedText text={editorial.body} /></p>}
 									{isRecentRecipeForPhotoPrompt && stableItemId && (
 										<div className="mt-4 border-y border-border py-3">
 											<p className="text-label font-semibold text-ink">이 레시피를 직접 만들어봤나요?</p>
@@ -568,7 +573,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 								<>
 									{/* 레시피드는 사진과 글이 주인공이라 제목을 키우지 않는다 (DESIGN.md Interface Grammar 1) */}
 									{item.title && <h1 className="mb-1.5 text-heading text-ink">{item.title}</h1>}
-									<p className="whitespace-pre-wrap break-words text-body text-ink">{item.content}</p>
+									<p className="whitespace-pre-wrap break-words text-body text-ink"><LinkifiedText text={item.content} /></p>
 								</>
 							)}
 
@@ -629,6 +634,13 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 								steps={item.steps || []}
 								recipeId={stableItemId}
 							/>
+						)}
+
+						{isRecipe && editorial.note && (
+							<footer className="border-t border-border px-4 py-4 text-meta text-ink-soft">
+								<span className="mr-2 font-semibold">출처·안내</span>
+								<LinkifiedText text={editorial.note} />
+							</footer>
 						)}
 
 						{renderRecipeGraph()}

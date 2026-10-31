@@ -7,6 +7,7 @@ import GoogleAnalytics from "@/components/analytics/GoogleAnalytics"
 import GoogleAdSense from "@/components/ads/GoogleAdSense"
 import ServiceWorkerUpdater from "@/components/layout/ServiceWorkerUpdater"
 import NavigationProgress from "@/components/layout/NavigationProgress"
+import ExternalLinkNotice from "@/components/common/ExternalLinkNotice"
 import { Suspense } from "react"
 
 
@@ -100,6 +101,7 @@ export default function RootLayout({
 				</Suspense>
 
 				<ClientLayoutWrapper>{children}</ClientLayoutWrapper>
+				<ExternalLinkNotice />
 				<Toaster />
 			</body>
 		</html>

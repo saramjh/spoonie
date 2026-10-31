@@ -7,6 +7,7 @@ import { Ingredient, RecipeStep } from "@/types/item"
 import { formatAmount } from "@/features/recipe/domain/recipe-amount"
 import { cn } from "@/lib/utils"
 import StepMode from "@/features/recipe/components/StepMode"
+import LinkifiedText from "@/components/common/LinkifiedText"
 import { CheckBox, Photo, SectionHeading } from "@/components/kit"
 
 interface RecipeContentViewProps {
@@ -239,7 +240,7 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 											{isDone ? <Check className="mt-0.5 h-5 w-5" strokeWidth={2.5} aria-hidden /> : index + 1}
 										</button>
 										<div className={cn("min-w-0 flex-1 pt-1", isDone && "text-ink-soft")}>
-											<p className="whitespace-pre-wrap break-words text-read">{step.description}</p>
+											<p className="whitespace-pre-wrap break-words text-read"><LinkifiedText text={step.description} /></p>
 											{step.image_url && (
 												<div className="relative mt-3 aspect-[4/3] w-full overflow-hidden rounded-[3px] bg-muted">
 													<Photo src={step.image_url} alt={`${index + 1}단계 사진`} sizes="(max-width: 448px) 85vw, 380px" fit="contain" />
