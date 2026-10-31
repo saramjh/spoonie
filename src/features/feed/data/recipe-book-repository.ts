@@ -148,6 +148,17 @@ export const fetchRecipeBookPage = async (key: string): Promise<Item[]> => {
 		})
 	}
 
+	// The legacy "my recipes" RPC has a fixed return type without the new focal field.
+	// Read only this page's owners' items; followers' view already returns cover_focal.
+	const coverFocalById = new Map<string, Item["cover_focal"]>()
+	if (tab === "my_recipes") {
+		const ids = data.map((item: Item) => item.id)
+		const { data: focalRows, error: focalError } = await supabase
+			.from("items").select("id, cover_focal").in("id", ids).eq("user_id", userId)
+		if (focalError) throw focalError
+		for (const row of focalRows ?? []) coverFocalById.set(row.id, row.cover_focal)
+	}
+
 	return data.map((item: Item) => {
 		const profileData: Partial<Profile> = {
 			display_name: item.display_name,
@@ -174,6 +185,7 @@ export const fetchRecipeBookPage = async (key: string): Promise<Item[]> => {
 			description: item.description,
 			image_urls: item.image_urls,
 			thumbnail_index: item.thumbnail_index || null,
+			cover_focal: coverFocalById.get(item.id) ?? item.cover_focal,
 			tags: item.tags,
 			color_label: item.color_label,
 			servings: item.servings,

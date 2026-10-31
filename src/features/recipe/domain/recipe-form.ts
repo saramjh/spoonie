@@ -4,6 +4,7 @@
  */
 
 import type { Item, ItemDetail } from "@/types/item"
+import type { CoverFocal } from "./cover-focal"
 import type { RecipeDraft, RecipeFormInput, RecipeIngredientInput, RecipeInstructionInput } from "../contracts"
 import { normalizeTags } from "@/shared/lib/topics"
 
@@ -86,7 +87,7 @@ export function creationOriginField(
 // items 표에 쓸 값
 export function buildRecipeItemPayload(
 	values: RecipeDraft,
-	ctx: { userId: string; imageUrls: string[]; thumbnailIndex: number; isEditMode: boolean; forkFromId: string | undefined; onboardingDraftId?: string | null }
+	ctx: { userId: string; imageUrls: string[]; thumbnailIndex: number; coverFocal: CoverFocal; isEditMode: boolean; forkFromId: string | undefined; onboardingDraftId?: string | null }
 ) {
 	return {
 		user_id: ctx.userId,
@@ -101,6 +102,7 @@ export function buildRecipeItemPayload(
 		tags: normalizeTags(values.tags),
 		cited_recipe_ids: values.cited_recipe_ids,
 		thumbnail_index: ctx.thumbnailIndex,
+		cover_focal: ctx.coverFocal,
 		...(ctx.onboardingDraftId ? { onboarding_draft_id: ctx.onboardingDraftId } : {}),
 		...creationOriginField(ctx.isEditMode, ctx.forkFromId, values.cited_recipe_ids),
 	}

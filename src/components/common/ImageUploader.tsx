@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label"
 import { ImagePlus, X, Camera } from "lucide-react"
 import { optimizeImages, isValidImageType, isValidFileSize, getImageProcessingMessage, OptimizedImage } from "@/shared/infra/image-utils"
 import { useToast } from "@/hooks/use-toast"
+import { CENTER_FOCAL, coverObjectPosition, normalizeCoverFocal, type CoverFocal } from "@/features/recipe/domain/cover-focal"
 
 interface ImageUploaderProps {
 	images: OptimizedImage[]
@@ -17,11 +18,13 @@ interface ImageUploaderProps {
 	placeholder?: string
 	thumbnailIndex?: number
 	onThumbnailChange?: (index: number) => void
+	focalPoint?: CoverFocal
+	onFocalPointChange?: (point: CoverFocal) => void
 	showThumbnailSelector?: boolean
 
 }
 
-export default function ImageUploader({ images, onImagesChange, maxImages = 5, label = "이미지 업로드", placeholder = "이미지를 추가해주세요", thumbnailIndex = 0, onThumbnailChange, showThumbnailSelector = true, frame = "recipeed" }: ImageUploaderProps) {
+export default function ImageUploader({ images, onImagesChange, maxImages = 5, label = "이미지 업로드", placeholder = "이미지를 추가해주세요", thumbnailIndex = 0, onThumbnailChange, showThumbnailSelector = true, frame = "recipeed", focalPoint, onFocalPointChange }: ImageUploaderProps) {
 	const fileInputRef = useRef<HTMLInputElement>(null)
   const fileInputId = useId()
   const onPickerKeyDown = (event: React.KeyboardEvent<HTMLLabelElement>) => {
@@ -32,6 +35,13 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
   }
 	const { toast } = useToast()
 	const [isProcessing, setIsProcessing] = useState(false)
+	const focus = normalizeCoverFocal(focalPoint)
+	const adjustFocus = (event: React.PointerEvent<HTMLButtonElement>) => {
+		if (!onFocalPointChange) return
+		const rect = event.currentTarget.getBoundingClientRect()
+		if (rect.width <= 0 || rect.height <= 0) return
+		onFocalPointChange(normalizeCoverFocal({ x: Math.round((event.clientX - rect.left) / rect.width * 100), y: Math.round((event.clientY - rect.top) / rect.height * 100) }))
+	}
 	const latestImages = useRef(images)
 	useEffect(() => { latestImages.current = images }, [images])
 	const previousPreviews = useRef<Set<string>>(new Set())
@@ -98,11 +108,14 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 			latestImages.current = newImages
 			onImagesChange(newImages)
 
-					if (onThumbnailChange && thumbnailIndex >= newImages.length && newImages.length > 0) {
-			onThumbnailChange(0)
-		}
+			if (onThumbnailChange) {
+				const nextIndex = newImages.length === 0 || index === thumbnailIndex ? 0
+					: index < thumbnailIndex ? thumbnailIndex - 1 : thumbnailIndex
+				if (nextIndex !== thumbnailIndex) onThumbnailChange(nextIndex)
+			}
+			if (index === thumbnailIndex) onFocalPointChange?.({ ...CENTER_FOCAL })
 	},
-	[onImagesChange, thumbnailIndex, onThumbnailChange]
+	[onImagesChange, thumbnailIndex, onThumbnailChange, onFocalPointChange]
 	)
 
 	const setThumbnail = useCallback(
@@ -191,6 +204,23 @@ export default function ImageUploader({ images, onImagesChange, maxImages = 5, l
 						)}
 					</ul>
 					{showThumbnailSelector && images.length > 1 && <p className="mt-1 text-meta text-ink-soft">사진을 누르면 대표 사진이 돼요.</p>}
+					{showThumbnailSelector && onFocalPointChange && images[thumbnailIndex] && (
+						<div className="mt-4">
+							<p className="text-label font-medium text-ink">피드에서 보이는 모습 · {frame === "recipe" ? "4:3" : "1:1"}</p>
+							<button type="button" aria-label="대표 사진 위치 미리보기 및 조절" className={`relative mt-2 block w-full touch-none overflow-hidden rounded-[3px] bg-muted ${frame === "recipe" ? "aspect-[4/3]" : "aspect-square"}`} onPointerDown={(event) => { event.currentTarget.setPointerCapture(event.pointerId); adjustFocus(event) }} onPointerMove={(event) => { if (event.buttons > 0) adjustFocus(event) }}>
+								<Image src={images[thumbnailIndex].preview} alt="선택한 대표 사진의 4:3 피드 크롭" fill sizes="(max-width: 448px) 100vw, 448px" className="object-cover" style={{ objectPosition: coverObjectPosition(focus) }} />
+							</button>
+							<div className="mt-3 grid grid-cols-2 gap-4">
+								<label className="text-meta text-ink-soft">좌우 위치
+									<input aria-label="대표 사진 좌우 위치" className="mt-1 block w-full accent-ink" type="range" min="0" max="100" value={focus.x} onChange={(event) => onFocalPointChange({ ...focus, x: Number(event.target.value) })} />
+								</label>
+								<label className="text-meta text-ink-soft">위아래 위치
+									<input aria-label="대표 사진 위아래 위치" className="mt-1 block w-full accent-ink" type="range" min="0" max="100" value={focus.y} onChange={(event) => onFocalPointChange({ ...focus, y: Number(event.target.value) })} />
+								</label>
+							</div>
+							<p className="mt-1 text-meta text-ink-soft">사진을 움직이거나 조절해 중요한 부분이 피드에 보이도록 맞춰 주세요. 상세에서는 원본 전체가 보입니다.</p>
+						</div>
+					)}
 				</>
 			) : (
 				<label

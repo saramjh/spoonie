@@ -17,6 +17,7 @@ import InstructionImageUploader from "@/features/recipe/components/InstructionIm
 import CitedRecipeSearch from "@/features/recipe/components/CitedRecipeSearch"
 import DraggableIngredientList, { DraggableIngredient } from "@/features/recipe/components/DraggableIngredientList"
 import { OptimizedImage, optimizeImages } from "@/shared/infra/image-utils"
+import { CENTER_FOCAL, normalizeCoverFocal, type CoverFocal } from "@/features/recipe/domain/cover-focal"
 import { useToast } from "@/hooks/use-toast"
 import { useComposerDraft } from "@/hooks/useComposerDraft"
 
@@ -67,12 +68,14 @@ export default function RecipeForm({
 	const submitLock = useRef(false)
 	const [mainImages, setMainImages] = useState<OptimizedImage[]>([])
 	const [thumbnailIndex, setThumbnailIndex] = useState(0)
+	const [coverFocal, setCoverFocal] = useState<CoverFocal>({ ...CENTER_FOCAL })
 	
 	// 작성 화면 안에서는 대표 사진의 로컬 선택만 바꾼다.
 	// 피드 캐시는 DB 저장 성공 후 fullItemPayload로 갱신한다.
 	const handleThumbnailChange = useCallback((newIndex: number) => {
+		if (newIndex !== thumbnailIndex) setCoverFocal({ ...CENTER_FOCAL })
 		setThumbnailIndex(newIndex)
-	}, [])
+	}, [thumbnailIndex])
 
 	const [instructionImages, setInstructionImages] = useState<(OptimizedImage | null)[]>([])
   const sourceImageRestoreGuard = useRef(false)
@@ -110,6 +113,7 @@ export default function RecipeForm({
 				// 저장된 대표 이미지가 범위를 벗어나면 첫 이미지로 제한한다.
 				const savedThumbnailIndex = initialData.thumbnail_index ?? 0
 				setThumbnailIndex(Math.min(savedThumbnailIndex, fetchedImages.length - 1))
+				setCoverFocal(normalizeCoverFocal(initialData.cover_focal))
 				
 			}
 
@@ -225,13 +229,14 @@ export default function RecipeForm({
       const subscription = form.watch(() => changed())
       return () => subscription.unsubscribe()
     },
-    snapshot: () => ({ values: form.getValues(), mainImages, instructionImages, thumbnailIndex }),
+    snapshot: () => ({ values: form.getValues(), mainImages, instructionImages, thumbnailIndex, coverFocal }),
     restore: (state) => {
       sourceImageRestoreGuard.current = true
       form.reset(state.values)
       setMainImages(state.mainImages)
       setInstructionImages(state.instructionImages ?? [])
       setThumbnailIndex(state.thumbnailIndex)
+      setCoverFocal(normalizeCoverFocal(state.coverFocal))
       const ids = state.values.cited_recipe_ids ?? []
       if (ids.length) {
         void fetchCitedRecipes(supabase, ids).then((recipes) => {
@@ -241,7 +246,7 @@ export default function RecipeForm({
     },
   })
   const scheduleDraft = draft.scheduleSave
-  useEffect(() => { scheduleDraft() }, [mainImages, instructionImages, thumbnailIndex, scheduleDraft])
+  useEffect(() => { scheduleDraft() }, [mainImages, instructionImages, thumbnailIndex, coverFocal, scheduleDraft])
 
 	const onSubmit = async (values: RecipeSubmitValues) => {
 		if (mainImages.length === 0) {
@@ -299,6 +304,7 @@ export default function RecipeForm({
 				userId: user.id,
 				imageUrls: finalImageUrls,
 				thumbnailIndex, // 썸네일 인덱스 저장
+				coverFocal,
 				isEditMode,
 				forkFromId: forkFrom?.id,
 				onboardingDraftId: onboardingDraft?.id,
@@ -543,6 +549,8 @@ export default function RecipeForm({
 							frame="recipe"
 							thumbnailIndex={thumbnailIndex}
 							onThumbnailChange={handleThumbnailChange}
+							focalPoint={coverFocal}
+							onFocalPointChange={setCoverFocal}
 							showThumbnailSelector={true}
 						/>
 

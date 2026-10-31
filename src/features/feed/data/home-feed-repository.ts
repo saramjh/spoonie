@@ -77,6 +77,7 @@ export const fetchHomeFeedPage = async (key: string): Promise<Item[]> => {
       description: item.description,
       image_urls: item.image_urls,
       thumbnail_index: item.thumbnail_index ?? 0, // 썸네일 인덱스 (기본값 0)
+      cover_focal: item.cover_focal,
       tags: item.tags,
       color_label: item.color_label,
       servings: item.servings,

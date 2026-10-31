@@ -72,9 +72,9 @@ describe("creationOriginField", () => {
 describe("저장 행 만들기", () => {
 	const values = { title: "t", description: "d", servings: 2, cooking_time_minutes: 10, is_public: true, ingredients: [{ name: "A", amount: 1, unit: "g" }], instructions: [{ description: "s1" }, { description: "s2" }], color_label: null, tags: ["x"], cited_recipe_ids: [] }
 	it("items 값", () => {
-		expect(buildRecipeItemPayload(values, { userId: "u", imageUrls: ["i"], thumbnailIndex: 0, isEditMode: false, forkFromId: undefined })).toEqual({
+		expect(buildRecipeItemPayload(values, { userId: "u", imageUrls: ["i"], thumbnailIndex: 0, coverFocal: { x: 17, y: 83 }, isEditMode: false, forkFromId: undefined })).toEqual({
 			user_id: "u", item_type: "recipe", title: "t", description: "d", servings: 2, cooking_time_minutes: 10, is_public: true,
-			image_urls: ["i"], color_label: null, tags: ["x"], cited_recipe_ids: [], thumbnail_index: 0, creation_origin: null,
+			image_urls: ["i"], color_label: null, tags: ["x"], cited_recipe_ids: [], thumbnail_index: 0, cover_focal: { x: 17, y: 83 }, creation_origin: null,
 		})
 	})
 	it("단계 사진, 재료·단계 번호", () => {

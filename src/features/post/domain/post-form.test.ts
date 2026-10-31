@@ -18,8 +18,8 @@ describe("postCreationOriginField", () => {
 
 describe("buildPostItemPayload", () => {
 	it("제목은 공백을 지우고 비면 null", () =>
-		expect(buildPostItemPayload({ title: "  ", content: "c", is_public: true, tags: [], cited_recipe_ids: [] }, { userId: "u", imageUrls: ["i"], thumbnailIndex: 0, isEditMode: false, sourceRecipeId: null, sourceOrigin: null })).toEqual({
-			user_id: "u", item_type: "post", title: null, content: "c", image_urls: ["i"], tags: [], cited_recipe_ids: [], is_public: true, thumbnail_index: 0, creation_origin: null,
+		expect(buildPostItemPayload({ title: "  ", content: "c", is_public: true, tags: [], cited_recipe_ids: [] }, { userId: "u", imageUrls: ["i"], thumbnailIndex: 0, coverFocal: { x: 65, y: 21 }, isEditMode: false, sourceRecipeId: null, sourceOrigin: null })).toEqual({
+			user_id: "u", item_type: "post", title: null, content: "c", image_urls: ["i"], tags: [], cited_recipe_ids: [], is_public: true, thumbnail_index: 0, cover_focal: { x: 65, y: 21 }, creation_origin: null,
 		}))
 })
 

@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import ImageUploader from "@/components/common/ImageUploader"
 import { OptimizedImage } from "@/shared/infra/image-utils"
+import { CENTER_FOCAL, normalizeCoverFocal, type CoverFocal } from "@/features/recipe/domain/cover-focal"
 import { useToast } from "@/hooks/use-toast"
 import { useComposerDraft } from "@/hooks/useComposerDraft"
 import type { Item } from "@/types/item"
@@ -63,12 +64,14 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 		(editing?.image_urls ?? []).map((url): OptimizedImage => ({ file: new File([], url.split("/").pop()!), preview: url, width: 800, height: 600 }))
 	)
 	const [thumbnailIndex, setThumbnailIndex] = useState(() => Math.max(0, Math.min(editing?.thumbnail_index ?? 0, (editing?.image_urls?.length ?? 1) - 1)))
+	const [coverFocal, setCoverFocal] = useState<CoverFocal>(() => normalizeCoverFocal(editing?.cover_focal))
 	
 	// 대표 사진 선택은 로컬 미리보기만 변경한다.
 	// 피드 캐시는 DB 저장 성공 후 fullItemPayload로 갱신한다.
 	const handleThumbnailChange = useCallback((newIndex: number) => {
+		if (newIndex !== thumbnailIndex) setCoverFocal({ ...CENTER_FOCAL })
 		setThumbnailIndex(newIndex)
-	}, [])
+	}, [thumbnailIndex])
 	const [selectedCitedRecipes, setSelectedCitedRecipes] = useState<Item[]>([])
 
 	const form = useForm<PostFormValues>({
@@ -118,18 +121,19 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
       const subscription = form.watch(() => changed())
       return () => subscription.unsubscribe()
     },
-    snapshot: () => ({ values: form.getValues(), mainImages, thumbnailIndex }),
+    snapshot: () => ({ values: form.getValues(), mainImages, thumbnailIndex, coverFocal }),
     restore: (state) => {
       form.reset(state.values)
       setMainImages(state.mainImages)
       setThumbnailIndex(state.thumbnailIndex)
+      setCoverFocal(normalizeCoverFocal(state.coverFocal))
       const ids = state.values.cited_recipe_ids ?? []
       if (ids.length) void loadCitedRecipes(ids).then(setSelectedCitedRecipes)
       else setSelectedCitedRecipes([])
     },
   })
   const scheduleDraft = draft.scheduleSave
-  useEffect(() => { scheduleDraft() }, [mainImages, thumbnailIndex, scheduleDraft])
+  useEffect(() => { scheduleDraft() }, [mainImages, thumbnailIndex, coverFocal, scheduleDraft])
 
 	const onSubmit = async (values: PostFormValues) => {
 	
@@ -177,6 +181,7 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 				userId: user.id,
 				imageUrls: uploadedImageUrls,
 				thumbnailIndex, // 썸네일 인덱스 저장
+				coverFocal,
 				isEditMode,
 				sourceRecipeId,
 				sourceOrigin,
@@ -363,6 +368,8 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 							frame="recipeed"
 							thumbnailIndex={thumbnailIndex}
 							onThumbnailChange={handleThumbnailChange}
+							focalPoint={coverFocal}
+							onFocalPointChange={setCoverFocal}
 							showThumbnailSelector={true}
 						/>
 

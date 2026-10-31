@@ -1,3 +1,5 @@
+import type { CoverFocal } from "@/features/recipe/domain/cover-focal"
+
 export type ItemType = "post" | "recipe"
 
 export interface Profile {
@@ -56,6 +58,7 @@ export interface Item {
 	description: string | null
 	image_urls: string[] | null
 	thumbnail_index: number | null
+	cover_focal?: CoverFocal | null
 	tags: string[] | null
 	is_public: boolean
 	color_label: string | null

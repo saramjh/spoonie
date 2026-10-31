@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import type { OptimizedImage } from "@/shared/infra/image-utils"
+import type { CoverFocal } from "@/features/recipe/domain/cover-focal"
 import {
   deleteComposerDraft, packImage, readComposerDraft, unpackImage, writeComposerDraft,
   type ComposerDraft,
@@ -12,6 +13,7 @@ interface Snapshot<T> {
   mainImages: OptimizedImage[]
   instructionImages?: (OptimizedImage | null)[]
   thumbnailIndex: number
+  coverFocal?: CoverFocal
 }
 
 type Status = "idle" | "pending" | "saved" | "error" | "conflict"
@@ -53,6 +55,7 @@ export function useComposerDraft<T>({
     mainImages: state.mainImages,
     instructionImages: state.instructionImages ?? [],
     thumbnailIndex: state.thumbnailIndex,
+    coverFocal: state.coverFocal,
   }, (_k, value) => {
     if (typeof File !== "undefined" && value instanceof File) {
       return { name: value.name, size: value.size, modified: value.lastModified }
@@ -75,6 +78,7 @@ export function useComposerDraft<T>({
       mainImages: state.mainImages.map(packImage),
       instructionImages: (state.instructionImages ?? []).map((image) => image ? packImage(image) : null),
       thumbnailIndex: state.thumbnailIndex,
+      coverFocal: state.coverFocal,
       savedAt: Date.now(),
     }
     setStatus("pending")
@@ -166,6 +170,7 @@ export function useComposerDraft<T>({
       mainImages: recovery.mainImages.map(unpackImage),
       instructionImages: recovery.instructionImages.map((image) => image ? unpackImage(image) : null),
       thumbnailIndex: recovery.thumbnailIndex,
+      coverFocal: recovery.coverFocal,
     }
     restorer.current(state)
     // React state updates commit later; use the recovered snapshot as the baseline.

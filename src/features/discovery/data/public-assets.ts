@@ -12,6 +12,7 @@ export type PublicDiscoveryItem = {
 	content: string | null
 	image_urls: string[] | null
 	thumbnail_index: number | null
+	cover_focal?: { x: number; y: number } | null
 	tags: string[] | null
 	cited_recipe_ids: string[] | null
 	servings?: number | null
@@ -19,7 +20,7 @@ export type PublicDiscoveryItem = {
 }
 
 const PAGE_SIZE = 500
-const COLUMNS = "id, user_id, item_type, created_at, updated_at, title, description, content, image_urls, thumbnail_index, tags, cited_recipe_ids, servings, cooking_time_minutes"
+const COLUMNS = "id, user_id, item_type, created_at, updated_at, title, description, content, image_urls, thumbnail_index, cover_focal, tags, cited_recipe_ids, servings, cooking_time_minutes"
 
 export async function fetchAllPublicDiscoveryItems(
 	filters: { itemType?: "recipe" | "post"; tag?: string; userId?: string } = {},

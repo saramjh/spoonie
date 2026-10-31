@@ -315,6 +315,7 @@ export default function PostCard({
           <ImageCarousel
             images={orderedImages}
             frame={isRecipe ? "recipe" : "recipeed"}
+            focalPoint={displayItem.cover_focal}
             alt={displayItem.title || `${enrichedItem.username || "작성자"}님의 레시피드 사진`}
             priority={priority}
             onSingleClick={() => router.push(detailUrl)}

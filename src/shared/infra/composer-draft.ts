@@ -1,4 +1,5 @@
 import type { OptimizedImage } from "@/shared/infra/image-utils"
+import type { CoverFocal } from "@/features/recipe/domain/cover-focal"
 
 // 작성 중인 파일은 URL 문자열이 아닌 실제 Blob/File로 보관한다.
 // blob: 미리보기 주소는 새로고침 후 유효하지 않으므로 복원 시 다시 만든다.
@@ -14,6 +15,7 @@ export interface ComposerDraft<T> {
   mainImages: StoredImage[]
   instructionImages: (StoredImage | null)[]
   thumbnailIndex: number
+  coverFocal?: CoverFocal
   savedAt: number
   revision?: number
 }

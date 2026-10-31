@@ -3,6 +3,7 @@
 import * as React from "react"
 import useEmblaCarousel from "embla-carousel-react"
 import { Photo } from "@/components/kit"
+import { coverObjectPosition, type CoverFocal } from "@/features/recipe/domain/cover-focal"
 
 import { cn } from "@/lib/utils"
 
@@ -18,6 +19,7 @@ interface ImageCarouselProps {
   // 프레임 비율: 레시피 4:3, 레시피드 1:1 (DESIGN.md Interface Grammar)
   frame?: "recipe" | "recipeed"
   fit?: "cover" | "contain"
+  focalPoint?: CoverFocal | null
 }
 
 export default function ImageCarousel({ 
@@ -29,6 +31,7 @@ export default function ImageCarousel({
   onSingleClick,
   frame = "recipeed",
   fit = "cover",
+  focalPoint,
 }: ImageCarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel()
   const [selectedIndex, setSelectedIndex] = React.useState(0)
@@ -123,6 +126,7 @@ export default function ImageCarousel({
               <Photo
                 src={src}
                 fit={fit}
+                style={index === 0 && fit === "cover" ? { objectPosition: coverObjectPosition(focalPoint) } : undefined}
                 alt={`${alt} ${index + 1}`}
                 sizes="(max-width: 448px) 100vw, 448px"
                 priority={priority && index === 0}

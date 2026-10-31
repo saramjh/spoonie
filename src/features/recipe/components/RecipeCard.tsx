@@ -1,6 +1,7 @@
 "use client"
 
 import { ChefHat } from "lucide-react"
+import { coverObjectPosition } from "@/features/recipe/domain/cover-focal"
 import { CheckBox, IntentLink, Magnet, Photo, PhotoCount } from "@/components/kit"
 import { formatCookingTime } from "@/features/recipe/domain/recipe-amount"
 import { useItemCache } from "@/hooks/useItemCache"
@@ -56,7 +57,7 @@ export default function RecipeCard({ item, isSelectable, isSelected, onSelectCha
 				{/* 선택 모드에서는 같은 자리에 선택 상자가 오므로 사진 장수는 감춘다 */}
 				{!isSelectable && <PhotoCount count={cachedItem.image_urls?.length || 0} />}
 				{thumbnail ? (
-					<Photo src={thumbnail} sizes="(max-width: 448px) 50vw, 220px" priority={priority} />
+					<Photo src={thumbnail} sizes="(max-width: 448px) 50vw, 220px" priority={priority} style={{ objectPosition: coverObjectPosition(displayItem.cover_focal) }} />
 				) : (
 					<span className="flex h-full w-full items-center justify-center">
 						<ChefHat className="h-6 w-6 text-ink-soft" aria-hidden />

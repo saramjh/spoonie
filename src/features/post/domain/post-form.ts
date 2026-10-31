@@ -3,6 +3,7 @@
  */
 
 import type { Item } from "@/types/item"
+import type { CoverFocal } from "@/features/recipe/domain/cover-focal"
 import type { PostDraft, PostSourceOrigin } from "../contracts"
 import { normalizeTags } from "@/shared/lib/topics"
 
@@ -59,7 +60,7 @@ export function postCreationOriginField(
 // items 표에 쓸 값
 export function buildPostItemPayload(
 	values: PostDraft,
-	ctx: { userId: string; imageUrls: string[]; thumbnailIndex: number; isEditMode: boolean; sourceRecipeId: string | null; sourceOrigin: PostSourceOrigin | null }
+	ctx: { userId: string; imageUrls: string[]; thumbnailIndex: number; coverFocal: CoverFocal; isEditMode: boolean; sourceRecipeId: string | null; sourceOrigin: PostSourceOrigin | null }
 ) {
 	return {
 		user_id: ctx.userId,
@@ -71,6 +72,7 @@ export function buildPostItemPayload(
 		cited_recipe_ids: values.cited_recipe_ids,
 		is_public: values.is_public,
 		thumbnail_index: ctx.thumbnailIndex,
+		cover_focal: ctx.coverFocal,
 		...postCreationOriginField(ctx.isEditMode, ctx.sourceRecipeId, ctx.sourceOrigin, values.cited_recipe_ids),
 	}
 }

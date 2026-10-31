@@ -1,6 +1,7 @@
 "use client"
 
 import { ChefHat } from "lucide-react"
+import { coverObjectPosition } from "@/features/recipe/domain/cover-focal"
 import { CheckBox, IntentLink, Magnet, Photo, RelativeTime } from "@/components/kit"
 import { formatCookingTime } from "@/features/recipe/domain/recipe-amount"
 import { useItemCache } from "@/hooks/useItemCache"
@@ -73,7 +74,7 @@ export default function RecipeListCard({
       {showColor && <Magnet color={displayItem.color_label} size="sm" className="absolute -left-2 top-1/2 z-20 -translate-y-1/2" />}
       <span className="relative block h-[72px] w-[72px] flex-shrink-0 overflow-hidden rounded-[2px] bg-muted">
         {thumbnail ? (
-          <Photo src={thumbnail} sizes="72px" priority={priority} />
+          <Photo src={thumbnail} sizes="72px" priority={priority} style={{ objectPosition: coverObjectPosition(displayItem.cover_focal) }} />
         ) : (
           <span className="flex h-full w-full items-center justify-center">
             <ChefHat className="h-6 w-6 text-ink-soft" aria-hidden />

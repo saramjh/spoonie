@@ -56,6 +56,7 @@ function setup(kind: "recipe" | "post", options: {
       ? [{ file: new File(["step"], "step.jpg", { type: "image/jpeg" }), preview: "blob:step" }]
       : [],
     thumbnailIndex: 0,
+    coverFocal: { x: 50, y: 50 },
     isEditMode: false,
     initialData: null,
     bucketId: "isolated-bucket",

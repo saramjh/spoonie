@@ -21,6 +21,7 @@ export function useEditInitialData(itemId: string) {
 			setInitialData({
 				...baseItem,
 				thumbnail_index: cachedItem.thumbnail_index,
+				cover_focal: cachedItem.cover_focal ?? baseItem.cover_focal,
 				image_urls: cachedItem.image_urls,
 				likes_count: cachedItem.likes_count,
 				is_liked: cachedItem.is_liked,
