@@ -1,17 +1,14 @@
 "use client"
 
 import useSWR from "swr"
-import { Button } from "@/components/ui/button"
-import { IntentLink, RelativeTime } from "@/components/kit"
+import { RelativeTime } from "@/components/kit"
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { fetchRecipeActivity } from "@/features/recipe/data/recipe-repository"
 import { markRemind } from "@/features/recipe/domain/recipe-activity"
-import { postSourceHref } from "@/features/post/domain/post-form"
-import { logEvent } from "@/shared/infra/events"
 
 // 레시피 상세의 사람별 한 줄 (docs/discovery-and-behavior.md)
 // - 작성자: 내 레시피가 다른 사람에게 실제로 어떻게 쓰였는지. 정보형 피드백이라 비교·순위는 보이지 않는다
-// - 다른 사람: 이 레시피로 요리를 시작했는데 아직 기록이 없으면, 다시 열었을 때 한 번 권한다 (알림으로 재촉하지 않는다)
+// - 다른 사람: 이 레시피로 요리를 시작했는데 아직 기록이 없으면, 다시 열었을 때 시작 이력을 알려준다 (사진 기록 CTA와 분리)
 // 로그인했을 때만 한 번 호출하고, 보여 줄 것이 없으면 아무것도 그리지 않는다.
 export function RecipeActivity({ recipeId, userId }: { recipeId: string; userId?: string | null }) {
 	const { data } = useSWR(userId ? `recipeActivity|${recipeId}|${userId}` : null, async () => {
@@ -42,16 +39,13 @@ export function RecipeActivity({ recipeId, userId }: { recipeId: string; userId?
 
 	if (!data.remind || !data.last_cook_start) return null
 	return (
-		<div className="mt-4 flex items-center justify-between gap-3 border-y border-border py-3">
-			<p className="min-w-0 text-label text-ink">
+		<div className="mt-4 border-y border-border py-3">
+			<p className="text-label text-ink">
 				이 레시피로 요리를 시작했어요
 				<span className="block text-meta text-ink-soft">
 					<RelativeTime iso={data.last_cook_start} />
 				</span>
 			</p>
-			<Button asChild size="sm" className="flex-shrink-0">
-				<IntentLink href={postSourceHref(recipeId, "cook_mode")} onClick={() => logEvent("recipeed_start", recipeId, "cook_mode")}>사진으로 남기기</IntentLink>
-			</Button>
 		</div>
 	)
 }

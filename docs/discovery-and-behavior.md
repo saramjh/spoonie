@@ -1,7 +1,7 @@
 # 발견과 행동 유도 규칙
 
 스푸니의 탐색 순위, 행동 계기(CTA), 작성자 피드백을 정하는 규칙. 코드가 이 문서를 따르고, 규칙을 바꾸면 이 문서부터 고친다.
-구현 위치: `supabase/discovery_and_behavior.sql`(get_explore, get_recipe_activity), `src/shared/lib/surface.ts`, `src/shared/infra/events.ts`, `src/components/recipe/RecipeActivity.tsx`, `src/hooks/useExplore.ts`.
+구현 위치: `supabase/discovery_and_behavior.sql`(get_explore, get_recipe_activity), `src/shared/lib/surface.ts`, `src/shared/infra/events.ts`, `src/features/recipe/components/RecipeActivity.tsx`, `src/hooks/useExplore.ts`.
 
 ## 헌법
 
@@ -62,8 +62,9 @@
 | 의도 | 근거 | 판정 |
 |---|---|---|
 | 레시피 화면·요리 모드에서 바로 기록, 출처 자동 연결 | 기본값이 행동을 결정 (Johnson & Goldstein, 2003). 행동은 동기·능력·계기가 겹칠 때 일어남 (Fogg, 2009) | 적용 |
+| 신규 공개 레시피의 초기 사진 기여 | 새 레시피를 발견한 시점에 참여 행동을 알려주되, 시간이 지난 레시피의 참여 경로는 닫지 않는다 | 적용: 게시 후 10일 동안 상세 상단 CTA 강조, 이후에는 "만들어 본 기록" 영역에 CTA 유지. 요리 시작 이력·작성자 계정과 무관 (10일은 초기 실험값) |
 | 요리 완료 화면에서 "사진으로 남기기" | 경험의 끝이 기억과 다음 행동을 좌우 (Kahneman 외, 1993, 피크엔드) | 적용 |
-| 요리를 시작했지만 기록이 없는 사람에게, 그 레시피를 다시 열었을 때 한 번 권함 | 구체적인 "언제·무엇을" 계기가 실행을 높임 (Gollwitzer, 1999) | 적용 (30일 안, 알림 없음) |
+| 요리를 시작했지만 기록이 없는 사람에게, 그 레시피를 다시 열었을 때 시작 이력을 알려줌 | 구체적인 "언제·무엇을" 계기가 실행을 높임 (Gollwitzer, 1999) | 적용 (30일 안, 정보형 안내만; 사진 기록 CTA의 표시 조건에는 사용하지 않음) |
 | 작성자에게 내 레시피가 실제로 쓰인 결과를 보여 줌 | 첫 기여에 반응을 받은 신규 사용자가 계속 기여함 (Burke, Marlow & Lento, 2009). 유능감을 주는 정보형 피드백은 내적 동기를 키움 (Ryan & Deci, 2000) | 적용 (본인만, 비교 없음) |
 | 인기 독점 완화 | 인기 수치를 보여 주면 불평등과 예측 불가능성이 커짐 (Salganik, Dodds & Watts, 2006). 누적 우위 (Merton, 1968). 추천의 인기 편향 (Abdollahpouri 외, 2019) | 적용: 최근 30일만, 작성자 상한 |
 | 새 작성자의 탐색 기회 | 노출의 공정성 (Singh & Joachims, 2018) | 적용: 새 레시피 1자리 |

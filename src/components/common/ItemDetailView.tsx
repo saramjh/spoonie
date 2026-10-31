@@ -18,6 +18,7 @@ import ImageCarousel from "@/components/common/ImageCarousel"
 import { publicContentTitle } from "@/features/discovery/domain/search-exposure"
 import RecipeContentView from "@/features/recipe/components/RecipeContentView"
 import { RecipeActivity } from "@/features/recipe/components/RecipeActivity"
+import { isWithinNewRecipePhotoPromptWindow } from "@/features/recipe/domain/recipe-activity"
 import RecipeCard from "@/features/recipe/components/RecipeCard"
 import { cn } from "@/lib/utils"
 import { formatCookingTime } from "@/features/recipe/domain/recipe-amount"
@@ -52,7 +53,6 @@ interface CurrentUser {
 	avatar_url: string | null
 	display_name: string
 }
-
 
 // cited_recipe_ids는 useCitedRecipes 훅에서 처리됨
 
@@ -138,6 +138,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	// 댓글 수는 mutation 직후 갱신되는 개별 캐시 값을 사용한다.
 	const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
 	const [isAuthLoading, setIsAuthLoading] = useState(true)
+	const [photoPromptState, setPhotoPromptState] = useState<{ recipeId: string | null; isRecent: boolean }>({ recipeId: null, isRecent: false })
 	const [showDeleteModal, setShowDeleteModal] = useState(false)
 	const [isDeleting, setIsDeleting] = useState(false)
 	
@@ -147,6 +148,8 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	const commentsRef = useRef<HTMLDivElement>(null)
 
 	const comments = useMemo(() => item?.comments_data || [], [item?.comments_data])
+	const photoPromptReady = !!stableItemId && photoPromptState.recipeId === stableItemId
+	const isRecentRecipeForPhotoPrompt = photoPromptReady && photoPromptState.isRecent
 	
 	// 로그인 사용자 기준으로 다시 받은 값(내 좋아요·저장, 최신 수)을 화면 캐시에 반영한다.
 	// 미리 만든 공개 페이지의 값으로 처음 채워진 캐시는 그대로 두면 바뀌지 않는다.
@@ -169,6 +172,20 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		// item의 사용자 기준 값이 바뀔 때만 (다시 받기 완료 시점)
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [stableItemId, item?.likes_count, item?.is_liked, item?.comments_count, (item as Item & { is_bookmarked?: boolean })?.is_bookmarked])
+
+	// 게시 시각은 hydration 이후 판정해 서버와 브라우저의 렌더 결과를 일치시킨다.
+	useEffect(() => {
+		const timer = window.setTimeout(() => {
+			setPhotoPromptState({
+				recipeId: stableItemId,
+				isRecent: Boolean(
+					isRecipe && item?.is_public === true && stableItemId &&
+					isWithinNewRecipePhotoPromptWindow(item.created_at, Date.now())
+				),
+			})
+		}, 0)
+		return () => window.clearTimeout(timer)
+	}, [isRecipe, stableItemId, item?.created_at, item?.is_public])
 
 	// 현재 사용자 조회 useEffect
 	useEffect(() => {
@@ -410,9 +427,11 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 						))}
 					</ul>
 				)}
-				<Button asChild variant="outline" className="mt-3 w-full">
-					<IntentLink href={requireLogin(postSourceHref(stableItemId, "recipe_detail"))} onClick={() => logEvent("recipeed_start", stableItemId, "recipe_detail")}>이 레시피로 만들었어요</IntentLink>
-				</Button>
+				{photoPromptReady && !isRecentRecipeForPhotoPrompt && (
+					<Button asChild variant="outline" className="mt-3 w-full">
+						<IntentLink href={requireLogin(postSourceHref(stableItemId, "recipe_detail"))} onClick={() => logEvent("recipeed_start", stableItemId, "recipe_detail")}>만들어 본 사진 남기기</IntentLink>
+					</Button>
+				)}
 
 				{relations.continued.length > 0 && (
 					<>
@@ -535,6 +554,15 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 									)}
 									<RecipeActivity recipeId={stableItemId} userId={currentUser?.id} />
 									{item.description && <p className="mt-4 whitespace-pre-wrap break-words text-body text-ink">{item.description}</p>}
+									{isRecentRecipeForPhotoPrompt && stableItemId && (
+										<div className="mt-4 border-y border-border py-3">
+											<p className="text-label font-semibold text-ink">이 레시피를 직접 만들어봤나요?</p>
+											<p className="mt-1 text-meta text-ink-soft">사진과 함께 나만의 요리 경험을 남겨보세요.</p>
+											<Button asChild variant="outline" className="mt-3 w-full">
+												<IntentLink href={requireLogin(postSourceHref(stableItemId, "recipe_detail"))} onClick={() => logEvent("recipeed_start", stableItemId, "recipe_detail")}>만들어 본 사진 남기기</IntentLink>
+											</Button>
+										</div>
+									)}
 								</>
 							) : (
 								<>
