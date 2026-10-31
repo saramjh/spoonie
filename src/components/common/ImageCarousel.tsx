@@ -17,6 +17,7 @@ interface ImageCarouselProps {
   onSingleClick?: () => void
   // 프레임 비율: 레시피 4:3, 레시피드 1:1 (DESIGN.md Interface Grammar)
   frame?: "recipe" | "recipeed"
+  fit?: "cover" | "contain"
 }
 
 export default function ImageCarousel({ 
@@ -27,6 +28,7 @@ export default function ImageCarousel({
   onDoubleClick, 
   onSingleClick,
   frame = "recipeed",
+  fit = "cover",
 }: ImageCarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel()
   const [selectedIndex, setSelectedIndex] = React.useState(0)
@@ -120,6 +122,7 @@ export default function ImageCarousel({
             {(discoverAll || loadedIndexes.has(index)) && (
               <Photo
                 src={src}
+                fit={fit}
                 alt={`${alt} ${index + 1}`}
                 sizes="(max-width: 448px) 100vw, 448px"
                 priority={priority && index === 0}

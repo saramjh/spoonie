@@ -503,6 +503,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 									images={orderedImages}
 									alt={isRecipe ? item.title || "레시피 사진" : `${publicContentTitle(item)} — ${authorName}님의 레시피드 사진`}
 									frame={isRecipe ? "recipe" : "recipeed"}
+									fit={isRecipe ? "contain" : "cover"}
 									discoverAll
 									priority
 									onDoubleClick={handleDoubleTapLike}
