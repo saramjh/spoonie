@@ -23,12 +23,12 @@ const copy = {
     sourceLabel: "옮길 Instagram 게시물 · 릴스 주소",
     sourceHelp: "한 줄에 하나씩 1~5개. 지금은 Instagram 게시물과 릴스부터 받습니다.",
     sourcePlaceholder: "https://www.instagram.com/p/.../\nhttps://www.instagram.com/reel/.../",
-    notePlaceholder: "예: 이 세 게시물을 대표 Recipe로 먼저 정리하고 싶습니다.",
+    notePlaceholder: "예: 이 세 게시물 중 첫 번째 레시피부터 정리해 보고 싶습니다.",
     sourcePath: "/partners/creators" as const,
     entry: "partner_creator" as PartnerEntrySource,
   },
   brand: {
-    sourceLabel: "초기 셋업에 쓸 제품 활용 자료 주소",
+    sourceLabel: "내 제품 활용 자료 주소",
     sourceHelp:
       "자사몰 레시피·제품 활용 페이지·Instagram 게시물/릴스 등 1~5개를 한 줄에 하나씩 입력해 주세요.",
     sourcePlaceholder: "https://brand.example/recipes/...\nhttps://www.instagram.com/p/.../",
@@ -96,7 +96,7 @@ export default function PartnerOnboardingForm({ actorType, initialRequests }: Pr
     }
 
     if (!rightsConfirmed) {
-      setError("제출한 자료를 Spoonie 초기 셋업에 사용할 권한을 확인해 주세요.")
+      setError("내가 제출한 자료를 비공개 Recipe 초안에 사용할 권한을 확인해 주세요.")
       setState("error")
       return
     }
@@ -122,7 +122,7 @@ export default function PartnerOnboardingForm({ actorType, initialRequests }: Pr
         | null
 
       if (!response.ok) {
-        throw new Error(result?.error || "초기 셋업 요청을 접수하지 못했습니다.")
+        throw new Error(result?.error || "내 콘텐츠 가져오기 요청을 접수하지 못했습니다.")
       }
 
       ;(window as GtagWindow).gtag?.("event", "partner_action", {
@@ -139,7 +139,7 @@ export default function PartnerOnboardingForm({ actorType, initialRequests }: Pr
       setError(
         submitError instanceof Error
           ? submitError.message
-          : "초기 셋업 요청을 접수하지 못했습니다.",
+          : "내 콘텐츠 가져오기 요청을 접수하지 못했습니다.",
       )
       setState("error")
     }
@@ -231,7 +231,7 @@ export default function PartnerOnboardingForm({ actorType, initialRequests }: Pr
       {requests.length > 0 && (
         <section className="mt-6 border-t border-border pt-4" aria-labelledby={actorType + "-setup-status"}>
           <h3 id={actorType + "-setup-status"} className="text-label font-medium text-ink">
-            내 초기 셋업
+            내 콘텐츠 가져오기 내역
           </h3>
           <div className="mt-2">
             {requests.flatMap((request) =>
