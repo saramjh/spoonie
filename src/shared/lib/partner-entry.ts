@@ -20,6 +20,28 @@ export const partnerEntryCopy: Record<
 	},
 }
 
+export function getPartnerAuthCopy(next: string, source: PartnerEntrySource | null) {
+	if (!source) return null
+
+	const route = safeNextPath(next).split(/[?#]/, 1)[0]
+	if (route === "/recipes/new") {
+		const recipe = source === "partner_creator" ? "Recipe" : "활용 Recipe"
+		return {
+			signupHint: `계정을 만든 뒤 내 ${recipe} 작성 화면으로 이동합니다. 기존 콘텐츠 제출은 선택 사항입니다.`,
+			loginHint: `로그인 후 내 ${recipe} 작성 화면으로 이동합니다.`,
+			emailSentBody: `메일의 인증 링크를 누르면 내 ${recipe} 작성 화면으로 이동할 수 있습니다.`,
+		}
+	}
+
+	return {
+		...partnerEntryCopy[source],
+		emailSentBody:
+			source === "partner_creator"
+				? "메일의 인증 링크를 누르면 크리에이터 초대 페이지로 돌아와 기존 콘텐츠를 제출할 수 있습니다."
+				: "메일의 인증 링크를 누르면 브랜드 초대 페이지로 돌아와 기존 제품 활용 자료를 제출할 수 있습니다.",
+	}
+}
+
 export function parsePartnerEntrySource(raw: string | null | undefined): PartnerEntrySource | null {
 	return raw === "partner_creator" || raw === "partner_brand" ? raw : null
 }

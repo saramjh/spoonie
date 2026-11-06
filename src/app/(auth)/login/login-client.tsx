@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useHydrationReady } from "@/hooks/useHydrationReady"
 import {
 	authEntryHref,
-	partnerEntryCopy,
+	getPartnerAuthCopy,
 	type PartnerEntrySource,
 	withPartnerEntry,
 } from "@/shared/lib/partner-entry"
@@ -39,7 +39,7 @@ export default function LoginClient({ next, partnerSource }: Props) {
 	const isHydrated = useHydrationReady()
 	const { toast } = useToast()
 	const [isRedirecting, setIsRedirecting] = useState(false)
-	const partnerCopy = partnerSource ? partnerEntryCopy[partnerSource] : null
+	const partnerCopy = getPartnerAuthCopy(next, partnerSource)
 	const signupHref = authEntryHref("/signup", next, partnerSource)
 	const forgotHref = authEntryHref("/forgot-password", next, partnerSource)
 

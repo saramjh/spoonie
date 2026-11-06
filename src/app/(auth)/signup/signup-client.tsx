@@ -20,7 +20,7 @@ import { logEvent } from "@/shared/infra/events"
 import {
 	authCallbackUrl,
 	authEntryHref,
-	partnerEntryCopy,
+	getPartnerAuthCopy,
 	type PartnerEntrySource,
 	withPartnerEntry,
 } from "@/shared/lib/partner-entry"
@@ -47,7 +47,7 @@ export default function SignupClient({ next, partnerSource }: Props) {
 	const supabase = createSupabaseBrowserClient()
 	const isHydrated = useHydrationReady()
 	const { toast } = useToast()
-	const partnerCopy = partnerSource ? partnerEntryCopy[partnerSource] : null
+	const partnerCopy = getPartnerAuthCopy(next, partnerSource)
 	const loginHref = authEntryHref("/login", next, partnerSource)
 	const [isRedirecting, setIsRedirecting] = useState(false)
 	const [emailSent, setEmailSent] = useState(false)
@@ -87,11 +87,7 @@ export default function SignupClient({ next, partnerSource }: Props) {
 		setEmailSent(true)
 	}
 
-	const emailSentBody = partnerSource
-		? partnerSource === "partner_creator"
-			? "메일의 인증 링크를 누르면 크리에이터 초대 페이지로 돌아와 기존 콘텐츠를 제출할 수 있습니다."
-			: "메일의 인증 링크를 누르면 브랜드 초대 페이지로 돌아와 기존 제품 활용 자료를 제출할 수 있습니다."
-		: "메일의 인증 링크를 누르면 가입이 완료됩니다."
+	const emailSentBody = partnerCopy?.emailSentBody ?? "메일의 인증 링크를 누르면 가입이 완료됩니다."
 
 	return (
 		<div className="min-h-screen flex flex-col items-center justify-start p-4">

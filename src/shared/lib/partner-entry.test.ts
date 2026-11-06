@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
 	authCallbackUrl,
 	authEntryHref,
+	getPartnerAuthCopy,
 	parsePartnerEntrySource,
 	resolveAuthEntryContext,
 	withPartnerEntry,
@@ -64,6 +65,32 @@ describe("partner entry context", () => {
 		expect(authCallbackUrl("https://spoonie.kr", brandNext, "partner_brand")).toBe(
 			"https://spoonie.kr/auth/callback?next=%2Fpartners%2Fbrands%3Fsetup%3D1%23setup&entry=partner_brand",
 		)
+	})
+
+	it("직접 Recipe 작성 선택은 가입·로그인·인증 안내도 작성 화면을 가리킨다", () => {
+		const creator = getPartnerAuthCopy("/recipes/new", "partner_creator")
+		expect(creator?.signupHint).toContain("Recipe 작성")
+		expect(creator?.loginHint).toContain("Recipe 작성")
+		expect(creator?.emailSentBody).toContain("Recipe 작성")
+		expect(creator?.signupHint).not.toContain("Instagram")
+		expect(creator?.emailSentBody).not.toContain("초대 페이지")
+
+		const brand = getPartnerAuthCopy("/recipes/new?from=promotion", "partner_brand")
+		expect(brand?.signupHint).toContain("활용 Recipe 작성")
+		expect(brand?.loginHint).toContain("활용 Recipe 작성")
+		expect(brand?.emailSentBody).toContain("활용 Recipe 작성")
+	})
+
+	it("기존 콘텐츠 주소 제출을 선택한 경우에만 안내 페이지 재방문을 설명한다", () => {
+		const creator = getPartnerAuthCopy("/partners/creators?setup=1#setup", "partner_creator")
+		expect(creator?.signupHint).toContain("Instagram")
+		expect(creator?.emailSentBody).toContain("크리에이터 초대 페이지")
+		expect(creator?.loginHint).toContain("초대 페이지")
+
+		const brand = getPartnerAuthCopy("/partners/brands?setup=1#setup", "partner_brand")
+		expect(brand?.signupHint).toContain("제품 활용")
+		expect(brand?.emailSentBody).toContain("브랜드 초대 페이지")
+		expect(getPartnerAuthCopy("/recipes/new", null)).toBeNull()
 	})
 
 	it("이메일·OAuth callback에도 next와 source를 함께 보존한다", () => {
