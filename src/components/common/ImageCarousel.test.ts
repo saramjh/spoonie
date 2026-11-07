@@ -17,10 +17,11 @@ it("uses saved focal coordinates for feed crop without altering recipe detail co
 
 it("keeps a recipe detail image intact when explicitly requesting contain, without changing the default feed crop", () => {
   const src = "https://example.com/food.jpg"
-  const detail = renderToStaticMarkup(createElement(ImageCarousel, { images: [src], alt: "recipe", frame: "recipe", fit: "contain" }))
+  const detail = renderToStaticMarkup(createElement(ImageCarousel, { images: [src], alt: "recipe", frame: "recipe-detail", fit: "contain" }))
   expect(detail).toContain("object-contain")
-  expect(detail).toContain("aspect-[4/3]")
+  expect(detail).toContain("aspect-[3/2]")
   const feed = renderToStaticMarkup(createElement(ImageCarousel, { images: [src], alt: "recipe", frame: "recipe" }))
   expect(feed).toContain("object-cover")
+  expect(feed).toContain("aspect-[4/3]")
   expect(feed).not.toContain("object-contain")
 })

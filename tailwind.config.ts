@@ -15,7 +15,7 @@ const config: Config = {
 			// 글자 역할 (DESIGN.md Typography). 크기 값이 아니라 역할 이름으로 쓴다. 기본 굵기·줄 간격·자간이 함께 온다.
 			// display/title은 700, heading은 600으로 정해져 있어 따로 font-bold를 붙이지 않는다.
 			fontSize: {
-				display: ["1.625rem", { lineHeight: "1.25", letterSpacing: "-0.02em", fontWeight: "700" }],
+				display: ["1.5625rem", { lineHeight: "1.25", letterSpacing: "-0.02em", fontWeight: "700" }],
 				// 요리 모드의 지금 단계: 팔 길이 거리에서 읽는 큰 글자, 굵기는 본문 쪽
 				step: ["1.625rem", { lineHeight: "1.55", fontWeight: "500" }],
 				title: ["1.25rem", { lineHeight: "1.35", letterSpacing: "-0.015em", fontWeight: "700" }],
@@ -39,6 +39,7 @@ const config: Config = {
 					soft: "rgb(var(--ink-soft) / <alpha-value>)",
 				},
 				"orange-ink": "rgb(var(--orange-ink) / <alpha-value>)",
+				"paper-tint": "rgb(var(--paper-tint) / <alpha-value>)",
 				like: "rgb(var(--like) / <alpha-value>)",
 				"changed-mark": "rgb(var(--changed-mark) / <alpha-value>)",
 
@@ -47,9 +48,9 @@ const config: Config = {
 				border: "rgb(var(--rule-line) / <alpha-value>)",
 				input: "rgb(var(--rule-line) / <alpha-value>)",
 				ring: "rgb(var(--orange-ink) / <alpha-value>)",
-				// 주요 동작 면은 흑연에 흰 글자. 주황(brand)은 로고와 작은 신호에만 (DESIGN.md Colors)
+				// 최신 목업: 주요 동작 면은 테라코타, 텍스트는 paper 색 (DESIGN.md Colors)
 				primary: {
-					DEFAULT: "rgb(var(--ink) / <alpha-value>)",
+					DEFAULT: "rgb(var(--orange-ink) / <alpha-value>)",
 					foreground: "rgb(var(--paper) / <alpha-value>)",
 				},
 				brand: "rgb(var(--brand-orange) / <alpha-value>)",

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react"
 import { useRouter } from "@/shared/lib/navigation"
-import { ArrowLeft, MessageCircle, Share2, MoreVertical, Edit, Trash2, Heart } from "lucide-react"
+import { ArrowLeft, MessageCircle, Share2, MoreVertical, MoreHorizontal, Edit, Trash2, Heart, Clock3, Utensils, CookingPot } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 
@@ -472,28 +472,28 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	const showDetailNavigation = !recipeAdjusting
 
 	return (
-		<div className={cn("flex flex-col h-full relative", showDetailNavigation && "pb-20", isRecipe && "bg-[#f7f2ec]")}>
+		<div className={cn("flex flex-col h-full relative", showDetailNavigation && "pb-20", isRecipe && "bg-paper")}>
 			<article>
-				<header className="sticky top-0 z-20 flex h-14 items-center gap-1 border-b border-border bg-paper px-1">
+				<header data-design-slot={isRecipe ? "header" : undefined} className={cn("sticky top-0 z-20 flex h-14 items-center gap-1 border-b border-border bg-paper px-1", isRecipe && "h-[54px] px-3")}>
 					<Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => router.back()} aria-label="뒤로 가기">
 						<ArrowLeft className="h-6 w-6" aria-hidden />
 					</Button>
 
-					<IntentLink href={`/profile/${item.user_public_id || item.user_id}`} className="flex min-w-0 flex-1 items-center gap-2.5">
-						<Avatar className="h-8 w-8">
+					<IntentLink href={`/profile/${item.user_public_id || item.user_id}`} className={cn("flex min-w-0 flex-1 items-center gap-2.5", isRecipe && "justify-center gap-0 text-[17px]")}>
+						{!isRecipe && <Avatar className="h-8 w-8">
 							<AvatarImage src={item.avatar_url || undefined} alt="" />
 							<AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
-						</Avatar>
+						</Avatar>}
 						<span className="truncate font-semibold text-ink">{authorName}</span>
-						<span className="flex-shrink-0 text-meta text-ink-soft">{isRecipe ? "레시피" : "레시피드"}</span>
+						{!isRecipe && <span className="flex-shrink-0 text-meta text-ink-soft">레시피드</span>}
 					</IntentLink>
 
-					<div className="flex items-center pr-1">
+					<div className={cn("flex items-center pr-1", isRecipe && "w-11 pr-0")}>
 						{isOwnItem ? (
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
 									<Button variant="ghost" size="icon" className="h-11 w-11" aria-label="더보기">
-										<MoreVertical className="h-5 w-5" aria-hidden />
+										{isRecipe ? <MoreHorizontal className="h-5 w-5" aria-hidden /> : <MoreVertical className="h-5 w-5" aria-hidden />}
 									</Button>
 								</DropdownMenuTrigger>
 								<DropdownMenuContent align="end" className="min-w-[8rem]">
@@ -508,26 +508,36 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 									</DropdownMenuItem>
 								</DropdownMenuContent>
 							</DropdownMenu>
+						) : isRecipe ? (
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button variant="ghost" size="icon" className="h-11 w-11" aria-label="더보기"><MoreHorizontal className="h-5 w-5" aria-hidden /></Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent align="end" className="min-w-[8rem]">
+									{currentUser && <div className="p-2"><FollowButton userId={item.user_id} initialIsFollowing={item.is_following} eventOrigin="detail" /></div>}
+									<DropdownMenuItem onClick={handleShare} className="min-h-11 cursor-pointer gap-2"><Share2 className="h-4 w-4" aria-hidden />공유</DropdownMenuItem>
+								</DropdownMenuContent>
+							</DropdownMenu>
 						) : (
 							currentUser && <FollowButton userId={item.user_id} initialIsFollowing={item.is_following} eventOrigin="detail" />
 						)}
 					</div>
 				</header>
 
-				<div className="flex-1 px-3 pb-8 pt-3">
+				<div className={cn("flex-1 px-3 pb-8 pt-3", isRecipe && "px-0 pt-0")}>
 					{renderCitedPeek()}
 
-					<Sheet className="relative z-10">
+					<Sheet className={cn("relative z-10", isRecipe && "rounded-none shadow-none")}>
 						{/* 레시피드: 어떤 레시피에서 나왔는지가 먼저 (성장 고리의 연결점) */}
 						{!isRecipe && !citedRecipesLoading && <SourceRow recipes={citedRecipes} creationOrigin={item.creation_origin} className="border-t-0" />}
 
 						{orderedImages.length > 0 && (
-							<div className="relative overflow-hidden rounded-t-[3px]">
+							<div data-design-slot={isRecipe ? "hero" : undefined} className={cn("relative overflow-hidden rounded-t-[3px]", isRecipe && "mx-3 rounded-b-xl rounded-t-none")}>
 								<ImageCarousel
 									images={orderedImages}
 									alt={isRecipe ? item.title || "레시피 사진" : `${publicContentTitle(item)} — ${authorName}님의 레시피드 사진`}
-									frame={isRecipe ? "recipe" : "recipeed"}
-									fit={isRecipe ? "contain" : "cover"}
+									frame={isRecipe ? "recipe-detail" : "recipeed"}
+									fit="cover"
 									discoverAll
 									priority
 									onDoubleClick={handleDoubleTapLike}
@@ -540,16 +550,14 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 							</div>
 						)}
 
-						<div className="px-4 pb-1 pt-6">
+						<div data-design-slot={isRecipe ? "summary" : undefined} className={cn("px-4 pb-1 pt-6", isRecipe && "pb-0 pt-4")}>
 							{isRecipe ? (
 								<>
-									{item.title && <h1 className="text-display text-ink [text-wrap:balance]">{item.title}</h1>}
-									<p className="mt-2 text-label text-ink-soft">
-										{[item.servings ? `${item.servings}인분` : null, cookingTime ? `조리 ${cookingTime}` : null, ingredientCount ? `재료 ${ingredientCount}가지` : null]
-											.filter(Boolean)
-											.join(" · ")}
-										{" · "}
-										<RelativeTime iso={item.created_at} />
+									{item.title && <h1 data-design-slot="title" className="text-display text-ink [text-wrap:balance]">{item.title}</h1>}
+									<p className="mt-[10px] flex flex-wrap items-center gap-[10px] text-[14px] leading-[22px] text-ink-soft">
+										{item.servings ? <span className="inline-flex items-center gap-1"><Utensils className="h-[15px] w-[15px]" aria-hidden />{item.servings}인분</span> : null}
+										{cookingTime ? <span className="inline-flex items-center gap-1"><Clock3 className="h-[15px] w-[15px]" aria-hidden />{cookingTime}</span> : null}
+										{ingredientCount ? <span className="inline-flex items-center gap-1"><CookingPot className="h-[15px] w-[15px]" aria-hidden />재료 {ingredientCount}가지</span> : null}
 									</p>
 									{/* 다른 사람이 실제로 만든 기록: 누르면 아래 '만들어 본 기록'으로 */}
 									{(madeByOthers.count > 0 || continuedByOthers > 0) && (
@@ -558,7 +566,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 										</a>
 									)}
 									<RecipeActivity recipeId={stableItemId} userId={currentUser?.id} />
-									{editorial.body && <p className="mt-4 whitespace-pre-wrap break-words text-body text-ink"><LinkifiedText text={editorial.body} /></p>}
+									{editorial.body && <p className="mt-[10px] whitespace-pre-wrap break-words text-body text-ink"><LinkifiedText text={editorial.body} /></p>}
 									{isRecentRecipeForPhotoPrompt && stableItemId && (
 										<div className="mt-4 border-y border-border py-3">
 											<p className="text-label font-semibold text-ink">이 레시피를 직접 만들어봤나요?</p>
@@ -578,10 +586,10 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 							)}
 
 							{item.tags && item.tags.length > 0 && (
-								<ul className="mt-4 flex flex-wrap gap-x-3 gap-y-1" aria-label="태그">
+								<ul data-design-slot={isRecipe ? "tags" : undefined} className={cn("mt-4 flex flex-wrap gap-x-3 gap-y-1", isRecipe && "mb-3 mt-3 gap-2")} aria-label="태그">
 									{item.tags.map((tag, idx) => (
 										<li key={idx}>
-											<IntentLink href={topicHref(tag)} className="inline-flex min-h-8 items-center text-label text-ink-soft hover:text-ink">#{tag}</IntentLink>
+											<IntentLink href={topicHref(tag)} className={cn("inline-flex min-h-8 items-center text-label text-ink-soft hover:text-ink", isRecipe && "rounded-[7px] bg-paper-tint px-[9px] py-[5px] text-meta")}>#{tag}</IntentLink>
 										</li>
 									))}
 								</ul>
@@ -594,7 +602,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 							)}
 						</div>
 
-						<div className="flex items-center justify-between px-2 py-1">
+						<div data-design-slot={isRecipe ? "social" : undefined} className={cn("flex items-center justify-between px-2 py-1", isRecipe && "mx-4 px-0 py-2")}>
 							<div className="flex items-center gap-1 text-ink-soft">
 								<LikeButton
 									itemId={stableItemId}
@@ -603,11 +611,12 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 									currentUserId={currentUser?.id}
 									initialLikesCount={cachedItem?.likes_count ?? item?.likes_count ?? 0}
 									initialHasLiked={cachedItem?.is_liked ?? item?.is_liked ?? false}
+									showCount={!isRecipe}
 									cachedItem={cachedItem}
 								/>
 								<a href="#comments" className="flex h-11 items-center gap-1.5 px-2" aria-label={`댓글 ${cachedItem?.comments_count || 0}개`}>
 									<MessageCircle className="h-5 w-5" aria-hidden />
-									<span className="text-label font-medium tabular-nums">{cachedItem?.comments_count || 0}</span>
+									{!isRecipe && <span className="text-label font-medium tabular-nums">{cachedItem?.comments_count || 0}</span>}
 								</a>
 							</div>
 							<div className="flex items-center">

@@ -163,13 +163,13 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 	return (
 		<>
 			{!adjusting && (
-				<div role="tablist" aria-label="레시피 내용" className="mx-4 mt-5 grid grid-cols-2 border-b border-[#d7c8b8]">
+				<div role="tablist" aria-label="레시피 내용" className="mx-[14px] mt-[18px] grid h-[53px] grid-cols-2 border-b border-border pt-[10px]">
 					{(["ingredients", "method"] as const).map((tab) => (
 						<button key={tab} id={"recipe-tab-" + tab} role="tab" type="button"
 							aria-controls={"recipe-panel-" + tab} aria-selected={activeTab === tab}
 							tabIndex={activeTab === tab ? 0 : -1} onClick={() => chooseTab(tab)}
 							onKeyDown={onTabKeyDown}
-							className={cn("min-h-12 border-b-2 px-2 text-body font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#905238]", activeTab === tab ? "border-[#98563c] text-[#603d2d]" : "border-transparent text-ink-soft hover:text-ink")}>
+							className={cn("min-h-[43px] border-b-[3px] px-2 text-label font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", activeTab === tab ? "border-primary bg-paper-tint text-orange-ink" : "border-transparent text-ink-soft hover:text-ink")}>
 							{tab === "ingredients" ? "재료" : "만드는 법"}
 						</button>
 					))}
@@ -177,23 +177,22 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 			)}
 			<section id="recipe-panel-ingredients" role="tabpanel" aria-labelledby="recipe-tab-ingredients"
 				hidden={!adjusting && activeTab !== "ingredients"}
-				className="border-t border-border px-4 pb-5 pt-5">
-				<div className="flex items-center justify-between gap-3">
-					<SectionHeading id="ingredients-heading" count={ingredients.length}>
-						재료</SectionHeading>
+				className="px-[14px] pb-6 pt-[18px]">
+				<div data-design-slot="ingredients" className="flex h-[42px] items-center justify-between gap-3">
+					<h2 id="ingredients-heading" className="text-heading font-semibold text-ink">재료 {ingredients.length}가지</h2>
 					{adjusting ? (
 						<button type="button" onClick={cancelAdjusting} className="min-h-11 px-3 text-label font-medium underline underline-offset-4">취소</button>
-					) : <div className="flex items-center rounded-lg border border-border" role="group" aria-label="인분 조절">
+					) : <div className="flex items-center rounded-[10px] border border-border" role="group" aria-label="인분 조절">
 						<button
 							type="button"
 							onClick={() => changeServings((reference ? Math.round(baseServings * scale) : servings) - 1)}
 							disabled={adjusting || (!reference && servings <= 1)}
 							aria-label="1인분 줄이기"
-							className="flex h-11 w-11 items-center justify-center text-ink disabled:text-ink-soft/40"
+							className="flex h-10 w-10 items-center justify-center text-ink disabled:text-ink-soft/40"
 						>
 							<Minus className="h-4 w-4" aria-hidden />
 						</button>
-						<output aria-live="polite" className="min-w-[4.5rem] text-center text-body font-semibold tabular-nums text-ink">
+						<output aria-live="polite" className="min-w-[55px] text-center text-label tabular-nums text-ink">
 							{reference ? "직접 맞춤" : `${servings}인분`}
 						</output>
 						<button
@@ -201,29 +200,14 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 							onClick={() => changeServings((reference ? Math.round(baseServings * scale) : servings) + 1)}
 							disabled={adjusting || (!reference && servings >= maxServings)}
 							aria-label="1인분 늘리기"
-							className="flex h-11 w-11 items-center justify-center text-ink disabled:text-ink-soft/40"
+							className="flex h-10 w-10 items-center justify-center text-ink disabled:text-ink-soft/40"
 						>
 							<Plus className="h-4 w-4" aria-hidden />
 						</button>
 					</div>}
 				</div>
 
-				{adjustableCount > 0 && ingredients.length > 1 && !adjusting && (
-					<div className="mt-3">
-						<button
-							type="button"
-							onClick={beginAdjusting}
-							className="flex min-h-[4.25rem] w-full items-center gap-3 rounded-lg border border-border bg-paper px-3 py-2.5 text-left transition-colors hover:bg-paper-tint active:bg-paper-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-						>
-							<Scale className="h-5 w-5 flex-shrink-0 text-ink" aria-hidden />
-							<span className="min-w-0 flex-1">
-								<span className="block text-label font-semibold text-ink">보유량으로 재료량 맞추기</span>
-								<span className="mt-1 block text-label leading-5 text-ink-soft"><span className="block">한 재료의 양만 입력하면</span><span className="block">나머지도 자동 계산돼요.</span></span>
-							</span>
-							<ChevronRight className="h-5 w-5 flex-shrink-0 text-ink-soft" aria-hidden />
-						</button>
-					</div>
-				)}
+
 				{adjusting && (
 					<p className="mt-3 text-label text-ink-soft">재료 하나를 선택하고, 지금 가진 양을 입력하세요. 나머지 재료는 자동으로 계산돼요.</p>
 				)}
@@ -238,14 +222,6 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 					</p>
 				)}
 
-				{scaled.length > 0 && (
-					<div className="mt-2 flex min-w-0 items-start gap-1.5">
-						<p className="min-w-0 flex-1 text-meta text-ink-soft">양념·조리 시간은 재료량과 같은 비율로 늘지 않을 수 있어요.</p>
-						<Link href="/magazine" aria-label="인분 늘리기 안내" title="인분 늘리기 안내" className="-my-2 flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-md text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-							<CircleHelp className="h-4 w-4" aria-hidden />
-						</Link>
-					</div>
-				)}
 
 				{!adjusting && scaled.length > 0 && (
 					<div className="mt-3 flex items-center justify-between gap-2 text-meta text-ink-soft">
@@ -332,12 +308,37 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 					<p className="mt-3 text-ink-soft">등록된 재료가 없어요.</p>
 				)}
 
+				{adjustableCount > 0 && ingredients.length > 1 && !adjusting && (
+					<div className="mt-3">
+						<button
+							type="button"
+							onClick={beginAdjusting}
+							className="flex min-h-[4.25rem] w-full items-center gap-3 rounded-lg border border-border bg-paper px-3 py-2.5 text-left transition-colors hover:bg-paper-tint active:bg-paper-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+						>
+							<Scale className="h-5 w-5 flex-shrink-0 text-ink" aria-hidden />
+							<span className="min-w-0 flex-1">
+								<span className="block text-label font-semibold text-ink">가진 재료 양에 맞추기</span>
+								<span className="mt-1 block text-label leading-5 text-ink-soft"><span className="block">한 재료의 양만 입력하면</span><span className="block">나머지도 자동 계산돼요.</span></span>
+							</span>
+							<ChevronRight className="h-5 w-5 flex-shrink-0 text-ink-soft" aria-hidden />
+						</button>
+					</div>
+				)}
+				{scaled.length > 0 && (
+					<div className="mt-2 flex min-w-0 items-start gap-1.5">
+						<p className="min-w-0 flex-1 text-meta text-ink-soft">양념·조리 시간은 재료량과 같은 비율로 늘지 않을 수 있어요.</p>
+						<Link href="/magazine" aria-label="인분 늘리기 안내" title="인분 늘리기 안내" className="-my-2 flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-md text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+							<CircleHelp className="h-4 w-4" aria-hidden />
+						</Link>
+					</div>
+				)}
+
 
 			</section>
 
 			<section id="recipe-panel-method" role="tabpanel" aria-labelledby="recipe-tab-method"
 				hidden={adjusting || activeTab !== "method"}
-				className="px-4 pb-6 pt-5">
+				className="px-[14px] pb-6 pt-[18px]">
 				<div className="flex items-center justify-between gap-3">
 					<SectionHeading id="steps-heading">
 						만드는 법 {steps.length > 0 && <span className="font-medium tabular-nums text-ink-soft">{steps.length}단계</span>}
@@ -393,17 +394,17 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 						<button type="button" onClick={resetScale} className="flex h-12 items-center gap-1 rounded-md border border-border px-3 text-label text-ink">
 							<RotateCcw className="h-4 w-4" aria-hidden />원래대로
 						</button>
-						<button type="button" disabled={invalidAmount} onClick={finishAdjusting} className="min-h-12 flex-1 rounded-md bg-[#98563c] px-3 text-label font-semibold text-white disabled:opacity-50">이 양 적용</button>
+						<button type="button" disabled={invalidAmount} onClick={finishAdjusting} className="min-h-12 flex-1 rounded-md bg-primary px-3 text-label font-semibold text-primary-foreground disabled:opacity-50">이 양 적용</button>
 					</div>
 				</>
 			)}
 			{!adjusting && steps.length > 0 && (
 				<>
 					<div className="h-24" aria-hidden="true" />
-					<div className="fixed inset-x-0 z-[45] mx-auto w-full max-w-md border-t border-[#e6d9cd] bg-[#fffaf4] px-4 py-2 shadow-[0_-5px_18px_rgba(66,46,30,0.06)]"
+					<div className="fixed inset-x-0 z-[45] mx-auto flex h-[71px] w-full max-w-md items-center border-t border-border bg-paper px-[14px] py-[10px]"
 						style={{ bottom: "calc(4rem + env(safe-area-inset-bottom))" }}>
 						<button type="button" aria-label="요리 시작" onClick={() => setStepModeAt(firstUndone(steps.length, doneSteps))}
-							className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#98563c] px-4 text-heading font-semibold text-white transition-colors hover:bg-[#7c422c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#98563c]">
+							className="flex min-h-[50px] w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-body font-semibold text-primary-foreground transition-colors hover:bg-orange-ink/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ring">
 							<Play className="h-5 w-5 fill-current" aria-hidden /> 요리 시작
 						</button>
 					</div>

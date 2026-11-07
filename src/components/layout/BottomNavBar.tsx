@@ -22,7 +22,7 @@ export default function BottomNavBar() {
 	}
 
 	const getLinkClass = (href: string, disabled = false) => {
-		const isActive = pathname === href || (href.startsWith("/profile") && pathname.startsWith("/profile"))
+		const isActive = pathname === href || (href === "/recipes" && pathname.startsWith("/recipes/")) || (href.startsWith("/profile") && pathname.startsWith("/profile"))
 		let classes = `flex min-w-14 flex-col items-center gap-1 py-1 ${isActive ? "text-ink font-semibold" : "text-ink-soft"}`
 		if (disabled) {
 			classes += " cursor-not-allowed opacity-50"
@@ -56,6 +56,7 @@ export default function BottomNavBar() {
 						<AvatarImage src={profile.avatar_url || ""} alt={profile.username || "User"} />
 						<AvatarFallback className="text-ink">{profile.username?.charAt(0) || "S"}</AvatarFallback>
 					</Avatar>
+					<span className="text-meta font-medium">프로필</span>
 				</IntentLink>
 			)
 		}
@@ -76,7 +77,7 @@ export default function BottomNavBar() {
 		<>
 
 			<nav aria-label="주요 메뉴" className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-md border-t border-border bg-paper pb-[env(safe-area-inset-bottom)]">
-				<div className="flex justify-around items-center h-16">
+				<div className="flex h-[63px] items-center justify-around">
 					{/* 1. 홈 */}
 					<Link
 						href="/"
@@ -98,10 +99,11 @@ export default function BottomNavBar() {
 					</Link>
 
 					{/* 3. 중앙 생성 버튼 (+) */}
-					<button onClick={handleCreateButtonClick} aria-label="새 글 쓰기" className="flex items-center justify-center">
-						<span className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary text-primary-foreground active:bg-primary/85">
-							<Plus className="h-6 w-6" strokeWidth={2.5} aria-hidden />
+					<button onClick={handleCreateButtonClick} aria-label="새 글 쓰기" className="flex min-w-14 flex-col items-center justify-center gap-1 text-ink-soft">
+						<span className="flex h-[35px] w-10 items-center justify-center rounded-[11px] bg-paper-tint text-ink active:bg-paper-tint/85">
+							<Plus className="h-6 w-6" strokeWidth={1.7} aria-hidden />
 						</span>
+						<span className="text-meta font-medium">작성</span>
 					</button>
 
 					{/* 4. 검색 */}
