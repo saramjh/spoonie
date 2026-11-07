@@ -1,10 +1,22 @@
 "use client"
 
 import { useState } from "react"
-import type { ReactNode } from "react"
+import type { ReactNode, KeyboardEvent } from "react"
 import { cn } from "@/lib/utils"
 
-// 보기 전환 탭: 대상 종류나 범위로 나눈다. 흑연 2px 밑줄 하나 (DESIGN.md Interface Grammar 2)
+// Shared tab behavior for Recipebook, search and profile. Keep focus and selection together.
+export function getNextTabIndex(index: number, length: number, key: string): number | null {
+	if (!length) return null
+	switch (key) {
+		case "ArrowRight": return (index + 1) % length
+		case "ArrowLeft": return (index + length - 1) % length
+		case "Home": return 0
+		case "End": return length - 1
+		default: return null
+	}
+}
+
+// 보기 전환 탭: 대상 종류나 범위로 나눈다. 활성 탭은 목업의 기존 brand/primary 토큰 밑줄 하나 (DESIGN.md Interface Grammar 2)
 export interface TabItem<K extends string> {
 	key: K
 	label: ReactNode
@@ -24,6 +36,15 @@ interface UnderlineTabsProps<K extends string> {
 export function UnderlineTabs<K extends string>({ items, value, onChange, label, stretch = true, className }: UnderlineTabsProps<K>) {
 	const [openDescription, setOpenDescription] = useState<K | null>(null)
 
+	const onTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
+		const next = getNextTabIndex(index, items.length, event.key)
+		if (next === null) return
+		event.preventDefault()
+		onChange(items[next].key)
+		const buttons = event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]')
+		buttons?.[next]?.focus()
+	}
+
 	return (
 		<div role="tablist" aria-label={label} className={cn("flex border-b border-border bg-paper", className)}>
 			{items.map((item, index) => {
@@ -36,6 +57,8 @@ export function UnderlineTabs<K extends string>({ items, value, onChange, label,
 						type="button"
 						role="tab"
 						aria-selected={value === item.key}
+						tabIndex={value === item.key ? 0 : -1}
+						onKeyDown={(event) => onTabKeyDown(event, index)}
 						aria-describedby={descriptionId}
 						onClick={() => onChange(item.key)}
 						onMouseEnter={() => item.description && setOpenDescription(item.key)}
@@ -57,7 +80,7 @@ export function UnderlineTabs<K extends string>({ items, value, onChange, label,
 							"-mb-px h-12 border-b-2 px-4 text-label font-semibold",
 							item.description && "relative",
 							stretch && "flex-1",
-							value === item.key ? "border-ink text-ink" : "border-transparent text-ink-soft"
+							value === item.key ? "border-primary text-orange-ink" : "border-transparent text-ink-soft"
 						)}
 					>
 						<span className={cn(item.description && "border-b border-dotted border-ink-soft")}>{item.label}</span>

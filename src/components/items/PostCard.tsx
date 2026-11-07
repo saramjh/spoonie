@@ -285,9 +285,31 @@ export default function PostCard({
         </div>
       </header>
 
-      {/* 레시피(자산)는 글이 먼저: 제목·메타가 사진 위에 온다 */}
+      {/* 레시피드(활동)는 어떤 레시피에서 나왔는지가 먼저: 출처 행 */}
+      {!isRecipe && !citedRecipesLoading && <SourceRow recipes={citedRecipes} creationOrigin={displayItem.creation_origin} />}
+
+      {orderedImages.length > 0 && (
+        <div className="relative mx-3 overflow-hidden rounded-[10px]">
+          <ImageCarousel
+            images={orderedImages}
+            frame="feed"
+            focalPoint={displayItem.cover_focal}
+            alt={displayItem.title || `${enrichedItem.username || "작성자"}님의 레시피드 사진`}
+            priority={priority}
+            onSingleClick={() => router.push(detailUrl)}
+            onDoubleClick={handleDoubleTapLike}
+          />
+          {showHeartAnimation && (
+            <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
+              <Heart className="h-16 w-16 animate-ping fill-like text-like" aria-hidden />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 사진 다음에 제목과 메타를 읽는다. */}
       {isRecipe && (
-        <div className="cursor-pointer px-4 pb-3" onClick={goDetail}>
+        <div className="cursor-pointer px-3 pt-3" onClick={goDetail}>
           <h2 className="text-title text-ink [text-wrap:balance]">
             <IntentLink href={detailUrl}>{displayItem.title}</IntentLink>
           </h2>
@@ -303,28 +325,6 @@ export default function PostCard({
               {displayItem.key_ingredients.join(", ")}
               {(displayItem.ingredient_count || 0) > displayItem.key_ingredients.length && <span className="text-ink-soft"> 외</span>}
             </p>
-          )}
-        </div>
-      )}
-
-      {/* 레시피드(활동)는 어떤 레시피에서 나왔는지가 먼저: 출처 행 */}
-      {!isRecipe && !citedRecipesLoading && <SourceRow recipes={citedRecipes} creationOrigin={displayItem.creation_origin} />}
-
-      {orderedImages.length > 0 && (
-        <div className="relative">
-          <ImageCarousel
-            images={orderedImages}
-            frame={isRecipe ? "recipe" : "recipeed"}
-            focalPoint={displayItem.cover_focal}
-            alt={displayItem.title || `${enrichedItem.username || "작성자"}님의 레시피드 사진`}
-            priority={priority}
-            onSingleClick={() => router.push(detailUrl)}
-            onDoubleClick={handleDoubleTapLike}
-          />
-          {showHeartAnimation && (
-            <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
-              <Heart className="h-16 w-16 animate-ping fill-like text-like" aria-hidden />
-            </div>
           )}
         </div>
       )}
@@ -351,10 +351,10 @@ export default function PostCard({
         )}
 
         {displayItem.tags && displayItem.tags.length > 0 && (
-          <ul className="mt-2 flex flex-wrap gap-x-3 gap-y-1" aria-label="태그">
+          <ul className="mt-3 flex flex-wrap gap-2" aria-label="태그">
             {displayItem.tags.map((tag, idx) => (
               <li key={idx}>
-                <IntentLink href={topicHref(tag)} className="inline-flex min-h-8 items-center text-meta text-ink-soft hover:text-ink">#{tag}</IntentLink>
+                <IntentLink href={topicHref(tag)} className="inline-flex min-h-8 items-center rounded-[7px] bg-paper-tint px-[9px] py-[5px] text-meta text-ink-soft hover:text-ink">#{tag}</IntentLink>
               </li>
             ))}
           </ul>
@@ -384,8 +384,9 @@ export default function PostCard({
             currentUserId={currentUser?.id}
             initialBookmarksCount={(cachedItem as Item & { bookmarks_count?: number }).bookmarks_count || 0}
             initialIsBookmarked={(cachedItem as Item & { is_bookmarked?: boolean }).is_bookmarked || false}
-            size="icon"
-            className="h-11 w-11"
+            size={surface === "bookmarks" ? "sm" : "icon"}
+            label={surface === "bookmarks" ? "저장 해제" : undefined}
+            className={surface === "bookmarks" ? "h-11 gap-1 px-2" : "h-11 w-11"}
             cachedItem={cachedItem}
           />
           <Button variant="ghost" size="icon" onClick={handleShare} className="h-11 w-11 text-ink-soft" aria-label="공유하기">
@@ -395,12 +396,12 @@ export default function PostCard({
       </footer>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent placement="bottom">
           <AlertDialogHeader>
-            <AlertDialogTitle>정말 삭제할까요?</AlertDialogTitle>
+            <AlertDialogTitle>이 글을 삭제할까요?</AlertDialogTitle>
             <AlertDialogDescription>이 {isRecipe ? "레시피" : "레시피드"}를 삭제하면 되돌릴 수 없어요.</AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="flex flex-row gap-2 [&_button]:min-h-12 [&_button]:flex-1 [&_button]:mt-0">
             <AlertDialogCancel>취소</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               {isDeleting ? "삭제 중..." : "삭제"}

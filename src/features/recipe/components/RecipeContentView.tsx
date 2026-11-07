@@ -16,13 +16,14 @@ interface RecipeContentViewProps {
 	ingredients: Ingredient[]
 	steps: RecipeStep[]
 	recipeId?: string
+	coverImage?: string | null
 	onAdjustingChange?: (editing: boolean) => void
 }
 
 const MIN_MAX_SERVINGS = 20
 const CHANGED_HOLD_MS = 2500
 
-export default function RecipeContentView({ initialServings, ingredients, steps, recipeId, onAdjustingChange }: RecipeContentViewProps) {
+export default function RecipeContentView({ initialServings, ingredients, steps, recipeId, coverImage, onAdjustingChange }: RecipeContentViewProps) {
 	const baseServings = initialServings > 0 ? initialServings : 1
 	const maxServings = Math.max(MIN_MAX_SERVINGS, baseServings * 2)
 	const [servings, setServings] = useState(baseServings)
@@ -48,7 +49,6 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 		if (currentReference) return scaleForReference(ingredients, currentReference) ?? 1
 		return currentServings / baseServings
 	}, [adjusting, draftReference, draftServings, reference, ingredients, servings, baseServings])
-	useEffect(() => onAdjustingChange?.(adjusting), [adjusting, onAdjustingChange])
 
 	const scaled = useMemo(() => ingredients.map((ing) => ({ ...ing, amount: ing.amount * scale })), [ingredients, scale])
 
@@ -94,6 +94,9 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 		setDraftReference(reference)
 		setDraftServings(servings)
 		setDraftAmount(String(Number((ingredients[index].amount * scale).toPrecision(10))))
+		// Parent detail chrome must disappear in the SAME event as the
+		// quantity editor opening, not one effect/render cycle later.
+		onAdjustingChange?.(true)
 		setAdjusting(true)
 	}
 	const chooseReference = (index: number) => {
@@ -111,6 +114,7 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 			setDraftReference({ index: selectedIndex, target: amount })
 	}
 	const cancelAdjusting = () => {
+		onAdjustingChange?.(false)
 		setAdjusting(false)
 		setKeyboardInset(0)
 	}
@@ -118,6 +122,7 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 		if (invalidAmount) return
 		setReference(draftReference)
 		setServings(draftServings)
+		onAdjustingChange?.(false)
 		setAdjusting(false)
 		setKeyboardInset(0)
 	}
@@ -161,8 +166,9 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 	}
 
 	return (
-		<>
-			{!adjusting && (
+    <>
+      {adjusting && <header className="sticky top-0 z-20 grid h-[54px] grid-cols-[1fr_auto_1fr] items-center border-b border-border bg-paper px-3"><button type="button" onClick={cancelAdjusting} className="min-h-11 justify-self-start text-label">취소</button><h2 id="quantity-heading" className="text-heading">재료 양 맞추기</h2><span aria-hidden /></header>}
+      {!adjusting && (
 				<div role="tablist" aria-label="레시피 내용" className="mx-[14px] mt-[18px] grid h-[53px] grid-cols-2 border-b border-border pt-[10px]">
 					{(["ingredients", "method"] as const).map((tab) => (
 						<button key={tab} id={"recipe-tab-" + tab} role="tab" type="button"
@@ -175,41 +181,40 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 					))}
 				</div>
 			)}
-			<section id="recipe-panel-ingredients" role="tabpanel" aria-labelledby="recipe-tab-ingredients"
+			<section id="recipe-panel-ingredients" role={adjusting ? undefined : "tabpanel"} aria-labelledby={adjusting ? "quantity-heading" : "recipe-tab-ingredients"}
 				hidden={!adjusting && activeTab !== "ingredients"}
 				className="px-[14px] pb-6 pt-[18px]">
-				<div data-design-slot="ingredients" className="flex h-[42px] items-center justify-between gap-3">
-					<h2 id="ingredients-heading" className="text-heading font-semibold text-ink">재료 {ingredients.length}가지</h2>
-					{adjusting ? (
-						<button type="button" onClick={cancelAdjusting} className="min-h-11 px-3 text-label font-medium underline underline-offset-4">취소</button>
-					) : <div className="flex items-center rounded-[10px] border border-border" role="group" aria-label="인분 조절">
-						<button
-							type="button"
-							onClick={() => changeServings((reference ? Math.round(baseServings * scale) : servings) - 1)}
-							disabled={adjusting || (!reference && servings <= 1)}
-							aria-label="1인분 줄이기"
-							className="flex h-10 w-10 items-center justify-center text-ink disabled:text-ink-soft/40"
-						>
-							<Minus className="h-4 w-4" aria-hidden />
-						</button>
-						<output aria-live="polite" className="min-w-[55px] text-center text-label tabular-nums text-ink">
-							{reference ? "직접 맞춤" : `${servings}인분`}
-						</output>
-						<button
-							type="button"
-							onClick={() => changeServings((reference ? Math.round(baseServings * scale) : servings) + 1)}
-							disabled={adjusting || (!reference && servings >= maxServings)}
-							aria-label="1인분 늘리기"
-							className="flex h-10 w-10 items-center justify-center text-ink disabled:text-ink-soft/40"
-						>
-							<Plus className="h-4 w-4" aria-hidden />
-						</button>
-					</div>}
-				</div>
-
+				{!adjusting && (
+					<div data-design-slot="ingredients" className="flex h-[42px] items-center justify-between gap-3">
+						<h2 id="ingredients-heading" className="text-heading font-semibold text-ink">재료 {ingredients.length}가지</h2>
+						<div className="flex items-center rounded-[10px] border border-border" role="group" aria-label="인분 조절">
+							<button
+								type="button"
+								onClick={() => changeServings((reference ? Math.round(baseServings * scale) : servings) - 1)}
+								disabled={!reference && servings <= 1}
+								aria-label="1인분 줄이기"
+								className="flex h-10 w-10 items-center justify-center text-ink disabled:text-ink-soft/40"
+							>
+								<Minus className="h-4 w-4" aria-hidden />
+							</button>
+							<output aria-live="polite" className="min-w-[55px] text-center text-label tabular-nums text-ink">
+								{reference ? "직접 맞춤" : `${servings}인분`}
+							</output>
+							<button
+								type="button"
+								onClick={() => changeServings((reference ? Math.round(baseServings * scale) : servings) + 1)}
+								disabled={!reference && servings >= maxServings}
+								aria-label="1인분 늘리기"
+								className="flex h-10 w-10 items-center justify-center text-ink disabled:text-ink-soft/40"
+							>
+								<Plus className="h-4 w-4" aria-hidden />
+							</button>
+						</div>
+					</div>
+				)}
 
 				{adjusting && (
-					<p className="mt-3 text-label text-ink-soft">재료 하나를 선택하고, 지금 가진 양을 입력하세요. 나머지 재료는 자동으로 계산돼요.</p>
+					<p className="mt-3 text-label text-ink-soft">한 재료를 고르고 가진 양을 입력해요.</p>
 				)}
 				{isScaled && !adjusting && (
 					<p className="mt-2 text-meta text-ink-soft">
@@ -366,13 +371,13 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 										</button>
 										<div className={cn("min-w-0 flex-1 pt-1", isDone && "text-ink-soft")}>
 											<p className="whitespace-pre-wrap break-words text-read"><LinkifiedText text={step.description} /></p>
-											{step.image_url && (
-												<div className="relative mt-3 aspect-[4/3] w-full overflow-hidden rounded-[3px] bg-muted">
-													<Photo src={step.image_url} alt={`${index + 1}단계 사진`} sizes="(max-width: 448px) 85vw, 380px" fit="contain" />
-												</div>
-											)}
 										</div>
 									</div>
+											{step.image_url && (
+												<div className="relative mt-3 aspect-[3/2] w-full overflow-hidden rounded-[11px] bg-muted">
+													<Photo src={step.image_url} alt={`${index + 1}단계 사진`} sizes="(max-width: 448px) 100vw, 420px" fit="cover" />
+												</div>
+											)}
 								</li>
 							)
 						})}
@@ -388,9 +393,10 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 					<div
 						role="toolbar"
 						aria-label="재료량 맞추기 도구"
-						className="fixed left-1/2 z-[55] flex w-full max-w-md -translate-x-1/2 items-center gap-2 border-t border-border bg-paper px-3 py-2 shadow-lg"
+						className="fixed left-1/2 z-[55] flex w-full max-w-md -translate-x-1/2 flex-wrap items-center gap-2 border-t border-border bg-paper px-[14px] py-[10px]"
 						style={{ bottom: keyboardInset > 80 ? String(keyboardInset) + "px" : "env(safe-area-inset-bottom)" }}
 					>
+            <p role="status" className="w-full text-caption leading-5 text-ink-soft">{invalidAmount ? "0보다 큰 수량을 입력해 주세요." : draftReference ? `${ingredients[draftReference.index].name} ${formatAmount(draftReference.target, ingredients[draftReference.index].unit)} ${ingredients[draftReference.index].unit}에 맞춘 양이에요.` : `원래 ${baseServings}인분을 미리 보고 있어요.`}</p>
 						<button type="button" onClick={resetScale} className="flex h-12 items-center gap-1 rounded-md border border-border px-3 text-label text-ink">
 							<RotateCcw className="h-4 w-4" aria-hidden />원래대로
 						</button>
@@ -417,6 +423,7 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 					servingsLabel={reference ? "직접 맞춘 양" : `${servings}인분`}
 					startAt={stepModeAt}
 					recipeId={recipeId}
+					coverImage={coverImage}
 					onStepDone={(index) => setDoneSteps((set) => new Set(set).add(index))}
 					onClose={() => setStepModeAt(null)}
 				/>

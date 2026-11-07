@@ -30,6 +30,8 @@ export interface RecipeInstructionInput {
 export interface RecipeDraft {
 	title: string
 	description?: string
+	external_source_creator?: string
+	external_source_url?: string
 	servings: number
 	cooking_time_minutes: number
 	is_public: boolean

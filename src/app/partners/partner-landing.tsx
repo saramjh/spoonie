@@ -2,6 +2,7 @@ import Image from "next/image"
 import Link from "next/link"
 
 import { buttonVariants } from "@/components/ui/button"
+import { PageHeader } from "@/components/kit"
 import { loadUserOnboardingRequests } from "@/features/onboarding/data/onboarding-admin"
 import { createSupabaseServerComponentClient } from "@/shared/infra/supabase-server"
 import {
@@ -33,8 +34,8 @@ const copy: Record<
     eyebrow: "Spoonie × 요리 크리에이터",
     title: "내 레시피가\n누군가의 한 끼로 이어질 때",
     description:
-      "피드에서 지나간 레시피를 누군가 참고해 요리한 뒤 기록하면, 그 이야기가 원본 Recipe와 다시 연결됩니다.",
-    directCta: "가입하고 내 Recipe 올려보기",
+      "레시피를 다시 만들 수 있는 Recipe로 쌓고, 만든 기록과 참고·응용 관계를 원본과 이어갑니다.",
+    directCta: "내 레시피 쓰기",
     setupTitle: "옮겨 적는 게 먼저 걸린다면",
     setupDescription:
       "가입 후 기존 Instagram 게시물·릴스 1~5개 주소를 보내세요. 접수된 자료는 매시간 한 번씩 일괄 확인·처리하며, 확인되는 정보만 내 계정의 비공개 Recipe 초안으로 정리합니다. 내가 검수한 뒤 공개합니다.",
@@ -47,7 +48,7 @@ const copy: Record<
     title: "제품 사진을 넘어\n실제 요리 방법으로",
     description:
       "고객이 제품으로 무엇을 만들 수 있는지 활용 Recipe로 직접 보여주세요. 따라 만든 기록이 생기면 원본과 이어집니다.",
-    directCta: "가입하고 활용 Recipe 올려보기",
+    directCta: "활용 Recipe 쓰기",
     setupTitle: "기존 활용 자료부터 옮기고 싶다면",
     setupDescription:
       "가입 후 자사몰·SNS의 활용 자료 1~5개 주소를 보내세요. 접수된 자료는 매시간 한 번씩 일괄 확인·처리하며, 따라 만들 수 있다고 확인되는 정보만 브랜드 계정의 비공개 Recipe 초안으로 정리합니다.",
@@ -65,79 +66,65 @@ export default async function PartnerLanding({ segment }: { segment: Segment }) 
   } = await supabase.auth.getUser()
 
   const directNext = "/recipes/new"
-  const setupNext = text.sourcePath + "?setup=1#setup"
+  const setupNext = segment === "creator" ? "/partners/creators/import" : text.sourcePath + "?setup=1#setup"
   const directHref = user
     ? withPartnerEntry(directNext, text.entry)
     : authEntryHref("/signup", directNext, text.entry)
-  const setupHref = user
-    ? "#setup"
-    : authEntryHref("/signup", setupNext, text.entry)
   const loginHref = authEntryHref("/login", text.sourcePath, text.entry)
-
-  const requests = user
-    ? (await loadUserOnboardingRequests(user.id)).filter(
-        (request) => request.actorType === segment,
-      )
+  const setupButtonClass = buttonVariants({
+    variant: "outline",
+    size: "lg",
+    className: "mt-4 w-full",
+  })
+  const brandRequests = user && segment === "brand"
+    ? (await loadUserOnboardingRequests(user.id)).filter((request) => request.actorType === "brand")
     : []
 
   return (
-    <div className="min-h-screen bg-door px-3 py-4">
-      <article className="mx-auto max-w-md overflow-hidden rounded-[3px] bg-paper shadow-sm">
+    <div className="min-h-screen bg-paper">
+      <PageHeader title={segment === "creator" ? "크리에이터 안내" : "브랜드 안내"} />
+      <article className="mx-auto max-w-md">
         <section className="px-4 pb-5 pt-6">
-          <Link href="/" className="inline-flex" aria-label="Spoonie 홈">
-            <Image src="/logo-full.svg" alt="Spoonie" width={100} height={32} priority />
-          </Link>
-          <p className="mt-5 text-meta text-ink-soft">{text.eyebrow}</p>
-          <h1 className="mt-2 whitespace-pre-line text-display text-ink">{text.title}</h1>
-          <p className="mt-3 text-body text-ink-soft">{text.description}</p>
-          <PartnerActionLink
-            href={directHref}
-            segment={segment}
+          <h1 className="whitespace-pre-line text-display text-ink">{text.title}</h1>
+          <p className="mt-4 text-body text-ink">{text.description}</p>
+          <figure className="mt-5">
+            <div className="relative aspect-[3/2] w-full overflow-hidden rounded-xl bg-paper-tint">
+              <Image
+                src={segment === "creator" ? "/partners-cooking-example.webp" : "/partners-sandwich-example.webp"}
+                alt={segment === "creator" ? "토마토 크림 파스타 조리 예시" : "달걀 샌드위치 조리 예시"}
+                fill priority sizes="(max-width: 448px) calc(100vw - 32px), 416px"
+                className="object-cover"
+              />
+            </div>
+            <figcaption className="mt-1.5 text-meta text-ink-soft">구성 예시 이미지 · 실제 사용자 활동이 아닙니다.</figcaption>
+          </figure>
+          <PartnerActionLink href={directHref} segment={segment}
             action={user ? "hero_recipe_create_open" : "hero_signup_to_recipe"}
-            className={buttonVariants({
-              variant: "default",
-              size: "lg",
-              className: "mt-4 w-full",
-            })}
-          >
+            className={buttonVariants({ variant: "default", size: "lg", className: "mt-4 w-full" })}>
             {text.directCta}
           </PartnerActionLink>
-        </section>
-
-        <PartnerProductTour segment={segment} />
-
-        <section className="border-t border-border px-4 py-6" aria-label="Spoonie 시작하기">
-          <p className="text-heading text-ink">직접 써보는 게 가장 빠릅니다</p>
-          <p className="mt-1 text-meta text-ink-soft">
-            가입하면 바로 내 계정에서 Recipe를 작성할 수 있습니다.
-          </p>
-          <PartnerActionLink
-            href={directHref}
-            segment={segment}
-            action={user ? "recipe_create_open" : "signup_to_recipe"}
-            className={buttonVariants({
-              variant: "default",
-              size: "lg",
-              className: "mt-4 w-full",
-            })}
-          >
-            {text.directCta}
-          </PartnerActionLink>
-
           {!user && (
             <p className="mt-3 text-center text-meta text-ink-soft">
               이미 계정이 있나요?{" "}
-              <PartnerActionLink
-                href={loginHref}
-                segment={segment}
-                action="login_open"
-                className="text-ink underline underline-offset-4"
-              >
-                로그인
-              </PartnerActionLink>
+              <PartnerActionLink href={loginHref} segment={segment} action="login_open"
+                className="text-ink underline underline-offset-4">로그인</PartnerActionLink>
             </p>
           )}
         </section>
+
+        <section className="border-t border-border px-4 py-5">
+          <h2 className="text-heading font-semibold text-ink">Recipe로 정리하고</h2>
+          <p className="mt-2 text-body text-ink-soft">사진, 재료와 분량, 만드는 순서를 한곳에 남겨요.</p>
+          <p className="mt-3 text-meta text-ink-soft">화면 예시 · 2인분 · 25분 · 재료 5가지</p>
+        </section>
+        <section className="border-t border-border px-4 py-5">
+          <h2 className="text-heading font-semibold text-ink">만든 기록과 이어져요</h2>
+          <p className="mt-2 text-body text-ink-soft">
+            참고한 Recipe와 만든 기록은 원래 Recipe로 이어져요. 연결 방식은 아래에서 직접 확인할 수 있습니다.
+          </p>
+        </section>
+
+        <PartnerProductTour segment={segment} />
 
         <section
           id="setup"
@@ -150,19 +137,17 @@ export default async function PartnerLanding({ segment }: { segment: Segment }) 
           </h2>
           <p className="mt-2 text-body text-ink-soft">{text.setupDescription}</p>
 
-          {user ? (
-            <PartnerOnboardingForm actorType={segment} initialRequests={requests} />
+          {user && segment === "brand" ? (
+            <PartnerOnboardingForm actorType="brand" initialRequests={brandRequests} />
+          ) : user ? (
+            <Link href={setupNext} className={setupButtonClass}>{text.setupCta}</Link>
           ) : (
             <>
               <PartnerActionLink
-                href={setupHref}
+                href={authEntryHref("/signup", setupNext, text.entry)}
                 segment={segment}
                 action="setup_signup_open"
-                className={buttonVariants({
-                  variant: "outline",
-                  size: "lg",
-                  className: "mt-4 w-full",
-                })}
+                className={setupButtonClass}
               >
                 {text.setupCta}
               </PartnerActionLink>

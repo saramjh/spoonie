@@ -23,6 +23,7 @@ export interface LikerProfile {
 	avatar_url: string | null
 	public_id: string | null
 	liked_at: string
+	viewer_follows: boolean
 }
 
 // 서버의 좋아요 수와 내가 눌렀는지

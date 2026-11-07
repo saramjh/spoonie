@@ -9,7 +9,7 @@
 		--door: 242 236 229; /* 바탕 #f2ece5: 따뜻한 캔버스. 음식 사진의 색을 죽이지 않는다 */
 		--paper: 255 252 248; /* 크림빛 종이 #fffcf8 */
 		--ink: 56 37 28; /* 초콜릿 잉크 #38251c. 본문과 제목 */
-		--ink-soft: 116 97 82; /* 보조 잉크 #746152 */
+		--ink-soft: 101 85 74; /* 보조 잉크 #65554a */
 		--brand-orange: 166 69 36; /* 테라코타 #a64524. 주요 동작과 강조에 사용 */
 		--orange-ink: 166 69 36; /* #a64524, 강조 텍스트와 포커스 링 */
 		--rule-line: 231 217 204; /* 구분선 #e7d9cc */
@@ -100,3 +100,8 @@ svg[data-motion="stir"] .logo-spoon {
 .splash-seen [data-splash] {
 	display: none;
 }
+
+.skeleton-shimmer { position: relative; overflow: hidden; }
+.skeleton-shimmer::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 10%, rgb(var(--paper) / .85) 50%, transparent 90%); transform: translateX(-100%); animation: skeleton-shimmer 1.6s ease-in-out infinite; }
+@keyframes skeleton-shimmer { to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { .skeleton-shimmer::after { animation: none; display: none; } }

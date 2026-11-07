@@ -109,7 +109,7 @@ function SortableIngredientItem({
           <DragHandle />
         </div>
 
-        <div className="flex-1 space-y-2">
+        <div className="min-w-0 flex-1 space-y-2">
           {/* 1행: 재료명 (전체 너비) */}
           <Input 
             placeholder="재료 이름 (예: 대파)" 
@@ -127,13 +127,13 @@ function SortableIngredientItem({
               placeholder="양" 
               aria-label={`${index + 1}번째 재료 양`}
               {...register(`ingredients.${index}.amount`)} 
-              className="h-11 flex-1 text-right tabular-nums" 
+              className="h-11 min-w-0 flex-1 text-right tabular-nums"
             />
             <Input 
               placeholder="단위 (g, 큰술)" 
               aria-label={`${index + 1}번째 재료 단위`}
               {...register(`ingredients.${index}.unit`)} 
-              className="h-11 flex-1" 
+              className="h-11 w-[104px] min-w-0 shrink-0"
             />
             <Button 
               type="button" 
@@ -174,7 +174,7 @@ function DragOverlayItem({ ingredient }: { ingredient: DraggableIngredient }) {
       <div className="flex items-center gap-3">
         <DragHandle />
         
-        <div className="flex-1 space-y-2">
+        <div className="min-w-0 flex-1 space-y-2">
           {/* 1행: 재료명 */}
           <div className="bg-door rounded-md px-3 py-2 text-label">
             {ingredient.name || '재료명'}

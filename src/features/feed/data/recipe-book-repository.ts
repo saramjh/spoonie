@@ -205,7 +205,8 @@ export const fetchRecipeBookPage = async (key: string): Promise<Item[]> => {
 	
 	} catch (error) {
 		console.error("❌ Fetcher error:", error)
-		// 에러 발생 시 빈 배열 반환 (무한 에러 루프 방지)
-		return []
+		// Never present a server or permission failure as an empty recipe book.
+		// The caller owns the retry UI and SWR retry policy.
+		throw error
 	}
 }

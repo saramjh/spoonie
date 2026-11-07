@@ -1,21 +1,22 @@
 import Link from "next/link"
-import { Sheet } from "@/components/kit"
+import { PageHeader } from "@/components/kit"
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-paper">
+      <PageHeader title="개인정보처리방침" />
       <div className="px-3 py-4">
         {/* 헤더 */}
         <div className="mb-4 px-1">
           <Link href="/" className="mb-4 inline-flex h-11 items-center text-label text-ink underline underline-offset-4">
             홈으로
           </Link>
-          <h1 className="text-title text-ink">개인정보처리방침</h1>
+          <p className="text-title font-semibold text-ink">개인정보처리방침</p>
           <p className="text-ink-soft">최종 업데이트: 2026년 10월 5일</p>
         </div>
 
         {/* 내용 */}
-        <Sheet className="px-5 py-6">
+        <article className="px-1 pb-12 pt-3">
           <div className="prose max-w-none">
             
             <section className="mb-8">
@@ -160,7 +161,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
           </div>
-        </Sheet>
+        </article>
 
         {/* 하단 링크 */}
         <div className="text-center mt-8 space-x-4">

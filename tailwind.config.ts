@@ -23,6 +23,7 @@ const config: Config = {
 				read: ["1.0625rem", { lineHeight: "1.65" }],
 				body: ["1rem", { lineHeight: "1.6" }],
 				label: ["0.9375rem", { lineHeight: "1.4" }],
+				caption: ["0.875rem", { lineHeight: "1.5" }],
 				meta: ["0.8125rem", { lineHeight: "1.45" }],
 				micro: ["0.6875rem", { lineHeight: "1.2", fontWeight: "600" }],
 			},

@@ -47,13 +47,14 @@ export default function RecipeCard({ item, isSelectable, isSelected, onSelectCha
 	const showColor = showColorLabel
 	const cookingTime = formatCookingTime(displayItem.cooking_time_minutes)
 	const thumbnail = cachedItem.image_urls?.[cachedItem.thumbnail_index || 0]
-	const meta = [displayItem.servings ? `${displayItem.servings}인분` : null, cookingTime ? `조리 ${cookingTime}` : null].filter(Boolean)
+	const meta = [displayItem.servings ? `${displayItem.servings}인분` : null, cookingTime || null].filter(Boolean)
 
 	// 카드 한 장의 모양. 선택 모드에서는 누르면 선택되고(레시피로 가지 않는다), 평소에는 레시피로 간다
 	const face = (
 		<>
-			{showColor && <Magnet color={displayItem.color_label} size="md" className="absolute -top-2 left-3.5 z-20" />}
-			<span className="relative block aspect-[4/3] w-full overflow-hidden rounded-t-[3px] bg-muted">
+
+			<span className="relative block aspect-square w-full overflow-hidden rounded-xl bg-muted">
+                {showColor && <Magnet color={displayItem.color_label} size="sm" className="absolute left-2 top-2 z-20 ring-2 ring-paper" />}
 				{/* 선택 모드에서는 같은 자리에 선택 상자가 오므로 사진 장수는 감춘다 */}
 				{!isSelectable && <PhotoCount count={cachedItem.image_urls?.length || 0} />}
 				{thumbnail ? (
@@ -65,15 +66,15 @@ export default function RecipeCard({ item, isSelectable, isSelected, onSelectCha
 				)}
 				{isSelectable && <CheckBox checked={!!isSelected} className="absolute right-2 top-2" />}
 			</span>
-			<span className="block px-3 pb-3 pt-2 text-left">
-				<span className="line-clamp-2 text-label font-semibold text-ink">{displayItem.title}</span>
+			<span className="block pt-2 text-left">
+				<span className="line-clamp-2 text-body font-semibold text-ink">{displayItem.title}</span>
 				<span className="mt-1 block truncate text-meta text-ink-soft">
 					{[showAuthor ? item.username : null, ...meta, !displayItem.is_public ? "비공개" : null].filter(Boolean).join(" · ")}
 				</span>
 			</span>
 		</>
 	)
-	const sheet = cn("relative block w-full rounded-[3px] bg-paper shadow-sheet", isSelected && "ring-2 ring-ink")
+	const sheet = cn("relative block w-full min-w-0 text-left", isSelected && "rounded-xl ring-2 ring-ink")
 
 	if (isSelectable) {
 		return (

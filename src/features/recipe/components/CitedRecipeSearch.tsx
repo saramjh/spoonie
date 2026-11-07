@@ -3,11 +3,13 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
 
-import { X, ChefHat, Search } from "lucide-react";
+import { X, ChefHat, Search, Plus } from "lucide-react";
 import { createSupabaseBrowserClient } from '@/shared/infra/supabase-client';
 import { searchCitableRecipes } from '@/features/recipe/data/recipe-repository';
 import type { Item } from '@/types/item';
 import { format } from 'date-fns'; // 날짜 포맷팅을 위해 date-fns 임포트
+import { Drawer, DrawerContent, DrawerTitle, DrawerDescription, DrawerTrigger } from "@/components/ui/drawer"
+import { Button } from "@/components/ui/button"
 import { Photo } from "@/components/kit"
 
 interface CitedRecipeSearchProps {
@@ -80,6 +82,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
     setSearchTerm('');
     setSearchResults([]);
     setIsLoading(false);
+    setShowSearch(false);
   };
 
   const handleRemoveRecipe = (recipeId: string) => {
@@ -95,101 +98,40 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
 
   return (
     <div className="space-y-3">
-      {/* 시작 상태: 작은 찾기 버튼 하나 */}
-      {selectedRecipes.length === 0 && !searchTerm && !showSearch && (
-        <button
-          type="button"
-          onClick={() => setShowSearch(true)}
-          className="flex h-11 w-full items-center gap-2 rounded-md border border-dashed border-ink/30 px-3 text-left text-label text-ink-soft"
-        >
-          <Search className="h-4 w-4" aria-hidden />
-          레시피 찾아서 고르기
-        </button>
-      )}
+      {selectedRecipes.length > 0 && <ul className="divide-y divide-border">{selectedRecipes.map(recipe => (
+        <li key={recipe.item_id} className="flex items-center gap-3 py-3">
+          <div className="relative aspect-[3/2] w-[72px] shrink-0 overflow-hidden rounded-lg bg-muted">{recipe.image_urls?.[0] ? <Photo src={recipe.image_urls[0]} sizes="72px" /> : <ChefHat className="m-auto h-5 w-5" aria-hidden />}</div>
+          <div className="min-w-0 flex-1"><p className="text-label font-medium text-ink [overflow-wrap:anywhere]">{recipe.title}</p><p className="text-caption text-ink-soft">{recipe.username || "익명"}의 레시피</p></div>
+          <button type="button" onClick={() => handleRemoveRecipe(recipe.item_id)} aria-label={`${recipe.title} 참고에서 빼기`} className="ml-auto flex h-11 w-11 shrink-0 items-center justify-center text-ink-soft"><X className="h-5 w-5" aria-hidden /></button>
+        </li>
+      ))}</ul>}
 
-      {/* 검색 영역 - 필요할 때만 표시 */}
-      {(searchTerm || selectedRecipes.length > 0 || showSearch) && (
-        <div className="relative">
+      <Drawer open={showSearch} onOpenChange={(open) => { setShowSearch(open); if (!open) { cancelSearch(); setIsLoading(false) } }} shouldScaleBackground={false}>
+        <DrawerTrigger asChild><Button type="button" variant="outline" className="w-full" disabled={selectedRecipes.length >= maxSelection}><Search className="h-5 w-5" aria-hidden />참고 레시피 찾기</Button></DrawerTrigger>
+        <DrawerContent className="mx-auto max-h-[85dvh] max-w-md px-4 pb-6 pt-4">
+          <div className="flex items-center justify-between">
+            <DrawerTitle className="text-title text-ink">참고 레시피 찾기</DrawerTitle>
+            <Button type="button" variant="ghost" size="icon" aria-label="닫기" onClick={() => setShowSearch(false)}><X className="h-5 w-5" aria-hidden /></Button>
+          </div>
+          <DrawerDescription className="sr-only">레시피를 검색하고 참고한 글을 선택하세요.</DrawerDescription>
           <Command shouldFilter={false} className="rounded-lg border border-ink/20">
-            <CommandInput 
-              ref={inputRef}
-              id="recipe-search-input"
-              placeholder="어떤 레시피를 참고하셨나요?" 
-              value={searchTerm}
-              onValueChange={(search) => {
-                setSearchTerm(search);
-                handleSearch(search);
-              }}
-              className="border-none"
-            />
-            <CommandList className="max-h-48">
-              {isLoading && <CommandEmpty>검색 중...</CommandEmpty>}
-              {!isLoading && searchTerm.length > 1 && searchResults.length === 0 && <CommandEmpty>검색 결과가 없습니다.</CommandEmpty>}
-              {searchResults.length > 0 && (
-                <CommandGroup>
-                  {searchResults.map((recipe) => (
-                    <CommandItem key={recipe.item_id} onSelect={() => handleSelectRecipe(recipe)} className="cursor-pointer hover:bg-muted">
-                      <div className="flex items-center gap-3 w-full">
-                        {/* 썸네일 추가 */}
-                        <div className="relative h-9 w-9 flex-shrink-0 overflow-hidden rounded-[2px] bg-muted">
-                          {recipe.image_urls && recipe.image_urls.length > 0 ? (
-                            <Photo src={recipe.image_urls[0]} sizes="36px" />
-                          ) : (
-                            <div className="w-full h-full bg-muted flex items-center justify-center">
-                              <ChefHat className="h-4 w-4 text-ink-soft" aria-hidden="true" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-label font-medium truncate">{recipe.title}</div>
-                          <div className="text-meta text-ink-soft truncate">
-                            {recipe.username || "익명"} • {recipe.created_at && format(new Date(recipe.created_at), 'MM.dd')}
-                          </div>
-                        </div>
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              )}
+            <CommandInput ref={inputRef} id="recipe-search-input" aria-label="요리 이름이나 재료 검색" placeholder="요리 이름이나 재료" value={searchTerm} onValueChange={(search) => { setSearchTerm(search); void handleSearch(search) }} />
+            <CommandList className="max-h-[55dvh]">
+              {isLoading && <CommandEmpty>검색 중…</CommandEmpty>}
+              {!isLoading && searchTerm.length > 1 && searchResults.length === 0 && <CommandEmpty>검색 결과가 없어요.</CommandEmpty>}
+              {searchResults.length > 0 && <CommandGroup>{searchResults.map(recipe => (
+                <CommandItem key={recipe.item_id} onSelect={() => handleSelectRecipe(recipe)} className="min-h-20 cursor-pointer border-b border-border px-0 py-3 last:border-b-0">
+                  <div className="flex w-full items-center gap-3" data-source-result>
+                    <div className="relative aspect-[3/2] w-[72px] shrink-0 overflow-hidden rounded-lg bg-muted">{recipe.image_urls?.[0] ? <Photo src={recipe.image_urls[0]} sizes="72px" /> : <ChefHat className="m-auto h-5 w-5" aria-hidden />}</div>
+                    <div className="min-w-0 flex-1"><p className="text-label font-medium [overflow-wrap:anywhere]">{recipe.title}</p><p className="text-caption text-ink-soft">{recipe.username || "익명"}{recipe.created_at && ` · ${format(new Date(recipe.created_at), 'MM.dd')}`}</p></div>
+                    <span className="ml-auto flex h-11 w-11 shrink-0 items-center justify-center" aria-hidden><Plus className="h-5 w-5" /></span>
+                  </div>
+                </CommandItem>
+              ))}</CommandGroup>}
             </CommandList>
           </Command>
-        </div>
-      )}
-
-      {selectedRecipes.length > 0 && (
-        <div className="space-y-2">
-          <ul className="divide-y divide-border">
-            {selectedRecipes.map(recipe => (
-              <li key={recipe.item_id} className="flex items-center gap-3 py-2">
-                {/* 썸네일 */}
-                <div className="relative h-11 w-11 flex-shrink-0 overflow-hidden rounded-[2px] bg-muted">
-                  {recipe.image_urls && recipe.image_urls.length > 0 ? (
-                    <Photo src={recipe.image_urls[0]} sizes="44px" />
-                  ) : (
-                    <div className="w-full h-full bg-muted flex items-center justify-center">
-                      <ChefHat className="h-4 w-4 text-ink-soft" aria-hidden="true" />
-                    </div>
-                  )}
-                </div>
-                {/* 내용 */}
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-ink truncate">{recipe.title}</div>
-                  <div className="text-meta text-ink-soft truncate">{recipe.username || "익명"}의 레시피</div>
-                </div>
-                {/* 삭제 버튼 */}
-                <button 
-                  type="button"
-                  onClick={() => handleRemoveRecipe(recipe.item_id)} 
-                  aria-label={`${recipe.title} 참고에서 빼기`}
-                  className="flex h-11 w-11 flex-shrink-0 items-center justify-center text-ink-soft"
-                >
-                  <X className="h-4 w-4" aria-hidden />
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+        </DrawerContent>
+      </Drawer>
     </div>
-  );
+  )
 }

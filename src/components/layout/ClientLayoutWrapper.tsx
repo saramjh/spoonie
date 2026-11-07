@@ -143,7 +143,10 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
       if (event === "SIGNED_OUT") {
         setSession(null)
         setProfile(null)
-        useFollowStore.setState({ followingUsers: new Set() })
+        useFollowStore.setState({
+          followingUsers: new Set(), isLoading: false,
+          initializedUserId: null, initializingUserId: null,
+        })
         return
       }
       if (event !== "SIGNED_IN" || !authSession?.user) return

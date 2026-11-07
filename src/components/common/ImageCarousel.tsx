@@ -17,7 +17,7 @@ interface ImageCarouselProps {
   onDoubleClick?: () => void
   onSingleClick?: () => void
   // 프레임 비율: 레시피 4:3, 레시피드 1:1 (DESIGN.md Interface Grammar)
-  frame?: "recipe" | "recipeed" | "recipe-detail"
+  frame?: "recipe" | "recipeed" | "recipe-detail" | "feed" | "recipeed-detail"
   fit?: "cover" | "contain"
   focalPoint?: CoverFocal | null
 }
@@ -33,6 +33,7 @@ export default function ImageCarousel({
   fit = "cover",
   focalPoint,
 }: ImageCarouselProps) {
+  const isWideFrame = frame === "recipe-detail" || frame === "recipeed-detail" || frame === "feed"
   const [emblaRef, emblaApi] = useEmblaCarousel()
   const [selectedIndex, setSelectedIndex] = React.useState(0)
   // 수평 캐러셀의 숨은 사진까지 브라우저가 초기 lazy-load 임계 안에서 받는 일을 막는다.
@@ -121,7 +122,7 @@ export default function ImageCarousel({
     <div className="relative w-full overflow-hidden" ref={emblaRef} onPointerDown={preloadAdjacent}>
       <div className="flex">
         {images.map((src, index) => (
-          <div className={cn("relative w-full flex-none bg-muted", frame === "recipe-detail" ? "aspect-[3/2]" : frame === "recipe" ? "aspect-[4/3]" : "aspect-square")} key={index}>
+          <div className={cn("relative w-full flex-none bg-muted", isWideFrame ? "aspect-[3/2]" : frame === "recipe" ? "aspect-[4/3]" : "aspect-square")} key={index}>
             {(discoverAll || loadedIndexes.has(index)) && (
               <Photo
                 src={src}
@@ -173,7 +174,7 @@ export default function ImageCarousel({
           <span className="sr-only">번째 사진</span>
         </span>
       )}
-      {images.length > 1 && frame !== "recipe-detail" && <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
+      {images.length > 1 && !isWideFrame && <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
         {images.map((_, index) => (
           <button
             key={index}

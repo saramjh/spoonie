@@ -24,9 +24,9 @@ export default function ExternalLinkNotice() {
   }, [])
 
   return <AlertDialog open={destination !== null} onOpenChange={open => { if (!open) setDestination(null) }}>
-    <AlertDialogContent data-external-confirm>
+    <AlertDialogContent placement="bottom" data-external-confirm>
       <AlertDialogHeader>
-        <AlertDialogTitle>외부 사이트로 이동합니다</AlertDialogTitle>
+        <AlertDialogTitle>외부 사이트로 이동할까요?</AlertDialogTitle>
         <AlertDialogDescription>
           이 링크는 Spoonie 밖의 사이트로 연결됩니다. Spoonie가 해당 사이트의 안전성을 확인하거나 보장하지는 않습니다. 주소를 확인한 후 이동해 주세요.
         </AlertDialogDescription>

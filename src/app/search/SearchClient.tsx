@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Search as SearchIcon, X } from 'lucide-react';
 import useSWR from 'swr';
 import useSWRInfinite from 'swr/infinite';
@@ -39,7 +41,8 @@ const fetcher = async (key: string): Promise<unknown> => {
     if (type === 'popular_keywords') return await getPopularKeywordsCached();
     if (type === 'search_users') return query ? await searchUsers(query) : [];
   } catch (error) {
-    console.error(`❌ ${type} fetch failed:`, error);
+    console.error(type + " fetch failed:", error);
+    if (type === "search_users") throw error;
   }
   return [];
 };
@@ -126,8 +129,8 @@ const infiniteSearchFetcher = async (key: string): Promise<Item[]> => {
     
     return items;
   } catch (error) {
-    console.error('❌ Infinite search failed:', error);
-    return [];
+    console.error("Infinite search failed:", error);
+    throw error;
   }
 };
 
@@ -152,6 +155,7 @@ export default function SearchClient({ initialExplore }: { initialExplore?: Expl
     data: searchPages,
     isLoading: searchLoading,
     isValidating: searchValidating,
+    error: searchError,
     setSize,
     mutate: mutateSearch,
   } = useSWRInfinite(
@@ -176,7 +180,7 @@ export default function SearchClient({ initialExplore }: { initialExplore?: Expl
   const userSearchKey = debouncedSearchTerm ? `search_users|${debouncedSearchTerm}` : null;
 
   
-  const { data: userSearchResults, isLoading: userSearchLoading } = useSWR(
+  const { data: userSearchResults, isLoading: userSearchLoading, error: userSearchError, mutate: retryUserSearch } = useSWR(
     userSearchKey,
     fetcher,
     {
@@ -266,31 +270,45 @@ export default function SearchClient({ initialExplore }: { initialExplore?: Expl
   const searchEmpty = (
     <StateSheet title={`'${debouncedSearchTerm}'에 맞는 결과가 없어요`} body="재료 이름이나 요리 이름으로 찾아 보세요." />
   );
+  const searchFailed = (
+    <StateSheet title="검색 결과를 불러오지 못했어요" body="연결 상태를 확인하고 다시 시도해 주세요."
+      action={<Button type="button" onClick={() => void mutateSearch()}>다시 시도</Button>} />
+  );
+  const userSearchFailed = (
+    <StateSheet title="사람 검색을 완료하지 못했어요" body="연결 상태를 확인하고 다시 시도해 주세요."
+      action={<Button type="button" onClick={() => void retryUserSearch()}>다시 시도</Button>} />
+  );
 
   return (
     <div className="min-h-screen">
       <div className="px-3 pb-20 pt-3">
-      <div className="relative mb-5">
-        <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-ink-soft" aria-hidden />
-        <Input
-          type="text"
-          placeholder="레시피·재료·사람 검색"
-          aria-label="검색"
-          className={searchTerm ? "pl-9 pr-11" : "pl-9"}
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        {searchTerm && (
-          <button
-            onClick={() => setSearchTerm('')}
-            type="button"
-            className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center"
-            aria-label="검색어 지우기"
-          >
-            <X className="h-5 w-5 text-ink-soft" aria-hidden />
-          </button>
-        )}
-      </div>
+      <form role="search" className="mb-5 flex items-center gap-2" onSubmit={(event) => {
+        event.preventDefault()
+        setDebouncedSearchTerm(searchTerm.trim())
+        setTab(null)
+      }}>
+        <div className="relative min-w-0 flex-1">
+          <Input
+            type="search"
+            placeholder="레시피·재료·사람 검색"
+            aria-label="검색"
+            className={searchTerm ? "h-12 pr-11" : "h-12"}
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+          />
+          {searchTerm && (
+            <button onClick={() => setSearchTerm('')} type="button"
+              className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center"
+              aria-label="검색어 지우기">
+              <X className="h-5 w-5 text-ink-soft" aria-hidden />
+            </button>
+          )}
+        </div>
+        <Button type="submit" variant="outline" aria-label="검색 실행"
+          className="h-12 w-11 flex-shrink-0 rounded-lg px-0">
+          <SearchIcon className="h-5 w-5" aria-hidden />
+        </Button>
+      </form>
 
       {debouncedSearchTerm ? (
         <div>
@@ -308,7 +326,9 @@ export default function SearchClient({ initialExplore }: { initialExplore?: Expl
           />
 
           {activeTab === 'recipe' &&
-            (recipeResults.length === 0 && !searchLoading ? (
+            (searchError ? (
+              searchFailed
+            ) : recipeResults.length === 0 && !searchLoading ? (
               searchEmpty
             ) : (
               <div className="space-y-2">
@@ -319,7 +339,9 @@ export default function SearchClient({ initialExplore }: { initialExplore?: Expl
             ))}
 
           {activeTab === 'post' &&
-            (postResults.length === 0 && !searchLoading ? (
+            (searchError ? (
+              searchFailed
+            ) : postResults.length === 0 && !searchLoading ? (
               searchEmpty
             ) : (
               <div className="grid grid-cols-3 gap-x-1 gap-y-3">
@@ -329,7 +351,7 @@ export default function SearchClient({ initialExplore }: { initialExplore?: Expl
               </div>
             ))}
 
-          {activeTab !== 'users' && (
+          {activeTab !== 'users' && !searchError && (
             <>
               {isLoadingMore && <p className="py-4 text-center text-meta text-ink-soft">찾는 중...</p>}
               {!isReachingEnd && <div ref={observerRef} className="h-10" />}
@@ -337,7 +359,9 @@ export default function SearchClient({ initialExplore }: { initialExplore?: Expl
           )}
 
           {activeTab === 'users' &&
-            (userSearchLoading ? (
+            (userSearchError ? (
+              userSearchFailed
+            ) : userSearchLoading ? (
               <p className="py-12 text-center text-ink-soft">사람을 찾는 중...</p>
             ) : userResults.length === 0 ? (
               searchEmpty
@@ -363,7 +387,7 @@ export default function SearchClient({ initialExplore }: { initialExplore?: Expl
             {exploreLoading && !explore ? (
               <div className="space-y-2">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="h-[88px] animate-pulse rounded-[3px] bg-paper/70" />
+                  <Skeleton key={i} className="h-[88px] rounded-[3px]" />
                 ))}
               </div>
             ) : explore && explore.recipes.length > 0 ? (

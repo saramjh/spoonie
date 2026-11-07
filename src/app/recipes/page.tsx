@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation"
 import { useRouter } from "@/shared/lib/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Trash2, Search, SlidersHorizontal, List, Grid } from "lucide-react"
+import { Trash2, Search, SlidersHorizontal, List, Grid, MoreHorizontal } from "lucide-react"
 
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import useSWRInfinite from "swr/infinite"
@@ -14,12 +14,13 @@ import { useRecipeStore } from "@/features/recipe/store/recipeStore"
 import RecipeCard from "@/features/recipe/components/RecipeCard"
 import RecipeCardSkeleton from "@/features/recipe/components/RecipeCardSkeleton"
 import RecipeBookGuest from "@/features/recipe/components/RecipeBookGuest"
-import FilterModal, { hasActiveRecipeFilter } from "@/features/recipe/components/FilterModal"
+import FilterModal, { getRecipeSortLabel, hasActiveRecipeFilter } from "@/features/recipe/components/FilterModal"
 import RecipeListCard from "@/features/recipe/components/RecipeListCard"
 import type { User } from "@supabase/supabase-js"
 import type { Item } from "@/types/item"
 import { useToast } from "@/hooks/use-toast"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Sheet, UnderlineTabs } from "@/components/kit"
 import { cacheManager } from "@/shared/infra/unified-cache-manager"
 import { revalidateItemPage } from "@/shared/infra/revalidate-item"
@@ -101,11 +102,14 @@ export default function RecipesPage() {
 		[currentUser, userLoading, currentTab, sortBy, sortOrder, searchTerm, filterCategory, filterColorLabel]
 	)
 
-	const { data, size, setSize, isLoading } = useSWRInfinite(getKey, fetcher, { revalidateFirstPage: false })
+	const { data, size, setSize, isLoading, error, mutate } = useSWRInfinite(getKey, fetcher, {
+        revalidateFirstPage: false,
+        shouldRetryOnError: false,
+    })
 
 
 	const recipes = data ? ([] as Item[]).concat(...data) : []
-	const isLoadingMore = isLoading || (size > 0 && data && typeof data[size - 1] === "undefined")
+	const isLoadingMore = !error && (isLoading || (size > 0 && data && typeof data[size - 1] === "undefined"))
 	const isEmpty = data?.[0]?.length === 0
 	const isReachingEnd = isEmpty || (data && data[data.length - 1]?.length < PAGE_SIZE)
 
@@ -148,14 +152,14 @@ export default function RecipesPage() {
 		const handleDeleteSelected = async () => {
 		if (selectedRecipes.length === 0) return
 
-		
+
 
 		// 1. 모든 목록·상세 캐시에서 바로 뺀다. 실패하면 rollback이 목록을 다시 받는다
 		const rollback = await cacheManager.deleteItems(selectedRecipes)
 
 		try {
-			
-			
+
+
 			// 3. 실제 데이터베이스에서 레시피 삭제
 			// 글이 지워지면 사진 목록도 사라지므로 먼저 모아 둔다
 			const imageUrls = await collectItemImageUrls(supabase, selectedRecipes)
@@ -164,18 +168,18 @@ export default function RecipesPage() {
 			if (error) throw error
 			selectedRecipes.forEach((itemId) => revalidateItemPage(itemId)) // 지운 레시피의 미리 만든 페이지를 바로 내린다
 			removeItemImages(imageUrls) // 지운 레시피의 사진 파일도 지운다
-			
-			
 
-			
+
+
+
 			toast({ title: `레시피 ${selectedRecipes.length}개를 지웠어요` })
 			stopSelecting()
-			
+
 		} catch (error: unknown) {
 			console.error("❌ RecipeBook: Database deletion failed:", error)
-			
+
 			rollback() // 지운 줄 알았던 레시피를 목록에 되돌린다 (서버에서 다시 받기)
-			
+
 			toast({ title: "지우지 못했어요", description: "잠시 뒤 다시 해 주세요.", variant: "destructive" })
 			console.error("Error deleting recipes:", error)
 		}
@@ -185,8 +189,8 @@ export default function RecipesPage() {
 		return (
 			<div className="px-2 py-3 max-w-7xl mx-auto w-full">
 				<div className={
-					viewMode === "card" 
-						? "grid grid-cols-2 gap-3" 
+					viewMode === "card"
+						? "grid grid-cols-2 gap-x-3 gap-y-[18px]"
 						: "space-y-5"
 				}>
 					{Array.from({ length: viewMode === "card" ? 6 : 3 }).map((_, i) => (
@@ -206,9 +210,10 @@ export default function RecipesPage() {
 				<RecipeBookGuest />
 			) : (
 			<div className="flex flex-col h-full">
+				<h1 className="px-4 pb-4 pt-4 text-display font-semibold text-ink">레시피북</h1>
 				<UnderlineTabs
 					label="레시피 범위"
-					className="sticky top-0 z-[60]"
+					className="sticky top-0 z-[60] mx-3.5"
 					value={currentTab}
 					onChange={handleTabChange}
 					items={[
@@ -217,10 +222,10 @@ export default function RecipesPage() {
 					]}
 				/>
 
-			<main className="flex-1 overflow-y-auto px-3 py-3 max-w-7xl mx-auto w-full">
-				{/* 도구 줄: 검색 / 거르기 / 보기 방식 / 선택. 고르는 동안에는 같은 높이·같은 자리에서 "고른 수 · 지우기 · 완료"로 바뀐다
+			<main className="flex-1 overflow-y-auto px-3.5 py-4 max-w-7xl mx-auto w-full">
+				{/* 도구 줄: 검색 / 필터 / 보기 방식 / 선택. 고르는 동안에는 같은 높이·같은 자리에서 "고른 수 · 지우기 · 완료"로 바뀐다
 				    (줄 높이가 같아 켜고 끌 때 아래 목록이 움직이지 않는다. "선택"과 "완료"는 같은 오른쪽 끝) */}
-				<div className="mb-3 flex h-11 items-center gap-1">
+				<div className="mb-4 flex h-[50px] items-center gap-2">
 					{isSelecting ? (
 						<>
 							<p className="min-w-0 flex-1 truncate pl-1 text-label text-ink" aria-live="polite">
@@ -233,12 +238,12 @@ export default function RecipesPage() {
 									지우기
 								</Button>
 							</AlertDialogTrigger>
-							<AlertDialogContent className="max-w-sm sm:max-w-md">
+							<AlertDialogContent placement="bottom" className="max-w-md">
 								<AlertDialogHeader>
 									<AlertDialogTitle>레시피 {selectedRecipes.length}개를 지울까요?</AlertDialogTitle>
 									<AlertDialogDescription>지운 레시피는 되돌릴 수 없어요. 이 레시피로 남긴 다른 사람의 기록에서는 출처가 사라져요.</AlertDialogDescription>
 								</AlertDialogHeader>
-								<AlertDialogFooter>
+								<AlertDialogFooter className="flex flex-row gap-2 [&_button]:mt-0 [&_button]:min-h-12 [&_button]:flex-1">
 									<AlertDialogCancel>취소</AlertDialogCancel>
 									<AlertDialogAction onClick={handleDeleteSelected} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">지우기</AlertDialogAction>
 								</AlertDialogFooter>
@@ -257,33 +262,56 @@ export default function RecipesPage() {
 									value={localSearchTerm}
 									onChange={(e) => setLocalSearchTerm(e.target.value)}
 									aria-label="레시피 검색"
-									className="pl-9"
+									className="h-[50px] pl-9"
 								/>
 							</div>
 							{currentTab === "my_recipes" && (
-								<Button variant="ghost" size="icon" onClick={() => setIsFilterModalOpen(true)} aria-label={filterActive ? "거르기와 정렬 (켜짐)" : "거르기와 정렬"} className="relative">
+								<Button variant="outline" size="icon" onClick={() => setIsFilterModalOpen(true)} aria-label={filterActive ? "필터와 정렬 (켜짐)" : "필터와 정렬"} className="relative">
 									<SlidersHorizontal className="!size-5" aria-hidden />
-									{/* 거르기·정렬이 켜져 있으면 점: 목록이 왜 줄었는지 알 수 있게 */}
+									{/* 필터·정렬이 켜져 있으면 점: 목록이 왜 줄었는지 알 수 있게 */}
 									{filterActive && <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-brand ring-2 ring-door" aria-hidden />}
 								</Button>
 							)}
-							<Button variant="ghost" size="icon" onClick={() => setViewMode(viewMode === "card" ? "list" : "card")} aria-label={viewMode === "card" ? "목록으로 보기" : "격자로 보기"}>
-								{viewMode === "card" ? <List className="!size-5" aria-hidden /> : <Grid className="!size-5" aria-hidden />}
-							</Button>
-							{currentTab === "my_recipes" && recipes.length > 0 && (
-								<Button variant="ghost" onClick={() => setIsSelecting(true)} className="px-3">
-									선택
-								</Button>
-							)}
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button type="button" variant="outline" size="icon" aria-label="레시피북 더보기" className="h-11 w-11 shrink-0">
+										<MoreHorizontal className="!size-5" aria-hidden />
+									</Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent align="end" className="min-w-44">
+									<DropdownMenuItem className="min-h-11 cursor-pointer gap-3" onSelect={() => setViewMode(viewMode === "card" ? "list" : "card")}>
+										{viewMode === "card" ? <List className="h-5 w-5" aria-hidden /> : <Grid className="h-5 w-5" aria-hidden />}
+										{viewMode === "card" ? "목록으로 보기" : "격자로 보기"}
+									</DropdownMenuItem>
+									{currentTab === "my_recipes" && recipes.length > 0 && (
+										<DropdownMenuItem className="min-h-11 cursor-pointer" onSelect={() => setIsSelecting(true)}>
+											선택해서 지우기
+										</DropdownMenuItem>
+									)}
+								</DropdownMenuContent>
+							</DropdownMenu>
 						</>
 					)}
 				</div>
 
-				{/* 2열 통일 그리드 시스템 */}
-				{isLoading && recipes.length === 0 ? (
+				{!isSelecting && !isLoading && recipes.length > 0 && (
+                    <p className="mb-6 text-caption text-ink-soft">
+                        {getRecipeSortLabel({ sortBy, sortOrder })}
+                    </p>
+                )}
+                {/* 2열 통일 그리드 시스템 */}
+                {error && recipes.length === 0 ? (
+                    <Sheet className="px-5 py-8 text-center" role="alert">
+                        <p className="text-heading text-ink">레시피북을 불러오지 못했어요</p>
+                        <p className="mt-2 text-label text-ink-soft">연결을 확인한 뒤 다시 시도해 주세요.</p>
+                        <Button type="button" variant="outline" className="mt-5 min-h-11" onClick={() => void mutate()}>
+                            다시 시도
+                        </Button>
+                    </Sheet>
+                ) : isLoading && recipes.length === 0 ? (
 					<div className={
-						viewMode === "card" 
-							? "grid grid-cols-2 gap-3" 
+						viewMode === "card"
+							? "grid grid-cols-2 gap-x-3 gap-y-[18px]"
 							: "space-y-2"
 					}>
 						{Array.from({ length: viewMode === "card" ? 4 : 3 }).map((_, i) => (
@@ -302,28 +330,28 @@ export default function RecipesPage() {
 					</Sheet>
 				) : (
 					<div className={
-						viewMode === "card" 
-							? "grid grid-cols-2 gap-3" 
+						viewMode === "card"
+							? "grid grid-cols-2 gap-x-3 gap-y-[18px]"
 							: "space-y-2"
 					}>
 						{recipes.map((item, index) =>
 							viewMode === "card" ? (
-								<RecipeCard 
-									key={item.item_id} 
-									item={item} 
-									isSelectable={isSelecting} 
-									isSelected={selectedRecipes.includes(item.item_id)} 
-									onSelect={() => handleSelectRecipe(item.item_id)} 
+								<RecipeCard
+									key={item.item_id}
+									item={item}
+									isSelectable={isSelecting}
+									isSelected={selectedRecipes.includes(item.item_id)}
+									onSelect={() => handleSelectRecipe(item.item_id)}
 									showAuthor={currentTab === "all_recipes"}
 									priority={index === 0} // 첫 번째 레시피에만 우선순위 부여
 								/>
 							) : (
-								<RecipeListCard 
-									key={item.item_id} 
-									item={item} 
-									isSelectable={isSelecting} 
-									isSelected={selectedRecipes.includes(item.item_id)} 
-									onSelect={() => handleSelectRecipe(item.item_id)} 
+								<RecipeListCard
+									key={item.item_id}
+									item={item}
+									isSelectable={isSelecting}
+									isSelected={selectedRecipes.includes(item.item_id)}
+									onSelect={() => handleSelectRecipe(item.item_id)}
 									showAuthor={currentTab === "all_recipes"}
 									priority={index === 0} // 첫 번째 레시피에만 우선순위 부여
 								/>
@@ -334,8 +362,8 @@ export default function RecipesPage() {
 
 				{isLoadingMore && (
 					<div className={
-						viewMode === "card" 
-							? "grid grid-cols-2 gap-3 mt-3" 
+						viewMode === "card"
+							? "grid grid-cols-2 gap-x-3 gap-y-[18px] mt-3"
 							: "space-y-2 mt-2"
 					}>
 						{Array.from({ length: viewMode === "card" ? 2 : 1 }).map((_, i) => (
@@ -344,9 +372,17 @@ export default function RecipesPage() {
 					</div>
 				)}
 
+                {error && recipes.length > 0 && (
+                    <div role="alert" className="mt-5 flex items-center justify-between gap-3 border-t border-border pt-4">
+                        <p className="text-label text-ink-soft">추가 레시피를 불러오지 못했어요.</p>
+                        <Button type="button" variant="outline" className="shrink-0" onClick={() => void mutate()}>
+                            다시 시도
+                        </Button>
+                    </div>
+                )}
 				<div ref={observerElem} className="h-px" />
 
-				{isReachingEnd && !isEmpty && <p className="py-6 text-center text-meta text-ink-soft">여기까지예요</p>}
+				{isReachingEnd && !isEmpty && recipes.length >= PAGE_SIZE && <p className="py-6 text-center text-meta text-ink-soft">여기까지예요</p>}
 			</main>
 
 			<FilterModal isOpen={isFilterModalOpen} onClose={() => setIsFilterModalOpen(false)} />

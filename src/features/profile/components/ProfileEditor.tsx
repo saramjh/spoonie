@@ -10,11 +10,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Camera, Loader2, RefreshCw, CheckCircle } from "lucide-react"
+import { Camera, Loader2, CheckCircle } from "lucide-react"
 import { validateUsername, checkUsernameAvailability, generateUniqueUsername } from "@/features/profile/data/username-generator"
 import { useSessionStore } from "@/store/sessionStore"
 import { optimizeImages } from "@/shared/infra/image-utils"
-import { PageHeader, PageLoading, Sheet } from "@/components/kit"
+import { PageHeader, PageLoading, StateSheet } from "@/components/kit"
 import { revalidateMyProfilePage } from "@/shared/infra/revalidate-item"
 import { fetchEditableProfile, updateProfileRow, uploadAvatar } from "@/features/profile/data/profile-repository"
 import { buildProfileUpdate } from "@/features/profile/domain/profile-update"
@@ -63,6 +63,9 @@ export default function ProfileEditor({
   // Seamless sync를 위한 optimistic update 추적
   const [optimisticUpdates, setOptimisticUpdates] = useState<Set<string>>(new Set())
   const updateSeq = useRef(0)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
+  const [loadError, setLoadError] = useState(false)
+  const [loadRevision, setLoadRevision] = useState(0)
 
 
   /**
@@ -271,6 +274,7 @@ export default function ProfileEditor({
   // 초기 데이터 로드
   useEffect(() => {
     const initializeProfile = async () => {
+      setLoadError(false)
       try {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         
@@ -314,11 +318,7 @@ export default function ProfileEditor({
               canChangeUsername: true
             }))
           } else {
-            toast({ 
-              title: "오류", 
-              description: "프로필 정보를 불러오는데 실패했습니다. 새로고침 후 다시 시도해주세요.", 
-              variant: "destructive" 
-            })
+            setLoadError(true)
           }
         } else if (data) {
           setInitialProfile(data)
@@ -332,21 +332,19 @@ export default function ProfileEditor({
             ...prev,
             canChangeUsername: (data.username_changed_count || 0) < 1
           }))
+        } else {
+          setLoadError(true)
         }
       } catch (error) {
         console.error('Profile initialization error:', error)
-        toast({ 
-          title: "시스템 오류", 
-          description: "예상치 못한 오류가 발생했습니다. 페이지를 새로고침해주세요.", 
-          variant: "destructive" 
-        })
+        setLoadError(true)
       } finally {
         setLoading(false)
       }
     }
 
-    initializeProfile()
-  }, [supabase, router, toast])
+    void initializeProfile()
+  }, [supabase, router, toast, loadRevision])
 
   // 변경사항 여부 확인
   const hasChanges = 
@@ -359,11 +357,12 @@ export default function ProfileEditor({
     !validation.username.isChecking &&
     formData.username.trim() !== "" // 유저명이 비어있지 않아야 함
 
-  if (loading) {
-    return (
-      <PageLoading />
-    )
-  }
+  if (loading) return <PageLoading />
+  if (loadError) return (
+    <StateSheet title="프로필을 불러오지 못했어요"
+      body="연결 상태를 확인하고 다시 시도해 주세요."
+      action={<Button type="button" onClick={() => { setLoading(true); setLoadRevision(value => value + 1) }}>다시 시도</Button>} />
+  )
 
   // 사진이 없으면 다른 화면과 같이 이름 첫 글자 원 (로고를 기본 사진으로 쓰지 않는다)
   const currentAvatarUrl = formData.avatarUrl || sessionProfile?.avatar_url || null
@@ -371,13 +370,13 @@ export default function ProfileEditor({
   const usernameChanged = formData.username !== (initialProfile?.username || "")
   // 프로필 편집: 사진, 이름, 소개 세 가지만. 미리보기·변경 요약 카드는 화면의 값이 곧 결과라 두지 않는다
   return (
-    <div className={mode === "full" ? "min-h-screen pb-28" : ""}>
+    <div className={mode === "modal" ? "" : "min-h-screen pb-28"}>
       {mode === "full" && (
-        <PageHeader title="프로필 수정" />
+        <PageHeader title="프로필 수정" leading="cancel" />
       )}
 
       <main className={mode === "full" ? "px-3 pt-3" : ""}>
-        <Sheet className="space-y-6 px-4 pb-6 pt-6">
+        <section className="space-y-6 bg-paper px-4 pb-6 pt-6">
           <div className="flex items-center gap-4">
             <div className="relative h-[88px] w-[88px] flex-shrink-0 overflow-hidden rounded-full bg-border">
               {currentAvatarUrl ? (
@@ -387,12 +386,14 @@ export default function ProfileEditor({
               )}
             </div>
             <div>
-              <label htmlFor="avatar-upload" className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg border border-ink/20 px-4 text-label font-medium text-ink transition-colors hover:border-ink/35 hover:bg-muted">
+              <Button type="button" variant="outline" className="h-11 gap-2 border-primary/50"
+                onClick={() => avatarInputRef.current?.click()}>
                 <Camera className="h-4 w-4" aria-hidden />
                 사진 바꾸기
-              </label>
+              </Button>
               <input
                 id="avatar-upload"
+                ref={avatarInputRef}
                 type="file"
                 accept="image/*"
                 className="sr-only"
@@ -415,18 +416,12 @@ export default function ProfileEditor({
                 disabled={!validation.canChangeUsername}
                 aria-invalid={!!validation.username.error}
                 aria-describedby="username-help"
-                className={`h-12 pr-24 ${validation.username.error ? "border-destructive" : ""}`}
+                className={`h-12 border-primary/40 pr-10 ${validation.username.error ? "border-destructive" : ""}`}
               />
               <div className="absolute right-1 top-1/2 flex -translate-y-1/2 items-center">
                 {validation.username.isChecking && <Loader2 className="mr-1 h-4 w-4 animate-spin text-ink-soft" aria-label="확인 중" />}
                 {!validation.username.isChecking && validation.username.isValid && usernameChanged && (
                   <CheckCircle className="mr-1 h-4 w-4 text-ink" aria-label="쓸 수 있는 이름" />
-                )}
-                {validation.canChangeUsername && (
-                  <Button type="button" variant="ghost" onClick={generateSmartUsername} disabled={validation.isGenerating} className="h-10 px-2 text-label">
-                    <RefreshCw className={`h-4 w-4 ${validation.isGenerating ? "animate-spin" : ""}`} aria-hidden />
-                    추천
-                  </Button>
                 )}
               </div>
             </div>
@@ -435,8 +430,14 @@ export default function ProfileEditor({
                 ? "이름은 한 번만 바꿀 수 있어서 이미 바꾼 이름을 쓰고 있어요."
                 : validation.username.error
                   ? validation.username.error
-                  : "이름은 한 번만 바꿀 수 있어요. 마음에 드는 이름이 없으면 추천을 눌러 보세요."}
+                  : "이름은 한 번만 바꿀 수 있어요. 한글 10자, 영문 20자 이내로 입력해 주세요."}
             </p>
+            {validation.canChangeUsername && (
+              <Button type="button" variant="link" disabled={validation.isGenerating}
+                onClick={generateSmartUsername} className="mt-2 h-11 px-0 text-label text-orange-ink">
+                {validation.isGenerating ? "추천 이름 찾는 중…" : "이름 추천"}
+              </Button>
+            )}
           </div>
 
           <div>
@@ -454,13 +455,14 @@ export default function ProfileEditor({
               onChange={(e) => setFormData((prev) => ({ ...prev, profileMessage: e.target.value }))}
               placeholder="어떤 요리를 주로 하는지, 브랜드라면 어떤 제품을 만드는지 적어 보세요"
               maxLength={150}
-              className="mt-1.5 h-28 resize-none text-body"
+              className="mt-1.5 h-40 resize-none border-primary/40 text-body"
             />
+            <p className="mt-2 text-meta text-ink-soft">150자 이내로 입력해 주세요.</p>
           </div>
-        </Sheet>
+        </section>
       </main>
 
-      <div className={mode === "full" ? "fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md border-t border-border bg-paper px-3 pb-[max(env(safe-area-inset-bottom),12px)] pt-3" : "pt-3"}>
+      <div className={mode === "modal" ? "pt-3" : "fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md border-t border-border bg-paper px-3 pb-[max(env(safe-area-inset-bottom),12px)] pt-3"}>
         <Button onClick={handleOptimisticSave} disabled={!canSave || optimisticUpdates.size > 0} className="h-12 w-full text-body">
           {optimisticUpdates.size > 0 ? (
             <>

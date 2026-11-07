@@ -7,12 +7,15 @@ import type { Item, ItemDetail } from "@/types/item"
 import type { CoverFocal } from "./cover-focal"
 import type { RecipeDraft, RecipeFormInput, RecipeIngredientInput, RecipeInstructionInput } from "../contracts"
 import { normalizeTags } from "@/shared/lib/topics"
+import { parseRecipeDescription, serializeRecipeDescription } from "./editorial-footer"
 
 // 수정 화면: 저장된 레시피로 폼을 채운다. 재료는 order_index 순서로 (원래 배열을 그 자리에서 정렬하는 동작도 그대로)
 export function editDefaults(initialData: Item): RecipeFormInput {
+	const parsed = parseRecipeDescription(initialData.description)
 	return {
 		title: initialData.title || "",
-		description: initialData.description || "",
+		description: parsed.description,
+		...(parsed.source ? { external_source_creator: parsed.source.creator, external_source_url: parsed.source.url } : {}),
 		servings: initialData.servings || 1,
 		cooking_time_minutes: initialData.cooking_time_minutes || 1,
 		is_public: initialData.is_public !== undefined ? initialData.is_public : true,
@@ -93,7 +96,7 @@ export function buildRecipeItemPayload(
 		user_id: ctx.userId,
 		item_type: "recipe" as const,
 		title: values.title,
-		description: values.description,
+		description: serializeRecipeDescription(values.description ?? "", values.external_source_creator, values.external_source_url),
 		servings: values.servings,
 		cooking_time_minutes: values.cooking_time_minutes,
 		is_public: values.is_public,

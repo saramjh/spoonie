@@ -10,7 +10,7 @@ import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Sheet } from "@/components/kit"
+import { PageHeader } from "@/components/kit"
 import GoogleAuthButton from "@/components/auth/GoogleAuthButton"
 import { useRouter } from "@/shared/lib/navigation"
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
@@ -61,17 +61,19 @@ export default function LoginClient({ next, partnerSource }: Props) {
 	}
 
 	return (
-		<div className="min-h-screen flex flex-col items-center justify-start p-4">
-			<div className="w-full max-w-sm mx-auto pt-8">
-				<div className="text-center mb-6">
+		<div className="min-h-screen bg-paper">
+			<PageHeader title="로그인" />
+			<div className="mx-auto w-full max-w-md px-6 pb-16 pt-8">
+				<div className="mb-7">
 					<Link href="/" className="inline-flex" aria-label="Spoonie 홈">
-						<Image src="/logo-full.svg" alt="Spoonie" width={100} height={32} priority />
+						<Image src="/logo-full.svg" alt="Spoonie" width={140} height={45} priority />
 					</Link>
-					<h1 className="mt-5 text-title text-ink">로그인</h1>
+					<h2 className="mt-5 text-[1.75rem]/tight font-bold tracking-tight text-ink">다시 만나 반가워요</h2>
+					<p className="mt-2 text-label text-ink-soft">남겨 둔 레시피를 다시 꺼내 봐요.</p>
 					{partnerCopy && <p className="mt-2 text-meta text-ink-soft">{partnerCopy.loginHint}</p>}
 				</div>
 
-				<Sheet className="p-6">
+				<div>
 					<Form {...form}>
 						<form onSubmit={form.handleSubmit(handleLogin)} className="space-y-5">
 							<FormField
@@ -80,7 +82,7 @@ export default function LoginClient({ next, partnerSource }: Props) {
 								render={({ field }) => (
 									<FormItem className="space-y-1.5">
 										<FormLabel className="text-label font-medium text-ink">이메일</FormLabel>
-										<FormControl><Input {...field} /></FormControl>
+										<FormControl><Input className="h-12" {...field} /></FormControl>
 										<FormMessage />
 									</FormItem>
 								)}
@@ -91,7 +93,7 @@ export default function LoginClient({ next, partnerSource }: Props) {
 								render={({ field }) => (
 									<FormItem className="space-y-1.5">
 										<FormLabel className="text-label font-medium text-ink">비밀번호</FormLabel>
-										<FormControl><Input type="password" {...field} /></FormControl>
+										<FormControl><Input type="password" className="h-12" {...field} /></FormControl>
 										<FormMessage />
 									</FormItem>
 								)}
@@ -104,9 +106,6 @@ export default function LoginClient({ next, partnerSource }: Props) {
 						</form>
 					</Form>
 
-					<div className="text-center mt-4 mb-6">
-						<Link href={forgotHref} className="text-meta text-ink-soft hover:text-orange-ink transition-colors duration-200">비밀번호를 잊으셨나요?</Link>
-					</div>
 
 					<div className="relative my-6">
 						<div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
@@ -114,11 +113,11 @@ export default function LoginClient({ next, partnerSource }: Props) {
 					</div>
 
 					<GoogleAuthButton next={next} partnerSource={partnerSource} />
-				</Sheet>
+				</div>
 
-				<div className="mt-8 text-center">
-					<span className="text-meta text-ink-soft">계정이 없으신가요? </span>
-					<Link href={signupHref} className="text-label font-semibold text-orange-ink hover:text-orange-ink transition-colors duration-200">회원가입</Link>
+				<div className="mt-8 flex items-center justify-between gap-4">
+					<Link href={signupHref} className="min-h-11 inline-flex items-center text-label font-semibold text-orange-ink underline underline-offset-4">회원가입</Link>
+					<Link href={forgotHref} className="min-h-11 inline-flex items-center text-label font-semibold text-orange-ink underline underline-offset-4">비밀번호 찾기</Link>
 				</div>
 
 				<div className="mt-6 text-center space-x-3">

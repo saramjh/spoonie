@@ -5,22 +5,23 @@ import ImageUploader from "./ImageUploader"
 import InstructionImageUploader from "@/features/recipe/components/InstructionImageUploader"
 
 describe("recipe card crop preview", () => {
-  it("shows the live 4:3 crop and accessible focal controls only for recipe covers", () => {
+  it("shows the live 3:2 crop and accessible focal controls only for recipe covers", () => {
     const image = { preview: "https://example.com/p.jpg", file: new File([], "p.jpg"), width: 1280, height: 960 }
     const html = renderToStaticMarkup(createElement(ImageUploader, {
       frame: "recipe", images: [image], thumbnailIndex: 0,
       focalPoint: { x: 15, y: 83 }, onFocalPointChange: () => {}, onImagesChange: () => {},
     }))
-    expect(html).toContain("피드에서 보이는 모습")
-    expect(html).toContain("object-position:15% 83%")
-    expect(html).toContain('aria-label="대표 사진 좌우 위치"')
-    expect(html).toContain('aria-label="대표 사진 위아래 위치"')
+    // Vaul portals are intentionally not included in server static markup.
+    // The approved crop editor is rendered only after the user opens the
+    // management sheet; interactive crop geometry is covered in browser E2E.
+    expect(html).toContain("사진 순서·대표 사진 관리")
+    expect(html).not.toContain('aria-label="대표 사진 좌우 위치"')
     const post = renderToStaticMarkup(createElement(ImageUploader, { frame: "recipeed", images: [image], onImagesChange: () => {} }))
     expect(post).not.toContain("피드에서 보이는 모습")
     const square = renderToStaticMarkup(createElement(ImageUploader, { frame: "recipeed", images: [image], focalPoint: { x: 82, y: 14 }, onFocalPointChange: () => {}, onImagesChange: () => {} }))
-    expect(square).toContain("피드에서 보이는 모습 · 1:1")
-    expect(square).toContain("aspect-square")
-    expect(square).toContain("object-position:82% 14%")
+    expect(square).toContain("사진 순서·대표 사진 관리")
+    expect(square).toContain("aspect-[3/2]")
+    expect(square).not.toContain("object-position:82% 14%")
   })
 })
 
@@ -47,5 +48,22 @@ describe("mobile file picker before hydration", () => {
     const input = html.match(/<input[^>]*type="file"[^>]*>/)?.[0]
     expect(input).toContain('class="sr-only"')
     expect(input).not.toContain('w-full')
+  })
+})
+
+
+describe("approved photo composer layout", () => {
+  it("uses matching photo/add slots and a collapsed native management section without losing crop controls", () => {
+    const image = { preview: "https://example.com/p.jpg", file: new File([], "p.jpg"), width: 1280, height: 960 }
+    const html = renderToStaticMarkup(createElement(ImageUploader, { images: [image], onImagesChange: () => {}, onThumbnailChange: () => {}, frame: "recipe", focalPoint: { x: 15, y: 83 }, onFocalPointChange: () => {} }))
+    expect(html).toContain('data-photo-slot="image"')
+    expect(html).toContain('data-photo-slot="add"')
+    expect(html).toContain("대표 사진")
+    expect(html).toContain("사진 순서·대표 사진 관리")
+    expect(html).toContain('사진 관리')
+    expect(html).toContain('data-photo-management')
+    expect(html).toContain('사진 순서·대표 사진 관리')
+    expect(html).not.toContain('aria-label="대표 사진 좌우 위치"')
+    expect(html).not.toContain('aria-label="1번째 사진 맨 앞으로"')
   })
 })

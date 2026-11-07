@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import Image from "next/image"
-import { Sheet } from "@/components/kit"
+import { PageHeader } from "@/components/kit"
 import { serializeJsonLd } from "@/shared/lib/json-ld"
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
@@ -36,7 +36,9 @@ const structured = {
 
 export default function AfterCookingMagazinePage() {
   return (
-    <Sheet className="mx-3 mb-24 mt-3 px-4 pb-7 pt-5 text-ink sm:px-6">
+    <div className="min-h-screen bg-paper">
+      <PageHeader title="매거진" />
+      <div className="mx-auto max-w-md px-4 pb-24 pt-6 text-ink">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(structured) }} />
       <nav aria-label="현재 위치" className="text-label text-ink-soft">
         <Link href="/magazine" className="underline underline-offset-4">Spoonie Magazine</Link>
@@ -135,6 +137,7 @@ export default function AfterCookingMagazinePage() {
         </section>
       </article>
 
-    </Sheet>
+    </div>
+    </div>
   )
 }

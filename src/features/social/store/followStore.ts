@@ -5,6 +5,8 @@ import { cacheManager } from '@/shared/infra/unified-cache-manager'
 interface FollowStore {
   followingUsers: Set<string>
   isLoading: boolean
+  initializedUserId: string | null
+  initializingUserId: string | null
   
   // 액션들
   initializeFollowState: (userId: string) => Promise<void>
@@ -20,11 +22,13 @@ interface FollowStore {
 export const useFollowStore = create<FollowStore>((set, get) => ({
   followingUsers: new Set(),
   isLoading: false,
+  initializedUserId: null,
+  initializingUserId: null,
   
   // 같은 세션에서 전체 팔로우 목록을 반복 조회하지 않는다.
   initializeFollowState: async (currentUserId: string) => {
     const supabase = createSupabaseBrowserClient()
-    set({ isLoading: true })
+    set({ isLoading: true, initializedUserId: null, initializingUserId: currentUserId })
     
     try {
       const { data, error } = await supabase
@@ -35,13 +39,16 @@ export const useFollowStore = create<FollowStore>((set, get) => ({
       if (error) throw error
       
       const followingSet = new Set(data?.map(f => f.following_id) || [])
-      set({ followingUsers: followingSet })
+      if (get().initializingUserId !== currentUserId) return
+      set({ followingUsers: followingSet, initializedUserId: currentUserId })
       
     } catch (error) {
       console.error('❌ FollowStore: Failed to initialize follow state:', error)
-      set({ followingUsers: new Set() })
+      if (get().initializingUserId === currentUserId)
+        set({ followingUsers: new Set(), initializedUserId: null })
     } finally {
-      set({ isLoading: false })
+      if (get().initializingUserId === currentUserId)
+        set({ isLoading: false, initializingUserId: null })
     }
   },
   

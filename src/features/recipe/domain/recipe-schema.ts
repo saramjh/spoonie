@@ -6,6 +6,8 @@ import * as z from "zod"
 export const recipeSchema = z.object({
 	title: z.string().min(3, "제목은 3글자 이상이어야 합니다."),
 	description: z.string().optional(),
+	external_source_creator: z.string().optional(),
+	external_source_url: z.string().optional(),
 	servings: z.coerce.number<string | number>().min(1, "인분은 1 이상이어야 합니다."),
 	cooking_time_minutes: z.coerce.number<string | number>().min(1, "조리시간은 1분 이상이어야 합니다."),
 	is_public: z.boolean(),

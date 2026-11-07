@@ -4,6 +4,7 @@ import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
+import { PageHeader } from "@/components/kit"
 import LegacyPartnerHashRedirect from "./legacy-hash-redirect"
 import PartnerActionLink from "./partner-action-link"
 
@@ -27,93 +28,49 @@ export const metadata: Metadata = {
 
 export default function PartnersPage() {
   return (
-    <div className="min-h-screen bg-door px-3 py-4">
+    <div className="min-h-screen bg-paper">
+      <PageHeader title="파트너 안내" />
       <LegacyPartnerHashRedirect />
-      <article className="mx-auto max-w-md overflow-hidden rounded-[3px] bg-paper shadow-sm">
-        <section className="px-4 pb-5 pt-6">
+      <article className="mx-auto max-w-md">
+        <section className="px-4 py-4">
           <Link href="/" className="inline-flex" aria-label="Spoonie 홈">
             <Image src="/logo-full.svg" alt="Spoonie" width={100} height={32} priority />
           </Link>
-          <p className="mt-5 text-meta text-ink-soft">For Creators & Brands</p>
-          <h1 className="mt-2 text-display text-ink">
-            레시피를 올리는 곳보다
+          <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight text-ink">
+            요리를 남기는
             <br />
-            실제로 쓰이는 곳
+            크리에이터와 브랜드에게
           </h1>
           <p className="mt-3 text-body text-ink-soft">
-            Spoonie는 Recipe를 읽는 사람이 양을 바꾸고 요리한 뒤, 만든 기록과 참고 관계까지 원본으로 이어 남길 수 있는 요리 소셜 서비스입니다.
+            레시피를 실제 요리에 쓰는 Recipe로 남기고, 만든 기록과 참고 관계를 원본에 이어갑니다.
           </p>
         </section>
 
-        <section className="border-t border-border px-4 py-5" aria-label="Spoonie 작동 방식">
-          <div className="overflow-hidden rounded-[3px] border border-border bg-paper-tint">
-            <div className="flex min-h-11 items-center justify-between gap-3 border-b border-border px-3">
-              <p className="text-label font-semibold text-ink">기능 시연</p>
-              <p className="text-meta text-ink-soft">Spoonie 화면 예시</p>
-            </div>
-
-            <div className="bg-paper">
-              <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
-                <div>
-                  <p className="text-meta text-ink-soft">Recipe</p>
-                  <p className="mt-0.5 text-label font-semibold text-ink">재료와 단계를 실제 요리에 맞게</p>
-                </div>
-                <div className="rounded-lg border border-border px-3 py-2 text-label font-semibold tabular-nums text-ink">
-                  − &nbsp;2인분&nbsp; +
-                </div>
-              </div>
-
-              <div className="border-b border-border px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <p className="text-meta text-ink-soft">요리하기</p>
-                  <div className="flex flex-1 gap-1" aria-hidden>
-                    <span className="h-1 flex-1 rounded-full bg-ink" />
-                    <span className="h-1 flex-1 rounded-full bg-border" />
-                    <span className="h-1 flex-1 rounded-full bg-border" />
-                  </div>
-                  <span className="text-meta tabular-nums text-ink-soft">1 / 3</span>
-                </div>
-                <p className="mt-2 text-read text-ink">지금 필요한 단계만 보며 끝까지 따라갑니다.</p>
-              </div>
-
-              <div className="px-4 py-3">
-                <p className="text-meta text-ink-soft">만든 기록 · 참고 관계</p>
-                <div className="mt-2 flex items-center gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-meta text-ink-soft">이 Recipe로 만들었어요</p>
-                    <p className="truncate text-label font-semibold text-ink">만들어 본 기록</p>
-                  </div>
-                  <ArrowRight className="h-4 w-4 flex-shrink-0 text-ink-soft" aria-hidden />
-                  <p className="text-label font-semibold text-ink">원본 Recipe</p>
-                </div>
-              </div>
-            </div>
+        <figure className="mx-4 mb-2">
+          <div className="relative aspect-[3/2] w-full overflow-hidden rounded-xl bg-paper-tint">
+            <Image src="/partners-cooking-example.webp" fill loading="eager" sizes="(max-width: 448px) calc(100vw - 32px), 416px"
+              className="object-cover" alt="토마토 크림 파스타 요리 예시" />
           </div>
+          <figcaption className="mt-2 text-meta text-ink-soft">조리 예시 이미지 · 실제 이용 기록이 아닙니다.</figcaption>
+        </figure>
 
-          <p className="mt-3 text-meta text-ink-soft">
-            기능 동작 예시 · 실제 관계는 사용자가 만들거나 참고했을 때만 생깁니다.
-          </p>
-        </section>
-
-        <section id="creators" className="scroll-mt-16 border-t border-border px-4 py-5">
-          <p className="text-meta text-ink-soft">요리 콘텐츠를 직접 만드는 사람</p>
-          <h2 className="mt-1 text-heading text-ink">내 레시피가 다시 쓰이게</h2>
+        <section id="creators" className="scroll-mt-16 border-t border-border px-4 py-3">
+          <h2 className="text-title text-ink">요리 크리에이터</h2>
           <p className="mt-2 text-body text-ink-soft">
-            Recipe가 요리에 쓰이고, 만든 기록과 참고가 생기면 원본과 내 프로필로 이어집니다.
+            다시 만들 수 있는 레시피를 남겨 보세요.
           </p>
           <PartnerActionLink
             href="/partners/creators"
             segment="hub"
             action="creator_segment_open"
-            className={buttonVariants({ variant: "outline", size: "lg", className: "mt-4 w-full" })}
+            className={buttonVariants({ size: "lg", className: "mt-3 w-full" })}
           >
-            크리에이터로 보기 <ArrowRight aria-hidden />
+            크리에이터 안내 보기 <ArrowRight aria-hidden />
           </PartnerActionLink>
         </section>
 
-        <section id="brands" className="scroll-mt-16 border-t border-border px-4 py-5">
-          <p className="text-meta text-ink-soft">식품·주방 제품의 활용법을 만드는 팀</p>
-          <h2 className="mt-1 text-heading text-ink">제품의 쓰임이 쌓이게</h2>
+        <section id="brands" className="scroll-mt-16 border-t border-border px-4 py-3">
+          <h2 className="text-title text-ink">식품·주방 브랜드</h2>
           <p className="mt-2 text-body text-ink-soft">
             제품 소개가 아니라 실제 조리 가능한 활용 Recipe를 만들고 여러 쓰임을 프로필에 축적합니다.
           </p>
@@ -121,9 +78,9 @@ export default function PartnersPage() {
             href="/partners/brands"
             segment="hub"
             action="brand_segment_open"
-            className={buttonVariants({ variant: "outline", size: "lg", className: "mt-4 w-full" })}
+            className={buttonVariants({ variant: "outline", size: "lg", className: "mt-3 w-full" })}
           >
-            브랜드로 보기 <ArrowRight aria-hidden />
+            브랜드 안내 보기 <ArrowRight aria-hidden />
           </PartnerActionLink>
         </section>
       </article>

@@ -2,34 +2,46 @@
 
 import LinkifiedText from "@/components/common/LinkifiedText"
 
-import { useState } from "react"
+import { useEffect, useState, useId } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
 import { cacheManager } from "@/shared/infra/unified-cache-manager"
 import { addComment, fetchComments, softDeleteComment } from "@/features/social/data/comment-repository"
-import { Send, Trash2, CornerUpLeft } from "lucide-react"
+import { Send, Trash2, CornerUpLeft, X } from "lucide-react"
 import { Comment } from "@/types/item"
 import { timeAgo } from "@/lib/utils"
 import useSWR, { mutate } from "swr"
 import { useRealtimeRefresh } from "@/hooks/useRealtimeRefresh"
 import type { Item } from "@/types/item"
 import { IntentLink } from "@/components/kit"
+import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "@/components/ui/drawer"
+import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
 
 interface CommentsSectionProps {
   currentUserId?: string
   itemId: string
   cachedItem?: Item // 전체 아이템 데이터 추가
+  asSheet?: boolean
+  isOpen?: boolean
+  onClose?: () => void
 }
 
 export default function CommentsSection({ 
   currentUserId, 
   itemId, 
-  cachedItem
+  cachedItem,
+  asSheet = false,
+  isOpen = false,
+  onClose,
 }: CommentsSectionProps) {
+  const composerId = useId()
   const [newComment, setNewComment] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false)
+  const [returnTo, setReturnTo] = useState<string | undefined>()
+  const [draftRestored, setDraftRestored] = useState(false)
   
   // 대댓글 시스템 상태
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
@@ -37,6 +49,51 @@ export default function CommentsSection({
   const [isSubmittingReply, setIsSubmittingReply] = useState<Record<string, boolean>>({})
   
   const { toast } = useToast()
+  // Guest drafts belong to one item and browser tab. Authentication never
+  // submits them automatically; the user must still press Send afterward.
+  const key = "spoonie-comment-draft:" + itemId
+  useEffect(() => {
+    let active = true
+    queueMicrotask(() => {
+    if (!active) return
+    try {
+      const stored = sessionStorage.getItem(key)
+      if (stored) {
+        const draft = JSON.parse(stored) as {
+          at: number; text?: string; replyTo?: string; replies?: Record<string, string>
+        }
+        if (Number.isFinite(draft.at) && Date.now() - draft.at < 86_400_000) {
+          if (typeof draft.text === "string") setNewComment(draft.text.slice(0, 5000))
+          if (typeof draft.replyTo === "string") setReplyingTo(draft.replyTo)
+          if (draft.replies && typeof draft.replies === "object") {
+            setReplyTexts(Object.fromEntries(Object.entries(draft.replies)
+              .filter(([id, value]) => id.length < 120 && typeof value === "string")
+              .map(([id, value]) => [id, value.slice(0, 5000)])))
+          }
+        } else sessionStorage.removeItem(key)
+      }
+    } catch { /* Disabled storage: keep the draft for this mount. */ }
+    setDraftRestored(true)
+    })
+    return () => { active = false }
+  }, [key])
+
+  useEffect(() => {
+    if (!draftRestored) return
+    try {
+      if (newComment || replyingTo || Object.values(replyTexts).some(Boolean)) {
+        sessionStorage.setItem(key, JSON.stringify({
+          at: Date.now(), text: newComment, replyTo: replyingTo, replies: replyTexts,
+        }))
+      } else sessionStorage.removeItem(key)
+    } catch { /* Text remains in memory. */ }
+  }, [draftRestored, key, newComment, replyingTo, replyTexts])
+
+  const loginForComment = () => {
+    setReturnTo(window.location.pathname + window.location.search + "#comments")
+    onClose?.()
+    setShowLoginPrompt(true)
+  }
 
   // 댓글 데이터 로드 (itemId가 없으면 요청하지 않음)
   const { data: comments, mutate: mutateComments } = useSWR(
@@ -64,7 +121,8 @@ export default function CommentsSection({
   })
 
   const handleAddComment = async () => {
-    if (!currentUserId || !newComment.trim() || isSubmitting) return
+    if (!newComment.trim() || isSubmitting) return
+    if (!currentUserId) { loginForComment(); return }
 
     const commentContent = newComment.trim()
     setIsSubmitting(true)
@@ -114,7 +172,8 @@ export default function CommentsSection({
 
   const handleReplySubmit = async (parentCommentId: string) => {
     const replyText = replyTexts[parentCommentId]?.trim()
-    if (!replyText || !currentUserId) return
+    if (!replyText) return
+    if (!currentUserId) { loginForComment(); return }
 
     setIsSubmittingReply({ ...isSubmittingReply, [parentCommentId]: true })
 
@@ -182,10 +241,10 @@ export default function CommentsSection({
     }
   }
 
-  return (
-    <div className="space-y-4">
+  const contents = (
+    <div className={asSheet ? "flex min-h-0 flex-1 flex-col gap-4" : "space-y-4"}>
       {/* 댓글 목록 */}
-      <div className="space-y-4">
+      <div className={asSheet ? "min-h-0 flex-1 space-y-4 overflow-y-auto" : "space-y-4"}>
         {/* 대댓글 시스템: 부모 댓글과 대댓글 분리 */}
         {(() => {
           // 부모 댓글과 대댓글 분리
@@ -240,7 +299,7 @@ export default function CommentsSection({
                       </p>
 
                       {/* 답글 버튼 (삭제되지 않은 댓글만) */}
-                      {currentUserId && (
+                      {(
                         <div className="flex items-center gap-2 mt-2">
                           <Button
                             variant="ghost"
@@ -259,27 +318,10 @@ export default function CommentsSection({
                   {/* 대댓글 입력 폼 (삭제되지 않은 댓글만) */}
                   {replyingTo === comment.id && !comment.is_deleted && (
                     <div className="mt-3 space-y-2">
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="답글을 입력하세요..."
-                          value={replyTexts[comment.id] || ""}
-                          onChange={(e) => setReplyTexts({ ...replyTexts, [comment.id]: e.target.value })}
-                          className="text-label"
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                              e.preventDefault()
-                              handleReplySubmit(comment.id)
-                            }
-                          }}
-                        />
-                        <Button
-                          size="sm"
-                          onClick={() => handleReplySubmit(comment.id)}
-                          disabled={!replyTexts[comment.id]?.trim() || isSubmittingReply[comment.id]}
-                        >
-                          <Send className="w-4 h-4" />
-                        </Button>
-                      </div>
+                      <form className="flex items-end gap-2 rounded-xl border border-ink/30 bg-paper p-2 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2" onSubmit={(event) => { event.preventDefault(); void handleReplySubmit(comment.id) }}>
+                        <Textarea autoFocus rows={2} aria-label={`${comment.user.username}님에게 답글`} placeholder="답글을 남겨 보세요" value={replyTexts[comment.id] || ""} onChange={(event) => setReplyTexts({ ...replyTexts, [comment.id]: event.target.value })} disabled={isSubmittingReply[comment.id]} className="min-h-14 flex-1 resize-none rounded-none border-0 bg-transparent px-1 py-1.5 text-body focus-visible:ring-0" />
+                        <Button type="submit" size="icon" className="shrink-0" aria-label="답글 올리기" disabled={!replyTexts[comment.id]?.trim() || isSubmittingReply[comment.id]}><Send className="h-5 w-5" aria-hidden /></Button>
+                      </form>
                       <Button variant="ghost" size="sm" onClick={handleCancelReply} className="text-meta">
                         취소
                       </Button>
@@ -364,24 +406,30 @@ export default function CommentsSection({
       </div>
 
       {/* 댓글 작성 */}
-      {currentUserId && (
-        <div className="flex gap-2">
-          <Input
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder="댓글을 입력하세요..."
-            onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
-            disabled={isSubmitting}
-          />
-          <Button
-            onClick={handleAddComment}
-            disabled={!newComment.trim() || isSubmitting}
-            size="sm"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
-        </div>
+      {(
+        <form data-comment-composer className="flex items-end gap-2 rounded-xl border border-ink/30 bg-paper p-2 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2" onSubmit={(event) => { event.preventDefault(); void handleAddComment() }}>
+          <label htmlFor={composerId} className="sr-only">댓글</label>
+          <Textarea id={composerId} rows={2} value={newComment} onChange={(event) => setNewComment(event.target.value)} placeholder="댓글을 남겨 보세요" disabled={isSubmitting} className="min-h-14 flex-1 resize-none rounded-none border-0 bg-transparent px-1 py-1.5 text-body focus-visible:ring-0" />
+          <Button type="submit" aria-label="댓글 올리기" size="icon" className="shrink-0" disabled={!newComment.trim() || isSubmitting}><Send className="h-5 w-5" aria-hidden /></Button>
+        </form>
       )}
     </div>
   )
-} 
+  return <>
+    {asSheet ? (
+      <Drawer open={isOpen} onOpenChange={open => { if (!open) onClose?.() }} shouldScaleBackground={false}>
+        <DrawerContent className="mx-auto flex h-auto max-h-[85dvh] min-h-[50dvh] max-w-md flex-col px-4 pb-5">
+          <div className="flex shrink-0 items-center justify-between pt-3">
+            <DrawerTitle className="text-title font-semibold text-ink">댓글</DrawerTitle>
+            <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label="닫기">
+              <X className="h-5 w-5" aria-hidden />
+            </Button>
+          </div>
+          <DrawerDescription className="sr-only">요리 이야기와 답글을 확인하고 작성해요.</DrawerDescription>
+          {contents}
+        </DrawerContent>
+      </Drawer>
+    ) : contents}
+    <LoginPromptSheet action="comment" isOpen={showLoginPrompt} onClose={() => setShowLoginPrompt(false)} returnTo={returnTo} />
+  </>
+}

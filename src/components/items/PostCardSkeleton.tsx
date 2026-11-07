@@ -11,7 +11,7 @@ export default function PostCardSkeleton() {
           <Skeleton className="h-3 w-1/4" />
         </div>
       </div>
-      <Skeleton className="aspect-square w-full rounded-none" />
+      <Skeleton className="mx-3 aspect-[3/2] w-[calc(100%-24px)] rounded-[10px]" />
       <div className="space-y-2 px-4 py-4">
         <Skeleton className="h-5 w-3/4" />
         <Skeleton className="h-4 w-1/2" />

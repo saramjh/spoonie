@@ -88,7 +88,7 @@ export async function fetchFollowList(direction: FollowDirection, userId: string
 }
 
 // 좋아요한 사람 최근 50명. 실패하면 던진다
-export async function fetchLikers(itemId: string): Promise<LikerProfile[]> {
+export async function fetchLikers(itemId: string, viewerId: string | null = null): Promise<LikerProfile[]> {
 	const { data, error } = await createSupabaseBrowserClient()
 		.from("likes")
 		.select("user_id, created_at, profiles!user_id (id, username, display_name, avatar_url, public_id)")
@@ -96,6 +96,16 @@ export async function fetchLikers(itemId: string): Promise<LikerProfile[]> {
 		.order("created_at", { ascending: false })
 		.limit(50)
 	if (error) throw error
+	const userIds = (data || []).map(row => row.user_id as string)
+	let followed = new Set<string>()
+	if (viewerId && userIds.length) {
+		const { data: rows } = await createSupabaseBrowserClient()
+			.from("follows")
+			.select("following_id")
+			.eq("follower_id", viewerId)
+			.in("following_id", userIds)
+		followed = new Set((rows || []).map(row => row.following_id as string))
+	}
 	return (data || []).map((like: { user_id: string; created_at: string; profiles: Profile | Profile[] }) => {
 		const profile = Array.isArray(like.profiles) ? like.profiles[0] : like.profiles
 		return {
@@ -105,6 +115,7 @@ export async function fetchLikers(itemId: string): Promise<LikerProfile[]> {
 			avatar_url: profile?.avatar_url ?? null,
 			public_id: profile?.public_id ?? null,
 			liked_at: like.created_at,
+			viewer_follows: followed.has(profile?.id || like.user_id),
 		}
 	})
 }

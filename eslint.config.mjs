@@ -7,6 +7,21 @@ export default defineConfig([
   ...nextTs,
   globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts", "public/**", "src/docs/**"]),
   {
+    files: ["**/*.cjs", "scripts/**/*.js"],
+    rules: { "@typescript-eslint/no-require-imports": "off" },
+  },
+  {
+    // Netlify deploy functions still use CommonJS, including existing
+    // inline require suppressions. Do not rewrite unrelated server code.
+    files: ["netlify/functions/**/*.js"],
+    linterOptions: { reportUnusedDisableDirectives: "off" },
+    rules: { "@typescript-eslint/no-require-imports": "off" },
+  },
+  {
+    // Next registers React Hooks plugins for app/source modules. Keep those
+    // rule overrides out of root configs (e.g. tailwind.config.ts) so a
+    // normal repository-wide lint does not fail on a missing plugin mapping.
+    files: ["src/**/*.{ts,tsx,js,jsx}"],
     rules: {
       "@typescript-eslint/no-unused-vars": "warn",
       "@typescript-eslint/no-explicit-any": "warn",

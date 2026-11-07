@@ -9,6 +9,7 @@ interface LoginPromptSheetProps {
 	isOpen: boolean
 	onClose: () => void
 	action: "follow" | "like" | "bookmark" | "comment" | "notification"
+	returnTo?: string
 }
 
 // 어떤 행동이 로그인 후 가능해지는지를 알려준다. 로그인했다고 원래 행동이 자동 실행되지는 않는다.
@@ -38,7 +39,8 @@ export const ACTION_MESSAGES = {
 export default function LoginPromptSheet({ 
 	isOpen, 
 	onClose, 
-	action 
+	action,
+	returnTo,
 }: LoginPromptSheetProps) {
 	const router = useRouter()
 	const actionInfo = ACTION_MESSAGES[action]
@@ -96,13 +98,13 @@ export default function LoginPromptSheet({
 
 	const handleLogin = () => {
 		// 컨텍스트 유지: 현재 페이지를 기억해두고 로그인 후 돌아오기
-		const currentPath = window.location.pathname + window.location.search
+		const currentPath = returnTo || (window.location.pathname + window.location.search)
 		router.push(`/login?next=${encodeURIComponent(currentPath)}`)
 		onClose()
 	}
 
 	const handleSignup = () => {
-		const currentPath = window.location.pathname + window.location.search
+		const currentPath = returnTo || (window.location.pathname + window.location.search)
 		router.push(`/signup?next=${encodeURIComponent(currentPath)}`)
 		onClose()
 	}

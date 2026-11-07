@@ -1,14 +1,15 @@
-import { Skeleton } from '@/components/ui/skeleton'
-import { Sheet } from "@/components/kit"
+import { Skeleton } from "@/components/ui/skeleton"
 
+// Match the real square-photo RecipeCard grid during loading; do not show
+// an old 4:3 sheet frame that jumps to another aspect ratio on data arrival.
 export default function RecipeCardSkeleton() {
   return (
-    <Sheet className="overflow-hidden" aria-hidden>
-      <Skeleton className="aspect-[4/3] w-full rounded-none" />
-      <div className="space-y-2 px-3 pb-3 pt-2">
+    <div className="min-w-0" aria-hidden>
+      <Skeleton className="aspect-square w-full rounded-xl" />
+      <div className="space-y-2 pt-2">
         <Skeleton className="h-4 w-3/4" />
         <Skeleton className="h-3 w-1/2" />
       </div>
-    </Sheet>
+    </div>
   )
 }

@@ -32,7 +32,7 @@ export function PageHeader({ title, leading = "back", trailing, titleAlign = "ce
 	// 가운데 제목은 양옆 폭과 상관없이 정확히 가운데 (3칸 격자)
 	if (titleAlign === "center") {
 		return (
-			<header className={cn("sticky top-0 z-40 grid h-14 grid-cols-[1fr_auto_1fr] items-center border-b border-border bg-paper px-1", className)}>
+			<header className={cn("sticky top-0 z-40 grid h-[54px] grid-cols-[1fr_auto_1fr] items-center border-b border-border bg-paper px-1", className)}>
 				<div className="flex justify-start">{back}</div>
 				<h1 className="truncate text-heading text-ink">{title}</h1>
 				<div className="flex justify-end">{trailing}</div>
@@ -40,7 +40,7 @@ export function PageHeader({ title, leading = "back", trailing, titleAlign = "ce
 		)
 	}
 	return (
-		<header className={cn("sticky top-0 z-40 flex h-14 items-center gap-1 border-b border-border bg-paper pr-1", back ? "pl-1" : "pl-4", className)}>
+		<header className={cn("sticky top-0 z-40 flex h-[54px] items-center gap-1 border-b border-border bg-paper pr-1", back ? "pl-1" : "pl-4", className)}>
 			{back}
 			<h1 className="min-w-0 flex-1 truncate text-title text-ink">{title}</h1>
 			{trailing}

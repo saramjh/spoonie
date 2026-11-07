@@ -11,7 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { LogOut, Trash2 } from "lucide-react"
 import ProfileEditor from "@/features/profile/components/ProfileEditor"
 import { InstallAppRow } from "@/components/install/InstallApp"
-import { PageHeader, SectionHeading, Sheet } from "@/components/kit"
+import { PageHeader, SectionHeading } from "@/components/kit"
 // useSessionStore removed - using local state instead
 
 export default function ProfileEditPage() {
@@ -67,18 +67,18 @@ export default function ProfileEditPage() {
 	}
 
 	return (
-		<div className="min-h-screen pb-10">
-			<PageHeader title="프로필 수정" />
+		<div className="min-h-screen bg-paper pb-28">
+			<PageHeader title="프로필 수정" leading="cancel" />
 
-			<main className="space-y-3 px-3 pt-3">
+			<div className="space-y-4 pt-3">
 				<ProfileEditor mode="inline" />
 
-				<Sheet as="section" className="px-4 py-5">
+				<section className="border-t border-border px-4 py-5">
 					<SectionHeading>앱으로 설치</SectionHeading>
 					<InstallAppRow />
-				</Sheet>
+				</section>
 
-				<Sheet as="section" className="px-4 py-5">
+				<section className="border-t border-border px-4 py-5">
 					<SectionHeading>계정</SectionHeading>
 					<Button variant="outline" className="mt-3 w-full justify-start" onClick={handleLogout}>
 						<LogOut className="h-4 w-4" aria-hidden />
@@ -115,8 +115,8 @@ export default function ProfileEditPage() {
 							</AlertDialogContent>
 						</AlertDialog>
 					</div>
-				</Sheet>
-			</main>
+				</section>
+			</div>
 		</div>
 	)
 }

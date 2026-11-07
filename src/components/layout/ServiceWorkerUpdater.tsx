@@ -1,90 +1,107 @@
 "use client"
 
-import { useEffect } from "react"
-import { useToast } from "@/hooks/use-toast"
+import { useEffect, useRef, useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "@/components/ui/drawer"
+import { X } from "lucide-react"
+
+// Only show a real update when an existing installation receives a newer
+// service worker. Never interrupt an editing screen or drop a local draft.
+function isComposing(pathname: string) {
+  return /^\/(?:recipes|posts)\/new\/?$/.test(pathname)
+    || /^\/(?:recipes|posts)\/[^/]+\/edit\/?$/.test(pathname)
+}
 
 export default function ServiceWorkerUpdater() {
-	const { toast } = useToast()
+  const [available, setAvailable] = useState(false)
+  const [message, setMessage] = useState("")
+  const registration = useRef<ServiceWorkerRegistration | null>(null)
+  const refreshRequested = useRef(false)
 
-	useEffect(() => {
-		if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-			// 메모리 안전: 이벤트 리스너 레퍼런스 저장
-			// 새 버전의 서비스워커가 넘겨받으면, 옛 화면이 지워진 파일을 찾지 않도록 새로 연다.
-			// - 처음 설치될 때(원래 넘겨받은 워커가 없을 때)는 새로 열지 않는다: 첫 방문자의 화면이 1초 뒤에 다시 열리던 문제
-			// - 쓰는 도중에 화면이 바뀌지 않게, 사용자가 이 탭을 떠나 있을 때 새로 연다
-			const hadController = !!navigator.serviceWorker.controller
-			let reloadPending = false
-			const reloadWhenHidden = () => {
-				// 작성 폼을 벗어나기 전에는 새 버전이 와도 자동 새로고침하지 않는다.
-				// 카메라/사진 선택기를 열 때 hidden 상태로 전환될 수 있다.
-				const path = window.location.pathname
-				const composing = /^\/(?:recipes|posts)\/new\/?$/.test(path)
-					|| /^\/(?:recipes|posts)\/[^/]+\/edit\/?$/.test(path)
-				if (reloadPending && !composing && document.visibilityState === 'hidden') window.location.reload()
-			}
-			const handleControllerChange = () => {
-				if (!hadController) return
-				reloadPending = true
-				reloadWhenHidden()
-			}
-			document.addEventListener('visibilitychange', reloadWhenHidden)
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return
+    let active = true
+    const hadController = Boolean(navigator.serviceWorker.controller)
+    let newWorker: ServiceWorker | null = null
+    let removeListeners = () => {}
 
-			const handleStateChange = (newWorker: ServiceWorker) => () => {
-				if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-					toast({
-						title: "새 버전 사용 가능",
-						description: "새로고침하여 최신 버전을 이용하세요.",
-						duration: 5000,
-					})
-				}
-			}
+    const prompt = () => {
+      if (active && hadController) setAvailable(true)
+    }
+    const stateChanged = () => {
+      if (newWorker?.state === "installed") prompt()
+    }
+    const updateFound = () => {
+      if (newWorker) newWorker.removeEventListener("statechange", stateChanged)
+      newWorker = registration.current?.installing ?? null
+      newWorker?.addEventListener("statechange", stateChanged)
+      stateChanged()
+    }
+    const controllerChanged = () => {
+      if (!hadController) return
+      if (refreshRequested.current && !isComposing(window.location.pathname)) {
+        window.location.reload()
+      } else if (active) {
+        setAvailable(true)
+      }
+    }
+    const visibilityChanged = () => {
+      // Background refresh is allowed only outside a composer; never refresh
+      // as a side effect of opening an OS photo/camera chooser.
+      if (document.visibilityState === "hidden" && refreshRequested.current && !isComposing(window.location.pathname)) {
+        window.location.reload()
+      }
+    }
+    navigator.serviceWorker.addEventListener("controllerchange", controllerChanged)
+    document.addEventListener("visibilitychange", visibilityChanged)
+    void navigator.serviceWorker.ready.then((reg) => {
+      if (!active) return
+      registration.current = reg
+      if (reg.waiting && hadController) prompt()
+      reg.addEventListener("updatefound", updateFound)
+      updateFound()
+      removeListeners = () => {
+        reg.removeEventListener("updatefound", updateFound)
+        newWorker?.removeEventListener("statechange", stateChanged)
+      }
+    }).catch(() => {})
+    return () => {
+      active = false
+      removeListeners()
+      navigator.serviceWorker.removeEventListener("controllerchange", controllerChanged)
+      document.removeEventListener("visibilitychange", visibilityChanged)
+    }
+  }, [])
 
-			const handleUpdateFound = (registration: ServiceWorkerRegistration) => () => {
-				const newWorker = registration.installing
-				if (newWorker) {
-					const stateChangeHandler = handleStateChange(newWorker)
-					newWorker.addEventListener('statechange', stateChangeHandler)
-					
-					// 메모리 안전: 정리 함수에서 제거할 수 있도록 저장
-					return () => {
-						newWorker.removeEventListener('statechange', stateChangeHandler)
-					}
-				}
-			}
+  const refresh = () => {
+    if (isComposing(window.location.pathname)) {
+      setMessage("작성 중인 내용을 먼저 저장하고 이 화면을 나간 뒤 새로고침해 주세요.")
+      return
+    }
+    refreshRequested.current = true
+    const waiting = registration.current?.waiting
+    if (waiting) waiting.postMessage({ type: "SKIP_WAITING" })
+    else window.location.reload()
+  }
 
-			// 이벤트 리스너 등록
-			navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange)
-
-			// 업데이트 감지 설정
-			let updateFoundCleanup: (() => void) | undefined
-			navigator.serviceWorker.ready.then((registration) => {
-				const updateFoundHandler = handleUpdateFound(registration)
-				registration.addEventListener('updatefound', updateFoundHandler)
-				updateFoundCleanup = () => {
-					registration.removeEventListener('updatefound', updateFoundHandler)
-				}
-			})
-
-			// 메모리 안전: cleanup 함수
-			return () => {
-				navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange)
-				document.removeEventListener('visibilitychange', reloadWhenHidden)
-				updateFoundCleanup?.()
-			}
-		}
-	}, [toast])
-
-	// 업데이트 적용
-	// const handleUpdate = () => {
-	// 	if ('serviceWorker' in navigator) {
-	// 		navigator.serviceWorker.ready.then((registration) => {
-	// 			if (registration.waiting) {
-	// 				registration.waiting.postMessage({ type: 'SKIP_WAITING' })
-	// 			}
-	// 		})
-	// 	}
-	// 	setIsUpdateAvailable(false)
-	// } // Function not used in current implementation
-
-	return null // UI 없음, 토스트로만 알림
+  return (
+    <Drawer open={available} onOpenChange={setAvailable} shouldScaleBackground={false}>
+      <DrawerContent className="mx-auto max-w-md rounded-t-2xl px-4 pb-6 pt-4">
+        <div className="flex items-center justify-between">
+          <DrawerTitle className="text-title font-semibold text-ink">새로운 버전이 있어요</DrawerTitle>
+          <Button variant="ghost" size="icon" type="button" onClick={() => setAvailable(false)} aria-label="닫기">
+            <X className="h-5 w-5" aria-hidden />
+          </Button>
+        </div>
+        <DrawerDescription className="mt-4 text-label leading-relaxed text-ink-soft">
+          새로고침하면 바뀐 내용을 볼 수 있어요. 작성 중인 내용이 있다면 먼저 저장해 주세요.
+        </DrawerDescription>
+        {message && <p role="alert" className="mt-3 text-meta text-destructive">{message}</p>}
+        <div className="mt-5 flex gap-2">
+          <Button type="button" variant="outline" className="h-12 flex-1" onClick={() => setAvailable(false)}>나중에</Button>
+          <Button type="button" className="h-12 flex-1" onClick={refresh}>새로고침</Button>
+        </div>
+      </DrawerContent>
+    </Drawer>
+  )
 }

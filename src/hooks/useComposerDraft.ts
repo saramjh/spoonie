@@ -210,16 +210,25 @@ export function useComposerDraft<T>({
     }
   }, [key])
 
-  const leave = useCallback(async (navigate: () => void) => {
+  // Forms own the confirmation surface. The draft hook remains the single source
+  // of truth for whether a save is needed and whether navigation is safe.
+  const leaveConfirmed = useCallback(async (navigate: () => void) => {
     if (!ready) return
-    const hasChanges = signature(latest.current()) !== baseline.current
     if (blocked.current) { setStatus("conflict"); return }
-    if (hasChanges && !window.confirm("작성 중인 내용을 이 기기에 보관하고 나갈까요?")) return
+    const hasChanges = signature(latest.current()) !== baseline.current
     if (hasChanges) {
       try { await saveNow() } catch { setStatus("error"); return }
     }
     navigate()
   }, [ready, saveNow, signature])
+
+  const leave = useCallback((navigate: () => void, requestConfirmation?: () => void) => {
+    if (!ready) return
+    if (blocked.current) { setStatus("conflict"); return }
+    const hasChanges = signature(latest.current()) !== baseline.current
+    if (hasChanges && requestConfirmation) { requestConfirmation(); return }
+    void leaveConfirmed(navigate)
+  }, [ready, leaveConfirmed, signature])
 
   useEffect(() => {
     const onVisibility = () => {
@@ -241,5 +250,5 @@ export function useComposerDraft<T>({
     }
   }, [saveNow, signature])
 
-  return { ready, recovery, status, scheduleSave, restorePrevious, startFresh, finishPublish, leave }
+  return { ready, recovery, status, scheduleSave, restorePrevious, startFresh, finishPublish, leave, leaveConfirmed }
 }

@@ -18,6 +18,7 @@ interface StepModeProps {
 	servingsLabel: string
 	startAt: number
 	recipeId?: string
+	coverImage?: string | null
 	onStepDone: (index: number) => void
 	onClose: () => void
 }
@@ -26,7 +27,7 @@ type WakeLockSentinelLike = { release: () => Promise<void> }
 
 // 요리하는 동안 쓰는 전체 화면 단계 보기.
 // 화면이 꺼지지 않게 하고, 지금 단계만 크게 보여 주며, 이전/다음은 엄지가 닿는 아래쪽에 둔다.
-export default function StepMode({ steps, ingredients, servingsLabel, startAt, recipeId, onStepDone, onClose }: StepModeProps) {
+export default function StepMode({ steps, ingredients, servingsLabel, startAt, recipeId, coverImage, onStepDone, onClose }: StepModeProps) {
 	const router = useRouter()
 	const [index, setIndex] = useState(startAt)
 	const [finished, setFinished] = useState(false)
@@ -143,11 +144,18 @@ export default function StepMode({ steps, ingredients, servingsLabel, startAt, r
 				}}
 			>
 				{finished ? (
-					<Sheet className="px-5 py-6">
-						<h2 className="text-display">다 만들었어요</h2>
-						<p className="mt-3 text-read text-ink-soft">
-							사진 한 장과 한 줄이면 이 레시피의 &lsquo;만들어 본 기록&rsquo;으로 남아요. 레시피를 쓴 사람에게도 알려 줘요.
+					<Sheet className="flex min-h-[55dvh] flex-col items-center px-5 pb-10 pt-16 text-center">
+						<h2 className="text-display font-semibold text-ink">다 만들었어요</h2>
+						{(coverImage || steps[steps.length - 1]?.image_url) && (
+							<div className="relative mt-7 aspect-[3/2] w-full max-w-[320px] overflow-hidden rounded-xl bg-muted">
+								<Photo src={(coverImage || steps[steps.length - 1]?.image_url)!} alt="완성한 요리 참고 사진" fit="cover" sizes="(max-width:448px) calc(100vw - 40px),320px" />
+							</div>
+						)}
+						<p className="mt-6 text-label font-medium text-ink">사진 한 장과 한 줄이면</p>
+						<p className="mt-1 max-w-[270px] text-label leading-relaxed text-ink-soft">
+							이 레시피를 만들어 본 기록으로 남아요.
 						</p>
+						<p className="mt-4 text-meta text-ink-soft">원래 레시피와 이어져 작성자에게도 알려져요.</p>
 					</Sheet>
 				) : (
 				<Sheet key={index} className="min-h-[45dvh] px-5 py-6 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-200">

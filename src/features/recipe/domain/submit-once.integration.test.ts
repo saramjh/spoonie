@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import ts from "typescript"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { serializeRecipeDescription } from "./editorial-footer"
 
 // 실제 폼의 onSubmit 본문을 그대로 실행한다. 네트워크·인증·스토리지는
 // 가짜로 대체하여 공개 글이나 운영 계정은 만들지 않는다.
@@ -73,6 +74,7 @@ function setup(kind: "recipe" | "post", options: {
     }),
     attachInstructionImages: vi.fn(() => []),
     buildRecipeItemPayload: vi.fn(() => ({ title: "test recipe" })),
+    serializeRecipeDescription,
     buildPostItemPayload: vi.fn(() => ({ content: "test post" })),
     saveRecipeRows: vi.fn(async () => {
       calls.push("recipe-db-attempt")
