@@ -76,8 +76,8 @@ export default function BottomNavBar() {
 	return (
 		<>
 
-			<nav aria-label="주요 메뉴" className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-md border-t border-border bg-paper pb-[env(safe-area-inset-bottom)]">
-				<div className="flex h-[63px] items-center justify-around">
+			<nav data-app-chrome aria-label="주요 메뉴" className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-md border-t border-border bg-paper pb-[env(safe-area-inset-bottom)]">
+				<div className="flex h-[calc(var(--bottom-nav-height)-1px)] items-center justify-around">
 					{/* 1. 홈 */}
 					<Link
 						href="/"

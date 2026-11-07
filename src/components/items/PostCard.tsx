@@ -4,6 +4,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Share2, MessageCircle, MoreVertical, Trash2, Edit, Heart } from "lucide-react"
 import { formatCookingTime } from "@/features/recipe/domain/recipe-amount"
+import { parseRecipeDescription } from "@/features/recipe/domain/editorial-footer"
 import FollowButton from "./FollowButton"
 import { LikeButton } from "@/components/items/LikeButton"
 import { BookmarkButton } from "@/components/items/BookmarkButton"
@@ -227,6 +228,7 @@ export default function PostCard({
   }
 
   const cookingTime = formatCookingTime(displayItem.cooking_time_minutes)
+  const recipeDescription = isRecipe ? parseRecipeDescription(displayItem.description).description : ""
   const tags = displayItem.tags ?? []
   const visibleTags = surface === "home" ? tags.slice(0, 3) : tags
   const remainingTagCount = tags.length - visibleTags.length
@@ -329,8 +331,8 @@ export default function PostCard({
                 )}
               </div>
             )}
-            {displayItem.description && (
-              <ExpandableText text={displayItem.description} maxLines={2} onExpand={() => router.push(detailUrl)} className="mt-3" />
+            {recipeDescription && (
+              <ExpandableText text={recipeDescription} maxLines={2} onExpand={() => router.push(detailUrl)} className="mt-3" />
             )}
             {/* 다른 사람이 실제로 만든 기록: 레시피의 신뢰 증거 */}
             <MadeProof

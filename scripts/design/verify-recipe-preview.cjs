@@ -1,9 +1,13 @@
 // Real application component versus approved static board, isolated localhost only.
 const assert=require('node:assert/strict')
 const {chromium}=require('playwright-core')
-const mock='http://127.0.0.1:49152/index.html?screen=recipe&revision=20261107-3'
-const actual='http://127.0.0.1:3001/recipes/design-preview?view=recipe'
-const chrome='/Users/ojihun/Library/Caches/ms-playwright/chromium-1243/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing'
+const { SPOONIE_MOCK_RECIPE_URL: mock, SPOONIE_APP_RECIPE_URL: actual,
+ SPOONIE_FIXTURE_API_URL: fixtureApi, PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH: chrome } = process.env
+assert.ok(mock && actual && fixtureApi, 'Set SPOONIE_MOCK_RECIPE_URL, SPOONIE_APP_RECIPE_URL and SPOONIE_FIXTURE_API_URL for the matching local recipe fixtures.')
+for (const url of [mock, actual, fixtureApi]) {
+ assert.ok(['127.0.0.1', 'localhost', '[::1]'].includes(new URL(url).hostname), 'Design fixtures must use a loopback URL.')
+}
+const apiOrigin = new URL(fixtureApi).origin
 const referenceSelectors={header:'.app-topbar',hero:'.detail-hero .photo',summary:'.detail-summary',title:'.detail-title',tags:'.detail-summary .tags',social:'.detail-summary .social-actions',tabs:'.sticky-tabs',ingredients:'.ingredient-head',cta:'.app-dock',nav:'.app-nav'}
 const actualSelectors={header:'[data-design-slot=header]',hero:'[data-design-slot=hero]',summary:'[data-design-slot=summary]',title:'[data-design-slot=title]',tags:'[data-design-slot=tags]',social:'[data-design-slot=social]',tabs:'[role=tablist]',ingredients:'[data-design-slot=ingredients]',cta:'[aria-label="요리 시작"]',nav:'nav[aria-label="주요 메뉴"]'}
 async function geometry(page,selectors,app){
@@ -22,7 +26,7 @@ async function geometry(page,selectors,app){
  },{selectors,app})
 }
 (async()=>{
-const browser=await chromium.launch({headless:true,executablePath:chrome})
+const browser=await chromium.launch({headless:true,...(chrome ? {executablePath:chrome} : {})})
 try{
  const ref=await browser.newPage({viewport:{width:390,height:844}})
  const app=await browser.newPage({viewport:{width:390,height:844},serviceWorkers:'block'})
@@ -55,6 +59,11 @@ try{
  checked+=3
  await app.locator('#recipe-tab-method').click()
  assert.equal(await app.locator('#recipe-tab-method').getAttribute('aria-selected'),'true')
+ await app.locator('#recipe-tab-method').press('ArrowRight')
+ assert.equal(await app.locator('#recipe-tab-ingredients').getAttribute('aria-selected'),'true')
+ await app.locator('#recipe-tab-ingredients').press('ArrowLeft')
+ assert.equal(await app.locator('#recipe-tab-method').getAttribute('aria-selected'),'true')
+ checked+=2
  let metrics=await app.evaluate(()=>{
   const img=document.querySelector('#recipe-panel-method img'),panel=document.querySelector('#recipe-panel-method')
   const a=img.getBoundingClientRect(),b=panel.getBoundingClientRect(),s=getComputedStyle(panel)
@@ -103,7 +112,7 @@ try{
   'access-control-allow-methods': 'GET, OPTIONS'
  }
  const related = await browser.newPage({viewport:{width:390,height:844},serviceWorkers:'block'})
- await related.route(/^http:\/\/127\.0\.0\.1:65432\/rest\/v1\/content_relations(?:\?|$)/, route => {
+ await related.route(url => url.origin === apiOrigin && url.pathname === '/rest/v1/content_relations', route => {
   if (route.request().method() === 'OPTIONS') return route.fulfill({status:204,headers:relationHeaders})
   return route.fulfill({
    headers: relationHeaders,
@@ -122,6 +131,13 @@ try{
   assert.equal(await disclosure.locator('ul').isVisible(), false)
   await disclosure.locator('summary').press('Enter')
   assert.equal(await disclosure.locator('ul').isVisible(), true)
+  checked++
+ }
+ for (const missing of ['/spoonie-qa-missing', '/search/spoonie-qa-missing']) {
+  const response = await app.goto(new URL(missing, actual).href, {waitUntil:'load'})
+  assert.equal(response.status(),404)
+  assert.equal(await app.locator('header:visible').count(),1)
+  assert.equal(await app.getByRole('navigation',{name:'주요 메뉴'}).count(),0)
   checked++
  }
  console.log('REAL_RECIPE_PLAYWRIGHT_PARITY_PASS',checked)

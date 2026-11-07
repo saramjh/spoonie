@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/kit"
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-paper">
+    <div data-app-not-found className="min-h-screen bg-paper">
       <PageHeader title="404 · 없는 글" />
       <section aria-labelledby="not-found-title" className="mx-auto flex max-w-sm flex-col items-center px-4 pb-24 pt-16 text-center">
         <Search aria-hidden className="h-10 w-10 text-ink-soft" strokeWidth={1.5} />

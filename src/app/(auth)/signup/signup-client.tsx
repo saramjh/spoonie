@@ -1,7 +1,7 @@
 "use client"
 
-import Image from "next/image"
 import Link from "next/link"
+import AuthScreen from "@/components/auth/AuthScreen"
 import { useState } from "react"
 import { Loader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
@@ -10,7 +10,6 @@ import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { PageHeader } from "@/components/kit"
 import GoogleAuthButton from "@/components/auth/GoogleAuthButton"
 import { useToast } from "@/hooks/use-toast"
 import { useHydrationReady } from "@/hooks/useHydrationReady"
@@ -94,110 +93,91 @@ export default function SignupClient({ next, partnerSource }: Props) {
 		: "메일의 인증 링크를 누르면 가입이 완료됩니다."
 
 	return (
-		<div className="min-h-screen bg-paper">
-			<PageHeader title="회원가입" />
-			<div className="mx-auto w-full max-w-md px-6 pb-16 pt-8">
-				<div className="mb-7">
-					<Link href="/" className="inline-flex" aria-label="Spoonie 홈">
-						<Image src="/logo-full.svg" alt="Spoonie" width={140} height={45} priority />
-					</Link>
-					<h2 className="mt-5 text-[1.75rem]/tight font-bold tracking-tight text-ink">Spoonie 계정 만들기</h2>
-					<p className="mt-2 text-label text-ink-soft">내 요리를 기록하고 다른 사람과 나눠 보세요.</p>
-					{partnerCopy && <p className="mt-2 text-meta text-ink-soft">{partnerCopy.signupHint}</p>}
-				</div>
-
-				<div>
-					{emailSent ? (
-						<div>
-							<h2 className="text-heading text-ink">인증 메일을 보냈어요</h2>
-							<p className="mt-2 text-body text-ink-soft">{emailSentBody}</p>
-							<p className="mt-3 text-meta text-ink-soft">메일이 보이지 않으면 스팸함도 확인해 주세요.</p>
-							<Button asChild variant="outline" className="mt-5 h-12 w-full">
-								<Link href={loginHref}>이미 인증했다면 로그인</Link>
-							</Button>
-						</div>
-					) : (
-						<>
-							<Form {...form}>
-								<form onSubmit={form.handleSubmit(handleSignUp)} className="space-y-5">
-									<FormField
-										control={form.control}
-										name="email"
-										render={({ field }) => (
-											<FormItem className="space-y-1.5">
-												<FormLabel className="text-label font-medium text-ink">이메일</FormLabel>
-												<FormControl><Input className="h-12" {...field} /></FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-									<FormField
-										control={form.control}
-										name="password"
-										render={({ field }) => (
-											<FormItem className="space-y-1.5">
-												<FormLabel className="text-label font-medium text-ink">비밀번호</FormLabel>
-												<FormControl><Input type="password" className="h-12" placeholder="6자 이상" {...field} /></FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-									<FormField
-										control={form.control}
-										name="confirmPassword"
-										render={({ field }) => (
-											<FormItem className="space-y-1.5">
-												<FormLabel className="text-label font-medium text-ink">비밀번호 확인</FormLabel>
-												<FormControl><Input type="password" className="h-12" {...field} /></FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-									<Button
-										type="submit"
-										disabled={!isHydrated || form.formState.isSubmitting || isRedirecting}
-										className="h-12 w-full text-body"
-									>
-										{form.formState.isSubmitting || isRedirecting ? (
-											<><Loader2 className="mr-2 h-5 w-5 animate-spin" aria-hidden />가입하는 중</>
-										) : partnerCopy ? "이메일로 계정 만들기" : "계정 만들기"}
-									</Button>
-								</form>
-							</Form>
-							<div className="relative my-6">
-								<div className="absolute inset-0 flex items-center">
-									<span className="w-full border-t border-border" />
-								</div>
-								<div className="relative flex justify-center text-meta">
-									<span className="bg-paper px-4 text-ink-soft font-medium">또는</span>
-								</div>
-							</div>
-
-							<GoogleAuthButton
-								next={next}
-								partnerSource={partnerSource}
-								label={partnerSource ? "Google로 계정 만들기" : "Google로 계속하기"}
-							/>
-
-						</>
-					)}
-				</div>
-
-				{!emailSent && (
-					<div className="mt-8 text-center">
-						<span className="text-meta text-ink-soft">이미 계정이 있으신가요? </span>
-						<Link href={loginHref} className="text-label font-semibold text-orange-ink hover:text-orange-ink transition-colors duration-200">로그인</Link>
+		<AuthScreen showLegalLinks title="회원가입" intro={{ heading: "Spoonie 계정 만들기", description: "내 요리를 기록하고 다른 사람과 나눠 보세요.", hint: partnerCopy?.signupHint }}>
+			<div>
+				{emailSent ? (
+					<div>
+						<h2 className="text-heading text-ink">인증 메일을 보냈어요</h2>
+						<p className="mt-2 text-body text-ink-soft">{emailSentBody}</p>
+						<p className="mt-3 text-meta text-ink-soft">메일이 보이지 않으면 스팸함도 확인해 주세요.</p>
+						<Button asChild variant="outline" className="mt-5 h-12 w-full">
+							<Link href={loginHref}>이미 인증했다면 로그인</Link>
+						</Button>
 					</div>
-				)}
+				) : (
+					<>
+						<Form {...form}>
+							<form onSubmit={form.handleSubmit(handleSignUp)} className="space-y-5">
+								<FormField
+									control={form.control}
+									name="email"
+									render={({ field }) => (
+										<FormItem className="space-y-1.5">
+											<FormLabel className="text-label font-medium text-ink">이메일</FormLabel>
+											<FormControl><Input className="h-12" {...field} /></FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+								<FormField
+									control={form.control}
+									name="password"
+									render={({ field }) => (
+										<FormItem className="space-y-1.5">
+											<FormLabel className="text-label font-medium text-ink">비밀번호</FormLabel>
+											<FormControl><Input type="password" className="h-12" placeholder="6자 이상" {...field} /></FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+								<FormField
+									control={form.control}
+									name="confirmPassword"
+									render={({ field }) => (
+										<FormItem className="space-y-1.5">
+											<FormLabel className="text-label font-medium text-ink">비밀번호 확인</FormLabel>
+											<FormControl><Input type="password" className="h-12" {...field} /></FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+								<Button
+									type="submit"
+									disabled={!isHydrated || form.formState.isSubmitting || isRedirecting}
+									className="h-12 w-full text-body"
+								>
+									{form.formState.isSubmitting || isRedirecting ? (
+										<><Loader2 className="mr-2 h-5 w-5 animate-spin" aria-hidden />가입하는 중</>
+									) : partnerCopy ? "이메일로 계정 만들기" : "계정 만들기"}
+								</Button>
+							</form>
+						</Form>
+						<div className="relative my-6">
+							<div className="absolute inset-0 flex items-center">
+								<span className="w-full border-t border-border" />
+							</div>
+							<div className="relative flex justify-center text-meta">
+								<span className="bg-paper px-4 text-ink-soft font-medium">또는</span>
+							</div>
+						</div>
 
-				<div className="mt-6 text-center space-x-3">
-					<Link href="/legal/privacy" className="text-meta text-ink-soft hover:text-ink transition-colors duration-200">개인정보처리방침</Link>
-					<span className="text-meta text-ink-soft/60">|</span>
-					<Link href="/legal/terms" className="text-meta text-ink-soft hover:text-ink transition-colors duration-200">이용약관</Link>
-					<span className="text-meta text-ink-soft/60">|</span>
-					<Link href="/legal/policy" className="text-meta text-ink-soft hover:text-ink transition-colors duration-200">운영정책</Link>
-				</div>
+						<GoogleAuthButton
+							next={next}
+							partnerSource={partnerSource}
+							label={partnerSource ? "Google로 계정 만들기" : "Google로 계속하기"}
+						/>
+
+					</>
+				)}
 			</div>
-		</div>
+
+			{!emailSent && (
+				<div className="mt-8 text-center">
+					<span className="text-meta text-ink-soft">이미 계정이 있으신가요? </span>
+					<Link href={loginHref} className="text-label font-semibold text-orange-ink hover:text-orange-ink transition-colors duration-200">로그인</Link>
+				</div>
+			)}
+
+		</AuthScreen>
 	)
 }

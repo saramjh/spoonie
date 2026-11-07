@@ -467,7 +467,8 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 
 	return (
 		<div className={cn("flex flex-col h-full relative", showDetailNavigation && (
-			hasCookingBar ? "pb-[calc(5rem+71px+env(safe-area-inset-bottom))]" : "pb-20"
+			hasCookingBar ? "pb-[calc(var(--bottom-nav-height)+var(--recipe-cooking-bar-height)+1rem+env(safe-area-inset-bottom))]"
+				: "pb-[calc(var(--bottom-nav-height)+1rem+env(safe-area-inset-bottom))]"
 		), isRecipe && "bg-paper")}>
 			<article>
 				{!recipeAdjusting && <header data-design-slot={isRecipe ? "header" : undefined} className={cn("sticky top-0 z-20 flex h-14 items-center gap-1 border-b border-border bg-paper px-1", isRecipe && "h-[54px] px-3")}>

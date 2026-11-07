@@ -18,6 +18,8 @@
 		--like: 214 69 61; /* 좋아요 하트 #d6453d */
 		--danger: 168 44 38; /* 지우기·오류 #a82c26 */
 		--sheet-shadow: none;
+		--bottom-nav-height: 4rem;
+		--recipe-cooking-bar-height: 71px;
 	}
 }
 

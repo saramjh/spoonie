@@ -22,6 +22,8 @@ export interface TabItem<K extends string> {
 	label: ReactNode
 	count?: number
 	description?: string
+	id?: string
+	controls?: string
 }
 
 interface UnderlineTabsProps<K extends string> {
@@ -30,10 +32,11 @@ interface UnderlineTabsProps<K extends string> {
 	onChange: (key: K) => void
 	label: string
 	stretch?: boolean
+	variant?: "standard" | "panel"
 	className?: string
 }
 
-export function UnderlineTabs<K extends string>({ items, value, onChange, label, stretch = true, className }: UnderlineTabsProps<K>) {
+export function UnderlineTabs<K extends string>({ items, value, onChange, label, stretch = true, variant = "standard", className }: UnderlineTabsProps<K>) {
 	const [openDescription, setOpenDescription] = useState<K | null>(null)
 
 	const onTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
@@ -54,9 +57,11 @@ export function UnderlineTabs<K extends string>({ items, value, onChange, label,
 				return (
 					<button
 						key={item.key}
+						id={item.id}
 						type="button"
 						role="tab"
 						aria-selected={value === item.key}
+						aria-controls={item.controls}
 						tabIndex={value === item.key ? 0 : -1}
 						onKeyDown={(event) => onTabKeyDown(event, index)}
 						aria-describedby={descriptionId}
@@ -77,10 +82,14 @@ export function UnderlineTabs<K extends string>({ items, value, onChange, label,
 							}, 2200)
 						}}
 						className={cn(
-							"-mb-px h-12 border-b-2 px-4 text-label font-semibold",
+							"text-label font-semibold",
+							variant === "panel"
+								? "min-h-[43px] border-b-[3px] px-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+								: "-mb-px h-12 border-b-2 px-4",
 							item.description && "relative",
 							stretch && "flex-1",
-							value === item.key ? "border-primary text-orange-ink" : "border-transparent text-ink-soft"
+							value === item.key ? "border-primary text-orange-ink" : "border-transparent text-ink-soft",
+							variant === "panel" && (value === item.key ? "bg-paper-tint" : "hover:text-ink")
 						)}
 					>
 						<span className={cn(item.description && "border-b border-dotted border-ink-soft")}>{item.label}</span>

@@ -9,7 +9,7 @@ import { initialReferenceIndex, parseAmountInput, selectReference, scaleForRefer
 import { cn } from "@/lib/utils"
 import StepMode from "@/features/recipe/components/StepMode"
 import LinkifiedText from "@/components/common/LinkifiedText"
-import { CheckBox, Photo, SectionHeading } from "@/components/kit"
+import { CheckBox, Photo, SectionHeading, UnderlineTabs } from "@/components/kit"
 
 interface RecipeContentViewProps {
 	initialServings: number
@@ -156,30 +156,22 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 	const invalidAmount = adjusting && (pendingAmount === null || selectedIndex === null || scaleForReference(ingredients, { index: selectedIndex, target: pendingAmount }) === null)
 	const adjustableCount = ingredients.filter((item) => Number.isFinite(item.amount) && item.amount > 0).length
 
-	const chooseTab = (tab: "ingredients" | "method") => setActiveTab(tab)
-	const onTabKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
-		if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return
-		event.preventDefault()
-		const next = event.key === "Home" || event.key === "ArrowLeft" ? "ingredients" : "method"
-		chooseTab(next)
-		event.currentTarget.parentElement?.querySelector<HTMLButtonElement>("#recipe-tab-" + next)?.focus()
-	}
 
 	return (
     <>
       {adjusting && <header className="sticky top-0 z-20 grid h-[54px] grid-cols-[1fr_auto_1fr] items-center border-b border-border bg-paper px-3"><button type="button" onClick={cancelAdjusting} className="min-h-11 justify-self-start text-label">취소</button><h2 id="quantity-heading" className="text-heading">재료 양 맞추기</h2><span aria-hidden /></header>}
-      {!adjusting && (
-				<div role="tablist" aria-label="레시피 내용" className="mx-[14px] mt-[18px] grid h-[53px] grid-cols-2 border-b border-border pt-[10px]">
-					{(["ingredients", "method"] as const).map((tab) => (
-						<button key={tab} id={"recipe-tab-" + tab} role="tab" type="button"
-							aria-controls={"recipe-panel-" + tab} aria-selected={activeTab === tab}
-							tabIndex={activeTab === tab ? 0 : -1} onClick={() => chooseTab(tab)}
-							onKeyDown={onTabKeyDown}
-							className={cn("min-h-[43px] border-b-[3px] px-2 text-label font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", activeTab === tab ? "border-primary bg-paper-tint text-orange-ink" : "border-transparent text-ink-soft hover:text-ink")}>
-							{tab === "ingredients" ? "재료" : "만드는 법"}
-						</button>
-					))}
-				</div>
+			{!adjusting && (
+				<UnderlineTabs
+					label="레시피 내용"
+					value={activeTab}
+					onChange={setActiveTab}
+					items={[
+						{ key: "ingredients", label: "재료", id: "recipe-tab-ingredients", controls: "recipe-panel-ingredients" },
+						{ key: "method", label: "만드는 법", id: "recipe-tab-method", controls: "recipe-panel-method" },
+					]}
+					variant="panel"
+					className="mx-[14px] mt-[18px] grid h-[53px] grid-cols-2 pt-[10px]"
+				/>
 			)}
 			<section id="recipe-panel-ingredients" role={adjusting ? undefined : "tabpanel"} aria-labelledby={adjusting ? "quantity-heading" : "recipe-tab-ingredients"}
 				hidden={!adjusting && activeTab !== "ingredients"}
@@ -405,8 +397,8 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 				</>
 			)}
 			{!adjusting && steps.length > 0 && (
-				<div className="fixed inset-x-0 z-[45] mx-auto flex h-[71px] w-full max-w-md items-center border-t border-border bg-paper px-[14px] py-[10px]"
-					style={{ bottom: "calc(4rem + env(safe-area-inset-bottom))" }}>
+				<div className="fixed inset-x-0 z-[45] mx-auto flex h-[var(--recipe-cooking-bar-height)] w-full max-w-md items-center border-t border-border bg-paper px-[14px] py-[10px]"
+					style={{ bottom: "calc(var(--bottom-nav-height) + env(safe-area-inset-bottom))" }}>
 					<button type="button" aria-label="요리 시작" onClick={() => setStepModeAt(firstUndone(steps.length, doneSteps))}
 						className="flex min-h-[50px] w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-body font-semibold text-primary-foreground transition-colors hover:bg-orange-ink/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ring">
 						<Play className="h-5 w-5 fill-current" aria-hidden /> 요리 시작

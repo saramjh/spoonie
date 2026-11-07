@@ -36,6 +36,19 @@ describe("optional external recipe source: nonblocking compatibility", () => {
       source: { creator: "Hyosun / Korean Bapsang", url: "https://www.koreanbapsang.com/hobak-jeon/" },
     })
   })
+  it("preserves literal backslashes in current prose and still reads escaped publisher footers", () => {
+    const prose = "사진 경로 C:\\new를 참고하세요."
+    expect(parseRecipeDescription(serializeRecipeDescription(prose, creator, url))).toEqual({
+      description: prose, source: { creator, url },
+    })
+    expect(parseRecipeDescription("소개\\n\\n출처·안내: " + creator + " · " + url)).toEqual({
+      description: "소개", source: { creator, url },
+    })
+    expect(parseRecipeDescription("소개\\n\\n원작자: " + creator + "\\n원문: " + url)).toEqual({
+      description: "소개", source: { creator, url },
+    })
+  })
+
   it("new form optional fields roundtrip without a DB migration or duplicate footers", () => {
     const once = serializeRecipeDescription("소개", creator, url)
     expect(serializeRecipeDescription(once, creator, url)).toBe(once)

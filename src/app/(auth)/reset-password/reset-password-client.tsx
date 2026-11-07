@@ -1,8 +1,8 @@
 "use client"
 
-import Image from "next/image"
 import { useState } from "react"
 import Link from "next/link"
+import AuthScreen from "@/components/auth/AuthScreen"
 import { useRouter } from "@/shared/lib/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -10,7 +10,7 @@ import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { PageHeader, StateSheet } from "@/components/kit"
+import { StateSheet } from "@/components/kit"
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { useToast } from "@/hooks/use-toast"
 import { useHydrationReady } from "@/hooks/useHydrationReady"
@@ -69,59 +69,48 @@ export default function ResetPasswordClient({ next, partnerSource, expiredLink }
 	}
 
 	return (
-		<div className="min-h-screen bg-paper">
-			<PageHeader title="비밀번호 재설정" />
-			<div className="mx-auto w-full max-w-md px-6 pb-16 pt-8">
-				{!expired && <div className="mb-7">
-					<Link href="/" className="inline-flex" aria-label="Spoonie 홈">
-						<Image src="/logo-full.svg" alt="Spoonie" width={140} height={45} priority />
+		<AuthScreen title="비밀번호 재설정" intro={expired ? undefined : { heading: "새 비밀번호 만들기", description: "새 비밀번호를 입력해 주세요." }}>
+			<div>
+				{expired ? (
+					<StateSheet title="재설정 링크가 만료됐어요"
+							body="안전하게 새 링크를 요청한 뒤 다시 설정해 주세요."
+							action={<Button asChild><Link href={authEntryHref("/forgot-password", next, partnerSource)}>새 링크 요청</Link></Button>} />
+				) : (
+				<Form {...form}>
+					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+						<FormField
+							control={form.control}
+							name="password"
+							render={({ field }) => (
+								<FormItem className="space-y-1.5">
+									<FormLabel className="text-label font-medium text-ink">새 비밀번호</FormLabel>
+									<FormControl><Input type="password" className="h-12" placeholder="6자 이상" {...field} /></FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name="confirmPassword"
+							render={({ field }) => (
+								<FormItem className="space-y-1.5">
+									<FormLabel className="text-label font-medium text-ink">새 비밀번호 확인</FormLabel>
+									<FormControl><Input type="password" className="h-12" {...field} /></FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<Button type="submit" disabled={!isHydrated} className="h-12 w-full text-body">비밀번호 재설정</Button>
+					</form>
+				</Form>
+				)}
+
+				<div className="mt-8 text-center">
+					<Link href={loginHref} className="text-label font-semibold text-orange-ink hover:text-orange-ink transition-colors duration-200">
+						로그인으로 돌아가기
 					</Link>
-					<h2 className="mt-5 text-[1.75rem]/tight font-bold tracking-tight text-ink">새 비밀번호 만들기</h2>
-					<p className="mt-2 text-label text-ink-soft">새 비밀번호를 입력해 주세요.</p>
-				</div>}
-
-				<div>
-					{expired ? (
-						<StateSheet title="재설정 링크가 만료됐어요"
-								body="안전하게 새 링크를 요청한 뒤 다시 설정해 주세요."
-								action={<Button asChild><Link href={authEntryHref("/forgot-password", next, partnerSource)}>새 링크 요청</Link></Button>} />
-					) : (
-					<Form {...form}>
-						<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-							<FormField
-								control={form.control}
-								name="password"
-								render={({ field }) => (
-									<FormItem className="space-y-1.5">
-										<FormLabel className="text-label font-medium text-ink">새 비밀번호</FormLabel>
-										<FormControl><Input type="password" className="h-12" placeholder="6자 이상" {...field} /></FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="confirmPassword"
-								render={({ field }) => (
-									<FormItem className="space-y-1.5">
-										<FormLabel className="text-label font-medium text-ink">새 비밀번호 확인</FormLabel>
-										<FormControl><Input type="password" className="h-12" {...field} /></FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<Button type="submit" disabled={!isHydrated} className="h-12 w-full text-body">비밀번호 재설정</Button>
-						</form>
-					</Form>
-					)}
-
-					<div className="mt-8 text-center">
-						<Link href={loginHref} className="text-label font-semibold text-orange-ink hover:text-orange-ink transition-colors duration-200">
-							로그인으로 돌아가기
-						</Link>
-					</div>
 				</div>
 			</div>
-		</div>
+		</AuthScreen>
 	)
 }

@@ -30,10 +30,7 @@ function validUrl(raw: string): string | null {
   } catch { return null }
 }
 
-export function parseRecipeDescription(value: string | null | undefined): ParsedRecipeDescription {
-  const original = value ?? ""
-  // Legacy Windows publisher sometimes stored escaped literal newline sequences.
-  const text = original.includes("\\n") ? original.replace(/\\n/g, "\n") : original
+function readSourceFooter(text: string): ParsedRecipeDescription | null {
 
   // New and existing source-footer format. Keep all image/licence notes after the first URL.
   const footer = /(?:^|\n\n)출처·안내:\s*([^\n]+)$/u.exec(text)
@@ -58,6 +55,20 @@ export function parseRecipeDescription(value: string | null | undefined): Parsed
       const after = text.slice(legacy.index + legacy[0].length).trim()
       return { description: [before, after].filter(Boolean).join("\n\n"), source: { creator: legacy[1].trim(), url } }
     }
+  }
+  return null
+}
+
+export function parseRecipeDescription(value: string | null | undefined): ParsedRecipeDescription {
+  const original = value ?? ""
+  const parsed = readSourceFooter(original)
+  if (parsed) return parsed
+
+  // The old publisher could escape line breaks, including the source markers.
+  // Decode only as a fallback for those records so literal \n in current prose survives.
+  if (original.includes("\\n\\n출처·안내:") || original.includes("\\n원문:")) {
+    const legacy = readSourceFooter(original.replace(/\\n/g, "\n"))
+    if (legacy) return legacy
   }
   return { description: original, source: null }
 }
