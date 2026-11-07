@@ -59,6 +59,7 @@ interface CurrentUser {
 // cited_recipe_ids는 useCitedRecipes 훅에서 처리됨
 
 export default function ItemDetailView({ item }: ItemDetailViewProps) {
+	const [recipeAdjusting, setRecipeAdjusting] = useState(false)
 	const router = useRouter()
 	const { createLinkWithOrigin } = useNavigation()
 	const { share } = useShare()
@@ -467,12 +468,11 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		)
 	}
 
-	// 공유 링크로 들어온 비회원은 뒤로 가기만으로 사이트를 탐색할 수 없으므로 하단 탭을 제공한다.
-	// 회원의 상세 읽기 집중 화면과 실제 작성 화면의 네비게이션 정책은 유지한다.
-	const guestNavigation = !isAuthLoading && !currentUser && item.is_public
+	// 레시피 상세는 공통 네비게이션을 유지하고, 분량 조정 중에는 하나의 작업 바만 표시한다.
+	const showDetailNavigation = !recipeAdjusting
 
 	return (
-		<div className={cn("flex flex-col h-full relative", guestNavigation && "pb-20")}>
+		<div className={cn("flex flex-col h-full relative", showDetailNavigation && "pb-20", isRecipe && "bg-[#f7f2ec]")}>
 			<article>
 				<header className="sticky top-0 z-20 flex h-14 items-center gap-1 border-b border-border bg-paper px-1">
 					<Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => router.back()} aria-label="뒤로 가기">
@@ -633,6 +633,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 								ingredients={item.ingredients || []}
 								steps={item.steps || []}
 								recipeId={stableItemId}
+								onAdjustingChange={setRecipeAdjusting}
 							/>
 						)}
 
@@ -713,7 +714,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 				onClose={() => setShowLoginPrompt(false)}
 				action="like"
 			/>
-			{guestNavigation && <BottomNavBar />}
+			{showDetailNavigation && <BottomNavBar />}
 		</div>
 	)
 }

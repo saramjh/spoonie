@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Check, CircleDot, Circle, Minus, Plus, CircleHelp, Scale, ChevronRight, Undo2, RotateCcw } from "lucide-react"
+import { Check, CircleDot, Circle, Minus, Plus, CircleHelp, Scale, ChevronRight, RotateCcw, Play } from "lucide-react"
 import Link from "next/link"
 import { Ingredient, RecipeStep } from "@/types/item"
 import { formatAmount } from "@/features/recipe/domain/recipe-amount"
@@ -16,20 +16,23 @@ interface RecipeContentViewProps {
 	ingredients: Ingredient[]
 	steps: RecipeStep[]
 	recipeId?: string
+	onAdjustingChange?: (editing: boolean) => void
 }
 
 const MIN_MAX_SERVINGS = 20
 const CHANGED_HOLD_MS = 2500
 
-export default function RecipeContentView({ initialServings, ingredients, steps, recipeId }: RecipeContentViewProps) {
+export default function RecipeContentView({ initialServings, ingredients, steps, recipeId, onAdjustingChange }: RecipeContentViewProps) {
 	const baseServings = initialServings > 0 ? initialServings : 1
 	const maxServings = Math.max(MIN_MAX_SERVINGS, baseServings * 2)
 	const [servings, setServings] = useState(baseServings)
 	const [reference, setReference] = useState<Reference | null>(null)
+	const [activeTab, setActiveTab] = useState<"ingredients" | "method">("ingredients")
 	const [adjusting, setAdjusting] = useState(false)
+	const [draftReference, setDraftReference] = useState<Reference | null>(null)
+	const [draftServings, setDraftServings] = useState(baseServings)
 	const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
 	const [draftAmount, setDraftAmount] = useState("")
-	const [history, setHistory] = useState<Array<{ reference: Reference | null; servings: number; selectedIndex: number | null; draftAmount: string }>>([])
 	const [clearedChecks, setClearedChecks] = useState<Set<number> | null>(null)
 	const [keyboardInset, setKeyboardInset] = useState(0)
 	const [checked, setChecked] = useState<Set<number>>(() => new Set())
@@ -40,9 +43,12 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 	const previousAmounts = useRef<number[] | null>(null)
 
 	const scale = useMemo(() => {
-		if (reference) return scaleForReference(ingredients, reference) ?? 1
-		return servings / baseServings
-	}, [reference, ingredients, servings, baseServings])
+		const currentReference = adjusting ? draftReference : reference
+		const currentServings = adjusting ? draftServings : servings
+		if (currentReference) return scaleForReference(ingredients, currentReference) ?? 1
+		return currentServings / baseServings
+	}, [adjusting, draftReference, draftServings, reference, ingredients, servings, baseServings])
+	useEffect(() => onAdjustingChange?.(adjusting), [adjusting, onAdjustingChange])
 
 	const scaled = useMemo(() => ingredients.map((ing) => ({ ...ing, amount: ing.amount * scale })), [ingredients, scale])
 
@@ -81,43 +87,38 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 		}
 	}, [adjusting])
 
-	const captureHistory = () => setHistory((items) => [...items.slice(-19), { reference, servings, selectedIndex, draftAmount }])
 	const beginAdjusting = () => {
 		const index = reference?.index ?? initialReferenceIndex(ingredients)
 		if (index < 0) return
 		setSelectedIndex(index)
+		setDraftReference(reference)
+		setDraftServings(servings)
 		setDraftAmount(String(Number((ingredients[index].amount * scale).toPrecision(10))))
-		setHistory([])
 		setAdjusting(true)
 	}
 	const chooseReference = (index: number) => {
 		if (index === selectedIndex) return
 		const next = selectReference(ingredients, index, scale)
 		if (!next) return
-		captureHistory()
 		setSelectedIndex(index)
-		setReference(next)
+		setDraftReference(next)
 		setDraftAmount(String(Number(next.target.toPrecision(10))))
 	}
 	const changeAmount = (text: string) => {
-		captureHistory()
 		setDraftAmount(text)
 		const amount = parseAmountInput(text)
-		if (amount !== null && selectedIndex !== null && scaleForReference(ingredients, { index: selectedIndex, target: amount }) !== null) setReference({ index: selectedIndex, target: amount })
+		if (amount !== null && selectedIndex !== null && scaleForReference(ingredients, { index: selectedIndex, target: amount }) !== null)
+			setDraftReference({ index: selectedIndex, target: amount })
 	}
-	const undoAdjustment = () => {
-		const previous = history[history.length - 1]
-		if (!previous) return
-		setReference(previous.reference)
-		setServings(previous.servings)
-		setSelectedIndex(previous.selectedIndex)
-		setDraftAmount(previous.draftAmount)
-		setHistory((items) => items.slice(0, -1))
+	const cancelAdjusting = () => {
+		setAdjusting(false)
+		setKeyboardInset(0)
 	}
 	const finishAdjusting = () => {
 		if (invalidAmount) return
+		setReference(draftReference)
+		setServings(draftServings)
 		setAdjusting(false)
-		setHistory([])
 		setKeyboardInset(0)
 	}
 
@@ -127,10 +128,14 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 	}
 
 	const resetScale = () => {
-		if (adjusting) captureHistory()
+		if (adjusting) {
+			setDraftReference(null)
+			setDraftServings(baseServings)
+			if (selectedIndex !== null) setDraftAmount(String(ingredients[selectedIndex].amount))
+			return
+		}
 		setReference(null)
 		setServings(baseServings)
-		if (adjusting && selectedIndex !== null) setDraftAmount(String(ingredients[selectedIndex].amount))
 	}
 
 	const toggle = (set: Set<number>, index: number) => {
@@ -146,13 +151,39 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 	const invalidAmount = adjusting && (pendingAmount === null || selectedIndex === null || scaleForReference(ingredients, { index: selectedIndex, target: pendingAmount }) === null)
 	const adjustableCount = ingredients.filter((item) => Number.isFinite(item.amount) && item.amount > 0).length
 
+	const chooseTab = (tab: "ingredients" | "method") => setActiveTab(tab)
+	const onTabKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+		if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return
+		event.preventDefault()
+		const next = event.key === "Home" || event.key === "ArrowLeft" ? "ingredients" : "method"
+		chooseTab(next)
+		event.currentTarget.parentElement?.querySelector<HTMLButtonElement>("#recipe-tab-" + next)?.focus()
+	}
+
 	return (
 		<>
-			<section aria-labelledby="ingredients-heading" className="border-t border-border px-4 pb-5 pt-5">
+			{!adjusting && (
+				<div role="tablist" aria-label="레시피 내용" className="mx-4 mt-5 grid grid-cols-2 border-b border-[#d7c8b8]">
+					{(["ingredients", "method"] as const).map((tab) => (
+						<button key={tab} id={"recipe-tab-" + tab} role="tab" type="button"
+							aria-controls={"recipe-panel-" + tab} aria-selected={activeTab === tab}
+							tabIndex={activeTab === tab ? 0 : -1} onClick={() => chooseTab(tab)}
+							onKeyDown={onTabKeyDown}
+							className={cn("min-h-12 border-b-2 px-2 text-body font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#905238]", activeTab === tab ? "border-[#98563c] text-[#603d2d]" : "border-transparent text-ink-soft hover:text-ink")}>
+							{tab === "ingredients" ? "재료" : "만드는 법"}
+						</button>
+					))}
+				</div>
+			)}
+			<section id="recipe-panel-ingredients" role="tabpanel" aria-labelledby="recipe-tab-ingredients"
+				hidden={!adjusting && activeTab !== "ingredients"}
+				className="border-t border-border px-4 pb-5 pt-5">
 				<div className="flex items-center justify-between gap-3">
 					<SectionHeading id="ingredients-heading" count={ingredients.length}>
 						재료</SectionHeading>
-					<div className="flex items-center rounded-lg border border-border" role="group" aria-label="인분 조절">
+					{adjusting ? (
+						<button type="button" onClick={cancelAdjusting} className="min-h-11 px-3 text-label font-medium underline underline-offset-4">취소</button>
+					) : <div className="flex items-center rounded-lg border border-border" role="group" aria-label="인분 조절">
 						<button
 							type="button"
 							onClick={() => changeServings((reference ? Math.round(baseServings * scale) : servings) - 1)}
@@ -174,7 +205,7 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 						>
 							<Plus className="h-4 w-4" aria-hidden />
 						</button>
-					</div>
+					</div>}
 				</div>
 
 				{adjustableCount > 0 && ingredients.length > 1 && !adjusting && (
@@ -304,20 +335,13 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 
 			</section>
 
-			<section aria-labelledby="steps-heading" className="border-t border-border px-4 pb-6 pt-5">
+			<section id="recipe-panel-method" role="tabpanel" aria-labelledby="recipe-tab-method"
+				hidden={adjusting || activeTab !== "method"}
+				className="px-4 pb-6 pt-5">
 				<div className="flex items-center justify-between gap-3">
 					<SectionHeading id="steps-heading">
 						만드는 법 {steps.length > 0 && <span className="font-medium tabular-nums text-ink-soft">{steps.length}단계</span>}
 					</SectionHeading>
-					{steps.length > 0 && (
-						<button
-							type="button"
-							onClick={() => setStepModeAt(firstUndone(steps.length, doneSteps))}
-							className="inline-flex h-11 items-center rounded-lg bg-primary px-4 text-label font-semibold text-primary-foreground active:bg-primary/85"
-						>
-							요리 시작
-						</button>
-					)}
 				</div>
 
 				{steps.length > 0 ? (
@@ -364,15 +388,24 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 						role="toolbar"
 						aria-label="재료량 맞추기 도구"
 						className="fixed left-1/2 z-[55] flex w-full max-w-md -translate-x-1/2 items-center gap-2 border-t border-border bg-paper px-3 py-2 shadow-lg"
-						style={{ bottom: keyboardInset > 80 ? `${keyboardInset}px` : "calc(4rem + env(safe-area-inset-bottom))" }}
+						style={{ bottom: keyboardInset > 80 ? String(keyboardInset) + "px" : "env(safe-area-inset-bottom)" }}
 					>
-						<button type="button" disabled={history.length === 0} onClick={undoAdjustment} className="flex h-11 items-center gap-1 rounded-md border border-border px-2 text-label text-ink disabled:opacity-40">
-							<Undo2 className="h-4 w-4" aria-hidden />되돌리기
-						</button>
-						<button type="button" onClick={resetScale} className="flex h-11 items-center gap-1 rounded-md border border-border px-2 text-label text-ink">
+						<button type="button" onClick={resetScale} className="flex h-12 items-center gap-1 rounded-md border border-border px-3 text-label text-ink">
 							<RotateCcw className="h-4 w-4" aria-hidden />원래대로
 						</button>
-						<button type="button" disabled={invalidAmount} onClick={finishAdjusting} className="min-h-11 flex-1 rounded-md bg-primary px-3 text-label font-semibold text-primary-foreground disabled:opacity-50">완료</button>
+						<button type="button" disabled={invalidAmount} onClick={finishAdjusting} className="min-h-12 flex-1 rounded-md bg-[#98563c] px-3 text-label font-semibold text-white disabled:opacity-50">이 양 적용</button>
+					</div>
+				</>
+			)}
+			{!adjusting && steps.length > 0 && (
+				<>
+					<div className="h-24" aria-hidden="true" />
+					<div className="fixed inset-x-0 z-[45] mx-auto w-full max-w-md border-t border-[#e6d9cd] bg-[#fffaf4] px-4 py-2 shadow-[0_-5px_18px_rgba(66,46,30,0.06)]"
+						style={{ bottom: "calc(4rem + env(safe-area-inset-bottom))" }}>
+						<button type="button" aria-label="요리 시작" onClick={() => setStepModeAt(firstUndone(steps.length, doneSteps))}
+							className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#98563c] px-4 text-heading font-semibold text-white transition-colors hover:bg-[#7c422c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#98563c]">
+							<Play className="h-5 w-5 fill-current" aria-hidden /> 요리 시작
+						</button>
 					</div>
 				</>
 			)}

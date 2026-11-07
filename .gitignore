@@ -59,3 +59,9 @@ SPOONIE.lomc
 # Claude Code 개인 설정 (내 컴퓨터 전용)
 .claude/settings.local.json
 client_secret_*.json
+
+# Local-only visual QA fixture: not a production route
+/src/app/recipes/design-preview/
+/public/design-preview-food.png
+/public/design-preview-step-1.png
+/public/design-preview-step-2.png
