@@ -463,9 +463,12 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 
 	// 레시피 상세는 공통 네비게이션을 유지하고, 분량 조정 중에는 하나의 작업 바만 표시한다.
 	const showDetailNavigation = !recipeAdjusting
+	const hasCookingBar = isRecipe && Boolean(item.steps?.length)
 
 	return (
-		<div className={cn("flex flex-col h-full relative", showDetailNavigation && "pb-20", isRecipe && "bg-paper")}>
+		<div className={cn("flex flex-col h-full relative", showDetailNavigation && (
+			hasCookingBar ? "pb-[calc(5rem+71px+env(safe-area-inset-bottom))]" : "pb-20"
+		), isRecipe && "bg-paper")}>
 			<article>
 				{!recipeAdjusting && <header data-design-slot={isRecipe ? "header" : undefined} className={cn("sticky top-0 z-20 flex h-14 items-center gap-1 border-b border-border bg-paper px-1", isRecipe && "h-[54px] px-3")}>
 					<Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => router.back()} aria-label="뒤로 가기">

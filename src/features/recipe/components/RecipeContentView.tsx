@@ -183,7 +183,7 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 			)}
 			<section id="recipe-panel-ingredients" role={adjusting ? undefined : "tabpanel"} aria-labelledby={adjusting ? "quantity-heading" : "recipe-tab-ingredients"}
 				hidden={!adjusting && activeTab !== "ingredients"}
-				className="px-[14px] pb-6 pt-[18px]">
+				className={cn("px-[14px] pt-[18px]", adjusting ? "pb-6" : "pb-2")}>
 				{!adjusting && (
 					<div data-design-slot="ingredients" className="flex h-[42px] items-center justify-between gap-3">
 						<h2 id="ingredients-heading" className="text-heading font-semibold text-ink">재료 {ingredients.length}가지</h2>
@@ -405,16 +405,13 @@ export default function RecipeContentView({ initialServings, ingredients, steps,
 				</>
 			)}
 			{!adjusting && steps.length > 0 && (
-				<>
-					<div className="h-24" aria-hidden="true" />
-					<div className="fixed inset-x-0 z-[45] mx-auto flex h-[71px] w-full max-w-md items-center border-t border-border bg-paper px-[14px] py-[10px]"
-						style={{ bottom: "calc(4rem + env(safe-area-inset-bottom))" }}>
-						<button type="button" aria-label="요리 시작" onClick={() => setStepModeAt(firstUndone(steps.length, doneSteps))}
-							className="flex min-h-[50px] w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-body font-semibold text-primary-foreground transition-colors hover:bg-orange-ink/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ring">
-							<Play className="h-5 w-5 fill-current" aria-hidden /> 요리 시작
-						</button>
-					</div>
-				</>
+				<div className="fixed inset-x-0 z-[45] mx-auto flex h-[71px] w-full max-w-md items-center border-t border-border bg-paper px-[14px] py-[10px]"
+					style={{ bottom: "calc(4rem + env(safe-area-inset-bottom))" }}>
+					<button type="button" aria-label="요리 시작" onClick={() => setStepModeAt(firstUndone(steps.length, doneSteps))}
+						className="flex min-h-[50px] w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-body font-semibold text-primary-foreground transition-colors hover:bg-orange-ink/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ring">
+						<Play className="h-5 w-5 fill-current" aria-hidden /> 요리 시작
+					</button>
+				</div>
 			)}
 			{stepModeAt !== null && (
 				<StepMode
