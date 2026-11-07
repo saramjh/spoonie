@@ -73,7 +73,7 @@ export default async function HomePage() {
 	})
 
 	return (
-		<div className="min-h-screen">
+		<div className="min-h-screen bg-door">
 			<h1 className="sr-only">Spoonie - 집밥 레시피 검색부터 인분별 재료량 조절과 요리 기록까지</h1>
 			<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(websiteSchema) }} />
 			<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(organizationSchema) }} />
@@ -89,7 +89,7 @@ export default async function HomePage() {
  */
 function ItemListSkeleton() {
 	return (
-		<div className="space-y-4 p-4">
+		<div className="space-y-8 px-3 py-4">
 			{Array.from({ length: 6 }).map((_, i) => (
 				<PostCardSkeleton key={i} />
 			))}

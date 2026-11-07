@@ -227,6 +227,9 @@ export default function PostCard({
   }
 
   const cookingTime = formatCookingTime(displayItem.cooking_time_minutes)
+  const tags = displayItem.tags ?? []
+  const visibleTags = surface === "home" ? tags.slice(0, 3) : tags
+  const remainingTagCount = tags.length - visibleTags.length
   const profileHref = `/profile/${enrichedItem.user_public_id || enrichedItem.user_id}`
   // 카드 글 영역을 누르면 상세로 (안의 링크를 누른 경우는 링크가 이동을 맡는다)
   const goDetail = (e: React.MouseEvent) => {
@@ -237,7 +240,7 @@ export default function PostCard({
   return (
     <Sheet ref={cardRef} as="article" className="relative">
 
-      <header className="flex items-center justify-between gap-2 py-2 pl-4 pr-1.5">
+      <header className="flex items-center justify-between gap-2 py-3 pl-4 pr-2">
         <div className="flex min-w-0 items-center gap-2.5">
           <IntentLink href={profileHref} aria-hidden tabIndex={-1}>
             <Avatar className="h-9 w-9">
@@ -286,7 +289,7 @@ export default function PostCard({
       </header>
 
       {/* 레시피드(활동)는 어떤 레시피에서 나왔는지가 먼저: 출처 행 */}
-      {!isRecipe && !citedRecipesLoading && <SourceRow recipes={citedRecipes} creationOrigin={displayItem.creation_origin} />}
+      {!isRecipe && !citedRecipesLoading && <SourceRow recipes={citedRecipes} creationOrigin={displayItem.creation_origin} className="mb-3" />}
 
       {orderedImages.length > 0 && (
         <div className="relative mx-3 overflow-hidden rounded-[10px]">
@@ -307,61 +310,62 @@ export default function PostCard({
         </div>
       )}
 
-      {/* 사진 다음에 제목과 메타를 읽는다. */}
-      {isRecipe && (
-        <div className="cursor-pointer px-3 pt-3" onClick={goDetail}>
-          <h2 className="text-title text-ink [text-wrap:balance]">
-            <IntentLink href={detailUrl}>{displayItem.title}</IntentLink>
-          </h2>
-          {(displayItem.servings || cookingTime) && (
-            <p className="mt-1 text-label text-ink-soft">
-              {[displayItem.servings ? `${displayItem.servings}인분` : null, cookingTime ? `조리 ${cookingTime}` : null].filter(Boolean).join(" · ")}
-            </p>
-          )}
-          {/* 핵심 재료: 사진 없이도 무엇을 만드는 글인지 읽힌다 */}
-          {!!displayItem.key_ingredients?.length && (
-            <p className="mt-0.5 truncate text-label text-ink">
-              <span className="text-ink-soft">재료 {displayItem.ingredient_count}가지 · </span>
-              {displayItem.key_ingredients.join(", ")}
-              {(displayItem.ingredient_count || 0) > displayItem.key_ingredients.length && <span className="text-ink-soft"> 외</span>}
-            </p>
-          )}
-        </div>
-      )}
-
-      <div className="cursor-pointer px-4 pt-3" onClick={goDetail}>
+      <div className="cursor-pointer px-4 pt-4" onClick={goDetail}>
         {isRecipe ? (
           <>
+            <h2 className="text-title text-ink [text-wrap:balance]">
+              <IntentLink href={detailUrl}>{displayItem.title}</IntentLink>
+            </h2>
+            {(displayItem.servings || cookingTime || !!displayItem.key_ingredients?.length) && (
+              <div className="mt-2 space-y-1 text-caption text-ink-soft">
+                {(displayItem.servings || cookingTime) && <p>
+                  {[displayItem.servings ? `${displayItem.servings}인분` : null, cookingTime ? `조리 ${cookingTime}` : null].filter(Boolean).join(" · ")}
+                </p>}
+                {!!displayItem.key_ingredients?.length && (
+                  <p className="truncate">
+                    재료 {displayItem.ingredient_count}가지 · {displayItem.key_ingredients.join(", ")}
+                    {(displayItem.ingredient_count || 0) > displayItem.key_ingredients.length && " 외"}
+                  </p>
+                )}
+              </div>
+            )}
             {displayItem.description && (
-              <ExpandableText text={displayItem.description} maxLines={2} onExpand={() => router.push(detailUrl)} className="text-label text-ink" />
+              <ExpandableText text={displayItem.description} maxLines={2} onExpand={() => router.push(detailUrl)} className="mt-3" />
             )}
             {/* 다른 사람이 실제로 만든 기록: 레시피의 신뢰 증거 */}
             <MadeProof
               madeCount={displayItem.made_count}
               continuedCount={displayItem.continued_count}
               thumbs={displayItem.made_thumbs}
-              className={displayItem.description ? "mt-2.5" : ""}
+              className="mt-3"
             />
           </>
         ) : (
           <>
-            {displayItem.title && <p className="mb-1 text-label font-semibold text-ink">{displayItem.title}</p>}
+            {displayItem.title && <p className="mb-2 text-title text-ink">{displayItem.title}</p>}
             <ExpandableText text={displayItem.content || ""} maxLines={3} onExpand={() => router.push(detailUrl)} className="text-body text-ink" />
           </>
         )}
 
-        {displayItem.tags && displayItem.tags.length > 0 && (
-          <ul className="mt-3 flex flex-wrap gap-2" aria-label="태그">
-            {displayItem.tags.map((tag, idx) => (
+        {visibleTags.length > 0 && (
+          <ul className="mt-4 flex flex-wrap items-center gap-2" aria-label="태그">
+            {visibleTags.map((tag, idx) => (
               <li key={idx}>
                 <IntentLink href={topicHref(tag)} className="inline-flex min-h-8 items-center rounded-[7px] bg-paper-tint px-[9px] py-[5px] text-meta text-ink-soft hover:text-ink">#{tag}</IntentLink>
               </li>
             ))}
+            {remainingTagCount > 0 && (
+              <li>
+                <IntentLink href={detailUrl} className="inline-flex min-h-8 items-center px-2 text-meta text-ink-soft hover:text-ink" aria-label={'태그 ' + remainingTagCount + '개 더 보기'}>
+                  +{remainingTagCount}
+                </IntentLink>
+              </li>
+            )}
           </ul>
         )}
       </div>
 
-      <footer className="flex items-center justify-between px-2 pb-1 pt-1">
+      <footer className="flex items-center justify-between px-3 pb-2 pt-3">
         <div className="flex items-center text-ink-soft">
           <LikeButton
             itemId={item.item_id || item.id}
