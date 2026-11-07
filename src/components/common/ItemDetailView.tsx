@@ -148,7 +148,6 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	// 더블탭 좋아요 상태 관리
 	const [showHeartAnimation, setShowHeartAnimation] = useState(false)
 	const [showLoginPrompt, setShowLoginPrompt] = useState(false)
-	const [commentsOpen, setCommentsOpen] = useState(false)
 
 	const photoPromptReady = !!stableItemId && photoPromptState.recipeId === stableItemId
 	const isRecentRecipeForPhotoPrompt = photoPromptReady && photoPromptState.isRecent
@@ -219,18 +218,6 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		logEvent("detail_open", stableItemId, cameFrom(window.location.pathname).surface)
 	}, [isAuthLoading, currentUser?.id, item?.user_id, stableItemId])
 
-	// Return from authentication: reopen the comment sheet with the saved
-	// item-specific in-tab draft; never automatically post it.
-	useEffect(() => {
-		const handleHash = () => {
-			if (window.location.hash === "#comments") setCommentsOpen(true)
-		}
-		window.addEventListener("hashchange", handleHash)
-		queueMicrotask(handleHash)
-		return () => window.removeEventListener("hashchange", handleHash)
-	}, [stableItemId])
-
-	
 	// 이미지 더블탭도 같은 좋아요 mutation을 사용한다.
 	const handleDoubleTapLike = async () => {
 		if (!currentUser?.id) {
@@ -630,10 +617,17 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 									showCount={!isRecipe}
 									cachedItem={cachedItem}
 								/>
-								<button type="button" onClick={() => setCommentsOpen(true)} className="flex h-11 items-center gap-1.5 px-2" aria-label={`댓글 ${cachedItem?.comments_count || 0}개`}>
+								<a href="#comments" onClick={(event) => {
+									if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+									const comments = document.getElementById("comments")
+									if (!comments) return
+									event.preventDefault()
+									comments.scrollIntoView()
+									comments.focus({ preventScroll: true })
+								}} className="flex h-11 items-center gap-1.5 px-2" aria-label={`댓글 ${cachedItem?.comments_count || 0}개`}>
 									<MessageCircle className="h-5 w-5" aria-hidden />
 									{!isRecipe && <span className="text-label font-medium tabular-nums">{cachedItem?.comments_count || 0}</span>}
-								</button>
+								</a>
 							</div>
 							<div className="flex items-center">
 								<BookmarkButton
@@ -670,6 +664,9 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 							</footer>
 						)}
 
+						<CommentsSection key={stableItemId} hidden={recipeAdjusting}
+							currentUserId={currentUser?.id} itemId={stableItemId} cachedItem={cachedItem || item} />
+
 						{!recipeAdjusting && renderRecipeGraph()}
 
 						{/* 레시피드: 같은 레시피로 만든 다른 기록 → 다른 사람의 결과와 작성자로 이어진다 */}
@@ -704,10 +701,6 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 						)}
 					</Sheet>
 
-					{!recipeAdjusting && (
-						<CommentsSection asSheet isOpen={commentsOpen} onClose={() => setCommentsOpen(false)}
-							currentUserId={currentUser?.id} itemId={stableItemId} cachedItem={cachedItem || item} />
-					)}
 				</div>
 			</article>
 

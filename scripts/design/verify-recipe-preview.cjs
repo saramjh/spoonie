@@ -42,6 +42,17 @@ try{
   }
   console.log('GEOMETRY_PASS',name,JSON.stringify(errors))
  }
+ const comments = app.locator('section#comments')
+ assert.ok(await app.locator('#recipe-panel-ingredients').evaluate(panel =>
+  Boolean(panel.compareDocumentPosition(document.getElementById('comments')) & Node.DOCUMENT_POSITION_FOLLOWING)
+ ))
+ const beforeCommentsUrl = app.url()
+ await app.getByRole('link',{name:/^댓글 \d+개$/}).click()
+ assert.equal(app.url(), beforeCommentsUrl)
+ assert.equal(await comments.evaluate(section => document.activeElement === section), true)
+ assert.equal(await comments.getByRole('textbox',{name:'댓글'}).evaluate(input=>document.activeElement===input),false)
+ assert.equal(await app.getByRole('dialog',{name:'댓글'}).count(),0)
+ checked+=3
  await app.locator('#recipe-tab-method').click()
  assert.equal(await app.locator('#recipe-tab-method').getAttribute('aria-selected'),'true')
  let metrics=await app.evaluate(()=>{
