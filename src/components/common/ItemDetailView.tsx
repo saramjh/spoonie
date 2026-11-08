@@ -529,7 +529,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 						{!isRecipe && !citedRecipesLoading && <SourceRow recipes={citedRecipes} creationOrigin={item.creation_origin} className="border-t-0" />}
 
 						{!recipeAdjusting && orderedImages.length > 0 && (
-							<div data-design-slot={isRecipe ? "hero" : undefined} className={cn("relative overflow-hidden rounded-t-[3px]", isRecipe && "mx-3 rounded-b-xl rounded-t-none")}>
+							<div data-design-slot={isRecipe ? "hero" : undefined} className={cn("relative overflow-hidden", isRecipe ? "mx-3 mt-3 rounded-xl" : "rounded-t-[3px]")}>
 								<ImageCarousel
 									images={orderedImages}
 									alt={isRecipe ? item.title || "레시피 사진" : `${publicContentTitle(item)} — ${authorName}님의 레시피드 사진`}

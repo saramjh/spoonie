@@ -34,10 +34,14 @@ try{
  await Promise.all([ref.locator('.detail-hero').waitFor(),app.locator('#recipe-tab-ingredients').waitFor()])
  await app.getByRole('link',{name:'만들어 본 사진 남기기'}).waitFor()
  const a=await geometry(app,actualSelectors,true),m=await geometry(ref,referenceSelectors,false)
- let checked=0
+ const heroTopGap=12
+ assert.equal(a.hero.y-(a.header.y+a.header.h),heroTopGap,'recipe photo is separated from the header')
+ assert.equal(await app.locator(actualSelectors.hero).evaluate(el=>getComputedStyle(el).borderTopLeftRadius),'12px')
+ let checked=2
  for(const [name,refRect] of Object.entries(m)){
   assert.ok(refRect&&a[name],'both mock and actual need '+name)
-  const expected={...refRect,y:refRect.y+(['cta','nav'].includes(name)?16:-24)}
+  const layoutOffset=name==='header' ? -24 : heroTopGap-24
+  const expected={...refRect,y:refRect.y+(['cta','nav'].includes(name)?16:layoutOffset)}
   const errors=Object.fromEntries(['x','y','w','h'].map(k=>[k,Math.round(a[name][k]-expected[k])]))
   const tolerance=name==='ingredients'?14:12
   for(const [dimension,difference]of Object.entries(errors)){
