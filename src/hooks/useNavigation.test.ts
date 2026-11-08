@@ -1,13 +1,14 @@
 import { createElement } from "react"
 import { renderToString } from "react-dom/server"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { useRouter } from "@/shared/lib/navigation"
 import { rememberPath, cameFrom } from "@/shared/lib/surface"
 import { useNavigation } from "./useNavigation"
 
-const { push, replace } = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }))
+const { push, replace, back } = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }))
 vi.mock("next/navigation", () => ({
 	usePathname: () => "/search",
-	useRouter: () => ({ push, replace }),
+	useRouter: () => ({ push, replace, back }),
 }))
 
 function navigation() {
@@ -26,6 +27,23 @@ beforeEach(() => {
 	vi.clearAllMocks()
 })
 afterEach(() => vi.unstubAllGlobals())
+
+it.each([true, false])("uses browser back only when there is a previous same-origin entry (%s)", canGoBack => {
+	Object.assign(window, { navigation: { canGoBack } })
+	let goBack!: () => void
+	renderToString(createElement(function Probe() {
+		goBack = useRouter().back
+		return null
+	}))
+	goBack()
+	if (canGoBack) {
+		expect(back).toHaveBeenCalledOnce()
+		expect(replace).not.toHaveBeenCalled()
+	} else {
+		expect(back).not.toHaveBeenCalled()
+		expect(replace).toHaveBeenCalledWith("/")
+	}
+})
 
 describe("canonical public navigation", () => {
 	it.each(["/recipes/1a580b04-0a00-41b7-a20a-a5c7faeda810", "/posts/3a740af5-9baa-48a8-8276-8e5859f49bf5", "/profile/publicid", "/profile/publicid/"])("server-renders a clean crawlable href: %s", path => {
