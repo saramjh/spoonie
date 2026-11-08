@@ -1,19 +1,15 @@
 import { createSupabaseRouteHandlerClient } from "@/shared/infra/supabase-server"
-import { NextResponse } from "next/server"
 import { generateUniqueUsername } from "@/features/profile/data/username-generator"
 import { generateUniquePublicId } from "@/features/profile/data/public-id-generator"
 import { safeNextPath } from "@/shared/lib/safe-next-path"
 import { parsePartnerEntrySource, withPartnerEntry } from "@/shared/lib/partner-entry"
 
-// 오픈 리다이렉트 방지: 같은 사이트 내부의 절대 경로만 허용한다.
-// "@evil.com", ".evil.com", "//evil.com", "/\\evil.com" 같은 값은 도메인 뒤에 붙으면 외부로 이동하므로 거부한다.
-
 export async function GET(request: Request) {
-	const { searchParams, origin } = new URL(request.url)
+	const { searchParams } = new URL(request.url)
 	const code = searchParams.get("code")
 	const next = safeNextPath(searchParams.get("next"))
 	const partnerSource = parsePartnerEntrySource(searchParams.get("entry"))
-	const destination = withPartnerEntry(next, partnerSource)
+	let destination = "/auth/auth-code-error"
 
 	if (code) {
 		const supabase = await createSupabaseRouteHandlerClient()
@@ -98,16 +94,10 @@ export async function GET(request: Request) {
 				console.error("❌ OAuth callback - User authentication failed:", userError)
 			}
 
-			// 올바른 도메인으로 강제 리디렉션
-			const redirectOrigin = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'
-			if (process.env.NODE_ENV === 'development') {
-				console.log('🔍 Callback redirect:', { origin, redirectOrigin, next })
-			}
-			return NextResponse.redirect(`${redirectOrigin}${destination}`)
+			destination = withPartnerEntry(next, partnerSource)
 		}
 	}
 
-	// return the user to an error page with instructions
-	const redirectOrigin = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'
-	return NextResponse.redirect(`${redirectOrigin}/auth/auth-code-error`)
+	// 경로만 보내서 PKCE와 세션 쿠키를 설정한 도메인 안에서 복귀한다.
+	return new Response(null, { status: 307, headers: { Location: destination } })
 }
