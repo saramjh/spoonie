@@ -28,11 +28,12 @@ export default function GoogleAuthButton({ next, partnerSource, label = "Googleë
 	const [isRedirecting, setIsRedirecting] = useState(false)
 
 	const handleGoogleAuth = async () => {
+		const origin = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
 		setIsRedirecting(true)
 		const { error } = await supabase.auth.signInWithOAuth({
 			provider: "google",
 			options: {
-				redirectTo: authCallbackUrl(window.location.origin, next, partnerSource),
+				redirectTo: authCallbackUrl(origin, next, partnerSource),
 				queryParams: { prompt: "select_account" },
 			},
 		})
