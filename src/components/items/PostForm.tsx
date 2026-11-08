@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { Button } from "@/components/ui/button"
+import { Drawer, DrawerContent, DrawerTitle, DrawerDescription } from "@/components/ui/drawer"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
@@ -15,6 +16,7 @@ import ImageUploader from "@/components/common/ImageUploader"
 import { OptimizedImage } from "@/shared/infra/image-utils"
 import { CENTER_FOCAL, normalizeCoverFocal, type CoverFocal } from "@/features/recipe/domain/cover-focal"
 import { useToast } from "@/hooks/use-toast"
+import { ImageOff } from "lucide-react"
 import { useComposerDraft } from "@/hooks/useComposerDraft"
 import type { Item } from "@/types/item"
 import CitedRecipeSearch from "@/features/recipe/components/CitedRecipeSearch"
@@ -57,6 +59,8 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 	const supabase = createSupabaseBrowserClient()
 
 	const [isSubmitting, setIsSubmitting] = useState(false)
+  const [leaveSheetOpen, setLeaveSheetOpen] = useState(false)
+  const [uploadIssue, setUploadIssue] = useState(false)
 	const submitLock = useRef(false)
 	// 수정할 때의 처음 값: 이미 올린 사진과 대표 사진 (수정 화면은 initialData가 준비된 뒤에만 이 폼을 그린다)
 	const editing = isEditMode && initialData ? initialData : null
@@ -143,6 +147,7 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 		submitLock.current = true
 		setIsSubmitting(true)
 		const newUploadUrls: string[] = []
+		let uploadingMedia = false
 		let dbSaveStarted = false
 		let dbCommitted = false
 		let savedItemId: string | null = null
@@ -169,6 +174,7 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 		// image_urls 순서와 thumbnail_index는 함께 저장되어야 한다.
 		
 
+		uploadingMedia = true
 		const newImageFiles = mainImages.filter((image) => image.file.size > 0)
 		const uploadResults = newImageFiles.length > 0
 			? await uploadImagesOptimized(newImageFiles, user.id, bucketId)
@@ -177,6 +183,7 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 		const { imageUrls: uploadedImageUrls, newUrls } = resolveImageUploadOrder(mainImages, uploadResults)
 		newUploadUrls.push(...newUrls)
 
+		uploadingMedia = false
 			const itemPayload = buildPostItemPayload(values, {
 				userId: user.id,
 				imageUrls: uploadedImageUrls,
@@ -293,6 +300,7 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 				return
 			}
 			await cleanupUncommittedImages(newUploadUrls, { dbSaveStarted, dbCommitted, error }, supabase)
+			if (uploadingMedia) setUploadIssue(true)
 			console.error("Post submission error:", error)
 			toast({
 				title: `레시피드 ${isEditMode ? "수정" : "작성"} 실패`,
@@ -342,17 +350,47 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
     </div>
   )
   if (!draft.ready) return <PageLoading />
+  if (uploadIssue) return (
+    <div className="min-h-screen bg-paper">
+      <PageHeader title="사진 업로드 실패" leading="none" />
+      <section className="mx-auto flex max-w-sm flex-col items-center px-5 pb-24 pt-16 text-center" role="alert">
+        <ImageOff strokeWidth={1.5} className="h-10 w-10 text-ink-soft" aria-hidden />
+        <h2 className="mt-5 text-heading font-semibold text-ink">사진을 올리지 못했어요</h2>
+        <p className="mt-3 text-label leading-relaxed text-ink-soft">
+          입력한 내용은 그대로 남아 있어요. 다른 사진을 고르거나 다시 시도해 주세요.
+        </p>
+        <Button type="button" className="mt-12 h-12 w-full" onClick={() => setUploadIssue(false)}>
+          작성 화면으로 돌아가기
+        </Button>
+      </section>
+    </div>
+  )
 
 	// 레시피드는 출처가 맨 위 첫 줄, 그다음 사진과 글 (DESIGN.md Interface Grammar 1)
 	return (
-		<div className="min-h-screen pb-28">
-			<PageHeader onCancel={() => { void draft.leave(() => router.back()) }} leading="cancel" title={isEditMode ? "레시피드 수정" : sourceRecipeId ? "만들어 본 기록" : "레시피드 쓰기"} />
+		<div className="min-h-screen bg-paper pb-28">
+			<PageHeader onCancel={() => draft.leave(() => router.back(), () => setLeaveSheetOpen(true))} leading="cancel" title={isEditMode ? "레시피드 수정" : sourceRecipeId ? "만들어 본 기록" : "레시피드 쓰기"} />
 
       <p role="status" className={`px-4 pt-2 text-meta ${draft.status === "error" || draft.status === "conflict" ? "text-destructive" : "text-ink-soft"}`}>
         {draft.status === "saved" ? "이 기기에 임시 저장됨" : draft.status === "pending" ? "임시 저장 중…" : draft.status === "conflict" ? "다른 탭에서 같은 글을 수정했습니다 · 이 탭에서 나가지 말고 내용을 복사해 주세요" : draft.status === "error" ? "임시 저장 실패 · 화면을 닫지 마세요" : "입력한 내용은 이 기기에 자동 저장돼요"}
       </p>
-			<form id="post-form" onSubmit={form.handleSubmit(onSubmit, onError)} className="space-y-3 px-3 pt-3">
-				<Sheet>
+      <Drawer open={leaveSheetOpen} onOpenChange={setLeaveSheetOpen} shouldScaleBackground={false}>
+        <DrawerContent className="mx-auto max-h-[85vh] max-w-md rounded-t-2xl px-4 pb-6 pt-4">
+          <div className="flex items-center justify-between">
+            <DrawerTitle className="text-title font-semibold text-ink">작성을 잠시 멈출까요?</DrawerTitle>
+            <Button type="button" variant="ghost" size="icon" className="h-11 w-11" onClick={() => setLeaveSheetOpen(false)} aria-label="닫기">×</Button>
+          </div>
+          <DrawerDescription className="mt-3 text-label leading-relaxed text-ink-soft">
+            입력한 내용은 임시 저장할게요. 나중에 이어서 쓸 수 있어요.
+          </DrawerDescription>
+          <div className="mt-5 flex gap-2">
+            <Button type="button" variant="outline" className="h-12 flex-1" onClick={() => setLeaveSheetOpen(false)}>계속 쓰기</Button>
+            <Button type="button" className="h-12 flex-1" onClick={() => { setLeaveSheetOpen(false); void draft.leaveConfirmed(() => router.back()) }}>임시 저장하고 나가기</Button>
+          </div>
+        </DrawerContent>
+      </Drawer>
+			<form id="post-form" onSubmit={form.handleSubmit(onSubmit, onError)} className="pt-3">
+				<Sheet className="rounded-none">
 					{sourceRecipes.length > 0 && (
 						<SourceRow recipes={sourceRecipes} creationOrigin={sourceOrigin} asLink={false} className="border-t-0" />
 					)}

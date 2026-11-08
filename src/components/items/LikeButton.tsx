@@ -18,6 +18,7 @@ interface LikeButtonProps {
   initialLikesCount?: number
   initialHasLiked?: boolean
   isAuthLoading?: boolean
+  showCount?: boolean
   cachedItem?: Item // 부분 갱신 시 이미지 등 기존 필드를 보존할 fallback
 }
 
@@ -28,6 +29,7 @@ export const LikeButton = forwardRef<HTMLButtonElement, LikeButtonProps>(({
   initialLikesCount = 0,
   initialHasLiked = false,
   isAuthLoading = false,
+  showCount = true,
   cachedItem: providedCachedItem,
 }, ref) => {
   // 부분 상태만 바꿀 때 이미지 등 기존 필드는 유지한다.
@@ -161,8 +163,8 @@ export const LikeButton = forwardRef<HTMLButtonElement, LikeButtonProps>(({
           />
         </Button>
 
-        {/* 숫자는 좋아요한 사람 목록을 연다. */}
-        <Button
+        {/* 기본 상세/피드에서는 숫자를 표시하고, 목업 레시피 상세에서는 아이콘만 보여준다. */}
+        {showCount && <Button
           variant="ghost"
           size="sm"
           onClick={(e) => {
@@ -175,7 +177,7 @@ export const LikeButton = forwardRef<HTMLButtonElement, LikeButtonProps>(({
           className="h-11 min-w-6 pl-1 pr-2 text-ink-soft hover:text-ink transition-colors"
         >
           <span className="text-label font-medium tabular-nums">{likesCount}</span>
-        </Button>
+        </Button>}
       </div>
 
       {/* 좋아요한 사람들 모달 */}

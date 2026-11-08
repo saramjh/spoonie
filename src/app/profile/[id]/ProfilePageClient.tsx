@@ -2,12 +2,11 @@
 
 import { useEffect, useEffectEvent, useRef, useState } from "react"
 import Image from "next/image"
-import { useRouter } from "@/shared/lib/navigation"
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import type { User } from "@supabase/supabase-js"
 import { Button } from "@/components/ui/button"
 
-import { MoreVertical, Edit, LogOut } from "lucide-react"
+import { MoreVertical, LogOut } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import FollowButton from "@/components/items/FollowButton"
 import Link from "next/link"
@@ -33,7 +32,6 @@ interface ProfilePageClientProps {
 }
 
 export default function ProfilePageClient({ params, initialProfile, initialItems, initialFollowCounts }: ProfilePageClientProps) {
-	const router = useRouter()
 	const userId = params.id
 	const supabase = createSupabaseBrowserClient()
 
@@ -196,64 +194,56 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 
 	return (
 		<div className="min-h-screen">
-			<header className="border-b border-border bg-paper px-4 pb-4 pt-5">
-				<div className="flex items-start gap-4">
-					<div className="relative h-[72px] w-[72px] flex-shrink-0 overflow-hidden rounded-full bg-border">
+			<header className="border-b border-border bg-paper px-4 pb-5 pt-6">
+				<div className="flex items-start justify-between gap-3">
+					<div className="relative h-[76px] w-[76px] flex-shrink-0 overflow-hidden rounded-full bg-paper-tint">
 						{currentAvatarUrl && currentAvatarUrl !== "/icon-only.svg" ? (
-							<Image src={currentAvatarUrl} alt="" fill sizes="72px" priority className="object-cover" />
+							<Image src={currentAvatarUrl} alt="" fill sizes="76px" priority className="object-cover" />
 						) : (
 							<span className="flex h-full w-full items-center justify-center text-title text-ink-soft">{profile?.username?.charAt(0) || "?"}</span>
 						)}
 					</div>
-					<div className="min-w-0 flex-1">
-						<div className="flex items-center justify-between gap-2">
-							<h1 className="truncate text-title text-ink">{profile?.username}</h1>
-							{isOwner && (
-								<DropdownMenu>
-									<DropdownMenuTrigger asChild>
-										<Button variant="ghost" size="icon" className="-mr-2 flex-shrink-0" aria-label="프로필 메뉴">
-											<MoreVertical className="h-5 w-5" aria-hidden />
-										</Button>
-									</DropdownMenuTrigger>
-									<DropdownMenuContent align="end" className="min-w-[9rem]">
-										<DropdownMenuItem onSelect={() => router.push(`/profile/${userId}/edit`)} className="min-h-11 cursor-pointer gap-2">
-											<Edit className="h-4 w-4" aria-hidden />
-											프로필 수정
-										</DropdownMenuItem>
-										<DropdownMenuItem onSelect={handleLogout} className="min-h-11 cursor-pointer gap-2">
-											<LogOut className="h-4 w-4" aria-hidden />
-											로그아웃
-										</DropdownMenuItem>
-									</DropdownMenuContent>
-								</DropdownMenu>
-							)}
-						</div>
-						<p className="mt-0.5 text-label text-ink">
-							레시피 <span className="font-semibold tabular-nums">{recipes.length}</span>
-							{lineageFacts.length > 0 && <span className="text-ink-soft"> · {lineageFacts.join(" · ")}</span>}
-						</p>
-						{showFollowCounts && (
-							<p className="mt-0.5 text-meta text-ink-soft">
-								<button type="button" onClick={() => setFollowList("followers")} className="py-1 underline-offset-4 hover:underline">
-									팔로워 <span className="tabular-nums">{followCounts?.followers || 0}</span>
-								</button>
-								{" · "}
-								<button type="button" onClick={() => setFollowList("following")} className="py-1 underline-offset-4 hover:underline">
-									팔로잉 <span className="tabular-nums">{followCounts?.following || 0}</span>
-								</button>
-							</p>
-						)}
-					</div>
+					{isOwner && (
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button variant="ghost" size="icon" className="-mr-2" aria-label="프로필 메뉴">
+									<MoreVertical className="h-5 w-5" aria-hidden />
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								<DropdownMenuItem onSelect={handleLogout} className="min-h-11 cursor-pointer gap-2">
+									<LogOut className="h-4 w-4" aria-hidden />로그아웃
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					)}
 				</div>
-
+				<h1 className="mt-4 text-title font-bold text-ink">{profile?.username}</h1>
+				{profile?.public_id && <p className="mt-0.5 text-label text-ink-soft">@{profile.public_id}</p>}
 				{profile?.profile_message && <p className="mt-3 whitespace-pre-wrap break-words text-body text-ink">{profile.profile_message}</p>}
+				{showFollowCounts && (
+					<div className="mt-4 flex items-center gap-4 text-meta text-ink-soft">
+						<button type="button" onClick={() => setFollowList("followers")} className="min-h-11 underline-offset-4 hover:underline">
+							팔로워 <span className="tabular-nums">{followCounts?.followers || 0}</span>
+						</button>
+						<button type="button" onClick={() => setFollowList("following")} className="min-h-11 underline-offset-4 hover:underline">
+							팔로잉 <span className="tabular-nums">{followCounts?.following || 0}</span>
+						</button>
+					</div>
+				)}
+				{lineageFacts.length > 0 && <p className="mt-1 text-meta text-ink-soft">{lineageFacts.join(" · ")}</p>}
 				{profile?.show_join_date !== false && profile?.created_at && (
 					<p className="mt-2 text-meta text-ink-soft">
 						{new Date(profile.created_at).toLocaleDateString("ko-KR", { year: "numeric", month: "long" })} 가입
 					</p>
 				)}
-
-				{!isOwner && profile && <FollowButton userId={profile.id} initialIsFollowing={isFollowing} appearance="primary" eventOrigin="profile" className="mt-4 w-full" />}
+				{isOwner ? (
+					<Button asChild variant="outline" className="mt-4 h-12 w-full">
+						<Link href={"/profile/" + userId + "/edit"}>프로필 수정</Link>
+					</Button>
+				) : profile ? (
+					<FollowButton userId={profile.id} initialIsFollowing={isFollowing} appearance="primary" eventOrigin="profile" className="mt-4 w-full" />
+				) : null}
 			</header>
 
 			<UnderlineTabs

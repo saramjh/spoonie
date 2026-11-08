@@ -24,6 +24,13 @@ describe("editDefaults", () => {
 			color_label: null, tags: "", cited_recipe_ids: [],
 		})
 	})
+	it("기존 원작 출처를 수정 폼에 복구하되 소개에는 중복 포함하지 않는다", () => {
+		const data = item({ description: "소개\n\n출처·안내: 원작 사이트 · https://example.com/recipe" })
+		const defaults = editDefaults(data)
+		expect(defaults.description).toBe("소개")
+		expect(defaults.external_source_creator).toBe("원작 사이트")
+		expect(defaults.external_source_url).toBe("https://example.com/recipe")
+	})
 	it("재료는 order_index 순서, 단위가 없으면 개, 태그는 쉼표로", () => {
 		const data = item({
 			title: "찜닭", servings: 3, is_public: false, color_label: "red", tags: ["a", "b"], cited_recipe_ids: ["x"],
@@ -76,6 +83,16 @@ describe("저장 행 만들기", () => {
 			user_id: "u", item_type: "recipe", title: "t", description: "d", servings: 2, cooking_time_minutes: 10, is_public: true,
 			image_urls: ["i"], color_label: null, tags: ["x"], cited_recipe_ids: [], thumbnail_index: 0, cover_focal: { x: 17, y: 83 }, creation_origin: null,
 		})
+	})
+	it("기존 description 컬럼에 외부 원작을 한 번만 저장하고 위험한 URL을 거부한다", () => {
+		const creator = "원작 사이트"
+		const url = "https://example.com/recipe"
+		const source = { ...values, external_source_creator: creator, external_source_url: url }
+		const ctx = { userId: "u", imageUrls: ["i"], thumbnailIndex: 0, coverFocal: { x: 50, y: 50 }, isEditMode: false, forkFromId: undefined }
+		const result = buildRecipeItemPayload(source, ctx)
+		expect(result.description).toBe("d\n\n출처·안내: 원작 사이트 · https://example.com/recipe")
+		expect(buildRecipeItemPayload({ ...source, description: result.description }, ctx).description).toBe(result.description)
+		expect(() => buildRecipeItemPayload({ ...source, external_source_url: "javascript:alert(1)" }, ctx)).toThrow()
 	})
 	it("단계 사진, 재료·단계 번호", () => {
 		const withImages = attachInstructionImages(values.instructions, ["p1", null])

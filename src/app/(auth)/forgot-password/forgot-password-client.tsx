@@ -1,14 +1,15 @@
 "use client"
 
-import Image from "next/image"
+import { useState } from "react"
 import Link from "next/link"
+import AuthScreen from "@/components/auth/AuthScreen"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Sheet } from "@/components/kit"
+import { StateSheet } from "@/components/kit"
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { useToast } from "@/hooks/use-toast"
 import { useHydrationReady } from "@/hooks/useHydrationReady"
@@ -26,6 +27,7 @@ type Props = {
 export default function ForgotPasswordClient({ next, partnerSource }: Props) {
 	const supabase = createSupabaseBrowserClient()
 	const isHydrated = useHydrationReady()
+	const [requestComplete, setRequestComplete] = useState(false)
 	const { toast } = useToast()
 	const loginHref = authEntryHref("/login", next, partnerSource)
 
@@ -49,49 +51,42 @@ export default function ForgotPasswordClient({ next, partnerSource }: Props) {
 			return
 		}
 
-		toast({
-			title: "재설정 메일을 보냈어요",
-			description: "메일의 링크에서 새 비밀번호를 설정해주세요.",
-		})
+		setRequestComplete(true)
 		form.reset()
 	}
 
 	return (
-		<div className="min-h-screen flex flex-col items-center justify-start p-4">
-			<div className="w-full max-w-sm mx-auto pt-12">
-				<div className="text-center mb-6">
-					<Link href="/" className="inline-flex" aria-label="Spoonie 홈">
-						<Image src="/logo-full.svg" alt="Spoonie" width={100} height={32} priority />
+		<AuthScreen title="비밀번호 찾기" intro={{ heading: "비밀번호를 잊으셨나요?", description: "가입한 이메일로 재설정 링크를 보내드려요." }}>
+			<div>
+				{requestComplete ? (
+					<StateSheet title="재설정 메일을 보냈어요"
+						body="메일의 링크로 새 비밀번호를 설정해 주세요. 메일이 없다면 스팸함도 확인해 주세요."
+						action={<Button asChild variant="outline"><Link href={loginHref}>로그인으로 돌아가기</Link></Button>} />
+				) : (
+				<Form {...form}>
+					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+						<FormField
+							control={form.control}
+							name="email"
+							render={({ field }) => (
+								<FormItem className="space-y-1.5">
+									<FormLabel className="text-label font-medium text-ink">이메일 주소</FormLabel>
+									<FormControl><Input className="h-12" {...field} /></FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<Button type="submit" disabled={!isHydrated} className="h-12 w-full text-body">재설정 링크 보내기</Button>
+					</form>
+				</Form>
+				)}
+
+				{!requestComplete && <div className="mt-8 text-center">
+					<Link href={loginHref} className="text-label font-semibold text-orange-ink hover:text-orange-ink transition-colors duration-200">
+						로그인으로 돌아가기
 					</Link>
-					<h1 className="mt-5 text-title text-ink">비밀번호 찾기</h1>
-					<p className="mt-1 text-meta text-ink-soft">가입 시 사용한 이메일 주소를 입력해주세요.</p>
-				</div>
-
-				<Sheet className="p-6">
-					<Form {...form}>
-						<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-							<FormField
-								control={form.control}
-								name="email"
-								render={({ field }) => (
-									<FormItem className="space-y-1.5">
-										<FormLabel className="text-label font-medium text-ink">이메일 주소</FormLabel>
-										<FormControl><Input {...field} /></FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<Button type="submit" disabled={!isHydrated} className="h-12 w-full text-body">재설정 링크 보내기</Button>
-						</form>
-					</Form>
-
-					<div className="mt-8 text-center">
-						<Link href={loginHref} className="text-label font-semibold text-orange-ink hover:text-orange-ink transition-colors duration-200">
-							로그인으로 돌아가기
-						</Link>
-					</div>
-				</Sheet>
+				</div>}
 			</div>
-		</div>
+		</AuthScreen>
 	)
 }

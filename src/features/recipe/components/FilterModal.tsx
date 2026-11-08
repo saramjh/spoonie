@@ -21,8 +21,13 @@ const SORTS = [
 	{ key: "title:asc", label: "이름순" },
 ] as const
 
+// The book header and the filter drawer must describe the same stored order.
+export function getRecipeSortLabel(state: { sortBy: string; sortOrder: string }): string {
+	return SORTS.find(option => option.key === state.sortBy + ":" + state.sortOrder)?.label ?? "정렬된 순서"
+}
+
 /**
- * 나의 레시피 거르기·정렬. 고르면 바로 목록에 반영된다 (따로 "적용"을 누르지 않는다).
+ * 나의 레시피 필터·정렬. 고르면 바로 목록에 반영된다 (따로 "적용"을 누르지 않는다).
  * 색상 라벨이 이 창의 주인공이라 맨 위에 둔다 (DESIGN.md Interface Grammar 3).
  */
 export function hasActiveRecipeFilter(state: { sortBy: string; sortOrder: string; filterCategory: string; filterColorLabel: string }) {
@@ -45,7 +50,7 @@ export default function FilterModal({ isOpen, onClose }: FilterModalProps) {
 		<Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
 			<DrawerContent className="mx-auto max-w-md">
 				<div className="px-4 pb-4 pt-3">
-					<DrawerTitle className="px-1 text-title text-ink">거르기와 정렬</DrawerTitle>
+					<DrawerTitle className="px-1 text-title text-ink">필터와 정렬</DrawerTitle>
 					<DrawerDescription className="sr-only">고르면 바로 목록에 반영돼요.</DrawerDescription>
 
 					<section aria-labelledby="filter-color" className="mt-5">

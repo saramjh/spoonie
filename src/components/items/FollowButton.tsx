@@ -15,7 +15,7 @@ interface FollowButtonProps {
 	initialIsFollowing?: boolean // store 초기화 전 표시할 fallback
 	className?: string
 	// icon: 카드·목록 머리의 아이콘 버튼(사람+ / 사람✓, 상태는 aria-label로). primary: 프로필처럼 그 화면의 주요 동작일 때(아이콘 + 글자)
-	appearance?: "icon" | "primary"
+	appearance?: "icon" | "primary" | "compact"
 	eventOrigin?: string
 }
 
@@ -23,13 +23,15 @@ export default function FollowButton({ userId, initialIsFollowing, className, ap
 	const { toast } = useToast()
 	const { session } = useSessionStore()
 	
-	const { isFollowing: globalIsFollowing, follow, unfollow, isLoading: storeLoading } = useFollowStore()
+	const { isFollowing: globalIsFollowing, follow, unfollow, isLoading: storeLoading, initializedUserId } = useFollowStore()
 	const [isProcessing, setIsProcessing] = useState(false)
 	const [showLoginPrompt, setShowLoginPrompt] = useState(false)
 	
 	// store 초기화 전에는 서버에서 받은 값을 사용한다.
 	const globalFollowState = globalIsFollowing(userId)
-	const isFollowing = storeLoading ? (initialIsFollowing || false) : globalFollowState
+	const isFollowing = storeLoading || !session?.id || initializedUserId !== session.id
+		? initialIsFollowing ?? false
+		: globalFollowState
 	
 	const handleFollowToggle = async () => {
 		if (isProcessing) return
@@ -104,13 +106,13 @@ export default function FollowButton({ userId, initialIsFollowing, className, ap
 				</Button>
 			) : (
 				<Button
-					variant={isFollowing ? "outline" : "default"}
+					variant={isFollowing ? "outline" : appearance === "compact" ? "secondary" : "default"}
 					onClick={handleFollowToggle}
 					disabled={isProcessing}
 					aria-pressed={isFollowing}
-					className={className}
+					className={cn(appearance === "compact" && "h-10 shrink-0 rounded-lg px-3 text-meta", className)}
 				>
-					{isFollowing ? <UserCheck aria-hidden /> : <UserPlus aria-hidden />}
+					{appearance === "primary" && (isFollowing ? <UserCheck aria-hidden /> : <UserPlus aria-hidden />)}
 					{isFollowing ? "팔로잉" : "팔로우"}
 				</Button>
 			)}

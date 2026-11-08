@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { usePushNotification } from '@/features/notification/hooks/usePushNotification';
 import { useToast } from '@/hooks/use-toast';
 import { createSupabaseBrowserClient } from '@/shared/infra/supabase-client';
-import { Sheet } from "@/components/kit"
 
 export default function PushNotificationSettings() {
   const { toast } = useToast();
@@ -115,14 +114,14 @@ export default function PushNotificationSettings() {
   // 한 줄 설정: 무엇을 받는지와 켜고 끄는 버튼 하나
   if (!isSupported) {
     return (
-      <p className="rounded-[3px] bg-paper px-4 py-3 text-meta text-ink-soft shadow-sheet">
+      <p className="py-2 text-meta text-ink-soft">
         이 브라우저에서는 휴대폰 알림을 받을 수 없어요. 홈 화면에 Spoonie를 추가하면 받을 수 있어요.
       </p>
     )
   }
 
   return (
-    <Sheet as="section" className="flex items-center gap-3 px-4 py-3">
+    <div className="flex items-center gap-3 py-2">
       <div className="min-w-0 flex-1">
         <h2 className="text-label font-semibold text-ink">휴대폰 알림 {isSubscribed ? "켜짐" : "꺼짐"}</h2>
         <p className="mt-0.5 text-meta text-ink-soft">
@@ -137,6 +136,6 @@ export default function PushNotificationSettings() {
       <Button onClick={handleTogglePush} disabled={isLoading} variant={isSubscribed ? "outline" : "default"} className="flex-shrink-0">
         {isLoading ? "처리 중" : isSubscribed ? "끄기" : "켜기"}
       </Button>
-    </Sheet>
+    </div>
   )
 }

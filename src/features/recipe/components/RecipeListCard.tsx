@@ -17,6 +17,7 @@ interface RecipeListCardProps {
   onSelect?: () => void;
   showAuthor?: boolean;
   priority?: boolean; // LCP 최적화를 위한 이미지 우선순위
+  className?: string;
 }
 
 export default function RecipeListCard({ 
@@ -26,7 +27,8 @@ export default function RecipeListCard({
   onSelectChange, 
   onSelect,
   showAuthor = false,
-  priority = false
+  priority = false,
+  className
 }: RecipeListCardProps) {
   const { createLinkWithOrigin } = useNavigation()
   
@@ -94,7 +96,7 @@ export default function RecipeListCard({
       {isSelectable && <CheckBox checked={!!isSelected} />}
     </>
   )
-  const sheet = cn("relative flex w-full items-center gap-3 rounded-[3px] bg-paper p-2 pr-4 shadow-sheet", isSelected && "ring-2 ring-ink")
+  const sheet = cn("relative flex w-full items-center gap-3 rounded-[3px] bg-paper p-2 pr-4 shadow-sheet", isSelected && "ring-2 ring-ink", className)
 
   if (isSelectable) {
     return (

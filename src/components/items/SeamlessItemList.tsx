@@ -189,7 +189,7 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
   // SSR 데이터가 없을 때만 초기 skeleton을 보여준다.
   if (isLoading && feedItems.length === 0 && !initialData) {
     return (
-      <div className="space-y-4 p-4">
+      <div className="space-y-8 px-3 py-4">
         {Array.from({ length: 6 }).map((_, i) => (
           <PostCardSkeleton key={i} />
         ))}
@@ -217,7 +217,7 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
         </div>
       )}
 
-      <div className="space-y-3 px-3 py-3">
+      <div className="space-y-8 px-3 py-4">
         {feedItems.map((item, index) => {
           // 첫 카드 한 장만 high priority로 두어 초기 이미지끼리 대역폭을 경쟁하지 않게 한다.
           const isPriorityPost = index === 0
@@ -243,7 +243,7 @@ export default function SeamlessItemList({ initialData }: SeamlessItemListProps)
       {!isReachingEnd && (
         <div ref={observerElem} className="flex justify-center py-8">
           {isLoading || isLoadingMore ? (
-            <div className="space-y-4 w-full">
+            <div className="w-full space-y-8 px-3">
               {Array.from({ length: 3 }).map((_, i) => (
                 <PostCardSkeleton key={i} />
               ))}

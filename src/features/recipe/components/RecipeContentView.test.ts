@@ -9,13 +9,13 @@ it("shows a discoverable quantity adjust entry, accessible help and preparation 
     ingredients: [{name:"감자",amount:300,unit:"g"},{name:"밀가루",amount:50,unit:"g"}],
     steps: [],
   }))
-  expect(html).toContain("보유량으로 재료량 맞추기")
+  expect(html).toContain("가진 재료 양에 맞추기")
   expect(html).toContain("한 재료의 양만 입력하면")
   expect(html).toContain("나머지도 자동 계산돼요.")
   expect(html).toContain("border border-border bg-paper")
   expect(html).toContain("hover:bg-paper-tint")
   expect(html).not.toContain("보유량 기준")
-  expect(html).not.toContain("가진 재료 양에 맞추기")
+  expect(html).not.toContain("보유량으로 재료량 맞추기")
   expect(html).toContain("재료 준비 0/2")
   expect(html).toContain('aria-label="인분 늘리기 안내"')
   expect(html).toContain("2인분")

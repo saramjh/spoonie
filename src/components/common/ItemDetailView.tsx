@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react"
 import { useRouter } from "@/shared/lib/navigation"
-import { ArrowLeft, MessageCircle, Share2, MoreVertical, Edit, Trash2, Heart } from "lucide-react"
+import { ArrowLeft, MessageCircle, Share2, MoreVertical, MoreHorizontal, Edit, Trash2, Heart, Clock3, Utensils, CookingPot } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 
@@ -23,7 +23,7 @@ import { isWithinNewRecipePhotoPromptWindow } from "@/features/recipe/domain/rec
 import RecipeCard from "@/features/recipe/components/RecipeCard"
 import { cn } from "@/lib/utils"
 import { formatCookingTime } from "@/features/recipe/domain/recipe-amount"
-import { splitKitchenEditorialFooter } from "@/features/recipe/domain/editorial-footer"
+import { splitKitchenEditorialFooter, parseRecipeDescription } from "@/features/recipe/domain/editorial-footer"
 import { useShare } from "@/hooks/useShare"
 import { useNavigation } from "@/hooks/useNavigation"
 import { useToast } from "@/hooks/use-toast"
@@ -59,6 +59,7 @@ interface CurrentUser {
 // cited_recipe_ids는 useCitedRecipes 훅에서 처리됨
 
 export default function ItemDetailView({ item }: ItemDetailViewProps) {
+	const [recipeAdjusting, setRecipeAdjusting] = useState(false)
 	const router = useRouter()
 	const { createLinkWithOrigin } = useNavigation()
 	const { share } = useShare()
@@ -147,9 +148,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	// 더블탭 좋아요 상태 관리
 	const [showHeartAnimation, setShowHeartAnimation] = useState(false)
 	const [showLoginPrompt, setShowLoginPrompt] = useState(false)
-	const commentsRef = useRef<HTMLDivElement>(null)
 
-	const comments = useMemo(() => item?.comments_data || [], [item?.comments_data])
 	const photoPromptReady = !!stableItemId && photoPromptState.recipeId === stableItemId
 	const isRecentRecipeForPhotoPrompt = photoPromptReady && photoPromptState.isRecent
 	
@@ -219,16 +218,6 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		logEvent("detail_open", stableItemId, cameFrom(window.location.pathname).surface)
 	}, [isAuthLoading, currentUser?.id, item?.user_id, stableItemId])
 
-	// 댓글 스크롤 useEffect
-	useEffect(() => {
-		if (window.location.hash === "#comments" && commentsRef.current) {
-			setTimeout(() => {
-				commentsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-			}, 500)
-		}
-	}, [comments])
-
-	
 	// 이미지 더블탭도 같은 좋아요 mutation을 사용한다.
 	const handleDoubleTapLike = async () => {
 		if (!currentUser?.id) {
@@ -364,9 +353,12 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 
 
 	const authorName = item.username || "사용자"
-	const editorial = isRecipe && item.user_public_id === "6a7e51f9"
-		? splitKitchenEditorialFooter(item.description)
-		: { body: item.description, note: null }
+	const externalSourceView = isRecipe ? parseRecipeDescription(item.description) : { description: item.description ?? "", source: null }
+	const editorial = externalSourceView.source
+		? { body: externalSourceView.description, note: null }
+		: isRecipe && item.user_public_id === "6a7e51f9"
+			? splitKitchenEditorialFooter(item.description)
+			: { body: item.description, note: null }
 	const cookingTime = formatCookingTime(item.cooking_time_minutes)
 	const ingredientCount = item.ingredients?.length || 0
 
@@ -415,23 +407,25 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		if (!isRecipe) return null
 		return (
 			<section aria-labelledby="made-heading" className="border-t border-border px-4 pb-5 pt-5">
-				<SectionHeading id="made-heading">
-					만들어 본 기록 {relations.made.length > 0 && <span className="font-medium tabular-nums text-ink-soft">{relations.made.length}</span>}
-				</SectionHeading>
-				{relations.made.length > 0 && (
-					<ul className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1">
-						{relations.made.map((made) => (
-							<li key={made.id} className="w-28 flex-shrink-0">
-								<IntentLink href={`/posts/${made.id}`} className="block" onClick={() => logEvent("related_open", made.id, `recipe_made:${stableItemId}`)}>
-									<div className="relative aspect-square overflow-hidden rounded-[2px] bg-muted">
-										{made.image_url && <Photo src={made.image_url} sizes="112px" />}
-									</div>
-									<p className="mt-1 truncate text-meta text-ink-soft">{made.username}</p>
-								</IntentLink>
-							</li>
-						))}
-					</ul>
-				)}
+				{relations.made.length > 0 ? (
+					<details open>
+						<summary className="min-h-11 cursor-pointer py-2 text-heading text-ink">
+							<h2 id="made-heading" className="inline">만들어 본 기록 보기 <span className="font-medium tabular-nums text-ink-soft">{relations.made.length}</span></h2>
+						</summary>
+						<ul className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1">
+							{relations.made.map((made) => (
+								<li key={made.id} className="w-28 flex-shrink-0">
+									<IntentLink href={`/posts/${made.id}`} className="block" onClick={() => logEvent("related_open", made.id, `recipe_made:${stableItemId}`)}>
+										<div className="relative aspect-square overflow-hidden rounded-[2px] bg-muted">
+											{made.image_url && <Photo src={made.image_url} sizes="112px" />}
+										</div>
+										<p className="mt-1 truncate text-meta text-ink-soft">{made.username}</p>
+									</IntentLink>
+								</li>
+							))}
+						</ul>
+					</details>
+				) : <SectionHeading id="made-heading">만들어 본 기록</SectionHeading>}
 				{photoPromptReady && !isRecentRecipeForPhotoPrompt && (
 					<Button asChild variant="outline" className="mt-3 w-full">
 						<IntentLink href={requireLogin(postSourceHref(stableItemId, "recipe_detail"))} onClick={() => logEvent("recipeed_start", stableItemId, "recipe_detail")}>만들어 본 사진 남기기</IntentLink>
@@ -439,10 +433,10 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 				)}
 
 				{relations.continued.length > 0 && (
-					<>
-						<h2 className="mt-6 text-heading text-ink">
-							이어진 레시피 <span className="font-medium tabular-nums text-ink-soft">{relations.continued.length}</span>
-						</h2>
+					<details open className="mt-4 border-t border-border">
+						<summary className="min-h-11 cursor-pointer py-2 text-heading text-ink">
+							<h2 className="inline">이어진 레시피 보기 <span className="font-medium tabular-nums text-ink-soft">{relations.continued.length}</span></h2>
+						</summary>
 						<ul className="mt-2 divide-y divide-border">
 							{relations.continued.map((next) => (
 								<li key={next.id}>
@@ -455,7 +449,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 								</li>
 							))}
 						</ul>
-					</>
+					</details>
 				)}
 				<Link
 					href={requireLogin(`/recipes/new?fork=${stableItemId}`)}
@@ -467,33 +461,36 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		)
 	}
 
-	// 공유 링크로 들어온 비회원은 뒤로 가기만으로 사이트를 탐색할 수 없으므로 하단 탭을 제공한다.
-	// 회원의 상세 읽기 집중 화면과 실제 작성 화면의 네비게이션 정책은 유지한다.
-	const guestNavigation = !isAuthLoading && !currentUser && item.is_public
+	// 레시피 상세는 공통 네비게이션을 유지하고, 분량 조정 중에는 하나의 작업 바만 표시한다.
+	const showDetailNavigation = !recipeAdjusting
+	const hasCookingBar = isRecipe && Boolean(item.steps?.length)
 
 	return (
-		<div className={cn("flex flex-col h-full relative", guestNavigation && "pb-20")}>
+		<div className={cn("flex flex-col h-full relative", showDetailNavigation && (
+			hasCookingBar ? "pb-[calc(var(--bottom-nav-height)+var(--recipe-cooking-bar-height)+1rem+env(safe-area-inset-bottom))]"
+				: "pb-[calc(var(--bottom-nav-height)+1rem+env(safe-area-inset-bottom))]"
+		), isRecipe && "bg-paper")}>
 			<article>
-				<header className="sticky top-0 z-20 flex h-14 items-center gap-1 border-b border-border bg-paper px-1">
+				{!recipeAdjusting && <header data-design-slot={isRecipe ? "header" : undefined} className={cn("sticky top-0 z-20 flex h-14 items-center gap-1 border-b border-border bg-paper px-1", isRecipe && "h-[54px] px-3")}>
 					<Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => router.back()} aria-label="뒤로 가기">
 						<ArrowLeft className="h-6 w-6" aria-hidden />
 					</Button>
 
-					<IntentLink href={`/profile/${item.user_public_id || item.user_id}`} className="flex min-w-0 flex-1 items-center gap-2.5">
-						<Avatar className="h-8 w-8">
+					<IntentLink href={`/profile/${item.user_public_id || item.user_id}`} className={cn("flex min-h-11 min-w-0 flex-1 items-center gap-2.5", isRecipe && "justify-center text-[17px]")}>
+						<Avatar className="h-8 w-8" aria-hidden>
 							<AvatarImage src={item.avatar_url || undefined} alt="" />
 							<AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
 						</Avatar>
 						<span className="truncate font-semibold text-ink">{authorName}</span>
-						<span className="flex-shrink-0 text-meta text-ink-soft">{isRecipe ? "레시피" : "레시피드"}</span>
+						{!isRecipe && <span className="flex-shrink-0 text-meta text-ink-soft">레시피드</span>}
 					</IntentLink>
 
-					<div className="flex items-center pr-1">
+					<div className={cn("flex items-center pr-1", isRecipe && "w-11 pr-0")}>
 						{isOwnItem ? (
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
 									<Button variant="ghost" size="icon" className="h-11 w-11" aria-label="더보기">
-										<MoreVertical className="h-5 w-5" aria-hidden />
+										{isRecipe ? <MoreHorizontal className="h-5 w-5" aria-hidden /> : <MoreVertical className="h-5 w-5" aria-hidden />}
 									</Button>
 								</DropdownMenuTrigger>
 								<DropdownMenuContent align="end" className="min-w-[8rem]">
@@ -508,26 +505,36 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 									</DropdownMenuItem>
 								</DropdownMenuContent>
 							</DropdownMenu>
+						) : isRecipe ? (
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button variant="ghost" size="icon" className="h-11 w-11" aria-label="더보기"><MoreHorizontal className="h-5 w-5" aria-hidden /></Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent align="end" className="min-w-[8rem]">
+									{currentUser && <div className="p-2"><FollowButton userId={item.user_id} initialIsFollowing={item.is_following} eventOrigin="detail" /></div>}
+									<DropdownMenuItem onClick={handleShare} className="min-h-11 cursor-pointer gap-2"><Share2 className="h-4 w-4" aria-hidden />공유</DropdownMenuItem>
+								</DropdownMenuContent>
+							</DropdownMenu>
 						) : (
 							currentUser && <FollowButton userId={item.user_id} initialIsFollowing={item.is_following} eventOrigin="detail" />
 						)}
 					</div>
-				</header>
+				</header>}
 
-				<div className="flex-1 px-3 pb-8 pt-3">
-					{renderCitedPeek()}
+				<div className={cn("flex-1 px-3 pb-8 pt-3", isRecipe && "px-0 pt-0")}>
+					{!recipeAdjusting && renderCitedPeek()}
 
-					<Sheet className="relative z-10">
+					<Sheet className={cn("relative z-10", isRecipe && "rounded-none")}>
 						{/* 레시피드: 어떤 레시피에서 나왔는지가 먼저 (성장 고리의 연결점) */}
 						{!isRecipe && !citedRecipesLoading && <SourceRow recipes={citedRecipes} creationOrigin={item.creation_origin} className="border-t-0" />}
 
-						{orderedImages.length > 0 && (
-							<div className="relative overflow-hidden rounded-t-[3px]">
+						{!recipeAdjusting && orderedImages.length > 0 && (
+							<div data-design-slot={isRecipe ? "hero" : undefined} className={cn("relative overflow-hidden rounded-t-[3px]", isRecipe && "mx-3 rounded-b-xl rounded-t-none")}>
 								<ImageCarousel
 									images={orderedImages}
 									alt={isRecipe ? item.title || "레시피 사진" : `${publicContentTitle(item)} — ${authorName}님의 레시피드 사진`}
-									frame={isRecipe ? "recipe" : "recipeed"}
-									fit={isRecipe ? "contain" : "cover"}
+									frame={isRecipe ? "recipe-detail" : "recipeed-detail"}
+									fit="cover"
 									discoverAll
 									priority
 									onDoubleClick={handleDoubleTapLike}
@@ -540,16 +547,14 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 							</div>
 						)}
 
-						<div className="px-4 pb-1 pt-6">
+						<div data-design-slot={isRecipe ? "summary" : undefined} className={cn("px-4 pb-1 pt-6", isRecipe && "pb-0 pt-4", recipeAdjusting && "hidden")}>
 							{isRecipe ? (
 								<>
-									{item.title && <h1 className="text-display text-ink [text-wrap:balance]">{item.title}</h1>}
-									<p className="mt-2 text-label text-ink-soft">
-										{[item.servings ? `${item.servings}인분` : null, cookingTime ? `조리 ${cookingTime}` : null, ingredientCount ? `재료 ${ingredientCount}가지` : null]
-											.filter(Boolean)
-											.join(" · ")}
-										{" · "}
-										<RelativeTime iso={item.created_at} />
+									{item.title && <h1 data-design-slot="title" className="text-display text-ink [text-wrap:balance]">{item.title}</h1>}
+									<p className="mt-[10px] flex flex-wrap items-center gap-[10px] text-caption leading-[22px] text-ink-soft">
+										{item.servings ? <span className="inline-flex items-center gap-1"><Utensils className="h-[15px] w-[15px]" aria-hidden />{item.servings}인분</span> : null}
+										{cookingTime ? <span className="inline-flex items-center gap-1"><Clock3 className="h-[15px] w-[15px]" aria-hidden />{cookingTime}</span> : null}
+										{ingredientCount ? <span className="inline-flex items-center gap-1"><CookingPot className="h-[15px] w-[15px]" aria-hidden />재료 {ingredientCount}가지</span> : null}
 									</p>
 									{/* 다른 사람이 실제로 만든 기록: 누르면 아래 '만들어 본 기록'으로 */}
 									{(madeByOthers.count > 0 || continuedByOthers > 0) && (
@@ -558,7 +563,17 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 										</a>
 									)}
 									<RecipeActivity recipeId={stableItemId} userId={currentUser?.id} />
-									{editorial.body && <p className="mt-4 whitespace-pre-wrap break-words text-body text-ink"><LinkifiedText text={editorial.body} /></p>}
+									{editorial.body && <p className="mt-[10px] whitespace-pre-wrap break-words text-body text-ink"><LinkifiedText text={editorial.body} /></p>}
+									{externalSourceView.source && (
+										<aside aria-label="외부 원작 출처" className="mt-4 border-t border-border pt-3 text-meta text-ink-soft">
+											<p className="font-medium text-ink">외부 원작 레시피</p>
+											<p className="mt-1">{externalSourceView.source.creator}</p>
+											<a href={externalSourceView.source.url} target="_blank" rel="noopener noreferrer"
+												className="mt-2 inline-flex min-h-11 items-center break-all font-medium text-ink underline underline-offset-4">
+												원문 보기 <span className="sr-only">(새 창)</span>
+											</a>
+										</aside>
+									)}
 									{isRecentRecipeForPhotoPrompt && stableItemId && (
 										<div className="mt-4 border-y border-border py-3">
 											<p className="text-label font-semibold text-ink">이 레시피를 직접 만들어봤나요?</p>
@@ -578,10 +593,10 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 							)}
 
 							{item.tags && item.tags.length > 0 && (
-								<ul className="mt-4 flex flex-wrap gap-x-3 gap-y-1" aria-label="태그">
+								<ul data-design-slot={isRecipe ? "tags" : undefined} className="mb-3 mt-3 flex flex-wrap gap-2" aria-label="태그">
 									{item.tags.map((tag, idx) => (
 										<li key={idx}>
-											<IntentLink href={topicHref(tag)} className="inline-flex min-h-8 items-center text-label text-ink-soft hover:text-ink">#{tag}</IntentLink>
+											<IntentLink href={topicHref(tag)} className="inline-flex min-h-8 items-center rounded-[7px] bg-paper-tint px-[9px] py-[5px] text-meta text-ink-soft hover:text-ink">#{tag}</IntentLink>
 										</li>
 									))}
 								</ul>
@@ -594,7 +609,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 							)}
 						</div>
 
-						<div className="flex items-center justify-between px-2 py-1">
+						<div data-design-slot={isRecipe ? "social" : undefined} className={cn("flex items-center justify-between px-2 py-1", isRecipe && "mx-4 px-0 py-2", recipeAdjusting && "hidden")}>
 							<div className="flex items-center gap-1 text-ink-soft">
 								<LikeButton
 									itemId={stableItemId}
@@ -603,11 +618,19 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 									currentUserId={currentUser?.id}
 									initialLikesCount={cachedItem?.likes_count ?? item?.likes_count ?? 0}
 									initialHasLiked={cachedItem?.is_liked ?? item?.is_liked ?? false}
+									showCount={!isRecipe}
 									cachedItem={cachedItem}
 								/>
-								<a href="#comments" className="flex h-11 items-center gap-1.5 px-2" aria-label={`댓글 ${cachedItem?.comments_count || 0}개`}>
+								<a href="#comments" onClick={(event) => {
+									if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+									const comments = document.getElementById("comments")
+									if (!comments) return
+									event.preventDefault()
+									comments.scrollIntoView()
+									comments.focus({ preventScroll: true })
+								}} className="flex h-11 items-center gap-1.5 px-2" aria-label={`댓글 ${cachedItem?.comments_count || 0}개`}>
 									<MessageCircle className="h-5 w-5" aria-hidden />
-									<span className="text-label font-medium tabular-nums">{cachedItem?.comments_count || 0}</span>
+									{!isRecipe && <span className="text-label font-medium tabular-nums">{cachedItem?.comments_count || 0}</span>}
 								</a>
 							</div>
 							<div className="flex items-center">
@@ -629,21 +652,26 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 
 						{isRecipe && (
 							<RecipeContentView
+								coverImage={orderedImages[0] ?? null}
 								initialServings={item.servings || 1}
 								ingredients={item.ingredients || []}
 								steps={item.steps || []}
 								recipeId={stableItemId}
+								onAdjustingChange={setRecipeAdjusting}
 							/>
 						)}
 
-						{isRecipe && editorial.note && (
+						{isRecipe && !recipeAdjusting && editorial.note && (
 							<footer className="border-t border-border px-4 py-4 text-meta text-ink-soft">
 								<span className="mr-2 font-semibold">출처·안내</span>
 								<LinkifiedText text={editorial.note} />
 							</footer>
 						)}
 
-						{renderRecipeGraph()}
+						<CommentsSection key={stableItemId} hidden={recipeAdjusting}
+							currentUserId={currentUser?.id} itemId={stableItemId} cachedItem={cachedItem || item} />
+
+						{!recipeAdjusting && renderRecipeGraph()}
 
 						{/* 레시피드: 같은 레시피로 만든 다른 기록 → 다른 사람의 결과와 작성자로 이어진다 */}
 						{!isRecipe && siblingRecords.length > 0 && (
@@ -665,7 +693,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 						)}
 
 						{/* 작성자의 다른 레시피: 이 글을 보고 그 사람의 다른 레시피로 (작성자 발견) */}
-						{authorRecipes.length > 0 && (
+						{!recipeAdjusting && authorRecipes.length > 0 && (
 							<section aria-labelledby="author-recipes-heading" className="border-t border-border px-4 pb-5 pt-5">
 								<SectionHeading id="author-recipes-heading">{authorName}의 {isRecipe ? "다른 " : ""}레시피</SectionHeading>
 								<div className="mt-3 grid grid-cols-2 gap-3">
@@ -677,25 +705,19 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 						)}
 					</Sheet>
 
-					<div id="comments" ref={commentsRef} className="mt-3 scroll-mt-16 rounded-[3px] bg-paper p-4 shadow-sheet">
-						<h2 className="mb-3 text-heading text-ink">
-							댓글 {(cachedItem?.comments_count || 0) > 0 && <span className="font-medium tabular-nums text-ink-soft">{cachedItem?.comments_count}</span>}
-						</h2>
-						<CommentsSection currentUserId={currentUser?.id} itemId={stableItemId} cachedItem={cachedItem || item} />
-					</div>
 				</div>
 			</article>
 
 			{/* 삭제 확인 다이얼로그 */}
 			<AlertDialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
-				<AlertDialogContent>
+				<AlertDialogContent placement="bottom">
 					<AlertDialogHeader>
-						<AlertDialogTitle>정말 삭제할까요?</AlertDialogTitle>
+						<AlertDialogTitle>이 글을 삭제할까요?</AlertDialogTitle>
 						<AlertDialogDescription>
 							이 {isRecipe ? "레시피를" : "레시피드를"} 삭제하면 되돌릴 수 없어요.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
-					<AlertDialogFooter>
+					<AlertDialogFooter className="flex flex-row gap-2 [&_button]:min-h-12 [&_button]:flex-1 [&_button]:mt-0">
 						<AlertDialogCancel disabled={isDeleting}>취소</AlertDialogCancel>
 						<AlertDialogAction 
 							onClick={handleDeleteConfirm} 
@@ -713,7 +735,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 				onClose={() => setShowLoginPrompt(false)}
 				action="like"
 			/>
-			{guestNavigation && <BottomNavBar />}
+			{showDetailNavigation && <BottomNavBar />}
 		</div>
 	)
 }

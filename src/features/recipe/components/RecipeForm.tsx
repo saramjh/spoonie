@@ -6,12 +6,13 @@ import { useForm, useFieldArray, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { Button } from "@/components/ui/button"
+import { Drawer, DrawerContent, DrawerTitle, DrawerDescription } from "@/components/ui/drawer"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
-import { Minus, Plus } from "lucide-react"
+import { ImageOff, Minus, Plus } from "lucide-react"
 import ImageUploader from "@/components/common/ImageUploader"
 import InstructionImageUploader from "@/features/recipe/components/InstructionImageUploader"
 import CitedRecipeSearch from "@/features/recipe/components/CitedRecipeSearch"
@@ -37,6 +38,7 @@ import { fetchCitedRecipes, saveRecipeRows, uploadInstructionImages } from "@/fe
 import type { RecipeFormProps } from "@/features/recipe/contracts"
 import { onboardingRecipeDefaults } from "@/features/onboarding/domain/review"
 import { recipeSchema } from "@/features/recipe/domain/recipe-schema"
+import { serializeRecipeDescription } from "@/features/recipe/domain/editorial-footer"
 import type { RecipeFormValues, RecipeSubmitValues } from "@/features/recipe/domain/recipe-schema"
 
 const onboardingFieldLabels: Record<string, string> = {
@@ -65,6 +67,8 @@ export default function RecipeForm({
 
 
 	const [isSubmitting, setIsSubmitting] = useState(false)
+  const [leaveSheetOpen, setLeaveSheetOpen] = useState(false)
+  const [uploadIssue, setUploadIssue] = useState(false)
 	const submitLock = useRef(false)
 	const [mainImages, setMainImages] = useState<OptimizedImage[]>([])
 	const [thumbnailIndex, setThumbnailIndex] = useState(0)
@@ -87,6 +91,8 @@ export default function RecipeForm({
 		defaultValues: {
 			title: "",
 			description: "",
+			external_source_creator: "",
+			external_source_url: "",
 			servings: 1,
 			cooking_time_minutes: 1,
 			is_public: true,
@@ -248,7 +254,17 @@ export default function RecipeForm({
   const scheduleDraft = draft.scheduleSave
   useEffect(() => { scheduleDraft() }, [mainImages, instructionImages, thumbnailIndex, coverFocal, scheduleDraft])
 
+	const externalSourceDetails = useRef<HTMLDetailsElement>(null)
+
 	const onSubmit = async (values: RecipeSubmitValues) => {
+		// Reject invalid external attribution before uploading media or saving a draft.
+		try {
+			serializeRecipeDescription(values.description ?? "", values.external_source_creator, values.external_source_url)
+		} catch (error) {
+			if (externalSourceDetails.current) externalSourceDetails.current.open = true
+			toast({ title: "외부 출처 확인", description: error instanceof Error ? error.message : "원문 출처를 확인해 주세요.", variant: "destructive" })
+			return
+		}
 		if (mainImages.length === 0) {
 			toast({ title: "이미지 필요", description: "레시피 대표 이미지를 최소 1개 업로드해주세요.", variant: "destructive" })
 			return
@@ -259,6 +275,7 @@ export default function RecipeForm({
 		submitLock.current = true
 		setIsSubmitting(true)
 		const newUploadUrls: string[] = []
+		let uploadingMedia = false
 		let dbSaveStarted = false
 		let dbCommitted = false
 		let savedItemId: string | null = null
@@ -282,6 +299,7 @@ export default function RecipeForm({
 		// image_urls 순서와 thumbnail_index는 함께 저장되어야 한다.
 		
 
+		uploadingMedia = true
 		const newImageFiles = mainImages.filter((img) => img.file.size > 0)
 		const uploadResults = newImageFiles.length > 0
 			? await uploadImagesOptimized(newImageFiles, user.id, bucketId)
@@ -296,6 +314,7 @@ export default function RecipeForm({
 				url && instructionImages[index]?.file.size ? [url] : []
 			))
 
+		uploadingMedia = false
 			const instructionsWithImages = attachInstructionImages(values.instructions, uploadedInstructionImageUrls)
 
 
@@ -465,6 +484,7 @@ export default function RecipeForm({
 				return
 			}
 			await cleanupUncommittedImages(newUploadUrls, { dbSaveStarted, dbCommitted, error }, supabase)
+			if (uploadingMedia) setUploadIssue(true)
 			const errorMessage = error instanceof Error ? error.message : "오류가 발생했습니다."
 			toast({ title: `레시피 ${isEditMode ? "수정" : "작성"} 실패`, description: errorMessage, variant: "destructive" })
 		} finally {
@@ -492,12 +512,27 @@ export default function RecipeForm({
     </div>
   )
   if (!draft.ready) return <PageLoading />
+  if (uploadIssue) return (
+    <div className="min-h-screen bg-paper">
+      <PageHeader title="사진 업로드 실패" leading="none" />
+      <section className="mx-auto flex max-w-sm flex-col items-center px-5 pb-24 pt-16 text-center" role="alert">
+        <ImageOff strokeWidth={1.5} className="h-10 w-10 text-ink-soft" aria-hidden />
+        <h2 className="mt-5 text-heading font-semibold text-ink">사진을 올리지 못했어요</h2>
+        <p className="mt-3 text-label leading-relaxed text-ink-soft">
+          입력한 내용은 그대로 남아 있어요. 다른 사진을 고르거나 다시 시도해 주세요.
+        </p>
+        <Button type="button" className="mt-12 h-12 w-full" onClick={() => setUploadIssue(false)}>
+          작성 화면으로 돌아가기
+        </Button>
+      </section>
+    </div>
+  )
 
 	// 쓰는 순서 = 읽는 순서: 사진 → 제목 → 분량·시간 → 설명 → 재료 → 만드는 법 → 참고 → 내 정리 (DESIGN.md Interface Grammar)
 	return (
-		<div className="min-h-screen pb-28">
+		<div className="min-h-screen bg-paper pb-28">
 			<PageHeader
-        onCancel={() => { void draft.leave(() => router.back()) }}
+        onCancel={() => draft.leave(() => router.back(), () => setLeaveSheetOpen(true))}
 				leading="cancel"
 				title={isEditMode ? "레시피 수정" : onboardingDraft ? "Recipe 초안 검수" : forkFrom ? "내 버전으로 고쳐 쓰기" : "레시피 쓰기"}
 			/>
@@ -505,7 +540,22 @@ export default function RecipeForm({
       <p role="status" className={`px-4 pt-2 text-meta ${draft.status === "error" || draft.status === "conflict" ? "text-destructive" : "text-ink-soft"}`}>
         {draft.status === "saved" ? "이 기기에 임시 저장됨" : draft.status === "pending" ? "임시 저장 중…" : draft.status === "conflict" ? "다른 탭에서 같은 글을 수정했습니다 · 이 탭에서 나가지 말고 내용을 복사해 주세요" : draft.status === "error" ? "임시 저장 실패 · 화면을 닫지 마세요" : "입력한 내용은 이 기기에 자동 저장돼요"}
       </p>
-			<form id="recipe-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 px-3 pt-3">
+      <Drawer open={leaveSheetOpen} onOpenChange={setLeaveSheetOpen} shouldScaleBackground={false}>
+        <DrawerContent className="mx-auto max-h-[85vh] max-w-md rounded-t-2xl px-4 pb-6 pt-4">
+          <div className="flex items-center justify-between">
+            <DrawerTitle className="text-title font-semibold text-ink">작성을 잠시 멈출까요?</DrawerTitle>
+            <Button type="button" variant="ghost" size="icon" className="h-11 w-11" onClick={() => setLeaveSheetOpen(false)} aria-label="닫기">×</Button>
+          </div>
+          <DrawerDescription className="mt-3 text-label leading-relaxed text-ink-soft">
+            입력한 내용은 임시 저장할게요. 나중에 이어서 쓸 수 있어요.
+          </DrawerDescription>
+          <div className="mt-5 flex gap-2">
+            <Button type="button" variant="outline" className="h-12 flex-1" onClick={() => setLeaveSheetOpen(false)}>계속 쓰기</Button>
+            <Button type="button" className="h-12 flex-1" onClick={() => { setLeaveSheetOpen(false); void draft.leaveConfirmed(() => router.back()) }}>임시 저장하고 나가기</Button>
+          </div>
+        </DrawerContent>
+      </Drawer>
+			<form id="recipe-form" onSubmit={form.handleSubmit(onSubmit)} className="pt-3">
 				{!isEditMode && onboardingDraft && (
 					<Sheet>
 						<div className="px-4 py-4">
@@ -538,13 +588,13 @@ export default function RecipeForm({
 					</Sheet>
 				)}
 
-				<Sheet>
+				<Sheet className="rounded-none">
 					<section className="space-y-5 px-4 pb-5 pt-5">
 						<ImageUploader
 							images={mainImages}
 							onImagesChange={setMainImages}
 							maxImages={5}
-							label="완성 사진"
+							label="사진"
 							placeholder="완성한 요리 사진을 올려 주세요"
 							frame="recipe"
 							thumbnailIndex={thumbnailIndex}
@@ -558,10 +608,17 @@ export default function RecipeForm({
 							<Label htmlFor="title" className={fieldLabel}>
 								제목
 							</Label>
-							<Input id="title" placeholder="예: 대파 듬뿍 김치찌개" className="mt-1.5 h-12 text-heading" {...form.register("title")} />
+							<Input id="title" placeholder="예: 대파 듬뿍 김치찌개" className="mt-1.5 h-12 text-body" {...form.register("title")} />
 							{errors.title && <p className={errorText}>{errors.title.message}</p>}
 						</div>
 
+						<div>
+							<Label htmlFor="description" className={fieldLabel}>
+								한 줄 소개 <span className="font-normal text-ink-soft">(선택)</span>
+							</Label>
+							<Textarea id="description" placeholder="어떤 맛인지, 언제 만들면 좋은지" className="mt-1.5 min-h-[72px]" {...form.register("description")} />
+							<p className="mt-1 text-meta text-ink-soft">자사·협찬 제품이 포함된 Recipe라면 제품과의 관계를 프로필이나 이 소개에 분명히 적어주세요.</p>
+						</div>
 						<div className="grid grid-cols-2 gap-3">
 							<div>
 								<Label htmlFor="servings" className={fieldLabel}>
@@ -621,14 +678,22 @@ export default function RecipeForm({
 								{errors.cooking_time_minutes && <p className={errorText}>{errors.cooking_time_minutes.message}</p>}
 							</div>
 						</div>
-
-						<div>
-							<Label htmlFor="description" className={fieldLabel}>
-								한 줄 소개 <span className="font-normal text-ink-soft">(선택)</span>
-							</Label>
-							<Textarea id="description" placeholder="어떤 맛인지, 언제 만들면 좋은지" className="mt-1.5 min-h-[72px]" {...form.register("description")} />
-							<p className="mt-1 text-meta text-ink-soft">자사·협찬 제품이 포함된 Recipe라면 제품과의 관계를 프로필이나 이 소개에 분명히 적어주세요.</p>
-						</div>
+						<details ref={externalSourceDetails} className="mt-4" data-external-source>
+							<summary className="flex min-h-11 cursor-pointer items-center text-label font-medium text-ink">
+								외부 원작 레시피 출처 <span className="ml-2 text-meta font-normal text-ink-soft">(선택)</span>
+							</summary>
+							<div className="mt-3 space-y-3">
+								<p className="text-meta text-ink-soft">외부 레시피를 참고한 경우에만 원작자와 원문 주소를 함께 적어 주세요.</p>
+								<div>
+									<Label htmlFor="external_source_creator" className={fieldLabel}>원작자 또는 원문 사이트</Label>
+									<Input id="external_source_creator" className="mt-1.5 h-11" placeholder="예: Hyosun / Korean Bapsang" {...form.register("external_source_creator")} />
+								</div>
+								<div>
+									<Label htmlFor="external_source_url" className={fieldLabel}>원문 주소</Label>
+									<Input id="external_source_url" className="mt-1.5 h-11" inputMode="url" autoComplete="url" placeholder="https://..." {...form.register("external_source_url")} />
+								</div>
+							</div>
+						</details>
 					</section>
 
 					<section aria-labelledby="form-ingredients" className="border-t border-border px-4 pb-5 pt-5">
@@ -713,34 +778,20 @@ export default function RecipeForm({
 						</div>
 					</section>
 
-					<section className="border-t border-border px-4 pb-5 pt-5">
-						<Label htmlFor="tags" className={fieldLabel}>
-							태그 <span className="font-normal text-ink-soft">(쉼표로 구분)</span>
-						</Label>
-						<Input id="tags" placeholder="예: 김치찌개, 한식, 간단요리" className="mt-1.5" {...form.register("tags")} />
-						{errors.tags && <p className={errorText}>{errors.tags.message}</p>}
-					</section>
-				</Sheet>
-
-				{/* 내 정리: 다른 사람에게는 보이지 않는 주인의 도구 (DESIGN.md Interface Grammar 3) */}
-				<Sheet className="px-4 pb-5 pt-5">
-					<SectionHeading>내 정리</SectionHeading>
-					<fieldset className="mt-3">
-						<legend className={fieldLabel}>
-							색상 라벨 <span className="font-normal text-ink-soft">(나의 레시피북에서 거를 때 써요)</span>
-						</legend>
-						<ColorLabelPicker
-							className="mt-2"
-							value={selectedColor}
-							onChange={(next) => form.setValue("color_label", next, { shouldValidate: true })}
-						/>
-					</fieldset>
+          <section className="border-t border-border px-4 pb-5 pt-5">
+            <details data-classification-options>
+              <summary className="flex min-h-12 cursor-pointer items-center text-heading text-ink">태그·색상 라벨 <span className="ml-2 text-caption font-normal text-ink-soft">선택</span></summary>
+              <div className="mt-4 space-y-4">
+                <div><Label htmlFor="tags" className={fieldLabel}>태그</Label><Input id="tags" placeholder="예: 김치찌개, 한식" className="mt-1.5" {...form.register("tags")} />{errors.tags && <p className={errorText}>{errors.tags.message}</p>}</div>
+                <fieldset><legend className={fieldLabel}>색상 라벨</legend><ColorLabelPicker className="mt-2" value={selectedColor} onChange={(next) => form.setValue("color_label", next, { shouldValidate: true })} /></fieldset>
+              </div>
+            </details>
 
 					<Controller
 						control={form.control}
 						name="is_public"
 						render={({ field }) => (
-							<fieldset className="mt-4">
+							<fieldset className="mt-6" data-visibility-section>
 								<legend className={fieldLabel}>공개 범위</legend>
 								<RadioGroup value={field.value.toString()} onValueChange={(value) => field.onChange(value === "true")} className="mt-1">
 									<label htmlFor="public" className="flex min-h-12 items-center gap-3">
@@ -759,6 +810,7 @@ export default function RecipeForm({
 							</fieldset>
 						)}
 					/>
+          </section>
 				</Sheet>
 			</form>
 

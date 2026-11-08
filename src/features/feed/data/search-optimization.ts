@@ -72,42 +72,16 @@ export async function getPopularKeywordsCached(): Promise<Array<{ keyword: strin
  * 디바운싱된 검색 (불필요한 요청 방지)
  */
 class DebouncedSearch {
-	private timeout: NodeJS.Timeout | null = null
 	private searchCache = new Map<string, { results: SearchResult[], timestamp: number }>()
-	private readonly DEBOUNCE_MS = 300
 	private readonly SEARCH_CACHE_TTL = 2 * 60 * 1000 // 2분
 
 	async search(query: string): Promise<SearchResult[]> {
-		// 캐시 체크
 		const cached = this.searchCache.get(query)
-		if (cached && Date.now() - cached.timestamp < this.SEARCH_CACHE_TTL) {
-		
-			return cached.results
-		}
-
-		return new Promise((resolve, reject) => {
-			// 이전 요청 취소
-			if (this.timeout) {
-				clearTimeout(this.timeout)
-			}
-
-			this.timeout = setTimeout(async () => {
-				try {
-					
-					const results = await this.performSearch(query)
-					
-					// 결과 캐싱
-					this.searchCache.set(query, {
-						results,
-						timestamp: Date.now()
-					})
-
-					resolve(results)
-				} catch (error) {
-					reject(error)
-				}
-			}, this.DEBOUNCE_MS)
-		})
+		if (cached && Date.now() - cached.timestamp < this.SEARCH_CACHE_TTL) return cached.results
+		// The UI already debounces. Cancelling a second timer left promises pending.
+		const results = await this.performSearch(query)
+		this.searchCache.set(query, { results, timestamp: Date.now() })
+		return results
 	}
 
 	private async performSearch(query: string): Promise<SearchResult[]> {
@@ -126,8 +100,8 @@ class DebouncedSearch {
 			})
 
 		if (error) {
-			console.error('❌ Search failed:', error)
-			return []
+			console.error("Search failed:", error)
+			throw error
 		}
 
 		return data || []
@@ -178,8 +152,8 @@ export async function searchUsers(query: string): Promise<UserSearchResult[]> {
 		})
 
 	if (error) {
-		console.error('❌ User search failed:', error)
-		return []
+		console.error("User search failed:", error)
+		throw error
 	}
 
 	

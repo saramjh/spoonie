@@ -8,16 +8,18 @@ import { useToast } from '@/hooks/use-toast'
 import { mutate } from 'swr'
 import { formatDistanceToNowStrict } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { Trash2 } from 'lucide-react'
+import { Trash2, Bell, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Drawer, DrawerContent, DrawerTitle, DrawerDescription } from '@/components/ui/drawer'
 import { useRouter } from '@/shared/lib/navigation'
 import Link from 'next/link'
 import PushNotificationSettings from '@/features/notification/components/PushNotificationSettings'
 import { NOTIFICATION_RECEIVED_EVENT } from '@/shared/infra/realtime-events';
-import { CheckBox, PageHeader, Sheet, StateSheet } from "@/components/kit"
+import { CheckBox, Sheet, StateSheet } from "@/components/kit"
 import type { Notification } from "@/features/notification/contracts"
 import { toNotifications } from "@/features/notification/domain/notification-rows"
-import { countNotifications, deleteNotifications, fetchNotificationRows, markAllNotificationsRead, markNotificationRead } from "@/features/notification/data/notification-repository"
+import { deleteNotifications, fetchNotificationRows, markAllNotificationsRead, markNotificationRead } from "@/features/notification/data/notification-repository"
 
 
 export default function NotificationsPage() {
@@ -27,6 +29,7 @@ export default function NotificationsPage() {
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const userId: string | undefined = currentUser?.id;
@@ -34,6 +37,7 @@ export default function NotificationsPage() {
   // 복수 선택 관련 상태
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [pushSettingsOpen, setPushSettingsOpen] = useState(false);
 
   // 편집 모드 토글 (선택 상태 초기화 포함)
   const toggleEditMode = useCallback(() => {
@@ -43,32 +47,31 @@ export default function NotificationsPage() {
 
   // 알림 데이터 가져오기 함수 (독립적으로 분리)
   const fetchUserAndNotifications = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      // 비로그인 방문은 예상된 상태다. 오류 토스트 대신 가치 안내 화면을 보여 준다.
-      return;
+    try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      // Missing session is the expected guest state, not an unavailable service.
+      if (authError && authError.name !== "AuthSessionMissingError") throw authError
+
+      if (!user) {
+        setCurrentUser(null)
+        setNotifications([])
+        setLoadError(null)
+        return
+      }
+      setCurrentUser(user)
+
+      // The count may remain unchanged while read states or content change on another device.
+      // Fetch the current rows for every explicit refresh instead of hiding stale results.
+      const { rows, error } = await fetchNotificationRows(supabase, user.id)
+      if (error) throw error
+      setNotifications(toNotifications(rows))
+      setLoadError(null)
+    } catch (error) {
+      // Do not turn a failed auth/network check into an empty notification list.
+      setLoadError('알림을 불러오지 못했어요. 연결 상태를 확인하고 다시 시도해 주세요.')
+      console.error('알림 불러오기 실패', error)
     }
-    setCurrentUser(user);
-
-    // 서버 부담 최소화: 최신 알림 개수만 먼저 확인
-    const newCount = await countNotifications(supabase, user.id);
-
-    // 개수가 같으면 데이터 요청 생략 (서버 자원 절약)
-    if (newCount === notifications.length && notifications.length > 0) {
-      return;
-    }
-
-    const { rows, error } = await fetchNotificationRows(supabase, user.id); // 최근 50개만 로드 (대역폭 절약)
-
-    if (error) {
-      toast({ title: '알림 불러오기 실패', description: "알림을 불러오는 중 오류가 발생했습니다. " + error.message, variant: 'destructive' });
-    } else {
-      // 데이터 변환 처리
-      const transformedData: Notification[] = toNotifications(rows);
-      setNotifications(transformedData);
-    }
-  }, [supabase, toast, notifications.length]);
+  }, [supabase])
 
   // 초기 로딩
   useEffect(() => {
@@ -225,26 +228,9 @@ export default function NotificationsPage() {
     }
   }, [userId, notifications, supabase]);
 
-  // 알림 페이지 접속 즉시 뱃지 초기화 (UX 개선)
-  useEffect(() => {
-    if (userId) {
-      // 즉시 뱃지를 0으로 만들어서 사용자에게 빠른 피드백 제공
-      mutate(`unread_notifications_count_${userId}`, 0);
-    }
-  }, [userId]);
+  // Opening the list must not mark unread items as read.
+  // Only explicit per-item actions or "모두 읽음" change stored read state.
 
-  // 알림 페이지 접근 시 모든 읽지 않은 알림 읽음 처리 (백그라운드)
-  useEffect(() => {
-    if (userId && notifications.length > 0) {
-      // 2초 후에 실제 읽음 처리 (사용자가 알림을 확인할 시간 제공)
-      const timer = setTimeout(() => {
-        markAllAsRead();
-      }, 2000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [userId, notifications.length, markAllAsRead]);
-  
   const generateNotificationMessage = (notification: Notification) => {
     const itemType = notification.related_item?.item_type;
     const itemName = itemType === 'recipe' ? '레시피를' : '레시피드를';
@@ -296,42 +282,67 @@ export default function NotificationsPage() {
     }
   };
 
+  const pageHeading = (
+    <div className="flex min-h-[66px] items-center justify-between gap-3 px-4 pb-2 pt-5">
+      <h1 className="text-title font-semibold text-ink">알림</h1>
+      {loading ? (
+        <Skeleton className="h-7 w-12 rounded-lg" />
+      ) : !loadError && currentUser ? (
+        <div className="flex items-center gap-1">
+          {notifications.length > 0 && notifications.some((item) => !item.is_read) && (
+            <Button variant="outline" type="button" onClick={() => void markAllAsRead()} className="h-10 px-3 text-meta">
+              모두 읽음
+            </Button>
+          )}
+          {notifications.length > 0 && (
+            <Button type="button" variant="ghost" onClick={toggleEditMode} className="h-10 px-2 text-label">
+              {isSelecting ? "완료" : "편집"}
+            </Button>
+          )}
+          <Button type="button" variant="ghost" size="icon" className="h-11 w-11"
+            onClick={() => setPushSettingsOpen(true)} aria-label="푸시 알림 설정">
+            <Bell className="h-5 w-5" aria-hidden />
+          </Button>
+        </div>
+      ) : null}
+    </div>
+  )
+
   if (loading) {
     return (
       <div className="min-h-screen bg-paper">
-        {/* 로딩 상태 헤더 */}
-        <div className="sticky top-0 z-10 bg-paper border-b border-border">
-          <div className="flex items-center justify-between px-4 py-4">
-            <h1 className="text-title text-ink">알림</h1>
-            <div className="w-12 h-7 bg-muted rounded-lg animate-pulse"></div>
-          </div>
-        </div>
-        
-        <div className="px-4 pb-6">
-          <div className="space-y-1 mt-4">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="p-4 flex items-start gap-3">
-                <div className="w-10 h-10 bg-muted rounded-full animate-pulse flex-shrink-0"></div>
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <div className="h-4 bg-muted rounded-md animate-pulse w-20"></div>
-                    <div className="h-4 bg-muted rounded-md animate-pulse flex-1"></div>
-                  </div>
-                  <div className="h-3 bg-muted rounded-md animate-pulse w-16"></div>
-                </div>
-                <div className="w-2 h-2 bg-muted rounded-full animate-pulse flex-shrink-0 mt-1"></div>
+        {pageHeading}
+        <ul aria-label="알림 불러오는 중" aria-busy="true" className="px-3 py-3">
+          {Array.from({ length: 6 }, (_, index) => (
+            <li key={index} className="flex min-h-[76px] items-start gap-3 border-b border-border px-2 py-3">
+              <Skeleton className="h-10 w-10 flex-shrink-0 rounded-full" />
+              <div className="min-w-0 flex-1 space-y-2 py-1">
+                <Skeleton className="h-4 w-full rounded-md" />
+                <Skeleton className="h-3 w-20 rounded-md" />
               </div>
-            ))}
-          </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen bg-paper">
+        {pageHeading}
+        <div className="px-3 pt-3" role="alert">
+          <StateSheet title="알림을 불러오지 못했어요" body={loadError}
+            action={<Button type="button" onClick={() => { setLoading(true); setRefreshTrigger((n) => n + 1) }}>다시 시도</Button>} />
         </div>
       </div>
-    );
+    )
   }
 
   if (!currentUser) {
     return (
       <div>
-        <PageHeader title="알림" />
+        {pageHeading}
         <div className="px-3 pt-3">
           <StateSheet
             headingLevel="h2"
@@ -355,20 +366,9 @@ export default function NotificationsPage() {
 
   return (
     <div className="min-h-screen">
-      <PageHeader
-        title="알림"
-        trailing={
-          notifications.length > 0 ? (
-            <Button variant="ghost" onClick={toggleEditMode} className="text-label">
-              {isSelecting ? "완료" : "편집"}
-            </Button>
-          ) : undefined
-        }
-      />
+      {pageHeading}
 
       <div className="space-y-3 px-3 pb-6 pt-3">
-        {currentUser && !isSelecting && <PushNotificationSettings />}
-
         {isSelecting && notifications.length > 0 && (
           <Sheet className="sticky top-14 z-10 flex items-center justify-between px-2">
             <button type="button" onClick={toggleSelectAll} role="checkbox" aria-checked={allSelected} className="flex h-12 items-center gap-2 px-2 text-label text-ink">
@@ -386,7 +386,7 @@ export default function NotificationsPage() {
         {notifications.length === 0 ? (
           <StateSheet title="아직 알림이 없어요" body="누가 내 레시피로 만들었거나, 좋아요·댓글을 남기면 여기에 쌓여요." />
         ) : (
-          <Sheet as="ul" className="divide-y divide-border">
+          <ul className="divide-y divide-border bg-paper">
             {notifications.map((notification) => {
               const selected = selectedIds.has(notification.id)
               const unread = !notification.is_read
@@ -404,7 +404,7 @@ export default function NotificationsPage() {
                         router.push(getNotificationLink(notification))
                       }
                     }}
-                    className={`flex w-full items-start gap-3 px-4 py-3.5 text-left ${unread && !isSelecting ? "bg-muted" : ""}`}
+                    className={`flex w-full items-start gap-3 px-4 py-3.5 text-left ${unread && !isSelecting ? "bg-paper-tint" : ""}`}
                   >
                     {isSelecting && <span className="pt-2.5"><CheckBox checked={selected} /></span>}
                     <span className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-border">
@@ -431,9 +431,21 @@ export default function NotificationsPage() {
                 </li>
               )
             })}
-          </Sheet>
+          </ul>
         )}
       </div>
+      <Drawer open={pushSettingsOpen} onOpenChange={setPushSettingsOpen} shouldScaleBackground={false}>
+        <DrawerContent className="mx-auto max-w-md rounded-t-2xl px-4 pb-6 pt-4">
+          <div className="flex items-center justify-between">
+            <DrawerTitle className="text-title font-semibold text-ink">푸시 알림</DrawerTitle>
+            <Button type="button" variant="ghost" size="icon" onClick={() => setPushSettingsOpen(false)} aria-label="닫기">
+              <X className="h-5 w-5" aria-hidden />
+            </Button>
+          </div>
+          <DrawerDescription className="mt-3 text-label leading-relaxed text-ink-soft">새 소식 알림을 받을지 선택해 주세요.</DrawerDescription>
+          <div className="mt-4"><PushNotificationSettings /></div>
+        </DrawerContent>
+      </Drawer>
     </div>
   )
 }

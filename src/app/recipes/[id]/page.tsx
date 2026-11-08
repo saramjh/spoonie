@@ -1,3 +1,4 @@
+import { parseRecipeDescription } from "@/features/recipe/domain/editorial-footer"
 import { Metadata } from 'next'
 import { createSupabasePublicClient } from '@/shared/infra/supabase-public'
 import { notFound } from 'next/navigation'
@@ -57,7 +58,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       cookingTime ? `조리 ${cookingTime}` : null,
       ingredientNames.length ? `재료 ${ingredientNames.slice(0, 5).join(', ')}${ingredientNames.length > 5 ? ` 외 ${ingredientNames.length - 5}가지` : ''}` : null,
     ].filter(Boolean).join(' · ')
-    const intro = recipe.description?.replace(/\n/g, ' ').trim()
+    const intro = parseRecipeDescription(recipe.description).description.replace(/\n/g, ' ').trim()
     const cleanDescription = [intro, facts].filter(Boolean).join(' — ').slice(0, 160) || `${recipe.title} 레시피`
     
     const seoTitle = `${recipe.title} - ${authorName}님의 레시피 | Spoonie`

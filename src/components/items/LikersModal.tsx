@@ -1,14 +1,13 @@
 "use client"
 
 import useSWR from "swr"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { Drawer, DrawerContent, DrawerTitle, DrawerDescription } from "@/components/ui/drawer"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Heart, Clock } from "lucide-react"
-import { formatDistanceToNow } from "date-fns"
-import { ko } from "date-fns/locale"
+import { Heart, X } from "lucide-react"
 import { IntentLink } from "@/components/kit"
 import { fetchLikers } from "@/features/social/data/social-repository"
+import FollowButton from "@/components/items/FollowButton"
 
 
 interface LikersModalProps {
@@ -22,24 +21,20 @@ interface LikersModalProps {
 
 export default function LikersModal({ isOpen, onClose, itemId, itemType, currentUserId }: LikersModalProps) {
 	// 창이 열렸을 때만 받는다
-	const { data: likers = [], error: fetchError, isLoading: loading, mutate } = useSWR(isOpen && itemId ? `likers|${itemId}` : null, () => fetchLikers(itemId), {
+	const { data: likers = [], error: fetchError, isLoading: loading, mutate } = useSWR(isOpen && itemId ? `likers|${itemId}|${currentUserId ?? "guest"}` : null, () => fetchLikers(itemId, currentUserId ?? null), {
 		revalidateOnFocus: false,
 	})
 	const error = fetchError ? "좋아요한 사용자 목록을 불러오는데 실패했습니다." : null
 	const retry = () => mutate()
 
 	return (
-		<Dialog open={isOpen} onOpenChange={onClose}>
-			<DialogContent className="max-w-md mx-auto max-h-[80vh]">
-				<DialogHeader>
-					<DialogTitle className="flex items-center gap-2">
-						<Heart className="w-5 h-5 text-orange-ink" />
-						좋아요 ({likers.length})
-					</DialogTitle>
-					<DialogDescription>
-						이 {itemType === 'recipe' ? '레시피' : '레시피드'}에 좋아요를 누른 사용자들을 확인할 수 있습니다.
-					</DialogDescription>
-				</DialogHeader>
+		<Drawer open={isOpen} onOpenChange={onClose} shouldScaleBackground={false}>
+			<DrawerContent className="mx-auto max-h-[80dvh] max-w-md px-4 pb-5">
+				<div className="flex items-center justify-between pt-4">
+					<DrawerTitle className="text-title font-semibold text-ink">좋아요 누른 사람</DrawerTitle>
+					<Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label="닫기"><X aria-hidden className="h-5 w-5" /></Button>
+				</div>
+				<DrawerDescription className="sr-only">이 {itemType === 'recipe' ? '레시피' : '레시피드'}에 좋아요를 누른 사용자</DrawerDescription>
 
 				<div className="max-h-96 overflow-y-auto">
 					{loading && (
@@ -73,10 +68,11 @@ export default function LikersModal({ isOpen, onClose, itemId, itemType, current
 					)}
 
 					{!loading && !error && likers.length > 0 && (
-						<div className="space-y-1">
+						<div className="divide-y divide-border">
 							{likers.map((liker) => (
-								<IntentLink key={liker.id} href={`/profile/${liker.public_id || liker.id}`} onClick={() => onClose()} className="block">
-									<div className="flex items-center gap-3 p-3 rounded-lg hover:bg-door transition-colors cursor-pointer">
+								<div key={liker.id} className="flex min-h-16 items-center gap-2">
+								<IntentLink href={`/profile/${liker.public_id || liker.id}`} onClick={() => onClose()} className="min-w-0 flex-1">
+									<div className="flex items-center gap-3 py-3 hover:bg-muted transition-colors">
 										<Avatar className="w-10 h-10">
 											<AvatarImage src={liker.avatar_url || undefined} />
 											                <AvatarFallback className="bg-muted text-orange-ink">{liker.username[0]}</AvatarFallback>
@@ -87,25 +83,19 @@ export default function LikersModal({ isOpen, onClose, itemId, itemType, current
 												<p className="font-medium text-label truncate">{liker.username}</p>
 												{liker.id === currentUserId && <span className="text-meta text-ink-soft">(나)</span>}
 											</div>
-											<div className="flex items-center gap-1 text-meta text-ink-soft">
-												<Clock className="w-3 h-3" />
-												<span>
-													{formatDistanceToNow(new Date(liker.liked_at), {
-														addSuffix: true,
-														locale: ko,
-													})}
-												</span>
-											</div>
+											<p className="text-meta text-ink-soft">@{liker.public_id || liker.username}</p>
 										</div>
 									</div>
 								</IntentLink>
+								{currentUserId && liker.id !== currentUserId && <FollowButton appearance="compact" userId={liker.id} initialIsFollowing={liker.viewer_follows} eventOrigin="likers_modal" />}
+								</div>
 							))}
 						</div>
 					)}
 				</div>
 
 				{likers.length >= 50 && <div className="text-center text-meta text-ink-soft pt-2 border-t">최근 50명까지 표시됩니다</div>}
-			</DialogContent>
-		</Dialog>
+			</DrawerContent>
+		</Drawer>
 	)
 }

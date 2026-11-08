@@ -2,6 +2,7 @@
 
 import { useState, useSyncExternalStore } from "react"
 import { X } from "lucide-react"
+import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "@/components/ui/drawer"
 import { Button } from "@/components/ui/button"
 import { chromeIntentUrl, installPath, isSamsungInternet, isStandalone, onInstallChange, promptInstall, type InstallPath } from "@/shared/lib/install"
 
@@ -10,31 +11,48 @@ const useInstallPath = () => useSyncExternalStore<InstallPath | null>(onInstallC
 
 /** 설정 화면의 "앱으로 설치" 한 줄: 브라우저에 맞는 설치 방법 하나만 보여 준다 */
 export function InstallAppRow() {
-	const path = useInstallPath()
-	if (!path) return null
+  const path = useInstallPath()
+  const [open, setOpen] = useState(false)
+  if (!path) return null
+  if (path === "installed") return <p className="mt-3 text-body text-ink-soft">지금 앱으로 쓰고 있어요.</p>
 
-	if (path === "installed") return <p className="mt-3 text-body text-ink-soft">지금 앱으로 쓰고 있어요.</p>
+  const instruction = path === "open-in-chrome"
+    ? "삼성 인터넷 대신 크롬에서 열어 주세요. 설치할 때 Play 프로텍트 경고가 날 수 있어요."
+    : path === "ios"
+      ? "사파리 아래쪽 공유 버튼을 누른 뒤 '홈 화면에 추가'를 선택하세요."
+      : path === "browser-menu"
+        ? "브라우저의 공유 또는 메뉴에서 '홈 화면에 추가'를 선택하세요."
+        : "지원하는 브라우저에서 설치 버튼을 눌러 홈 화면에 추가하세요."
 
-	if (path === "prompt")
-		return (
-			<Button variant="outline" className="mt-3 w-full justify-start" onClick={() => void promptInstall()}>
-				홈 화면에 앱 설치
-			</Button>
-		)
-
-	if (path === "open-in-chrome")
-		return (
-			<div className="mt-3">
-				<p className="text-body text-ink-soft">삼성 인터넷으로 설치하면 Play 프로텍트 경고가 떠요. 크롬에서 열어 메뉴의 &lsquo;앱 설치&rsquo;로 설치해 주세요.</p>
-				<Button asChild variant="outline" className="mt-3 w-full justify-start">
-					<a href={chromeIntentUrl()}>크롬에서 열기</a>
-				</Button>
-			</div>
-		)
-
-	if (path === "ios") return <p className="mt-3 text-body text-ink-soft">사파리 아래쪽 공유 버튼을 누르고 &lsquo;홈 화면에 추가&rsquo;를 고르세요.</p>
-
-	return <p className="mt-3 text-body text-ink-soft">브라우저 메뉴의 &lsquo;앱 설치&rsquo; 또는 &lsquo;홈 화면에 추가&rsquo;를 고르세요.</p>
+  return <>
+    <Button type="button" variant="outline" className="mt-3 w-full justify-start" onClick={() => setOpen(true)}>
+      홈 화면에 앱 설치
+    </Button>
+    <Drawer open={open} onOpenChange={setOpen} shouldScaleBackground={false}>
+      <DrawerContent className="mx-auto max-w-md rounded-t-2xl px-4 pb-6 pt-4">
+        <div className="flex items-center justify-between">
+          <DrawerTitle className="text-title font-semibold text-ink">Spoonie를 홈 화면에</DrawerTitle>
+          <Button type="button" variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="닫기">
+            <X className="h-5 w-5" aria-hidden />
+          </Button>
+        </div>
+        <DrawerDescription className="mt-4 text-label text-ink-soft">
+          지원하는 브라우저에서 홈 화면에 추가하면 더 쉽게 꺼내 볼 수 있어요.
+        </DrawerDescription>
+        <p className="mt-4 text-label text-ink">{instruction}</p>
+        <div className="mt-5 flex gap-2">
+          <Button type="button" variant="outline" className="h-12 flex-1" onClick={() => setOpen(false)}>나중에</Button>
+          {path === "prompt" ? (
+            <Button type="button" className="h-12 flex-1" onClick={() => { setOpen(false); void promptInstall() }}>앱 설치</Button>
+          ) : path === "open-in-chrome" ? (
+            <Button asChild className="h-12 flex-1"><a href={chromeIntentUrl()} onClick={() => setOpen(false)}>크롬에서 열기</a></Button>
+          ) : (
+            <Button type="button" className="h-12 flex-1" onClick={() => setOpen(false)}>알겠어요</Button>
+          )}
+        </div>
+      </DrawerContent>
+    </Drawer>
+  </>
 }
 
 const DISMISS_KEY = "spoonie-samsung-install-notice"

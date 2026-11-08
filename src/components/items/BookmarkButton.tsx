@@ -22,6 +22,7 @@ interface BookmarkButtonProps {
   className?: string
   size?: "sm" | "icon" | "default"
   variant?: "ghost" | "outline" | "default"
+  label?: string
   cachedItem?: Item // 부분 갱신 시 이미지 등 기존 필드를 보존할 fallback
 }
 
@@ -36,6 +37,7 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
   className = "",
   size = "icon",
   variant = "ghost",
+  label,
   cachedItem: providedCachedItem
 }, ref) => {
 
@@ -80,8 +82,8 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
   // CRITICAL DEBUG: BookmarkButton 최종 데이터 확인
 
   
-  const bookmarksCount = cachedItem.bookmarks_count || initialBookmarksCount
-  const isBookmarked = cachedItem.is_bookmarked || initialIsBookmarked
+  const bookmarksCount = cachedItem.bookmarks_count ?? initialBookmarksCount
+  const isBookmarked = cachedItem.is_bookmarked ?? initialIsBookmarked
 
   const [isLoading, setIsLoading] = useState(false)
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
@@ -182,7 +184,7 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
         size={size}
         onClick={handleBookmark}
         disabled={isLoading || isAuthLoading}
-        aria-label={isBookmarked ? "저장 취소" : "저장하기"}
+        aria-label={label ?? (isBookmarked ? "저장 취소" : "저장하기")}
         aria-pressed={isBookmarked}
         className={cn("transition-colors", isBookmarked ? "text-orange-ink" : "text-ink-soft hover:text-ink", className)}
       >
@@ -194,6 +196,7 @@ export const BookmarkButton = forwardRef<HTMLButtonElement, BookmarkButtonProps>
               : 'hover:scale-105'
           }`} 
         />
+        {label && <span className="text-meta font-medium">{label}</span>}
       </Button>
 
       <LoginPromptSheet

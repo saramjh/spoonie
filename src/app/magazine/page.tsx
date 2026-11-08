@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
+import { PageHeader } from "@/components/kit"
 import { serializeJsonLd } from "@/shared/lib/json-ld"
-import { Sheet } from "@/components/kit"
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://spoonie.kr"
 const articleTitle = "2인분을 4인분으로, 어디까지 두 배로 늘릴까?"
@@ -41,13 +41,12 @@ const articleSchema = {
 
 export default function MagazinePage() {
   return (
-    <Sheet className="mx-3 mb-24 mt-3 px-4 pb-7 pt-5 text-ink sm:px-6">
+    <div className="min-h-screen bg-paper">
+      <PageHeader title="매거진" />
+      <div className="mx-auto max-w-md px-4 pb-24 pt-6 text-ink">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(articleSchema) }} />
       <header className="border-b border-border pb-6">
-        <Link href="/" className="text-label text-ink-soft underline underline-offset-4">
-          Spoonie 홈
-        </Link>
-        <p className="mt-6 text-meta tracking-wide text-ink-soft">SPOONIE MAGAZINE · 2026.10.08 발행</p>
+        <p className="mt-1 text-meta tracking-wide text-ink-soft">SPOONIE MAGAZINE · 2026.10.08 발행</p>
         <h1 className="mt-3 text-display leading-tight">
           2인분을 4인분으로,
           <br />
@@ -142,6 +141,7 @@ export default function MagazinePage() {
           다른 Recipe와 Recipeed 둘러보기 →
         </Link>
       </footer>
-    </Sheet>
+      </div>
+    </div>
   )
 }

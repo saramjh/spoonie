@@ -1,7 +1,7 @@
 "use client"
 
-import Image from "next/image"
 import Link from "next/link"
+import AuthScreen from "@/components/auth/AuthScreen"
 import { useState } from "react"
 import { Loader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
@@ -10,7 +10,6 @@ import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Sheet } from "@/components/kit"
 import GoogleAuthButton from "@/components/auth/GoogleAuthButton"
 import { useRouter } from "@/shared/lib/navigation"
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
@@ -61,74 +60,54 @@ export default function LoginClient({ next, partnerSource }: Props) {
 	}
 
 	return (
-		<div className="min-h-screen flex flex-col items-center justify-start p-4">
-			<div className="w-full max-w-sm mx-auto pt-8">
-				<div className="text-center mb-6">
-					<Link href="/" className="inline-flex" aria-label="Spoonie 홈">
-						<Image src="/logo-full.svg" alt="Spoonie" width={100} height={32} priority />
-					</Link>
-					<h1 className="mt-5 text-title text-ink">로그인</h1>
-					{partnerCopy && <p className="mt-2 text-meta text-ink-soft">{partnerCopy.loginHint}</p>}
+		<AuthScreen showLegalLinks title="로그인" intro={{ heading: "다시 만나 반가워요", description: "남겨 둔 레시피를 다시 꺼내 봐요.", hint: partnerCopy?.loginHint }}>
+			<div>
+				<Form {...form}>
+					<form onSubmit={form.handleSubmit(handleLogin)} className="space-y-5">
+						<FormField
+							control={form.control}
+							name="email"
+							render={({ field }) => (
+								<FormItem className="space-y-1.5">
+									<FormLabel className="text-label font-medium text-ink">이메일</FormLabel>
+									<FormControl><Input className="h-12" {...field} /></FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name="password"
+							render={({ field }) => (
+								<FormItem className="space-y-1.5">
+									<FormLabel className="text-label font-medium text-ink">비밀번호</FormLabel>
+									<FormControl><Input type="password" className="h-12" {...field} /></FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<Button type="submit" disabled={!isHydrated || form.formState.isSubmitting || isRedirecting} className="h-12 w-full text-body">
+							{form.formState.isSubmitting || isRedirecting ? (
+								<><Loader2 className="mr-2 h-5 w-5 animate-spin" aria-hidden />로그인 중</>
+							) : "로그인"}
+						</Button>
+					</form>
+				</Form>
+
+
+				<div className="relative my-6">
+					<div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
+					<div className="relative flex justify-center text-meta"><span className="bg-paper px-4 text-ink-soft font-medium">또는</span></div>
 				</div>
 
-				<Sheet className="p-6">
-					<Form {...form}>
-						<form onSubmit={form.handleSubmit(handleLogin)} className="space-y-5">
-							<FormField
-								control={form.control}
-								name="email"
-								render={({ field }) => (
-									<FormItem className="space-y-1.5">
-										<FormLabel className="text-label font-medium text-ink">이메일</FormLabel>
-										<FormControl><Input {...field} /></FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="password"
-								render={({ field }) => (
-									<FormItem className="space-y-1.5">
-										<FormLabel className="text-label font-medium text-ink">비밀번호</FormLabel>
-										<FormControl><Input type="password" {...field} /></FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<Button type="submit" disabled={!isHydrated || form.formState.isSubmitting || isRedirecting} className="h-12 w-full text-body">
-								{form.formState.isSubmitting || isRedirecting ? (
-									<><Loader2 className="mr-2 h-5 w-5 animate-spin" aria-hidden />로그인 중</>
-								) : "로그인"}
-							</Button>
-						</form>
-					</Form>
-
-					<div className="text-center mt-4 mb-6">
-						<Link href={forgotHref} className="text-meta text-ink-soft hover:text-orange-ink transition-colors duration-200">비밀번호를 잊으셨나요?</Link>
-					</div>
-
-					<div className="relative my-6">
-						<div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
-						<div className="relative flex justify-center text-meta"><span className="bg-paper px-4 text-ink-soft font-medium">또는</span></div>
-					</div>
-
-					<GoogleAuthButton next={next} partnerSource={partnerSource} />
-				</Sheet>
-
-				<div className="mt-8 text-center">
-					<span className="text-meta text-ink-soft">계정이 없으신가요? </span>
-					<Link href={signupHref} className="text-label font-semibold text-orange-ink hover:text-orange-ink transition-colors duration-200">회원가입</Link>
-				</div>
-
-				<div className="mt-6 text-center space-x-3">
-					<Link href="/legal/privacy" className="text-meta text-ink-soft hover:text-ink transition-colors duration-200">개인정보처리방침</Link>
-					<span className="text-meta text-ink-soft/60">|</span>
-					<Link href="/legal/terms" className="text-meta text-ink-soft hover:text-ink transition-colors duration-200">이용약관</Link>
-					<span className="text-meta text-ink-soft/60">|</span>
-					<Link href="/legal/policy" className="text-meta text-ink-soft hover:text-ink transition-colors duration-200">운영정책</Link>
-				</div>
+				<GoogleAuthButton next={next} partnerSource={partnerSource} />
 			</div>
-		</div>
+
+			<div className="mt-8 flex items-center justify-between gap-4">
+				<Link href={signupHref} className="min-h-11 inline-flex items-center text-label font-semibold text-orange-ink underline underline-offset-4">회원가입</Link>
+				<Link href={forgotHref} className="min-h-11 inline-flex items-center text-label font-semibold text-orange-ink underline underline-offset-4">비밀번호 찾기</Link>
+			</div>
+
+		</AuthScreen>
 	)
 }

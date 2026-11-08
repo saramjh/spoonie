@@ -82,12 +82,6 @@ const nextConfig = {
 				destination: '/',
 				permanent: true,
 			},
-			// Keep published legacy partner links usable without changing onboarding.
-			{
-				source: '/partners/creators/import',
-				destination: '/partners/creators',
-				permanent: true,
-			},
 		]
 	},
 
