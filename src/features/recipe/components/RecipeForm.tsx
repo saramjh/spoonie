@@ -778,14 +778,18 @@ export default function RecipeForm({
 						</div>
 					</section>
 
-          <section className="border-t border-border px-4 pb-5 pt-5">
-            <details data-classification-options>
-              <summary className="flex min-h-12 cursor-pointer items-center text-heading text-ink">태그·색상 라벨 <span className="ml-2 text-caption font-normal text-ink-soft">선택</span></summary>
-              <div className="mt-4 space-y-4">
-                <div><Label htmlFor="tags" className={fieldLabel}>태그</Label><Input id="tags" placeholder="예: 김치찌개, 한식" className="mt-1.5" {...form.register("tags")} />{errors.tags && <p className={errorText}>{errors.tags.message}</p>}</div>
-                <fieldset><legend className={fieldLabel}>색상 라벨</legend><ColorLabelPicker className="mt-2" value={selectedColor} onChange={(next) => form.setValue("color_label", next, { shouldValidate: true })} /></fieldset>
-              </div>
-            </details>
+				<section className="border-t border-border px-4 pb-5 pt-5">
+					<details data-classification-options>
+						<summary className="flex min-h-12 cursor-pointer items-center text-heading text-ink">태그 <span className="ml-2 text-caption font-normal text-ink-soft">선택</span></summary>
+						<Label htmlFor="tags" className="sr-only">태그</Label>
+						<Input id="tags" placeholder="예: 김치찌개, 한식" className="mt-1.5" {...form.register("tags")} />
+						{errors.tags && <p className={errorText}>{errors.tags.message}</p>}
+					</details>
+
+					<fieldset className="mt-4">
+						<legend className={fieldLabel}>색상 라벨 <span className="ml-1 text-caption font-normal text-ink-soft">선택</span></legend>
+						<ColorLabelPicker className="mt-2" value={selectedColor} onChange={(next) => form.setValue("color_label", next, { shouldValidate: true })} />
+					</fieldset>
 
 					<Controller
 						control={form.control}
@@ -810,7 +814,7 @@ export default function RecipeForm({
 							</fieldset>
 						)}
 					/>
-          </section>
+				</section>
 				</Sheet>
 			</form>
 
