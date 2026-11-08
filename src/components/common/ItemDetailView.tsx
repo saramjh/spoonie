@@ -476,11 +476,11 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 						<ArrowLeft className="h-6 w-6" aria-hidden />
 					</Button>
 
-					<IntentLink href={`/profile/${item.user_public_id || item.user_id}`} className={cn("flex min-w-0 flex-1 items-center gap-2.5", isRecipe && "justify-center gap-0 text-[17px]")}>
-						{!isRecipe && <Avatar className="h-8 w-8">
+					<IntentLink href={`/profile/${item.user_public_id || item.user_id}`} className={cn("flex min-h-11 min-w-0 flex-1 items-center gap-2.5", isRecipe && "justify-center text-[17px]")}>
+						<Avatar className="h-8 w-8" aria-hidden>
 							<AvatarImage src={item.avatar_url || undefined} alt="" />
 							<AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
-						</Avatar>}
+						</Avatar>
 						<span className="truncate font-semibold text-ink">{authorName}</span>
 						{!isRecipe && <span className="flex-shrink-0 text-meta text-ink-soft">레시피드</span>}
 					</IntentLink>
