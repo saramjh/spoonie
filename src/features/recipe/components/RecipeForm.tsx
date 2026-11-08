@@ -779,12 +779,9 @@ export default function RecipeForm({
 					</section>
 
 				<section className="border-t border-border px-4 pb-5 pt-5">
-					<details data-classification-options>
-						<summary className="flex min-h-12 cursor-pointer items-center text-heading text-ink">태그 <span className="ml-2 text-caption font-normal text-ink-soft">선택</span></summary>
-						<Label htmlFor="tags" className="sr-only">태그</Label>
-						<Input id="tags" placeholder="예: 김치찌개, 한식" className="mt-1.5" {...form.register("tags")} />
-						{errors.tags && <p className={errorText}>{errors.tags.message}</p>}
-					</details>
+					<Label htmlFor="tags" className={fieldLabel}>태그 <span className="ml-1 text-caption font-normal text-ink-soft">선택</span></Label>
+					<Input id="tags" placeholder="예: 김치찌개, 한식" className="mt-1.5" {...form.register("tags")} />
+					{errors.tags && <p className={errorText}>{errors.tags.message}</p>}
 
 					<fieldset className="mt-4">
 						<legend className={fieldLabel}>색상 라벨 <span className="ml-1 text-caption font-normal text-ink-soft">선택</span></legend>
