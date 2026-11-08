@@ -17,15 +17,34 @@ const DrawerClose = DrawerPrimitive.Close
 const DrawerOverlay = React.forwardRef<React.ElementRef<typeof DrawerPrimitive.Overlay>, React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Overlay>>(({ className, ...props }, ref) => <DrawerPrimitive.Overlay ref={ref} className={cn("fixed inset-0 z-50 bg-ink/50", className)} {...props} />)
 DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName
 
-const DrawerContent = React.forwardRef<React.ElementRef<typeof DrawerPrimitive.Content>, React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>>(({ className, children, ...props }, ref) => (
-	<DrawerPortal>
-		<DrawerOverlay />
-		<DrawerPrimitive.Content ref={ref} className={cn("fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[8px] bg-paper pb-[env(safe-area-inset-bottom)] shadow-[0_16px_40px_-12px_rgb(var(--ink)/0.4)]", className)} {...props}>
-			<div className="mx-auto mt-2.5 h-1 w-10 rounded-full bg-ink/15" aria-hidden />
-			{children}
-		</DrawerPrimitive.Content>
-	</DrawerPortal>
-))
+type DrawerContentProps = React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content> & {
+	placement?: "edge" | "floating"
+}
+
+const DrawerContent = React.forwardRef<React.ElementRef<typeof DrawerPrimitive.Content>, DrawerContentProps>(
+	({ className, children, placement = "edge", ...props }, ref) => {
+		const floating = placement === "floating"
+		return (
+			<DrawerPortal>
+				<DrawerOverlay className={floating ? "bg-ink/35" : undefined} />
+				<DrawerPrimitive.Content
+					ref={ref}
+					className={cn(
+						"fixed z-50 mt-24 flex h-auto flex-col bg-paper shadow-[0_16px_40px_-12px_rgb(var(--ink)/0.4)]",
+						floating
+							? "inset-x-2.5 bottom-[calc(10px+env(safe-area-inset-bottom))] mx-auto max-w-md rounded-[20px] after:hidden"
+							: "inset-x-0 bottom-0 rounded-t-[8px] pb-[env(safe-area-inset-bottom)]",
+						className
+					)}
+					{...props}
+				>
+					{!floating && <div className="mx-auto mt-2.5 h-1 w-10 rounded-full bg-ink/15" aria-hidden />}
+					{children}
+				</DrawerPrimitive.Content>
+			</DrawerPortal>
+		)
+	}
+)
 DrawerContent.displayName = "DrawerContent"
 
 const DrawerHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => <div className={cn("grid gap-1.5 p-4 text-center sm:text-left", className)} {...props} />

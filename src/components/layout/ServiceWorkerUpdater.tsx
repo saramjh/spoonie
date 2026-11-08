@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "@/components/ui/drawer"
+import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerTitle } from "@/components/ui/drawer"
 import { X } from "lucide-react"
 
 // Only show a real update when an existing installation receives a newer
@@ -84,22 +84,31 @@ export default function ServiceWorkerUpdater() {
     else window.location.reload()
   }
 
+  const changeOpen = (open: boolean) => {
+    setAvailable(open)
+    if (!open) setMessage("")
+  }
+
   return (
-    <Drawer open={available} onOpenChange={setAvailable} shouldScaleBackground={false}>
-      <DrawerContent className="mx-auto max-w-md rounded-t-2xl px-4 pb-6 pt-4">
-        <div className="flex items-center justify-between">
-          <DrawerTitle className="text-title font-semibold text-ink">새로운 버전이 있어요</DrawerTitle>
-          <Button variant="ghost" size="icon" type="button" onClick={() => setAvailable(false)} aria-label="닫기">
-            <X className="h-5 w-5" aria-hidden />
-          </Button>
+    <Drawer open={available} onOpenChange={changeOpen} shouldScaleBackground={false}>
+      <DrawerContent placement="floating" className="px-[18px] pb-5 pt-4">
+        <div className="flex items-center justify-between gap-3">
+          <DrawerTitle className="text-title text-ink">새로운 버전이 있어요</DrawerTitle>
+          <DrawerClose asChild>
+            <Button variant="ghost" size="icon" type="button" aria-label="닫기">
+              <X className="h-5 w-5" aria-hidden />
+            </Button>
+          </DrawerClose>
         </div>
-        <DrawerDescription className="mt-4 text-label leading-relaxed text-ink-soft">
+        <DrawerDescription className="mt-5 text-label leading-relaxed text-ink-soft">
           새로고침하면 바뀐 내용을 볼 수 있어요. 작성 중인 내용이 있다면 먼저 저장해 주세요.
         </DrawerDescription>
         {message && <p role="alert" className="mt-3 text-meta text-destructive">{message}</p>}
-        <div className="mt-5 flex gap-2">
-          <Button type="button" variant="outline" className="h-12 flex-1" onClick={() => setAvailable(false)}>나중에</Button>
-          <Button type="button" className="h-12 flex-1" onClick={refresh}>새로고침</Button>
+        <div className="mt-8 flex gap-2">
+          <DrawerClose asChild>
+            <Button type="button" variant="outline" size="lg" className="flex-1 border-primary/60">나중에</Button>
+          </DrawerClose>
+          <Button type="button" size="lg" className="flex-1" onClick={refresh}>새로고침</Button>
         </div>
       </DrawerContent>
     </Drawer>
