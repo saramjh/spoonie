@@ -210,7 +210,7 @@ export default function RecipesPage() {
 				<RecipeBookGuest />
 			) : (
 			<div className="flex flex-col h-full">
-				<h1 className="px-4 pb-4 pt-4 text-display font-semibold text-ink">레시피북</h1>
+				<h1 className="sr-only">레시피북</h1>
 				<UnderlineTabs
 					label="레시피 범위"
 					className="sticky top-0 z-10 mx-3.5"
