@@ -2,6 +2,8 @@
 
 **요리를 사랑하는 사람들의 레시피 공유 플랫폼**
 
+**개발·디자인 디렉터리 구분 및 배포 절차:** [DEVELOPMENT_WORKSPACES.md](docs/DEVELOPMENT_WORKSPACES.md)
+
 [![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/saramjh/spoonie)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-Backend-green)](https://supabase.com/)
