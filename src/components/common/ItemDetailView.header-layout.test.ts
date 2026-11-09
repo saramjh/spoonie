@@ -11,4 +11,6 @@ it("uses the same left-aligned author header for Recipe and Recipeed details", (
   expect(source).toContain('href={`/profile/${item.user_public_id || item.user_id}`}')
   expect(source).toContain('aria-label="뒤로 가기"')
   expect(source).toContain('aria-label="더보기"')
+  // The byline must contain identity only. Recipe/Recipeed type belongs in content, not in the profile link.
+  expect(source).not.toContain('!isRecipe && <span className="flex-shrink-0 text-meta text-ink-soft">레시피드</span>')
 })

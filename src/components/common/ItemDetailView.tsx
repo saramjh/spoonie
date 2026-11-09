@@ -482,7 +482,6 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 							<AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
 						</Avatar>
 						<span className="truncate font-semibold text-ink">{authorName}</span>
-						{!isRecipe && <span className="flex-shrink-0 text-meta text-ink-soft">레시피드</span>}
 					</IntentLink>
 
 					<div className="flex items-center pr-1">
