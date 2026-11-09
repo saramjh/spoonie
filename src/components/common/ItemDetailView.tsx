@@ -471,12 +471,12 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 				: "pb-[calc(var(--bottom-nav-height)+1rem+env(safe-area-inset-bottom))]"
 		), isRecipe && "bg-paper")}>
 			<article>
-				{!recipeAdjusting && <header data-design-slot={isRecipe ? "header" : undefined} className={cn("sticky top-0 z-20 flex h-14 items-center gap-1 border-b border-border bg-paper px-1", isRecipe && "h-[54px] px-3")}>
+				{!recipeAdjusting && <header data-design-slot={isRecipe ? "header" : undefined} className="sticky top-0 z-20 flex h-14 items-center gap-1 border-b border-border bg-paper px-1">
 					<Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => router.back()} aria-label="뒤로 가기">
 						<ArrowLeft className="h-6 w-6" aria-hidden />
 					</Button>
 
-					<IntentLink href={`/profile/${item.user_public_id || item.user_id}`} className={cn("flex min-h-11 min-w-0 flex-1 items-center gap-2.5", isRecipe && "justify-center text-[17px]")}>
+					<IntentLink href={`/profile/${item.user_public_id || item.user_id}`} className="flex min-h-11 min-w-0 flex-1 items-center gap-2.5">
 						<Avatar className="h-8 w-8" aria-hidden>
 							<AvatarImage src={item.avatar_url || undefined} alt="" />
 							<AvatarFallback>{authorName.charAt(0)}</AvatarFallback>
@@ -485,7 +485,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 						{!isRecipe && <span className="flex-shrink-0 text-meta text-ink-soft">레시피드</span>}
 					</IntentLink>
 
-					<div className={cn("flex items-center pr-1", isRecipe && "w-11 pr-0")}>
+					<div className="flex items-center pr-1">
 						{isOwnItem ? (
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
