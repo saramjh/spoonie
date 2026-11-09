@@ -1,0 +1,14 @@
+import { readFileSync } from "node:fs"
+import { expect, it } from "vitest"
+
+const source = readFileSync(new URL("./ItemDetailView.tsx", import.meta.url), "utf8")
+
+it("uses the same left-aligned author header for Recipe and Recipeed details", () => {
+  expect(source).toContain('className="sticky top-0 z-20 flex h-14 items-center gap-1 border-b border-border bg-paper px-1"')
+  expect(source).toContain('className="flex min-h-11 min-w-0 flex-1 items-center gap-2.5"')
+  expect(source).toContain('className="flex items-center pr-1"')
+  expect(source).not.toContain('isRecipe && "justify-center text-[17px]"')
+  expect(source).toContain('href={`/profile/${item.user_public_id || item.user_id}`}')
+  expect(source).toContain('aria-label="뒤로 가기"')
+  expect(source).toContain('aria-label="더보기"')
+})
