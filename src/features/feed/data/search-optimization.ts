@@ -30,13 +30,17 @@ export async function fetchPopularKeywords(): Promise<Array<{ keyword: string; c
   return data ?? []
 }
 
-export async function searchItems(query: string): Promise<SearchResult[]> {
+export const SEARCH_PAGE_SIZE = 20
+
+export async function searchItems(query: string, itemType: "recipe" | "post", offset: number): Promise<SearchResult[]> {
   const supabase = createSupabaseBrowserClient()
   const { data: { user } } = await supabase.auth.getUser()
   const { data, error } = await supabase.rpc("search_items_optimized", {
     search_term: query,
-    max_results: 20,
+    max_results: SEARCH_PAGE_SIZE + 1,
     current_user_id: user?.id ?? null,
+    result_offset: offset,
+    item_type_filter: itemType,
   })
   if (error) throw error
   return data ?? []
