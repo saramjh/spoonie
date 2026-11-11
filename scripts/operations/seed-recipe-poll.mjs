@@ -33,9 +33,9 @@ if (itemError || item?.item_type !== 'recipe' || item?.is_public !== true) fail(
 const {data:author,error:authError} = await client.auth.admin.getUserById(item.user_id)
 if (authError || author.user?.app_metadata?.spoonie_editorial_curator !== true)
   fail('POLL_CURATOR_EDITORIAL_AUTHOR_REQUIRED')
-const {data:existing,error:readError} = await client.from('recipe_polls').select('question,options,active').eq('recipe_id',payload.recipeId).maybeSingle()
+const {data:existing,error:readError} = await client.from('item_polls').select('question,options,active').eq('item_id',payload.recipeId).maybeSingle()
 if(readError) fail('POLL_PREFLIGHT_READ_FAILED')
-const desired = {recipe_id:payload.recipeId,question:payload.question.trim(),options:payload.options.map(x=>x.trim()),active:true}
+const desired = {item_id:payload.recipeId,question:payload.question.trim(),options:payload.options.map(x=>x.trim()),active:true}
 if(existing){
   if(existing.question!==desired.question || JSON.stringify(existing.options)!==JSON.stringify(desired.options))
     fail('EXISTING_POLL_DIFFERENT_DO_NOT_CHANGE_VOTES')
@@ -46,9 +46,9 @@ if(!flags.includes('--apply')){
   console.log(JSON.stringify({status:'PREFLIGHT_ONLY',recipeId:payload.recipeId,recipeTitle:item.title,options:desired.options.length,providerWrites:0}))
   process.exit(0)
 }
-const {error:writeError}=await client.from('recipe_polls').insert(desired)
+const {error:writeError}=await client.from('item_polls').insert(desired)
 if(writeError) fail('POLL_INSERT_FAILED_CHECK_BEFORE_RETRY_'+(writeError.code||'UNKNOWN'))
-const {data:verified,error:verifyError}=await client.from('recipe_polls').select('question,options,active').eq('recipe_id',payload.recipeId).single()
+const {data:verified,error:verifyError}=await client.from('item_polls').select('question,options,active').eq('item_id',payload.recipeId).single()
 if(verifyError || verified.question!==desired.question ||
     JSON.stringify(verified.options)!==JSON.stringify(desired.options) || verified.active!==true)
   fail('POLL_PROVIDER_READBACK_FAILED_NO_RETRY')

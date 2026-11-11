@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
+import useSWR from "swr"
 import { useRouter } from "@/shared/lib/navigation"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -33,6 +34,8 @@ import { afterCommit } from "@/shared/infra/post-commit"
 import type { PostFormProps } from "@/features/post/contracts"
 import { buildPostItemPayload, citedIdsFromRecipes, postFormDefaults, returnToSourcePath } from "@/features/post/domain/post-form"
 import { loadCitedRecipesForPost, savePostRow } from "@/features/post/data/post-repository"
+import { fetchItemPoll, pollDraftSchema, saveItemPoll } from "@/features/recipe/domain/item-poll"
+import PollComposer from "@/features/recipe/components/PollComposer"
 
 
 const postSchema = z.object({
@@ -42,6 +45,7 @@ const postSchema = z.object({
 	is_public: z.boolean(),
 	tags: z.array(z.string()).optional(),
 	cited_recipe_ids: z.array(z.string().min(1, "참고 레시피 ID는 비어있을 수 없습니다")).optional(),
+    poll: pollDraftSchema.nullable().optional(),
 })
 
 type PostFormValues = z.infer<typeof postSchema>
@@ -77,11 +81,18 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 		setThumbnailIndex(newIndex)
 	}, [thumbnailIndex])
 	const [selectedCitedRecipes, setSelectedCitedRecipes] = useState<Item[]>([])
+  const pollRecovered = useRef(false)
+  const pollHydrated = useRef(false)
+  const { data: savedPoll, error: pollLoadError, isLoading: pollLoading, mutate: reloadPoll } = useSWR(
+    editing?.id ? `item-poll-edit:${editing.id}` : null,
+    () => fetchItemPoll(supabase, editing!.id),
+    { revalidateOnFocus: false }
+  )
 
 	const form = useForm<PostFormValues>({
 		resolver: zodResolver(postSchema),
 		mode: "onChange",
-		defaultValues: postFormDefaults(editing),
+		defaultValues: { ...postFormDefaults(editing), poll: null },
 	})
 
 	// 참고 레시피의 표시 정보(제목, 작성자) 조회
@@ -127,6 +138,7 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
     },
     snapshot: () => ({ values: form.getValues(), mainImages, thumbnailIndex, coverFocal }),
     restore: (state) => {
+      pollRecovered.current = Object.prototype.hasOwnProperty.call(state.values, "poll")
       form.reset(state.values)
       setMainImages(state.mainImages)
       setThumbnailIndex(state.thumbnailIndex)
@@ -136,10 +148,21 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
       else setSelectedCitedRecipes([])
     },
   })
+  useEffect(() => {
+    if (!isEditMode || !draft.ready || draft.recovery || pollRecovered.current || pollHydrated.current ||
+        savedPoll === undefined || pollLoadError) return
+    pollHydrated.current = true
+    form.setValue("poll", savedPoll?.active ? { question:savedPoll.question, options:[...savedPoll.options] } : null)
+  }, [isEditMode, draft.ready, draft.recovery, savedPoll, pollLoadError, form])
+
   const scheduleDraft = draft.scheduleSave
   useEffect(() => { scheduleDraft() }, [mainImages, thumbnailIndex, coverFocal, scheduleDraft])
 
 	const onSubmit = async (values: PostFormValues) => {
+        if (isEditMode && (pollLoading || pollLoadError || (!pollHydrated.current && !pollRecovered.current))) {
+            toast({ title: "투표 정보를 확인할 수 없어요.", description: "투표를 불러온 후 다시 저장해 주세요.", variant: "destructive" })
+            return
+        }
 	
 		
 		// isSubmitting은 다음 React 렌더 전에는 갱신되지 않는다.
@@ -152,6 +175,7 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 		let dbCommitted = false
 		let savedItemId: string | null = null
 		let successNotified = false
+        let pollSaveFailed = false
 		try {
 			const {
 				data: { user },
@@ -199,6 +223,14 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 			const { itemId } = await savePostRow(supabase, { existingId: isEditMode && initialData ? initialData.id : null, itemPayload })
 			dbCommitted = true
 			savedItemId = itemId
+            try {
+                if (values.poll || (isEditMode && savedPoll?.active)) {
+                    await saveItemPoll(supabase, itemId, values.poll ?? null)
+                }
+            } catch (error) {
+                pollSaveFailed = true
+                throw error
+            }
       await afterCommit("draft", () => draft.finishPublish()) // DB 성공 후 초안 정리
 
 
@@ -293,7 +325,9 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 		} catch (error) {
 			if (dbCommitted) {
 				console.warn("Recipeed saved, but a follow-up action failed:", error)
-				if (!successNotified) toast({ title: "레시피드 저장 완료", description: "글은 저장됐습니다. 일부 화면 갱신이 지연될 수 있습니다." })
+				if (!successNotified) toast(pollSaveFailed
+                    ? { title: "레시피드는 저장됐지만 투표는 반영되지 않았어요.", description: "수정 화면에서 투표를 다시 확인해 주세요.", variant: "destructive" }
+                    : { title: "레시피드 저장 완료", description: "글은 저장됐습니다. 일부 화면 갱신이 지연될 수 있습니다." })
 				if (savedItemId) {
 					try { router.replace("/posts/" + savedItemId) } catch (navigationError) { console.warn("Recipeed navigation failed:", navigationError) }
 				}
@@ -454,6 +488,24 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 					</section>
 
 					{sourceRecipeId && citedSection}
+                    <Controller
+                        control={form.control}
+                        name="poll"
+                        render={({ field, fieldState }) => (
+                            <PollComposer
+                                value={field.value ?? null}
+                                onChange={field.onChange}
+                                saved={savedPoll ? { question:savedPoll.question, options:[...savedPoll.options] } : null}
+                                voteCount={savedPoll?.total ?? 0}
+                                disabled={isEditMode && (pollLoading || Boolean(pollLoadError))}
+                                showErrors={form.formState.isSubmitted}
+                                onRetry={() => { void reloadPoll() }}
+                                error={fieldState.error?.message ?? fieldState.error?.root?.message ??
+                                    (pollLoadError ? "투표 정보를 불러오지 못했어요. 다시 시도해 주세요." : undefined)}
+                            />
+                        )}
+                    />
+
 
 					<Controller
 						control={form.control}
