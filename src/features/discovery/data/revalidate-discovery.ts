@@ -3,6 +3,7 @@ import { normalizeTags, topicHref } from "@/shared/lib/topics"
 
 export function revalidateProfilePaths(profileIds: Array<string | null | undefined>) {
 	// 작성자 이름·공개 상태는 프로필의 sitemap 포함 여부에도 영향을 준다.
+	revalidatePath("/curators") // Official Spoonie editorial profiles are surfaced here.
 	revalidatePath("/sitemap.xml")
 	revalidatePath("/llms.txt")
 	for (const profileId of new Set(profileIds.filter((value): value is string => Boolean(value)))) {
