@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
-import useSWR from "swr"
 import { useRouter } from "@/shared/lib/navigation"
 import { useForm, useFieldArray, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -34,12 +33,13 @@ import { ColorLabelPicker, PageHeader, PageLoading, SectionHeading, Sheet, Sourc
 import { revalidateItemPage } from "@/shared/infra/revalidate-item"
 import { cleanupUncommittedImages, removeDroppedImages } from "@/shared/infra/item-images"
 import { afterCommit } from "@/shared/infra/post-commit"
+import { fetchItemAuthorFields } from "@/features/profile/data/profile-repository"
 import { attachInstructionImages, buildRecipeItemPayload, editDefaults, forkDefaults, removeInstructionPhoto, reorderIngredients } from "@/features/recipe/domain/recipe-form"
 import { fetchCitedRecipes, saveRecipeRows, uploadInstructionImages } from "@/features/recipe/data/recipe-repository"
 import type { RecipeFormProps } from "@/features/recipe/contracts"
 import { onboardingRecipeDefaults } from "@/features/onboarding/domain/review"
 import { recipeSchema } from "@/features/recipe/domain/recipe-schema"
-import { fetchItemPoll } from "@/features/recipe/domain/item-poll"
+import { useItemPollEditor } from "@/features/recipe/components/useItemPollEditor"
 import PollComposer from "@/features/recipe/components/PollComposer"
 import { serializeRecipeDescription } from "@/features/recipe/domain/editorial-footer"
 import type { RecipeFormValues, RecipeSubmitValues } from "@/features/recipe/domain/recipe-schema"
@@ -88,12 +88,6 @@ export default function RecipeForm({
   const sourceImageRestoreGuard = useRef(false)
 	const [selectedCitedRecipes, setSelectedCitedRecipes] = useState<Item[]>([])
   const pollRecovered = useRef(false)
-  const pollHydrated = useRef(false)
-  const { data: savedPoll, error: pollLoadError, isLoading: pollLoading, mutate: reloadPoll } = useSWR(
-    isEditMode && initialData?.id ? `item-poll-edit:${initialData.id}` : null,
-    () => fetchItemPoll(supabase, initialData!.id),
-    { revalidateOnFocus: false }
-  )
 
 	const form = useForm<RecipeFormValues, unknown, RecipeSubmitValues>({
 		resolver: zodResolver(recipeSchema),
@@ -263,12 +257,14 @@ export default function RecipeForm({
       } else setSelectedCitedRecipes([])
     },
   })
-  useEffect(() => {
-    if (!isEditMode || !draft.ready || draft.recovery || pollRecovered.current || pollHydrated.current ||
-        savedPoll === undefined || pollLoadError) return
-    pollHydrated.current = true
-    form.setValue("poll", savedPoll?.active ? { question:savedPoll.question, options:[...savedPoll.options] } : null)
-  }, [isEditMode, draft.ready, draft.recovery, savedPoll, pollLoadError, form])
+  const { savedPoll, pollLoadError, pollLoading, reloadPoll, pollHydrated } = useItemPollEditor({
+    itemId: isEditMode ? initialData?.id ?? null : null,
+    supabase,
+    draftReady: draft.ready,
+    draftHasRecovery: Boolean(draft.recovery),
+    pollRecovered,
+    setPoll: (value) => form.setValue("poll", value),
+  })
 
   const scheduleDraft = draft.scheduleSave
   useEffect(() => { scheduleDraft() }, [mainImages, instructionImages, thumbnailIndex, coverFocal, scheduleDraft])
@@ -366,9 +362,11 @@ export default function RecipeForm({
 			savedItemId = itemId
       await afterCommit("draft", () => draft.finishPublish()) // DB 성공 후 초안 정리
 
-      // Both create and edit have the same persisted feed shape; only the
-      // cache action differs. Keep one source of truth for the full payload.
-      const fullItemPayload = {
+      // Never show an Auth email address as a public author identity.
+      // A failed profile fetch skips the optimistic cache, not the committed save.
+      await afterCommit("cache", async () => {
+        const authorFields = await fetchItemAuthorFields(supabase, user.id)
+        const fullItemPayload = {
         ...itemPayload,
         id: itemId,
         item_id: itemId,
@@ -377,27 +375,16 @@ export default function RecipeForm({
         instructions: instructionsWithImages.map((instruction, index) => ({
           ...instruction, step_number: index + 1,
         })),
-        display_name: initialData?.display_name || initialData?.username || user.user_metadata?.username || user.email?.split("@")[0] || "Anonymous",
-        username: initialData?.username || user.user_metadata?.username || user.email?.split("@")[0] || "anonymous",
-        avatar_url: initialData?.avatar_url || user.user_metadata?.avatar_url || null,
-        user_public_id: initialData?.user_public_id || user.user_metadata?.public_id || null,
-        author: {
-          id: initialData?.user_id || user.id,
-          display_name: initialData?.username || user.user_metadata?.username || user.email?.split("@")[0] || "Anonymous",
-          username: initialData?.username || user.user_metadata?.username || user.email?.split("@")[0] || "anonymous",
-          avatar_url: initialData?.avatar_url || user.user_metadata?.avatar_url || null,
-          public_id: initialData?.user_public_id || user.user_metadata?.public_id || null,
-        },
+        ...authorFields,
         likes_count: initialData?.likes_count || 0,
         comments_count: initialData?.comments_count || 0,
         is_liked: initialData?.is_liked || false,
         is_following: initialData?.is_following || false,
         created_at: initialData?.created_at || new Date().toISOString(),
       }
-      await afterCommit("cache", () => isEditMode
-        ? cacheManager.updateItem(itemId, fullItemPayload)
-        : cacheManager.addNewItem(fullItemPayload as Item)
-      )
+        if (isEditMode) await cacheManager.updateItem(itemId, fullItemPayload)
+        else await cacheManager.addNewItem(fullItemPayload as Item)
+      })
 
 		toast({ title: `레시피 ${isEditMode ? "수정" : "작성"} 완료`, description: `성공적으로 ${isEditMode ? "수정" : "등록"}되었습니다.` })
 		successNotified = true

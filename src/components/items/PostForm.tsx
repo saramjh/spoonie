@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
-import useSWR from "swr"
 import { useRouter } from "@/shared/lib/navigation"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -31,10 +30,12 @@ import { PageHeader, PageLoading, SectionHeading, Sheet, SourceRow, StateSheet }
 import { revalidateItemPage } from "@/shared/infra/revalidate-item"
 import { cleanupUncommittedImages, removeDroppedImages } from "@/shared/infra/item-images"
 import { afterCommit } from "@/shared/infra/post-commit"
+import { fetchItemAuthorFields } from "@/features/profile/data/profile-repository"
 import type { PostFormProps } from "@/features/post/contracts"
 import { buildPostItemPayload, citedIdsFromRecipes, postFormDefaults, returnToSourcePath } from "@/features/post/domain/post-form"
 import { loadCitedRecipesForPost, savePostRow } from "@/features/post/data/post-repository"
-import { fetchItemPoll, pollDraftSchema } from "@/features/recipe/domain/item-poll"
+import { pollDraftSchema } from "@/features/recipe/domain/item-poll"
+import { useItemPollEditor } from "@/features/recipe/components/useItemPollEditor"
 import PollComposer from "@/features/recipe/components/PollComposer"
 
 
@@ -82,12 +83,6 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 	}, [thumbnailIndex])
 	const [selectedCitedRecipes, setSelectedCitedRecipes] = useState<Item[]>([])
   const pollRecovered = useRef(false)
-  const pollHydrated = useRef(false)
-  const { data: savedPoll, error: pollLoadError, isLoading: pollLoading, mutate: reloadPoll } = useSWR(
-    editing?.id ? `item-poll-edit:${editing.id}` : null,
-    () => fetchItemPoll(supabase, editing!.id),
-    { revalidateOnFocus: false }
-  )
 
 	const form = useForm<PostFormValues>({
 		resolver: zodResolver(postSchema),
@@ -148,12 +143,14 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
       else setSelectedCitedRecipes([])
     },
   })
-  useEffect(() => {
-    if (!isEditMode || !draft.ready || draft.recovery || pollRecovered.current || pollHydrated.current ||
-        savedPoll === undefined || pollLoadError) return
-    pollHydrated.current = true
-    form.setValue("poll", savedPoll?.active ? { question:savedPoll.question, options:[...savedPoll.options] } : null)
-  }, [isEditMode, draft.ready, draft.recovery, savedPoll, pollLoadError, form])
+  const { savedPoll, pollLoadError, pollLoading, reloadPoll, pollHydrated } = useItemPollEditor({
+    itemId: isEditMode ? initialData?.id ?? null : null,
+    supabase,
+    draftReady: draft.ready,
+    draftHasRecovery: Boolean(draft.recovery),
+    pollRecovered,
+    setPoll: (value) => form.setValue("poll", value),
+  })
 
   const scheduleDraft = draft.scheduleSave
   useEffect(() => { scheduleDraft() }, [mainImages, thumbnailIndex, coverFocal, scheduleDraft])
@@ -232,41 +229,28 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 
 
 
-			const fullItemPayload = {
-				...itemPayload,
-				id: itemId,
-				item_id: itemId,
-				// 사용자 정보 추가 (optimized_feed_view 호환)
-				        display_name: user.email?.split('@')[0] || 'Anonymous',
-				username: user.user_metadata?.username || user.email?.split('@')[0] || 'anonymous',
-				avatar_url: user.user_metadata?.avatar_url || null,
-				user_public_id: user.user_metadata?.public_id || null,
-				// 초기 통계 값
-				likes_count: initialData?.likes_count || 0,
-				comments_count: initialData?.comments_count || 0,
-				is_liked: initialData?.is_liked || false,
-				is_following: initialData?.is_following || false,
-				created_at: initialData?.created_at || new Date().toISOString(),
-			}
-
-			if (isEditMode) {
-
-				await afterCommit("cache", () => cacheManager.updateItem(itemId, fullItemPayload))
-
-				// 저장된 item 캐시가 반영된 뒤 바로 재검증한다. 타이머와 실패 누락을 남기지 않는다.
-				// 서버 저장 성공 후의 캐시 갱신 실패는 작성 실패로 보고하지 않는다.
-				void cacheManager.revalidateHomeFeed().catch((error: unknown) => {
-					console.warn("PostForm: home feed revalidation failed:", error)
-				})
-
-
-			} else {
-				await afterCommit("cache", () => cacheManager.addNewItem(fullItemPayload as Item))
-			}
-
-
-
-
+            await afterCommit("cache", async () => {
+              const authorFields = await fetchItemAuthorFields(supabase, user.id)
+              const fullItemPayload = {
+                ...itemPayload,
+                id: itemId,
+                item_id: itemId,
+                ...authorFields,
+                likes_count: initialData?.likes_count || 0,
+                comments_count: initialData?.comments_count || 0,
+                is_liked: initialData?.is_liked || false,
+                is_following: initialData?.is_following || false,
+                created_at: initialData?.created_at || new Date().toISOString(),
+              }
+              if (isEditMode) {
+                await cacheManager.updateItem(itemId, fullItemPayload)
+                void cacheManager.revalidateHomeFeed().catch((error: unknown) => {
+                  console.warn("PostForm: home feed revalidation failed:", error)
+                })
+              } else {
+                await cacheManager.addNewItem(fullItemPayload as Item)
+              }
+            })
 
 			// DataManager가 모든 캐시 동기화를 처리하므로 추가 작업 불필요
 

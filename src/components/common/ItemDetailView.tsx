@@ -49,7 +49,7 @@ import { fetchProfileSummary } from "@/features/profile/data/profile-repository"
 import { postSourceHref } from "@/features/post/domain/post-form"
 
 interface ItemDetailViewProps {
-	item: ItemDetail | null | undefined
+	item: ItemDetail
 	initialPoll?: ItemPollSnapshot | null
 }
 
@@ -85,46 +85,17 @@ export default function ItemDetailView({ item, initialPoll }: ItemDetailViewProp
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [item?.item_id, item?.id])
 	
-	const stableFallbackData = useMemo(() => {
-		if (!item || !stableItemId) {
-			// item이 없을 때도 hook 호출 순서를 유지할 fallback을 제공한다.
-			return {
-				id: stableItemId || 'unknown',
-				item_id: stableItemId || 'unknown',
-				user_id: '',
-				item_type: 'post' as const,
-				created_at: new Date().toISOString(),
-				title: null,
-				content: null,
-				description: null,
-				image_urls: [],
-				thumbnail_index: 0,
-				tags: null,
-				is_public: true,
-				color_label: null,
-				servings: null,
-				cooking_time_minutes: null,
-				recipe_id: null,
-				cited_recipe_ids: null,
-				username: '',
-				likes_count: 0,
-				comments_count: 0,
-				is_liked: false,
-				is_following: false,
-				bookmarks_count: 0,
-				is_bookmarked: false
-			}
-		}
-		return {
-			...item,
-			id: stableItemId, // 타입 안전성: 명시적 id 설정
-			likes_count: item?.likes_count || 0,
-			comments_count: item?.comments_count || 0,
-			is_liked: item?.is_liked || false,
-			is_bookmarked: item?.is_bookmarked || false,
-			bookmarks_count: item?.bookmarks_count || 0
-		}
-	}, [item, stableItemId])
+  // The two route clients render this component only after a valid item exists.
+  // Do not fabricate an entire empty post to satisfy the cache hook.
+  const stableFallbackData = useMemo(() => ({
+    ...item,
+    id: stableItemId || item.id,
+    likes_count: item.likes_count ?? 0,
+    comments_count: item.comments_count ?? 0,
+    is_liked: item.is_liked ?? false,
+    is_bookmarked: item.is_bookmarked ?? false,
+    bookmarks_count: item.bookmarks_count ?? 0,
+  }), [item, stableItemId])
 
 	// 캐시 구독 hook은 early return보다 먼저 호출해야 한다.
 	const cachedItem = useItemCache(stableItemId || 'null', stableFallbackData)
@@ -205,7 +176,7 @@ export default function ItemDetailView({ item, initialPoll }: ItemDetailViewProp
 				setCurrentUser({
 					id: user.id,
 					avatar_url: profile?.avatar_url || null,
-					    display_name: profile?.username || user.email?.split("@")[0] || "User",
+					    display_name: profile?.display_name || profile?.username || "사용자",
 				})
 			}
 			setIsAuthLoading(false)
@@ -248,22 +219,6 @@ export default function ItemDetailView({ item, initialPoll }: ItemDetailViewProp
 				variant: "destructive",
 			})
 		}
-	}
-	
-	// 방어적 렌더링: item이 없을 때의 처리 (hooks 호출 후)
-	if (!item) {
-		return (
-			<div className="flex flex-col h-full items-center justify-center p-8">
-				<div className="text-center space-y-4">
-					<div className="w-16 h-16 bg-border rounded-full animate-pulse mx-auto"></div>
-					<div className="space-y-2">
-						<div className="h-4 bg-border rounded animate-pulse w-48"></div>
-						<div className="h-3 bg-border rounded animate-pulse w-32 mx-auto"></div>
-					</div>
-					<p className="text-ink-soft text-meta">컨텐츠를 불러오는 중...</p>
-				</div>
-			</div>
-		)
 	}
 	
 	// ID가 없으면 에러 상태 표시 - 모든 hooks 호출 후 조건부 렌더링

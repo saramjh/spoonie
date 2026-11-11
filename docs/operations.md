@@ -47,9 +47,9 @@
 
 ## 콘텐츠 저장·검색 자산 갱신
 
-- 레시피 쓰기/수정은 Supabase 함수 `save_recipe_atomic`을 사용한다. 스키마 재구축 시 `supabase/save_recipe_atomic.sql`을 적용한다. 일반 사용자는 `SECURITY INVOKER` + 현재 RLS를 그대로 따르고, `scripts/import-photo-recipes.py`만 service-role로 명시한 작성자 ID를 전달해 같은 원자 저장 경로를 쓴다. anon 실행 권한은 없다.
+- 일반 회원의 레시피·레시피드와 선택적 투표는 Supabase 함수 `save_item_with_poll_atomic`으로 한 트랜잭션에 저장한다. 이 함수는 기존 `save_recipe_atomic`과 `save_item_poll`을 재사용한다. 관리자 임포트는 기존 `save_recipe_atomic`을 사용할 수 있다. 스키마 재구축 시 `supabase/save_recipe_atomic.sql`을 적용한다. 일반 사용자는 `SECURITY INVOKER` + 현재 RLS를 그대로 따르고, `scripts/import-photo-recipes.py`만 service-role로 명시한 작성자 ID를 전달해 같은 원자 저장 경로를 쓴다. anon 실행 권한은 없다.
 - 새 이미지의 400/800px variant 생성은 게시 성공 조건이다. 각 variant를 최대 3번 재시도하고 실패하면 새 원본과 생성 중인 variant를 정리한 뒤 저장을 중단한다.
-- `sweep-orphan-images`와 수동 `delete-orphan-images.py`는 DB 참조와 사용자 UUID Storage 폴더를 1,000개 단위로 끝까지 페이지네이션한 뒤 orphan을 판정한다. `marketing` 같은 운영 자산 prefix는 건드리지 않으며, 실제 삭제 직전 DB 참조를 다시 읽어 스캔 중 새로 연결된 사진을 제외한다.
+- `sweep-orphan-images`와 수동 `delete-orphan-images.py`는 DB 참조와 사용자 UUID Storage 폴더를 1,000개 단위로 끝까지 페이지네이션한 뒤 orphan을 판정한다. 주간 정리 작업은 Auth Admin에서 404로 삭제가 확인된 계정의 잔여 이미지·아바타도 재시도한다. 이때 이미지의 DB 재참조·최근 24시간 보존, Auth 상태 확인 실패 시 삭제 중단을 적용한다. `npm test`에 정리 실패 조건 모의 검증이 포함된다. `marketing` 같은 운영 자산 prefix는 건드리지 않으며, 실제 삭제 직전 DB 참조를 다시 읽어 스캔 중 새로 연결된 사진을 제외한다.
 - 글 작성·수정·삭제 후 `/api/revalidate`가 상세, 홈, 검색, `/recipes`, 프로필, `/sitemap.xml`, `/llms.txt`, 영향받은 `/topics/*`를 즉시 갱신한다. 예약 공개 함수는 `PUSH_WEBHOOK_SECRET`으로 보호된 `/api/revalidate-published`를 호출해 같은 갱신을 한다. 정적 `revalidate` 시간은 이 호출이 실패했을 때의 폴백이다.
 - `/sitemap.xml`은 최근 N개가 아니라 현재 적격 canonical 전체를 배치 조회하고, Recipe/Recipeed의 실제 이미지 URL도 image sitemap으로 제공한다. URL이 50,000개에 접근하면 sitemap index로 분할한다.
 

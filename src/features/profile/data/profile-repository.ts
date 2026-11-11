@@ -258,3 +258,27 @@ export const fetchProfileSummary = async (supabase: SupabaseClient, userId: stri
 	const { data } = await supabase.from("profiles").select("id, username, display_name, avatar_url, public_id").eq("id", userId).maybeSingle()
 	return data
 }
+
+
+// Feed cache metadata must come from the public profile, not the Auth email or mutable JWT metadata.
+// If this lookup fails, callers skip optimistic cache insertion; the saved item is still reloaded from DB.
+export const fetchItemAuthorFields = async (supabase: SupabaseClient, userId: string) => {
+  const { data, error } = await supabase.from("profiles")
+    .select("id, username, display_name, avatar_url, public_id")
+    .eq("id", userId).single()
+  if (error || !data) throw new Error(error?.message || "Author profile unavailable")
+  const displayName = data.display_name || data.username
+  return {
+    display_name: displayName,
+    username: data.username,
+    avatar_url: data.avatar_url,
+    user_public_id: data.public_id,
+    author: {
+      id: userId,
+      public_id: data.public_id || userId,
+      username: data.username,
+      display_name: displayName,
+      avatar_url: data.avatar_url,
+    },
+  }
+}
