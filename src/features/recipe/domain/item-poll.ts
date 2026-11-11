@@ -50,7 +50,7 @@ export function readItemPollSnapshot(input: unknown): ItemPollSnapshot | null {
 export function splitEditorialPollPrompt(text: string): { body: string; prompt: string | null } {
   // Historical editorial invitation remains in stored description for provenance.
   // Only remove it from rendering when an actual structured poll exists.
-  const expression = /(?:^|\n)함께 나눠요\s*\|\s*([^\n]{1,180})(?=\n|$)/u
+  const expression = /(?:^|\n)함께 나눠요(?:[ \t]*\||[ \t]*:|[ \t]*\r?\n)[ \t]*([^\r\n]{1,180})(?=\r?\n|$)/u
   const match = expression.exec(text)
   if (!match) return { body: text, prompt: null }
   const before = text.slice(0,match.index).trimEnd()
