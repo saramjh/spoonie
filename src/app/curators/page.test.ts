@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { CURATOR_GROUPS, default as CuratorsPage, metadata } from './page'
+import CuratorsPage, { metadata } from './page'
+import { CURATOR_GROUPS } from './curator-ids'
 import { createSupabasePublicClient } from '@/shared/infra/supabase-public'
 
 vi.mock('@/shared/infra/supabase-public', () => ({ createSupabasePublicClient: vi.fn() }))
