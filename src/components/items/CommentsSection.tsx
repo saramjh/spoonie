@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
 import { cacheManager } from "@/shared/infra/unified-cache-manager"
 import { addComment, fetchComments, softDeleteComment } from "@/features/social/data/comment-repository"
-import { Send, Trash2, CornerUpLeft } from "lucide-react"
+import { Send, Trash2, CornerDownRight } from "lucide-react"
 import { Comment } from "@/types/item"
 import { cn, timeAgo } from "@/lib/utils"
 import useSWR, { mutate } from "swr"
@@ -327,7 +327,7 @@ export default function CommentsSection({
                       className="mt-1 min-h-11 px-1 text-meta text-ink-soft hover:text-ink"
                       onClick={() => handleReply(comment.id)}
                     >
-                      <CornerUpLeft className="h-3 w-3" aria-hidden />
+                      <CornerDownRight className="h-3 w-3" aria-hidden />
                       답글
                     </Button>
                   </>
