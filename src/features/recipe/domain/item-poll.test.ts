@@ -32,6 +32,21 @@ describe("structured item polls", () => {
     expect(splitEditorialPollPrompt("본문에서 함께 나눠요 라고 썼습니다.")).toEqual({ body: "본문에서 함께 나눠요 라고 썼습니다.", prompt: null })
     expect(splitEditorialPollPrompt("함께 나눠요 | 당고는 구운 표면이 좋나요?")).toEqual({body:"",prompt:"당고는 구운 표면이 좋나요?"})
   })
+
+  it("collapses historical curator poll invites with pipe, colon or newline only where the caller confirmed a native poll", () => {
+    const before = "Flavor Notes | 구운 당근의 풍미."
+    const after = "출처·안내: 원작 링크 https://example.com"
+    const question = "당근은 가장자리가 바삭한 편이 좋으신가요, 부드러운 속이 좋으신가요?"
+    for (const marker of [" | ", ": ", "\n"]) {
+      const full = before + "\n\n함께 나눠요" + marker + question + "\n\n" + after
+      expect(splitEditorialPollPrompt(full)).toEqual({body: before + "\n\n" + after, prompt: question})
+    }
+    expect(splitEditorialPollPrompt(before + "\n\n함께 나눠요\n\n" + after))
+      .toEqual({body: before + "\n\n함께 나눠요\n\n" + after,prompt:null})
+    expect(splitEditorialPollPrompt("본문 중에 함께 나눠요 라는 표현을 적었습니다."))
+      .toEqual({body:"본문 중에 함께 나눠요 라는 표현을 적었습니다.",prompt:null})
+  })
+
   it("reads only the matching recipe poll and rejects invalid RPC data", async () => {
     const rpc = vi.fn().mockResolvedValue({ data: record, error: null })
     const client = { rpc } as unknown as SupabaseClient
