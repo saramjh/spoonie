@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import { createSupabasePublicClient } from '@/shared/infra/supabase-public'
 import { notFound } from 'next/navigation'
 import { fetchItemDetail, ItemNotFoundError } from '@/features/feed/data/item-detail'
+import { fetchItemPoll } from '@/features/recipe/domain/item-poll'
 import PostDetailClient from './PostDetailClient'
 import PostSchema from '@/components/ai-search-optimization/PostSchema'
 import BreadcrumbSchema, { createBreadcrumbs } from '@/components/ai-search-optimization/BreadcrumbSchema'
@@ -151,6 +152,9 @@ export default async function PostDetailPage(props: Props) {
   const params = await props.params;
   if (!UUID.test(params.id)) notFound()
   const initialItem = await loadInitialItem(params.id)
+  const initialPoll = initialItem?.is_public
+    ? await fetchItemPoll(createSupabasePublicClient(), params.id).catch(() => null)
+    : null
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'
   const breadcrumbs = initialItem?.title
@@ -161,7 +165,7 @@ export default async function PostDetailPage(props: Props) {
     <>
       <BreadcrumbSchema items={breadcrumbs} />
       {initialItem && <PostSchema item={initialItem} baseUrl={baseUrl} />}
-      <PostDetailClient params={params} initialItem={initialItem} />
+      <PostDetailClient params={params} initialItem={initialItem} initialPoll={initialPoll} />
     </>
   )
 }

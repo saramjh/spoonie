@@ -31,7 +31,7 @@ export const ACTION_MESSAGES = {
     body: "궁금한 점이나 직접 바꿔 만든 경험을 댓글로 남길 수 있어요.",
   },
   poll: {
-    title: "레시피 투표에 참여하기",
+    title: "투표에 참여하기",
     body: "로그인하면 마음에 드는 선택지에 투표하고 다른 사람들의 결과를 확인할 수 있어요.",
   },
   notification: {

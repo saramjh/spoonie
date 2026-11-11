@@ -24,8 +24,8 @@ import RecipeCard from "@/features/recipe/components/RecipeCard"
 import { cn } from "@/lib/utils"
 import { formatCookingTime } from "@/features/recipe/domain/recipe-amount"
 import { splitKitchenEditorialFooter, parseRecipeDescription } from "@/features/recipe/domain/editorial-footer"
-import RecipePoll from "@/features/recipe/components/RecipePoll"
-import { splitEditorialPollPrompt, type RecipePollSnapshot } from "@/features/recipe/domain/recipe-poll"
+import ItemPoll from "@/features/recipe/components/ItemPoll"
+import { splitEditorialPollPrompt, type ItemPollSnapshot } from "@/features/recipe/domain/item-poll"
 import { useShare } from "@/hooks/useShare"
 import { useNavigation } from "@/hooks/useNavigation"
 import { useToast } from "@/hooks/use-toast"
@@ -50,7 +50,7 @@ import { postSourceHref } from "@/features/post/domain/post-form"
 
 interface ItemDetailViewProps {
 	item: ItemDetail | null | undefined
-	initialPoll?: RecipePollSnapshot | null
+	initialPoll?: ItemPollSnapshot | null
 }
 
 interface CurrentUser {
@@ -151,7 +151,7 @@ export default function ItemDetailView({ item, initialPoll }: ItemDetailViewProp
 	// 더블탭 좋아요 상태 관리
 	const [showHeartAnimation, setShowHeartAnimation] = useState(false)
 	const [showLoginPrompt, setShowLoginPrompt] = useState(false)
-	const [hasActiveRecipePoll, setHasActiveRecipePoll] = useState(Boolean(initialPoll))
+	const [hasActiveRecipePoll, setHasActiveRecipePoll] = useState(Boolean(initialPoll?.active))
 	const setRecipePollAvailability = useCallback((active: boolean) => setHasActiveRecipePoll(active), [])
 
 	const photoPromptReady = !!stableItemId && photoPromptState.recipeId === stableItemId
@@ -570,15 +570,6 @@ export default function ItemDetailView({ item, initialPoll }: ItemDetailViewProp
 									)}
 									<RecipeActivity recipeId={stableItemId} userId={currentUser?.id} />
 									{visibleEditorialBody && <p className="mt-[10px] whitespace-pre-wrap break-words text-body text-ink"><LinkifiedText text={visibleEditorialBody} /></p>}
-                                    {stableItemId && (
-                                      <RecipePoll
-                                        key={stableItemId}
-                                        recipeId={stableItemId}
-                                        currentUserId={currentUser?.id ?? null}
-                                        initialPoll={initialPoll}
-                                        onAvailabilityChange={setRecipePollAvailability}
-                                      />
-                                    )}
 									{externalSourceView.source && (
 										<aside aria-label="외부 원작 출처" className="mt-4 border-t border-border pt-3 text-meta text-ink-soft">
 											<p className="font-medium text-ink">외부 원작 레시피</p>
@@ -606,6 +597,17 @@ export default function ItemDetailView({ item, initialPoll }: ItemDetailViewProp
 									<p className="whitespace-pre-wrap break-words text-body text-ink"><LinkifiedText text={item.content} /></p>
 								</>
 							)}
+
+                            {stableItemId && (
+                              <ItemPoll
+                                key={stableItemId}
+                                itemId={stableItemId}
+                                currentUserId={currentUser?.id ?? null}
+                                initialPoll={initialPoll}
+                                isPublic={Boolean(item.is_public)}
+                                onAvailabilityChange={setRecipePollAvailability}
+                              />
+                            )}
 
 							{item.tags && item.tags.length > 0 && (
 								<ul data-design-slot={isRecipe ? "tags" : undefined} className="mb-3 mt-3 flex flex-wrap gap-2" aria-label="태그">

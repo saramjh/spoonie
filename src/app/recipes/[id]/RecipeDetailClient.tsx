@@ -6,12 +6,12 @@ import DetailStateMessage from "@/components/common/DetailStateMessage"
 import PostCardSkeleton from "@/components/items/PostCardSkeleton"
 import { useItemDetail } from "@/features/feed/hooks/useItemDetail"
 import type { ItemDetail } from "@/types/item"
-import type { RecipePollSnapshot } from "@/features/recipe/domain/recipe-poll"
+import type { ItemPollSnapshot } from "@/features/recipe/domain/item-poll"
 
 interface RecipeDetailClientProps {
 	params: { id: string }
 	initialItem?: ItemDetail | null
-	initialPoll?: RecipePollSnapshot | null
+	initialPoll?: ItemPollSnapshot | null
 }
 
 export default function RecipeDetailClient({ params, initialItem, initialPoll }: RecipeDetailClientProps) {

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
+import useSWR from "swr"
 import { useRouter } from "@/shared/lib/navigation"
 import { useForm, useFieldArray, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -38,6 +39,8 @@ import { fetchCitedRecipes, saveRecipeRows, uploadInstructionImages } from "@/fe
 import type { RecipeFormProps } from "@/features/recipe/contracts"
 import { onboardingRecipeDefaults } from "@/features/onboarding/domain/review"
 import { recipeSchema } from "@/features/recipe/domain/recipe-schema"
+import { fetchItemPoll, saveItemPoll } from "@/features/recipe/domain/item-poll"
+import PollComposer from "@/features/recipe/components/PollComposer"
 import { serializeRecipeDescription } from "@/features/recipe/domain/editorial-footer"
 import type { RecipeFormValues, RecipeSubmitValues } from "@/features/recipe/domain/recipe-schema"
 
@@ -84,6 +87,13 @@ export default function RecipeForm({
 	const [instructionImages, setInstructionImages] = useState<(OptimizedImage | null)[]>([])
   const sourceImageRestoreGuard = useRef(false)
 	const [selectedCitedRecipes, setSelectedCitedRecipes] = useState<Item[]>([])
+  const pollRecovered = useRef(false)
+  const pollHydrated = useRef(false)
+  const { data: savedPoll, error: pollLoadError, isLoading: pollLoading, mutate: reloadPoll } = useSWR(
+    isEditMode && initialData?.id ? `item-poll-edit:${initialData.id}` : null,
+    () => fetchItemPoll(supabase, initialData!.id),
+    { revalidateOnFocus: false }
+  )
 
 	const form = useForm<RecipeFormValues, unknown, RecipeSubmitValues>({
 		resolver: zodResolver(recipeSchema),
@@ -101,12 +111,13 @@ export default function RecipeForm({
 			color_label: null,
 			tags: "",
 			cited_recipe_ids: [],
+            poll: null,
 		},
 	})
 
 	useEffect(() => {
 		if (isEditMode && initialData) {
-			form.reset(editDefaults(initialData))
+			form.reset({ ...editDefaults(initialData), poll: null })
 
 			if (initialData.image_urls && initialData.image_urls.length > 0) {
 				const fetchedImages = initialData.image_urls.map((url) => ({
@@ -150,13 +161,13 @@ export default function RecipeForm({
 	// fork: 사진과 색상 라벨은 가져오지 않는다 (내가 만든 요리의 사진, 내 정리 기준을 쓴다)
 	useEffect(() => {
 		if (isEditMode || !forkFrom) return
-		form.reset(forkDefaults(forkFrom))
+		form.reset({ ...forkDefaults(forkFrom), poll: null })
 		setSelectedCitedRecipes([{ ...forkFrom, item_id: forkFrom.id } as Item])
 	}, [isEditMode, forkFrom, form])
 
 	useEffect(() => {
 		if (isEditMode || !onboardingDraft) return
-		form.reset(onboardingRecipeDefaults(onboardingDraft))
+		form.reset({ ...onboardingRecipeDefaults(onboardingDraft), poll: null })
 
 		if (!onboardingDraft.sourceImageEndpoint) return
 		let cancelled = false
@@ -238,6 +249,7 @@ export default function RecipeForm({
     snapshot: () => ({ values: form.getValues(), mainImages, instructionImages, thumbnailIndex, coverFocal }),
     restore: (state) => {
       sourceImageRestoreGuard.current = true
+      pollRecovered.current = Object.prototype.hasOwnProperty.call(state.values, "poll")
       form.reset(state.values)
       setMainImages(state.mainImages)
       setInstructionImages(state.instructionImages ?? [])
@@ -251,12 +263,23 @@ export default function RecipeForm({
       } else setSelectedCitedRecipes([])
     },
   })
+  useEffect(() => {
+    if (!isEditMode || !draft.ready || draft.recovery || pollRecovered.current || pollHydrated.current ||
+        savedPoll === undefined || pollLoadError) return
+    pollHydrated.current = true
+    form.setValue("poll", savedPoll?.active ? { question:savedPoll.question, options:[...savedPoll.options] } : null)
+  }, [isEditMode, draft.ready, draft.recovery, savedPoll, pollLoadError, form])
+
   const scheduleDraft = draft.scheduleSave
   useEffect(() => { scheduleDraft() }, [mainImages, instructionImages, thumbnailIndex, coverFocal, scheduleDraft])
 
 	const externalSourceDetails = useRef<HTMLDetailsElement>(null)
 
 	const onSubmit = async (values: RecipeSubmitValues) => {
+        if (isEditMode && (pollLoading || pollLoadError || (!pollHydrated.current && !pollRecovered.current))) {
+            toast({ title: "투표 정보 확인 필요", description: "투표를 불러온 뒤 다시 저장해 주세요.", variant: "destructive" })
+            return
+        }
 		// Reject invalid external attribution before uploading media or saving a draft.
 		try {
 			serializeRecipeDescription(values.description ?? "", values.external_source_creator, values.external_source_url)
@@ -280,6 +303,7 @@ export default function RecipeForm({
 		let dbCommitted = false
 		let savedItemId: string | null = null
 		let successNotified = false
+        let pollSaveFailed = false
 
 		try {
 			const {
@@ -338,6 +362,14 @@ export default function RecipeForm({
 			})
 			dbCommitted = true
 			savedItemId = itemId
+            try {
+              if (values.poll || (isEditMode && savedPoll?.active)) {
+                await saveItemPoll(supabase, itemId, values.poll ?? null)
+              }
+            } catch (error) {
+              pollSaveFailed = true
+              throw error
+            }
 
       await afterCommit("draft", () => draft.finishPublish()) // DB 성공 후 초안 정리
 
@@ -477,7 +509,9 @@ export default function RecipeForm({
 	} catch (error: unknown) {
 			if (dbCommitted) {
 				console.warn("Recipe saved, but a follow-up action failed:", error)
-				if (!successNotified) toast({ title: "레시피 저장 완료", description: "글은 저장됐습니다. 일부 화면 갱신이 지연될 수 있습니다." })
+				if (!successNotified) toast(pollSaveFailed
+                    ? { title: "레시피는 저장됐지만 투표는 반영되지 않았어요.", description: "수정 화면에서 투표를 다시 확인해 주세요.", variant: "destructive" }
+                    : { title: "레시피 저장 완료", description: "글은 저장됐습니다. 일부 화면 갱신이 지연될 수 있습니다." })
 				if (savedItemId) {
 					try { router.replace("/recipes/" + savedItemId) } catch (navigationError) { console.warn("Recipe navigation failed:", navigationError) }
 				}
@@ -695,6 +729,24 @@ export default function RecipeForm({
 							</div>
 						</details>
 					</section>
+
+                    <Controller
+                        control={form.control}
+                        name="poll"
+                        render={({ field, fieldState }) => (
+                            <PollComposer
+                                value={field.value ?? null}
+                                onChange={(value) => field.onChange(value)}
+                                saved={savedPoll ? { question:savedPoll.question, options:[...savedPoll.options] } : null}
+                                voteCount={savedPoll?.total ?? 0}
+                                disabled={isEditMode && (pollLoading || Boolean(pollLoadError))}
+                                showErrors={form.formState.isSubmitted}
+                                onRetry={() => { void reloadPoll() }}
+                                error={fieldState.error?.message ?? fieldState.error?.root?.message ??
+                                    (pollLoadError ? "투표 정보를 불러오지 못했어요. 다시 시도해 주세요." : undefined)}
+                            />
+                        )}
+                    />
 
 					<section aria-labelledby="form-ingredients" className="border-t border-border px-4 pb-5 pt-5">
 						<div className="flex items-baseline justify-between">

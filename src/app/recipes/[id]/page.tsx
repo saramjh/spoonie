@@ -4,7 +4,7 @@ import { createSupabasePublicClient } from '@/shared/infra/supabase-public'
 import { notFound } from 'next/navigation'
 import { formatCookingTime } from '@/features/recipe/domain/recipe-amount'
 import { fetchItemDetail, ItemNotFoundError } from '@/features/feed/data/item-detail'
-import { fetchRecipePoll } from '@/features/recipe/domain/recipe-poll'
+import { fetchItemPoll } from '@/features/recipe/domain/item-poll'
 import RecipeDetailClient from './RecipeDetailClient'
 import RecipeSchema from '@/components/ai-search-optimization/RecipeSchema'
 import BreadcrumbSchema, { createBreadcrumbs } from '@/components/ai-search-optimization/BreadcrumbSchema'
@@ -157,7 +157,7 @@ export default async function RecipeDetailPage(props: Props) {
   if (!UUID.test(params.id)) notFound()
   const initialItem = await loadInitialItem(params.id)
   const initialPoll = initialItem?.is_public
-    ? await fetchRecipePoll(createSupabasePublicClient(), params.id).catch(() => null)
+    ? await fetchItemPoll(createSupabasePublicClient(), params.id).catch(() => null)
     : null
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'

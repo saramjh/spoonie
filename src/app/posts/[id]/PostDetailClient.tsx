@@ -6,13 +6,15 @@ import DetailStateMessage from "@/components/common/DetailStateMessage"
 import PostCardSkeleton from "@/components/items/PostCardSkeleton"
 import { useItemDetail } from "@/features/feed/hooks/useItemDetail"
 import type { ItemDetail } from "@/types/item"
+import type { ItemPollSnapshot } from "@/features/recipe/domain/item-poll"
 
 interface PostDetailClientProps {
 	params: { id: string }
 	initialItem?: ItemDetail | null
+	initialPoll?: ItemPollSnapshot | null
 }
 
-export default function PostDetailClient({ params, initialItem }: PostDetailClientProps) {
+export default function PostDetailClient({ params, initialItem, initialPoll }: PostDetailClientProps) {
 	const itemId = params.id
 
 
@@ -57,5 +59,5 @@ export default function PostDetailClient({ params, initialItem }: PostDetailClie
 		)
 	}
 
-	return <ItemDetailView item={item} />
+	return <ItemDetailView item={item} initialPoll={initialPoll} />
 }

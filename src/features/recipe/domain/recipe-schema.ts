@@ -2,6 +2,7 @@
  * 입력 tags는 쉼표 구분 문자열, 제출 tags는 문자열 배열이다.
  */
 import * as z from "zod"
+import { pollDraftSchema } from "./item-poll"
 
 export const recipeSchema = z.object({
 	title: z.string().min(3, "제목은 3글자 이상이어야 합니다."),
@@ -41,7 +42,8 @@ export const recipeSchema = z.object({
 				: []
 		)
 		.pipe(z.array(z.string())),
-	cited_recipe_ids: z.array(z.string()).optional(), // 참고 레시피 ID 배열
+	cited_recipe_ids: z.array(z.string()).optional(),
+	poll: pollDraftSchema.nullable().optional(), // 참고 레시피 ID 배열
 })
 
 export type RecipeFormValues = z.input<typeof recipeSchema>
