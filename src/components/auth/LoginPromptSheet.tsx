@@ -8,7 +8,7 @@ import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } f
 interface LoginPromptSheetProps {
 	isOpen: boolean
 	onClose: () => void
-	action: "follow" | "like" | "bookmark" | "comment" | "notification"
+	action: "follow" | "like" | "bookmark" | "comment" | "notification" | "poll"
 	returnTo?: string
 }
 
@@ -29,6 +29,10 @@ export const ACTION_MESSAGES = {
   comment: {
     title: "요리에 관한 이야기를 나눠 보세요",
     body: "궁금한 점이나 직접 바꿔 만든 경험을 댓글로 남길 수 있어요.",
+  },
+  poll: {
+    title: "레시피 투표에 참여하기",
+    body: "로그인하면 마음에 드는 선택지에 투표하고 다른 사람들의 결과를 확인할 수 있어요.",
   },
   notification: {
     title: "내 요리에 관한 소식을 확인하세요",
