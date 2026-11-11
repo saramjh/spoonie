@@ -1,6 +1,6 @@
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 
-interface SearchResult {
+export interface SearchResult {
 	id: string
 	title: string
 	content?: string
@@ -15,108 +15,32 @@ interface SearchResult {
 	user_id?: string
 	is_following?: boolean
 	is_liked?: boolean
+	tags?: string[]
+	cooking_time_minutes?: number
+	servings?: number
+	color_label?: string
+	ingredients?: { name: string; amount: number; unit: string }[]
+	instructions?: { step_number: number; description: string; image_url?: string }[]
 }
 
-interface CachedSearchResults {
-	popularKeywords: Array<{ keyword: string; count: number }>
-	lastUpdated: number
-	ttl: number // Time To Live (ms)
+/** SWR owns client-side caching; fetchers only fetch. */
+export async function fetchPopularKeywords(): Promise<Array<{ keyword: string; count: number }>> {
+  const { data, error } = await createSupabaseBrowserClient().rpc("get_popular_tags", { limit_count: 10 })
+  if (error) throw error
+  return data ?? []
 }
 
-// 브라우저 메모리 캐시 (탭이 열려 있는 동안)
-const searchCache = new Map<string, CachedSearchResults>()
-const CACHE_TTL = 5 * 60 * 1000 // 5분 캐시
-
-/**
- * 인기 키워드 (5분 동안 다시 조회하지 않는다)
- */
-export async function getPopularKeywordsCached(): Promise<Array<{ keyword: string; count: number }>> {
-	const cacheKey = 'popular_keywords'
-	const cached = searchCache.get(cacheKey)
-	
-	if (cached && Date.now() - cached.lastUpdated < cached.ttl) {
-
-		return cached.popularKeywords
-	}
-
-	
-	const supabase = createSupabaseBrowserClient()
-
-	try {
-		// 태그 집계는 DB 함수에서 수행해 원본 행 전체를 브라우저로 가져오지 않는다.
-		const { data, error } = await supabase.rpc('get_popular_tags', { 
-			limit_count: 10 
-		})
-
-		if (error) {
-			console.error('❌ Failed to fetch popular keywords:', error)
-			return cached?.popularKeywords || []
-		}
-
-		const result = data || []
-		
-		searchCache.set(cacheKey, {
-			popularKeywords: result,
-			lastUpdated: Date.now(),
-			ttl: CACHE_TTL
-		})
-
-		return result
-	} catch (error) {
-		console.error('❌ Popular keywords fetch failed:', error)
-		return cached?.popularKeywords || []
-	}
+export async function searchItems(query: string): Promise<SearchResult[]> {
+  const supabase = createSupabaseBrowserClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data, error } = await supabase.rpc("search_items_optimized", {
+    search_term: query,
+    max_results: 20,
+    current_user_id: user?.id ?? null,
+  })
+  if (error) throw error
+  return data ?? []
 }
-
-/**
- * 디바운싱된 검색 (불필요한 요청 방지)
- */
-class DebouncedSearch {
-	private searchCache = new Map<string, { results: SearchResult[], timestamp: number }>()
-	private readonly SEARCH_CACHE_TTL = 2 * 60 * 1000 // 2분
-
-	async search(query: string): Promise<SearchResult[]> {
-		const cached = this.searchCache.get(query)
-		if (cached && Date.now() - cached.timestamp < this.SEARCH_CACHE_TTL) return cached.results
-		// The UI already debounces. Cancelling a second timer left promises pending.
-		const results = await this.performSearch(query)
-		this.searchCache.set(query, { results, timestamp: Date.now() })
-		return results
-	}
-
-	private async performSearch(query: string): Promise<SearchResult[]> {
-		const supabase = createSupabaseBrowserClient()
-
-		// 현재 사용자 정보 가져오기
-		const { data: { user } } = await supabase.auth.getUser()
-		const currentUserId = user?.id || null
-
-		// 전문검색 RPC 함수 사용 (GIN 인덱스 활용, 팔로우 상태 포함)
-		const { data, error } = await supabase
-			.rpc('search_items_optimized', { 
-				search_term: query,
-				max_results: 20,
-				current_user_id: currentUserId
-			})
-
-		if (error) {
-			console.error("Search failed:", error)
-			throw error
-		}
-
-		return data || []
-	}
-
-	// 캐시 정리 (메모리 누수 방지)
-	clearCache(): void {
-		this.searchCache.clear()
-	}
-}
-
-/**
- * 싱글톤 검색 인스턴스
- */
-export const optimizedSearch = new DebouncedSearch()
 
 export interface UserSearchResult {
 	user_id: string;

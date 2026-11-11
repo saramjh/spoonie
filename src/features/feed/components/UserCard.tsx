@@ -1,23 +1,13 @@
 "use client"
-import { IntentLink, Photo } from "@/components/kit"
+import { IntentLink } from "@/components/kit"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { User } from "lucide-react"
 import { useNavigation } from "@/hooks/useNavigation"
-import type { Item } from "@/types/item"
+import type { UserSearchResult } from "@/features/feed/data/search-optimization"
 import { Sheet } from "@/components/kit"
 
-// 유저 검색 결과 타입 (search/page.tsx와 동일)
-interface UserResult {
-  user_id: string;
-  username: string;
-  display_name?: string;
-  avatar_url?: string;
-  items_count: number;
-  latest_items: Item[];
-}
-
 interface UserCardProps {
-  user: UserResult
+  user: UserSearchResult
 }
 
 export default function UserCard({ user }: UserCardProps) {
@@ -30,7 +20,7 @@ export default function UserCard({ user }: UserCardProps) {
         <div className="flex items-center space-x-3 mb-3">
           {/* 유저 아바타 */}
           <Avatar className="w-12 h-12">
-            <AvatarImage src={user.avatar_url} alt={user.display_name || user.username} />
+            <AvatarImage src={user.avatar_url ?? undefined} alt={user.display_name || user.username} />
             <AvatarFallback>
               <User className="w-6 h-6 text-ink-soft" />
             </AvatarFallback>
@@ -48,22 +38,6 @@ export default function UserCard({ user }: UserCardProps) {
           </div>
         </div>
         
-        {/* 최근 아이템 미리보기 */}
-        {user.latest_items.length > 0 && (
-          <div className="grid grid-cols-3 gap-1">
-            {user.latest_items.slice(0, 3).map((item, index) => (
-              <div key={`${user.user_id}-${index}`} className="aspect-square relative rounded overflow-hidden bg-muted">
-                {item.image_urls && item.image_urls.length > 0 ? (
-                  <Photo src={item.image_urls[item.thumbnail_index || 0]} alt="" sizes="100px" />
-                ) : (
-                  <div className="w-full h-full bg-muted flex items-center justify-center">
-                    <User className="w-4 h-4 text-ink-soft" />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
       </Sheet>
     </IntentLink>
   )
