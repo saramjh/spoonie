@@ -100,6 +100,10 @@ export async function fetchItemDetail(supabase: SupabaseClient, itemId: string, 
 		}
 
 		const isRecipeItem = itemData.item_type === "recipe"
+		// Ingredients and instructions are essential Recipe data. A failed query is
+		// not an empty list: keep existing content or show a retryable error instead.
+		if (isRecipeItem && ingredientsResult.error) throw ingredientsResult.error
+		if (isRecipeItem && instructionsResult.error) throw instructionsResult.error
 		const ingredients: Ingredient[] = isRecipeItem ? ingredientsResult.data || [] : []
 		const instructions: Instruction[] = isRecipeItem ? instructionsResult.data || [] : []
 
