@@ -105,6 +105,7 @@ export default function Header() {
       </Link>
 
       <div className="flex items-center">
+        <Link href="/curators" className="inline-flex h-11 items-center whitespace-nowrap px-2 text-meta font-semibold text-ink-soft hover:text-ink" aria-label="레시피 큐레이터 둘러보기">큐레이터</Link>
         <Button 
           variant="ghost" 
           size="icon" 
