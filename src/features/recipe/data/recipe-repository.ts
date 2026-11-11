@@ -17,57 +17,47 @@ import type { RecipeIngredientInput, RecipeInstructionInput } from "../contracts
 
 type Db = ReturnType<typeof createSupabaseBrowserClient>
 
-/** 참고 Recipe 선택 검색. RLS가 허용한 본인 비공개 글도 원래대로 유지한다. */
-export async function searchCitableRecipes(supabase: Db, query: string, signal: AbortSignal): Promise<Item[]> {
-	const { data: profiles, error: profileError } = await supabase
-		.from("profiles")
-		.select("id")
-		.ilike("username", `%${query}%`)
-		.limit(10)
-		.abortSignal(signal)
-	if (profileError) throw profileError
+/** Reference picker search: RLS still controls public and own private recipes. */
+export const CITABLE_PAGE_SIZE = 10
 
-	const authors = (profiles ?? []).map((profile) => profile.id)
-	const filter = `title.ilike.%${query}%`
-	const match = authors.length ? `${filter},user_id.in.(${authors.join(",")})` : filter
-	const { data: rows, error: itemError } = await supabase
-		.from("items")
-		.select("id, title, created_at, item_type, is_public, image_urls, user_id, cited_recipe_ids, author:profiles!items_user_id_fkey(username, public_id, avatar_url)")
-		.eq("item_type", "recipe")
-		.or(match)
-		.limit(10)
-		.abortSignal(signal)
-	if (itemError) throw itemError
+export async function searchCitableRecipes(supabase: Db, query: string, signal: AbortSignal, offset = 0): Promise<Item[]> {
+  const { data, error } = await supabase.rpc("search_citable_recipes", {
+    search_term: query,
+    max_results: CITABLE_PAGE_SIZE + 1,
+    result_offset: offset,
+  }).abortSignal(signal)
+  if (error) throw error
 
-	return (rows ?? []).map((item): Item => {
-		const author = Array.isArray(item.author) ? item.author[0] : item.author
-		return {
-			id: item.id,
-			item_id: item.id,
-			user_id: item.user_id,
-			item_type: item.item_type,
-			created_at: item.created_at,
-			is_public: item.is_public,
-			username: author?.username || "익명",
-			avatar_url: author?.avatar_url ?? null,
-			user_public_id: author?.public_id ?? null,
-			title: item.title,
-			content: null,
-			description: null,
-			image_urls: item.image_urls,
-			thumbnail_index: 0,
-			tags: [],
-			color_label: null,
-			servings: null,
-			cooking_time_minutes: null,
-			recipe_id: null,
-			likes_count: 0,
-			comments_count: 0,
-			is_liked: false,
-			is_following: false,
-			cited_recipe_ids: item.cited_recipe_ids || [],
-		}
-	})
+  return (data ?? []).map((item: {
+    id: string; title: string | null; created_at: string; is_public: boolean;
+    image_urls: string[] | null; user_id: string; username: string | null;
+    public_id: string | null; avatar_url: string | null;
+  }): Item => ({
+    id: item.id,
+    item_id: item.id,
+    user_id: item.user_id,
+    item_type: "recipe",
+    created_at: item.created_at,
+    is_public: item.is_public,
+    username: item.username || "익명",
+    avatar_url: item.avatar_url ?? null,
+    user_public_id: item.public_id ?? null,
+    title: item.title,
+    content: null,
+    description: null,
+    image_urls: item.image_urls,
+    thumbnail_index: 0,
+    tags: [],
+    color_label: null,
+    servings: null,
+    cooking_time_minutes: null,
+    recipe_id: null,
+    likes_count: 0,
+    comments_count: 0,
+    is_liked: false,
+    is_following: false,
+    cited_recipe_ids: [],
+  }))
 }
 
 // 수정 화면: 참고 레시피의 제목·사진·작성자를 CitedRecipeSearch가 쓰는 모양으로 가져온다. 실패하면 로그만 남기고 null

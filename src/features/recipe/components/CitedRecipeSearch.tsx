@@ -5,7 +5,7 @@ import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, Command
 
 import { X, ChefHat, Search, Plus } from "lucide-react";
 import { createSupabaseBrowserClient } from '@/shared/infra/supabase-client';
-import { searchCitableRecipes } from '@/features/recipe/data/recipe-repository';
+import { searchCitableRecipes, CITABLE_PAGE_SIZE } from '@/features/recipe/data/recipe-repository';
 import type { Item } from '@/types/item';
 import { format } from 'date-fns'; // 날짜 포맷팅을 위해 date-fns 임포트
 import { Drawer, DrawerContent, DrawerTitle, DrawerDescription, DrawerTrigger } from "@/components/ui/drawer"
@@ -22,6 +22,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
   const supabase = createSupabaseBrowserClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<Item[]>([]);
+  const [hasMore, setHasMore] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showSearch, setShowSearch] = useState(false); // 검색 표시 상태 추가
   const inputRef = useRef<HTMLInputElement>(null); // input 참조
@@ -39,16 +40,16 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
     activeController.current?.abort();
   }, []);
 
+  const cleanSearchTerm = searchTerm
+    .replace(/[^\p{L}\p{N}\s-]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
   const handleSearch = useCallback(async (query: string) => {
     cancelSearch();
+    setHasMore(false);
 
-    // PostgREST or() 필터의 구분 문자를 제거해 입력을 검색어로만 다룬다.
-    const cleanQuery = query
-      .replace(/[^\p{L}\p{N}\s-]/gu, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-
-    if (cleanQuery.length < 2) {
+    if (query.length < 2) {
       setSearchResults([]);
       setIsLoading(false);
       return;
@@ -59,10 +60,13 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
     activeController.current = controller;
     setIsLoading(true);
     try {
-      const results = await searchCitableRecipes(supabase, cleanQuery, controller.signal);
-      if (requestVersion.current === version) setSearchResults(results);
-    } catch (error) {
+      const results = await searchCitableRecipes(supabase, query, controller.signal);
       if (requestVersion.current === version) {
+        setSearchResults(results.slice(0, CITABLE_PAGE_SIZE));
+        setHasMore(results.length > CITABLE_PAGE_SIZE);
+      }
+    } catch (error) {
+      if (requestVersion.current === version && !controller.signal.aborted) {
         console.error('Error searching cited recipes:', error);
         setSearchResults([]);
       }
@@ -74,6 +78,36 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
     }
   }, [supabase, cancelSearch]);
 
+  useEffect(() => {
+    if (!showSearch) return;
+    const timer = setTimeout(() => void handleSearch(cleanSearchTerm), 300);
+    return () => clearTimeout(timer);
+  }, [showSearch, cleanSearchTerm, handleSearch]);
+
+  const handleLoadMore = async () => {
+    if (!hasMore || isLoading) return;
+    const version = requestVersion.current;
+    const controller = new AbortController();
+    activeController.current = controller;
+    setIsLoading(true);
+    try {
+      const results = await searchCitableRecipes(supabase, cleanSearchTerm, controller.signal, searchResults.length);
+      if (requestVersion.current === version) {
+        setSearchResults(current => [...current, ...results.slice(0, CITABLE_PAGE_SIZE)]);
+        setHasMore(results.length > CITABLE_PAGE_SIZE);
+      }
+    } catch (error) {
+      if (requestVersion.current === version && !controller.signal.aborted) {
+        console.error('Error loading more cited recipes:', error);
+      }
+    } finally {
+      if (requestVersion.current === version) {
+        activeController.current = null;
+        setIsLoading(false);
+      }
+    }
+  };
+
   const handleSelectRecipe = (recipe: Item) => {
     if (selectedRecipes.length < maxSelection && !selectedRecipes.some(r => r.item_id === recipe.item_id)) {
       onSelectedRecipesChange([...selectedRecipes, recipe]);
@@ -81,6 +115,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
     cancelSearch();
     setSearchTerm('');
     setSearchResults([]);
+    setHasMore(false);
     setIsLoading(false);
     setShowSearch(false);
   };
@@ -115,7 +150,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
           </div>
           <DrawerDescription className="sr-only">레시피를 검색하고 참고한 글을 선택하세요.</DrawerDescription>
           <Command shouldFilter={false} className="rounded-lg border border-ink/20">
-            <CommandInput ref={inputRef} id="recipe-search-input" aria-label="요리 이름이나 재료 검색" placeholder="요리 이름이나 재료" value={searchTerm} onValueChange={(search) => { setSearchTerm(search); void handleSearch(search) }} />
+            <CommandInput ref={inputRef} id="recipe-search-input" aria-label="요리 이름이나 재료 검색" placeholder="요리 이름이나 재료" value={searchTerm} onValueChange={(search) => { cancelSearch(); setSearchTerm(search); setSearchResults([]); setHasMore(false); setIsLoading(false) }} />
             <CommandList className="max-h-[55dvh]">
               {isLoading && <CommandEmpty>검색 중…</CommandEmpty>}
               {!isLoading && searchTerm.length > 1 && searchResults.length === 0 && <CommandEmpty>검색 결과가 없어요.</CommandEmpty>}
@@ -128,6 +163,7 @@ export default function CitedRecipeSearch({ selectedRecipes, onSelectedRecipesCh
                   </div>
                 </CommandItem>
               ))}</CommandGroup>}
+              {hasMore && <div className="px-3 py-2"><Button type="button" variant="outline" className="w-full" disabled={isLoading} onClick={() => void handleLoadMore()}>{isLoading ? "불러오는 중…" : "레시피 더 보기"}</Button></div>}
             </CommandList>
           </Command>
         </DrawerContent>
