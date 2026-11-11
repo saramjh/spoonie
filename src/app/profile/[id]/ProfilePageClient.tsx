@@ -194,7 +194,7 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 	].filter(Boolean)
 
 	return (
-		<div className="min-h-screen">
+		<div className="flex min-h-screen flex-col">
 			<header className="border-b border-border bg-paper px-4 pb-5 pt-6">
 				<div className="flex items-start justify-between gap-3">
 					<div className="relative h-[76px] w-[76px] flex-shrink-0 overflow-hidden rounded-full bg-paper-tint">
@@ -292,6 +292,17 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 					<StateSheet title={isOwner ? "아직 남긴 레시피드가 없어요" : "아직 공개한 레시피드가 없어요"} body={isOwner ? "다른 사람의 레시피로 만들었다면 그 레시피 화면의 ‘이 레시피로 만들었어요’로 남겨 보세요." : undefined} />
 				)}
 			</div>
+
+			{isOwner && (
+				<footer className="mt-auto border-t border-border px-4 py-5 text-center text-meta text-ink-soft">
+					<nav aria-label="서비스 정책" className="flex flex-wrap justify-center gap-x-4 gap-y-2">
+						<Link href="/legal/privacy" className="underline-offset-4 hover:underline">개인정보처리방침</Link>
+						<Link href="/legal/terms" className="underline-offset-4 hover:underline">이용약관</Link>
+						<Link href="/legal/policy" className="underline-offset-4 hover:underline">운영정책</Link>
+					</nav>
+					<Link href="/curators" className="mt-3 inline-block underline-offset-4 hover:underline">큐레이터 소개</Link>
+				</footer>
+			)}
 
 			{followList && (
 				<FollowListModal direction={followList} isOpen onClose={() => setFollowList(null)} userId={profile?.id || ""} currentUserId={sessionUser?.id || null} />

@@ -3,7 +3,6 @@
 import { usePathname } from "next/navigation"
 import BottomNavBar from "./BottomNavBar"
 import Header from "./Header"
-import SiteFooter from "./SiteFooter"
 import { usePullToRefresh } from "@/hooks/usePullToRefresh"
 import { canPullToRefresh } from "@/shared/lib/pull-to-refresh-route"
 import { SamsungInstallNotice } from "@/components/install/InstallApp"
@@ -35,7 +34,6 @@ export default function AppWrapper({ children }: { children: React.ReactNode }) 
 					{pathname === "/" && <SamsungInstallNotice />}
 					<div className={noBottomNav ? undefined : "pb-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom))] group-has-[[data-app-not-found]]/app-shell:pb-0"}>{children}</div>
 				</main>
-				{!isFocusedAuth && !isPartnerLanding && <SiteFooter hasBottomNav={!noBottomNav} />}
 			</div>
 			{!noBottomNav && <BottomNavBar />}
 		</div>
