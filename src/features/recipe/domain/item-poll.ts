@@ -13,6 +13,7 @@ export const pollDraftSchema = z.object({
 })
 
 export type PollDraft = z.infer<typeof pollDraftSchema>
+export type PollSaveAction = "keep" | "set" | "disable"
 
 export interface ItemPollSnapshot extends PollDraft {
   itemId: string
@@ -72,25 +73,5 @@ export async function castItemPollVote(db: SupabaseClient, itemId: string, optio
   if (error) throw error
   const result = readItemPollSnapshot(data)
   if (!result || result.itemId !== itemId || result.selectedIndex !== optionIndex) throw new Error("POLL_SAVE_UNVERIFIED")
-  return result
-}
-
-export async function saveItemPoll(db: SupabaseClient, itemId: string, poll: PollDraft | null): Promise<ItemPollSnapshot | null> {
-  const valid = poll ? pollDraftSchema.parse(poll) : null
-  const {data,error} = await db.rpc("save_item_poll", {
-    p_item_id: itemId,
-    p_question: valid?.question ?? null,
-    p_options: valid?.options ?? null,
-  })
-  if (error) throw error
-  if (valid === null) {
-    if (data !== null) throw new Error("POLL_DISABLE_UNVERIFIED")
-    return null
-  }
-  const result = readItemPollSnapshot(data)
-  if (!result || result.itemId !== itemId || !result.active ||
-      result.question !== valid.question || JSON.stringify(result.options) !== JSON.stringify(valid.options)) {
-    throw new Error("POLL_SAVE_UNVERIFIED")
-  }
   return result
 }

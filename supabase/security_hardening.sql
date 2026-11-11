@@ -27,7 +27,7 @@ revoke insert, update, delete, truncate on public.adjectives, public.nouns, publ
 --    auth.users 삭제 시 profiles, user_push_settings가 연쇄 삭제되고,
 --    profiles 삭제 시 items(재료/조리법/댓글/좋아요/북마크/알림 포함), comments, likes,
 --    follows, bookmarks, notifications가 외래 키 ON DELETE CASCADE로 함께 삭제된다.
---    스토리지 이미지는 /api/delete-user 라우트가 이 함수 호출 전에 삭제한다.
+--    스토리지 이미지는 DB 삭제가 확정된 후 /api/delete-user 라우트가 관리자 Storage API로 정리한다.
 -- ---------------------------------------------------------------------------
 create or replace function public.delete_user_data(user_id_to_delete uuid)
 returns void

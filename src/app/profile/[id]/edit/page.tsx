@@ -57,7 +57,10 @@ export default function ProfileEditPage() {
 		})
 
 		if (response.ok) {
-			toast({ title: "성공", description: "회원 탈퇴가 완료되었습니다." })
+            const result = await response.json()
+            toast(result.media_cleanup_pending
+                ? { title: "계정 삭제 완료", description: "계정은 삭제됐지만 일부 사진 정리가 지연되고 있습니다.", variant: "destructive" }
+                : { title: "성공", description: "회원 탈퇴가 완료되었습니다." })
 			await supabase.auth.signOut()
 			router.push("/")
 		} else {

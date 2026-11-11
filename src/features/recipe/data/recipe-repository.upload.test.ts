@@ -58,18 +58,18 @@ describe("recipe database rejection provenance", () => {
     const supabase = {
       async rpc() { return { data: null, error } },
     } as unknown as Parameters<typeof saveRecipeRows>[0]
-    await expect(saveRecipeRows(supabase, { existingId: null, itemPayload: {}, ingredients: [], instructions: [] }))
+    await expect(saveRecipeRows(supabase, { existingId: null, itemPayload: {}, ingredients: [], instructions: [], poll: null, pollAction: "keep" }))
       .rejects.toMatchObject({ cause: error })
   })
 })
 
 describe("recipe cover index is committed with ordered photos and recipe rows", () => {
-  it("passes edit cover and image order in the same save_recipe_atomic RPC", async () => {
+  it("passes edit cover and image order in the same save_item_with_poll_atomic RPC", async () => {
     const saved = { image_urls: ["https://cdn.example/a.jpg", "https://cdn.example/b.jpg"], thumbnail_index: 1 }
     const params: unknown[] = []
     const supabase = {
       async rpc(name: string, args: object) {
-        expect(name).toBe("save_recipe_atomic")
+        expect(name).toBe("save_item_with_poll_atomic")
         params.push(args)
         return { data: "existing-recipe", error: null }
       },
@@ -79,6 +79,8 @@ describe("recipe cover index is committed with ordered photos and recipe rows", 
       itemPayload: saved,
       ingredients: [{ name: "salt", amount: 1, unit: "g" }],
       instructions: [{ description: "add salt", image_url: undefined }],
+      poll: { question: "어떤 재료가 더 좋으신가요?", options: ["굵은 소금", "가는 소금"] },
+      pollAction: "set",
     })
     expect(result.itemId).toBe("existing-recipe")
     expect(result.ingredientsToInsert[0]).toMatchObject({ item_id: "existing-recipe", order_index: 1 })
@@ -87,6 +89,8 @@ describe("recipe cover index is committed with ordered photos and recipe rows", 
       p_item: saved,
       p_ingredients: [expect.objectContaining({ name: "salt", order_index: 1 })],
       p_instructions: [expect.objectContaining({ description: "add salt", step_number: 1 })],
+      p_poll: { question: "어떤 재료가 더 좋으신가요?", options: ["굵은 소금", "가는 소금"] },
+      p_poll_action: "set",
     })])
   })
 })

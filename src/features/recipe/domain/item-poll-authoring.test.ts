@@ -1,9 +1,8 @@
 import { describe, expect, it, vi } from "vitest"
 import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
-import type { SupabaseClient } from "@supabase/supabase-js"
 import PollComposer from "../components/PollComposer"
-import { pollDraftSchema, saveItemPoll } from "./item-poll"
+import { pollDraftSchema, readItemPollSnapshot } from "./item-poll"
 
 const draft = { question: "어느 식감이 더 좋으신가요?", options: ["바삭한 식감", "촉촉한 식감"] }
 const itemId = "6eaa37a1-6c0f-4841-aadd-7a2d980fbdbf"
@@ -37,21 +36,13 @@ describe("optional poll authoring contract", () => {
     expect(html).toContain("이미 3명이 참여해")
     expect(html).toContain("투표 빼기")
   })
-  it("only calls owner-checked RPC for validated input, verifying provider readback", async () => {
-    const rpc = vi.fn().mockResolvedValue({
-      error:null,
-      data: { item_id:itemId,question:draft.question,options:draft.options,counts:[0,0],total:0,selected_index:null,active:true },
-    })
-    const db={rpc} as unknown as SupabaseClient
-    const result=await saveItemPoll(db,itemId,draft)
-    expect(result?.itemId).toBe(itemId)
-    expect(rpc).toHaveBeenCalledWith("save_item_poll",{
-      p_item_id:itemId,p_question:draft.question,p_options:draft.options,
-    })
-    await expect(saveItemPoll(db,itemId,{...draft,options:["중복 선택","중복 선택"]})).rejects.toThrow()
-    expect(rpc).toHaveBeenCalledTimes(1)
-    rpc.mockResolvedValueOnce({data:null,error:null})
-    expect(await saveItemPoll(db,itemId,null)).toBeNull()
-    expect(rpc).toHaveBeenLastCalledWith("save_item_poll",{p_item_id:itemId,p_question:null,p_options:null})
+  it("does not accept mismatched or invented server vote totals", () => {
+    const good = {
+      item_id: itemId, question: draft.question, options: draft.options,
+      counts: [2, 1], total: 3, selected_index: null, active: true,
+    }
+    expect(readItemPollSnapshot(good)?.total).toBe(3)
+    expect(readItemPollSnapshot({ ...good, total: 999 })).toBeNull()
+    expect(readItemPollSnapshot({ ...good, counts: [3, -1] })).toBeNull()
   })
 })
