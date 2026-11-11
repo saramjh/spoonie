@@ -21,7 +21,8 @@ import type { Item } from "@/types/item"
 import { useToast } from "@/hooks/use-toast"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { PageLoading, Sheet, UnderlineTabs } from "@/components/kit"
+import { Sheet, UnderlineTabs } from "@/components/kit"
+import { RecipeBookLoading } from "@/components/common/RouteLoading"
 import { cacheManager } from "@/shared/infra/unified-cache-manager"
 import { revalidateItemPage } from "@/shared/infra/revalidate-item"
 import { collectItemImageUrls, removeItemImages } from "@/shared/infra/item-images"
@@ -395,5 +396,5 @@ function RecipesPageContent() {
 // useSearchParams가 필요한 레시피북에만 Suspense를 적용한다.
 // 공통 /recipes 레이아웃은 상세 화면의 스켈레톤 경계를 가리면 안 된다.
 export default function RecipesPage() {
-  return <Suspense fallback={<PageLoading />}><RecipesPageContent /></Suspense>
+  return <Suspense fallback={<RecipeBookLoading />}><RecipesPageContent /></Suspense>
 }

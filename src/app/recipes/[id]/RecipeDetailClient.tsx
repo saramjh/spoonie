@@ -3,7 +3,7 @@
 // useParams removed - using props instead
 import ItemDetailView from "@/components/common/ItemDetailView"
 import DetailStateMessage from "@/components/common/DetailStateMessage"
-import PostCardSkeleton from "@/components/items/PostCardSkeleton"
+import { DetailLoading } from "@/components/common/RouteLoading"
 import { useItemDetail } from "@/features/feed/hooks/useItemDetail"
 import type { ItemDetail } from "@/types/item"
 import type { ItemPollSnapshot } from "@/features/recipe/domain/item-poll"
@@ -22,13 +22,7 @@ export default function RecipeDetailClient({ params, initialItem, initialPoll }:
 	const { item, isLoading, error, refresh } = useItemDetail(itemId, initialItem)
 
 	// 로딩 상태
-	if (isLoading && !item) {
-		return (
-			<div className="px-3 pt-3">
-				<PostCardSkeleton />
-			</div>
-		)
-	}
+	if (isLoading && !item) return <DetailLoading />
 
 	if (error) {
 		console.error(`DetailPage: Error loading item ${itemId}:`, error)
