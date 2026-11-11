@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { Suspense, useState, useEffect, useCallback, useRef } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { useRouter } from "@/shared/lib/navigation"
@@ -21,7 +21,7 @@ import type { Item } from "@/types/item"
 import { useToast } from "@/hooks/use-toast"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Sheet, UnderlineTabs } from "@/components/kit"
+import { PageLoading, Sheet, UnderlineTabs } from "@/components/kit"
 import { cacheManager } from "@/shared/infra/unified-cache-manager"
 import { revalidateItemPage } from "@/shared/infra/revalidate-item"
 import { collectItemImageUrls, removeItemImages } from "@/shared/infra/item-images"
@@ -34,7 +34,7 @@ const PAGE_SIZE = RECIPE_BOOK_PAGE_SIZE
 
 const fetcher = fetchRecipeBookPage
 
-export default function RecipesPage() {
+function RecipesPageContent() {
 	const supabase = createSupabaseBrowserClient()
 	const router = useRouter()
 	const searchParams = useSearchParams()
@@ -390,4 +390,10 @@ export default function RecipesPage() {
 			)}
 		</div>
 	)
+}
+
+// useSearchParams가 필요한 레시피북에만 Suspense를 적용한다.
+// 공통 /recipes 레이아웃은 상세 화면의 스켈레톤 경계를 가리면 안 된다.
+export default function RecipesPage() {
+  return <Suspense fallback={<PageLoading />}><RecipesPageContent /></Suspense>
 }

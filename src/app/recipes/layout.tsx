@@ -1,6 +1,5 @@
 
 import { Metadata } from 'next'
-import { Suspense } from 'react'
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'
 
@@ -34,6 +33,6 @@ export default function RecipesLayout({
 }: {
   children: React.ReactNode
 }) {
-  // 레시피 목록 페이지가 useSearchParams를 쓰므로 Suspense 경계가 필요하다 (정적 프리렌더 오류 방지)
-  return <Suspense fallback={null}>{children}</Suspense>
+  // 레시피 상세 loading.tsx를 가리지 않는다. 목록의 useSearchParams 경계는 목록 page 안에 둔다.
+  return children
 }
