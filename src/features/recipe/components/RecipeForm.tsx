@@ -373,86 +373,38 @@ export default function RecipeForm({
 
       await afterCommit("draft", () => draft.finishPublish()) // DB 성공 후 초안 정리
 
-			if (isEditMode) {
-				
-				const fullItemPayload = {
-					...itemPayload,
-					id: itemId,
-					item_id: itemId,
-					// 정렬 순서를 보존하려고 order_index도 함께 넘긴다.
-					ingredients: ingredientsToInsert.map((item) => {
-						// eslint-disable-next-line @typescript-eslint/no-unused-vars
-						const { item_id, ...ing } = item
-						return ing
-					}),
-					instructions: instructionsWithImages.map((inst, index) => ({ 
-						...inst, 
-						step_number: index + 1 
-					})),
-					// 작성자 정보 (수정 모드에서는 기존 작성자 정보 유지)
-					display_name: initialData?.display_name || initialData?.username || user.user_metadata?.username || user.email?.split('@')[0] || 'Anonymous',
-					username: initialData?.username || user.user_metadata?.username || user.email?.split('@')[0] || 'anonymous',
-					avatar_url: initialData?.avatar_url || user.user_metadata?.avatar_url || null,
-					user_public_id: initialData?.user_public_id || user.user_metadata?.public_id || null,
-					// author 정보도 함께 설정 (ItemDetail 호환성)
-					author: {
-						id: initialData?.user_id || user.id, // Profile 타입 호환성: id 필드 추가
-						display_name: initialData?.username || user.user_metadata?.username || user.email?.split('@')[0] || 'Anonymous',
-						username: initialData?.username || user.user_metadata?.username || user.email?.split('@')[0] || 'anonymous',
-						avatar_url: initialData?.avatar_url || user.user_metadata?.avatar_url || null,
-						public_id: initialData?.user_public_id || user.user_metadata?.public_id || null,
-					},
-					// 초기 통계 값 (기존 값 유지)
-					likes_count: initialData?.likes_count || 0,
-					comments_count: initialData?.comments_count || 0,
-					is_liked: initialData?.is_liked || false,
-					is_following: initialData?.is_following || false,
-					created_at: initialData?.created_at || new Date().toISOString(),
-				}
-				
-				// 중요: 모든 캐시 즉시 갱신 (홈피드, 프로필, 레시피북 등)
-				await afterCommit("cache", () => cacheManager.updateItem(itemId, fullItemPayload))
-			
-					} else {
-				
-				const fullItemPayload = {
-					...itemPayload,
-					id: itemId,
-					item_id: itemId,
-					// 정렬 순서를 보존하려고 order_index도 함께 넘긴다.
-					ingredients: ingredientsToInsert.map((item) => {
-						// eslint-disable-next-line @typescript-eslint/no-unused-vars
-						const { item_id, ...ing } = item
-						return ing
-					}),
-					instructions: instructionsWithImages.map((inst, index) => ({ 
-						...inst, 
-						step_number: index + 1 
-					})),
-					// 작성자 정보 (신규 작성, username을 display_name으로 사용)
-					display_name: user.user_metadata?.username || user.email?.split('@')[0] || 'Anonymous',
-					username: user.user_metadata?.username || user.email?.split('@')[0] || 'anonymous',
-					avatar_url: user.user_metadata?.avatar_url || null,
-					user_public_id: user.user_metadata?.public_id || null,
-					// author 정보도 함께 설정 (ItemDetail 호환성)
-					author: {
-						id: user.id, // Profile 타입 호환성: id 필드 추가
-						display_name: user.user_metadata?.username || user.email?.split('@')[0] || 'Anonymous',
-						username: user.user_metadata?.username || user.email?.split('@')[0] || 'anonymous',
-						avatar_url: user.user_metadata?.avatar_url || null,
-						public_id: user.user_metadata?.public_id || null,
-					},
-					// 초기 통계 값
-					likes_count: 0,
-					comments_count: 0,
-					is_liked: false,
-					is_following: false,
-					created_at: new Date().toISOString(),
-				}
-				await afterCommit("cache", () => cacheManager.addNewItem(fullItemPayload as Item))
-			}
-
-		
+      // Both create and edit have the same persisted feed shape; only the
+      // cache action differs. Keep one source of truth for the full payload.
+      const fullItemPayload = {
+        ...itemPayload,
+        id: itemId,
+        item_id: itemId,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        ingredients: ingredientsToInsert.map(({ item_id, ...ingredient }) => ingredient),
+        instructions: instructionsWithImages.map((instruction, index) => ({
+          ...instruction, step_number: index + 1,
+        })),
+        display_name: initialData?.display_name || initialData?.username || user.user_metadata?.username || user.email?.split("@")[0] || "Anonymous",
+        username: initialData?.username || user.user_metadata?.username || user.email?.split("@")[0] || "anonymous",
+        avatar_url: initialData?.avatar_url || user.user_metadata?.avatar_url || null,
+        user_public_id: initialData?.user_public_id || user.user_metadata?.public_id || null,
+        author: {
+          id: initialData?.user_id || user.id,
+          display_name: initialData?.username || user.user_metadata?.username || user.email?.split("@")[0] || "Anonymous",
+          username: initialData?.username || user.user_metadata?.username || user.email?.split("@")[0] || "anonymous",
+          avatar_url: initialData?.avatar_url || user.user_metadata?.avatar_url || null,
+          public_id: initialData?.user_public_id || user.user_metadata?.public_id || null,
+        },
+        likes_count: initialData?.likes_count || 0,
+        comments_count: initialData?.comments_count || 0,
+        is_liked: initialData?.is_liked || false,
+        is_following: initialData?.is_following || false,
+        created_at: initialData?.created_at || new Date().toISOString(),
+      }
+      await afterCommit("cache", () => isEditMode
+        ? cacheManager.updateItem(itemId, fullItemPayload)
+        : cacheManager.addNewItem(fullItemPayload as Item)
+      )
 
 		toast({ title: `레시피 ${isEditMode ? "수정" : "작성"} 완료`, description: `성공적으로 ${isEditMode ? "수정" : "등록"}되었습니다.` })
 		successNotified = true

@@ -33,6 +33,7 @@ function setup(kind: "recipe" | "post", options: {
   withPhotos?: boolean
   dbFailure?: "rejected" | "uncertain"
   stepUploadFailure?: boolean
+  isEditMode?: boolean
 } = {}) {
   const calls: string[] = []
   let releaseAuth!: () => void
@@ -58,8 +59,19 @@ function setup(kind: "recipe" | "post", options: {
       : [],
     thumbnailIndex: 0,
     coverFocal: { x: 50, y: 50 },
-    isEditMode: false,
-    initialData: null,
+    isEditMode: Boolean(options.isEditMode),
+    initialData: options.isEditMode ? {
+      id: "mock-id", user_id: user.id, username: "old-handle", display_name: "공개 닉네임",
+      avatar_url: null, user_public_id: "old-public", likes_count: 7,
+      comments_count: 4, is_liked: false, is_following: false,
+      created_at: "2026-10-01T00:00:00Z", image_urls: [], instructions: [],
+      tags: [], is_public: true,
+    } : null,
+    pollLoading: false,
+    pollLoadError: null,
+    pollHydrated: { current: true },
+    pollRecovered: { current: false },
+    savedPoll: null,
     bucketId: "isolated-bucket",
     uploadImagesOptimized: vi.fn(async () => options.withPhotos
       ? [{ success: true, url: "https://cdn.invalid/storage/v1/object/public/item-images/isolated-fake-user/new.jpg" }]
@@ -96,7 +108,7 @@ function setup(kind: "recipe" | "post", options: {
     }),
     afterCommit,
     draft: { finishPublish: async () => { calls.push("draft-finished") } },
-    cacheManager: { addNewItem: async () => {}, updateItem: async () => {}, revalidateHomeFeed: async () => {} },
+    cacheManager: { addNewItem: vi.fn(async () => {}), updateItem: vi.fn(async () => {}), revalidateHomeFeed: async () => {} },
     logEvent: async () => {},
     revalidateItemPage: async () => {},
     toast,
@@ -132,6 +144,34 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllEnvs()
   vi.restoreAllMocks()
+})
+
+describe("recipe optimistic cache payload after a confirmed DB save", () => {
+  it("preserves an existing author's public display name and engagement counts on edit", async () => {
+    const { scope, submit, releaseAuth, calls } = setup("recipe", { isEditMode: true })
+    const pending = submit({ title: "수정", description: "", ingredients: [], instructions: [], cited_recipe_ids: [] })
+    releaseAuth()
+    await pending
+    expect(calls).toContain("recipe-db-commit")
+    const cache = scope.cacheManager as { updateItem: ReturnType<typeof vi.fn>; addNewItem: ReturnType<typeof vi.fn> }
+    expect(cache.updateItem).toHaveBeenCalledOnce()
+    expect(cache.addNewItem).not.toHaveBeenCalled()
+    expect(cache.updateItem.mock.calls[0]?.[1]).toMatchObject({
+      id: "mock-id", display_name: "공개 닉네임", username: "old-handle",
+      user_public_id: "old-public", likes_count: 7, comments_count: 4,
+      created_at: "2026-10-01T00:00:00Z",
+    })
+  })
+
+  it("inserts new recipes without invoking the edit cache path", async () => {
+    const { scope, submit, releaseAuth } = setup("recipe")
+    const pending = submit({ title: "새 레시피", description: "", ingredients: [], instructions: [], cited_recipe_ids: [] })
+    releaseAuth()
+    await pending
+    const cache = scope.cacheManager as { updateItem: ReturnType<typeof vi.fn>; addNewItem: ReturnType<typeof vi.fn> }
+    expect(cache.addNewItem).toHaveBeenCalledOnce()
+    expect(cache.updateItem).not.toHaveBeenCalled()
+  })
 })
 
 describe("real Recipe/Recipeed onSubmit bodies - mocked auth/storage/DB", () => {

@@ -1,12 +1,11 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Search as SearchIcon, X } from 'lucide-react';
 import useSWR from 'swr';
-import useSWRInfinite from 'swr/infinite';
 
 import PopularKeywords from '@/features/feed/components/PopularKeywords';
 import MadeRecordTile from '@/features/feed/components/MadeRecordTile';
@@ -14,78 +13,19 @@ import RecipeListCard from '@/features/recipe/components/RecipeListCard';
 import { useExplore, type ExploreData } from '@/features/feed/hooks/useExplore';
 import UserCard from '@/features/feed/components/UserCard';
 import type { Item } from '@/types/item';
-import { getPopularKeywordsCached, optimizedSearch, searchUsers, type UserSearchResult } from '@/features/feed/data/search-optimization';
+import { fetchPopularKeywords, searchItems, searchUsers, type SearchResult } from '@/features/feed/data/search-optimization';
 import { useFollowStore } from '@/features/social/store/followStore';
 import { SectionHeading, StateSheet, UnderlineTabs } from "@/components/kit"
 
-// 서버 부담 최소화를 위한 페이지 크기
-const PAGE_SIZE = 12;
+const EMPTY_ITEMS: Item[] = [];
 
 // 검색 결과 종류: 레시피(자산)가 먼저, 레시피드(활동)와 사람이 뒤 (DESIGN.md Interface Grammar 1)
 type SearchTab = 'recipe' | 'post' | 'users';
 
-// 유저 검색 결과 타입
-interface UserResult {
-  user_id: string;
-  username: string;
-  display_name?: string;
-  avatar_url?: string;
-  items_count: number;
-  latest_items: Item[];
-}
-
-// 인기 키워드와 사람 검색. 실패하면 빈 목록으로 보여 준다 (콘텐츠 검색은 아래 infiniteSearchFetcher)
-const fetcher = async (key: string): Promise<unknown> => {
-  const [type, query] = key.split('|');
-  try {
-    if (type === 'popular_keywords') return await getPopularKeywordsCached();
-    if (type === 'search_users') return query ? await searchUsers(query) : [];
-  } catch (error) {
-    console.error(type + " fetch failed:", error);
-    if (type === "search_users") throw error;
-  }
-  return [];
-};
-
-// 무한스크롤을 위한 페이지네이션 fetcher
-const getSearchPageKey = (pageIndex: number, previousPageData: Item[], searchTerm: string) => {
-  if (!searchTerm.trim()) return null;
-  if (previousPageData && previousPageData.length === 0) return null;
-  
-  return `search_page|${searchTerm}|${pageIndex}|${PAGE_SIZE}`;
-};
-
-// SearchResult를 Item으로 변환
-interface SearchResultType {
-  id: string;
-  title: string;
-  content?: string;
-  item_type: 'recipe' | 'post';
-  created_at: string;
-  display_name?: string;
-  username?: string;
-  avatar_url?: string;
-  user_id?: string;
-  image_urls?: string[];
-  tags?: string[];
-  likes_count?: number;
-  comments_count?: number;
-  is_liked?: boolean; // 추가: 좋아요 상태
-  is_following?: boolean; // 추가: 팔로우 상태
-  cooking_time_minutes?: number;
-  servings?: number;
-  color_label?: string;
-  ingredients?: { name: string; amount: number; unit: string }[];
-  instructions?: { step_number: number; description: string; image_url?: string }[];
-}
-
-const convertSearchResultToItem = (searchResult: SearchResultType): Item => {
-  // ID 안전성 보장
-  const safeId = searchResult.id || `temp-${Date.now()}-${Math.random()}`;
-  
+const convertSearchResultToItem = (searchResult: SearchResult): Item => {
   return {
-    id: safeId,
-    item_id: safeId,
+    id: searchResult.id,
+    item_id: searchResult.id,
     user_id: searchResult.user_id || '',
     item_type: searchResult.item_type,
     title: searchResult.title || 'Untitled',
@@ -113,27 +53,6 @@ const convertSearchResultToItem = (searchResult: SearchResultType): Item => {
   };
 };
 
-const infiniteSearchFetcher = async (key: string): Promise<Item[]> => {
-  const [, searchTerm, pageIndex, pageSize] = key.split('|');
-  
-  if (!searchTerm) return [];
-  
-  try {
-    // 페이지네이션된 검색 결과
-    const searchResults = await optimizedSearch.search(searchTerm);
-    const startIndex = parseInt(pageIndex) * parseInt(pageSize);
-    const endIndex = startIndex + parseInt(pageSize);
-    
-    // SearchResult[]를 Item[]로 변환
-    const items = searchResults.slice(startIndex, endIndex).map(convertSearchResultToItem);
-    
-    return items;
-  } catch (error) {
-    console.error("Infinite search failed:", error);
-    throw error;
-  }
-};
-
 // 검색어가 없을 때의 탐색 목록은 서버가 미리 그린 것(initialExplore)으로 시작한다: 검색엔진이 레시피 링크를 읽고, 첫 화면에 빈칸이 없다
 export default function SearchClient({ initialExplore }: { initialExplore?: ExploreData | null }) {
 
@@ -141,31 +60,27 @@ export default function SearchClient({ initialExplore }: { initialExplore?: Expl
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [tab, setTab] = useState<SearchTab | null>(null); // 고르기 전에는 결과가 있는 첫 종류
   const { setFollowing } = useFollowStore() // 업계 표준: 글로벌 팔로우 상태 동기화
-  const observerRef = useRef<HTMLDivElement>(null);
 
-  const { data: popularKeywords, isLoading: keywordsLoading } = useSWR('popular_keywords', fetcher, {
+  const { data: popularKeywords, isLoading: keywordsLoading } = useSWR('popular_keywords', fetchPopularKeywords, {
     revalidateOnFocus: false,
     revalidateOnReconnect: false,
     dedupingInterval: 60000, // 1분간 중복 요청 방지
   });
   const { data: explore, isLoading: exploreLoading } = useExplore(initialExplore);
 
-  // 무한스크롤 검색 결과
+  // This RPC returns at most 20 rows and has no offset parameter.
+  // Fetch once per term: SWR already owns caching, retries and deduplication.
   const {
-    data: searchPages,
+    data: searchResultsData,
     isLoading: searchLoading,
-    isValidating: searchValidating,
     error: searchError,
-    setSize,
     mutate: mutateSearch,
-  } = useSWRInfinite(
-    (pageIndex, previousPageData) => getSearchPageKey(pageIndex, previousPageData as Item[], debouncedSearchTerm),
-    infiniteSearchFetcher,
-    {
-      revalidateFirstPage: true,  // 수정: 검색어가 바뀔 때 첫 페이지도 재검증
-      revalidateOnFocus: false,
-    }
+  } = useSWR(
+    debouncedSearchTerm ? ["search_items", debouncedSearchTerm] : null,
+    ([, query]) => searchItems(query).then(rows => rows.filter(row => row.id).map(convertSearchResultToItem)),
+    { revalidateOnFocus: false }
   );
+  const searchResults = searchResultsData ?? EMPTY_ITEMS;
 
   // 검색어 디바운싱
   useEffect(() => {
@@ -177,78 +92,23 @@ export default function SearchClient({ initialExplore }: { initialExplore?: Expl
   }, [searchTerm]);
 
   // 사용자 검색 결과 (유저네임 전용)
-  const userSearchKey = debouncedSearchTerm ? `search_users|${debouncedSearchTerm}` : null;
+  const userSearchKey = debouncedSearchTerm ? ['search_users', debouncedSearchTerm] : null;
 
   
   const { data: userSearchResults, isLoading: userSearchLoading, error: userSearchError, mutate: retryUserSearch } = useSWR(
     userSearchKey,
-    fetcher,
+    ([, query]) => searchUsers(query),
     {
       revalidateOnFocus: false,
       dedupingInterval: 30000, // 30초간 중복 요청 방지
     }
   );
 
-  // 검색어가 변경될 때 캐시 클리어 및 페이지 리셋
-  useEffect(() => {
-    if (debouncedSearchTerm) {
-      setSize(1); // 페이지를 첫 페이지로 리셋
-      mutateSearch(); // SWR 캐시 클리어
-      optimizedSearch.clearCache(); // DebouncedSearch 캐시도 클리어
-
-    }
-  }, [debouncedSearchTerm, setSize, mutateSearch]);
-
-  // 무한스크롤 Intersection Observer
-  useEffect(() => {
-    if (!observerRef.current || !searchPages) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && !searchLoading && !searchValidating) {
-          setSize(prev => prev + 1);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    observer.observe(observerRef.current);
-    return () => observer.disconnect();
-  }, [searchPages, searchLoading, searchValidating, setSize]);
-
   const handleKeywordClick = (keyword: string) => {
     setSearchTerm(keyword);
   };
 
-  // 유저네임 검색 결과를 UserResult 인터페이스에 맞게 변환
-  const convertUserSearchResults = (results: UserSearchResult[]): UserResult[] => {
-    return results.map(user => ({
-      user_id: user.user_id,
-      username: user.username,
-      display_name: user.display_name || undefined,
-      avatar_url: user.avatar_url || undefined,
-      items_count: user.items_count,
-      latest_items: [], // 유저네임 검색에서는 latest_items 불필요
-    }));
-  };
-
-  // 검색 결과 평면화 (메모이제이션으로 무한 루프 방지)
-  const searchResults = useMemo(() => {
-    return searchPages?.filter(page => Array.isArray(page)).flat() || [];
-  }, [searchPages]);
-  
-  const isLoadingMore = searchLoading || searchValidating;
-  const isReachingEnd = searchPages && searchPages.length > 0 && searchPages[searchPages.length - 1]?.length < PAGE_SIZE;
-
-  // 유저 검색 결과 처리 (유저네임 전용 검색 결과 사용)
-  const userResults = useMemo(() => {
-
-    
-    if (!userSearchResults || !Array.isArray(userSearchResults)) {
-      return [];
-    }
-    return convertUserSearchResults(userSearchResults);
-  }, [userSearchResults]);
+  const userResults = userSearchResults ?? []
 
   // 검색 결과와 전역 팔로우 상태를 맞추되 값이 달라질 때만 갱신한다.
   useEffect(() => {
@@ -351,13 +211,6 @@ export default function SearchClient({ initialExplore }: { initialExplore?: Expl
               </div>
             ))}
 
-          {activeTab !== 'users' && !searchError && (
-            <>
-              {isLoadingMore && <p className="py-4 text-center text-meta text-ink-soft">찾는 중...</p>}
-              {!isReachingEnd && <div ref={observerRef} className="h-10" />}
-            </>
-          )}
-
           {activeTab === 'users' &&
             (userSearchError ? (
               userSearchFailed
@@ -367,7 +220,7 @@ export default function SearchClient({ initialExplore }: { initialExplore?: Expl
               searchEmpty
             ) : (
               <div className="space-y-5">
-                {userResults.map((user: UserResult) => (
+                {userResults.map((user) => (
                   <UserCard key={user.user_id} user={user} />
                 ))}
               </div>
@@ -377,7 +230,7 @@ export default function SearchClient({ initialExplore }: { initialExplore?: Expl
         /* 탐색: 레시피가 중심, 만들어 본 기록이 그 레시피로 돌려보낸다 */
         <div className="space-y-6">
           <PopularKeywords
-            keywords={popularKeywords as { keyword: string }[]}
+            keywords={popularKeywords}
             isLoading={keywordsLoading}
             onKeywordClick={handleKeywordClick}
           />
