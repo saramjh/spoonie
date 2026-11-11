@@ -29,7 +29,7 @@ export default function AppWrapper({ children }: { children: React.ReactNode }) 
 	return (
 		<div className="group/app-shell relative mx-auto flex min-h-screen w-full max-w-md flex-col bg-paper [&:has([data-app-not-found])_[data-app-chrome]]:hidden">
 			<PullToRefreshIndicator />
-			<div style={wrapperStyle} className="relative flex flex-col w-full">
+			<div style={wrapperStyle} className="relative flex min-h-screen flex-col w-full">
 				{!noHeader && <Header />}
 				<main className="flex-1 w-full">
 					{pathname === "/" && <SamsungInstallNotice />}
