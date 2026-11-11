@@ -11,7 +11,7 @@ describe("recipe route transition", () => {
     const page = source("src/app/recipes/page.tsx")
     expect(layout).not.toContain("fallback={null}")
     expect(layout).not.toContain("<Suspense")
-    expect(page).toContain("<Suspense fallback={<PageLoading />}>")
+    expect(page).toContain("<Suspense fallback={<RecipeBookLoading />}>")
     expect(source("src/app/recipes/[id]/loading.tsx")).toContain("DetailLoading")
   })
 

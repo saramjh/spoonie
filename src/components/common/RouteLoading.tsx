@@ -1,4 +1,5 @@
 import PostCardSkeleton from "@/components/items/PostCardSkeleton"
+import RecipeCardSkeleton from "@/features/recipe/components/RecipeCardSkeleton"
 import { Skeleton } from "@/components/ui/skeleton"
 
 /**
@@ -7,8 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton"
  */
 export function DetailLoading() {
   return (
-    <div className="px-3 pt-3" aria-busy="true">
-      <span className="sr-only">불러오는 중</span>
+    <div className="px-3 pt-3" role="status" aria-label="글을 불러오는 중" aria-busy="true">
+      <p className="mb-2 text-right text-meta text-ink-soft">불러오는 중…</p>
       <PostCardSkeleton />
     </div>
   )
@@ -29,6 +30,21 @@ export function ProfileLoading() {
         {Array.from({ length: 4 }).map((_, i) => (
           <Skeleton key={i} className="aspect-[4/5] w-full" />
         ))}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * 레시피북 목록 전용 대기 UI. React useSearchParams 경계에서도
+ * 동일한 카드 스켈레톤을 보여 줘 로고 로딩 → 카드 스켈레톤 전환을 피한다.
+ */
+export function RecipeBookLoading() {
+  return (
+    <div role="status" aria-label="레시피북을 불러오는 중" aria-busy="true" className="px-2 py-3">
+      <p className="mb-3 text-right text-meta text-ink-soft">불러오는 중…</p>
+      <div className="grid grid-cols-2 gap-x-3 gap-y-[18px]">
+        {Array.from({ length: 6 }, (_, index) => <RecipeCardSkeleton key={index} />)}
       </div>
     </div>
   )
