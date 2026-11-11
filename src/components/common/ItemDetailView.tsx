@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useMemo } from "react"
+import { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { useRouter } from "@/shared/lib/navigation"
 import { ArrowLeft, MessageCircle, Share2, MoreVertical, MoreHorizontal, Edit, Trash2, Heart, Clock3, Utensils, CookingPot } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -24,6 +24,8 @@ import RecipeCard from "@/features/recipe/components/RecipeCard"
 import { cn } from "@/lib/utils"
 import { formatCookingTime } from "@/features/recipe/domain/recipe-amount"
 import { splitKitchenEditorialFooter, parseRecipeDescription } from "@/features/recipe/domain/editorial-footer"
+import RecipePoll from "@/features/recipe/components/RecipePoll"
+import { splitEditorialPollPrompt, type RecipePollSnapshot } from "@/features/recipe/domain/recipe-poll"
 import { useShare } from "@/hooks/useShare"
 import { useNavigation } from "@/hooks/useNavigation"
 import { useToast } from "@/hooks/use-toast"
@@ -48,6 +50,7 @@ import { postSourceHref } from "@/features/post/domain/post-form"
 
 interface ItemDetailViewProps {
 	item: ItemDetail | null | undefined
+	initialPoll?: RecipePollSnapshot | null
 }
 
 interface CurrentUser {
@@ -58,7 +61,7 @@ interface CurrentUser {
 
 // cited_recipe_ids는 useCitedRecipes 훅에서 처리됨
 
-export default function ItemDetailView({ item }: ItemDetailViewProps) {
+export default function ItemDetailView({ item, initialPoll }: ItemDetailViewProps) {
 	const [recipeAdjusting, setRecipeAdjusting] = useState(false)
 	const router = useRouter()
 	const { createLinkWithOrigin } = useNavigation()
@@ -148,6 +151,8 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 	// 더블탭 좋아요 상태 관리
 	const [showHeartAnimation, setShowHeartAnimation] = useState(false)
 	const [showLoginPrompt, setShowLoginPrompt] = useState(false)
+	const [hasActiveRecipePoll, setHasActiveRecipePoll] = useState(Boolean(initialPoll))
+	const setRecipePollAvailability = useCallback((active: boolean) => setHasActiveRecipePoll(active), [])
 
 	const photoPromptReady = !!stableItemId && photoPromptState.recipeId === stableItemId
 	const isRecentRecipeForPhotoPrompt = photoPromptReady && photoPromptState.isRecent
@@ -359,6 +364,8 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 		: isRecipe && item.user_public_id === "6a7e51f9"
 			? splitKitchenEditorialFooter(item.description)
 			: { body: item.description, note: null }
+	const editorialPollText = splitEditorialPollPrompt(editorial.body || "")
+	const visibleEditorialBody = hasActiveRecipePoll ? editorialPollText.body : editorial.body
 	const cookingTime = formatCookingTime(item.cooking_time_minutes)
 	const ingredientCount = item.ingredients?.length || 0
 
@@ -562,7 +569,16 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 										</a>
 									)}
 									<RecipeActivity recipeId={stableItemId} userId={currentUser?.id} />
-									{editorial.body && <p className="mt-[10px] whitespace-pre-wrap break-words text-body text-ink"><LinkifiedText text={editorial.body} /></p>}
+									{visibleEditorialBody && <p className="mt-[10px] whitespace-pre-wrap break-words text-body text-ink"><LinkifiedText text={visibleEditorialBody} /></p>}
+                                    {stableItemId && (
+                                      <RecipePoll
+                                        key={stableItemId}
+                                        recipeId={stableItemId}
+                                        currentUserId={currentUser?.id ?? null}
+                                        initialPoll={initialPoll}
+                                        onAvailabilityChange={setRecipePollAvailability}
+                                      />
+                                    )}
 									{externalSourceView.source && (
 										<aside aria-label="외부 원작 출처" className="mt-4 border-t border-border pt-3 text-meta text-ink-soft">
 											<p className="font-medium text-ink">외부 원작 레시피</p>
