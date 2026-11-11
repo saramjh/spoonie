@@ -22,4 +22,3 @@ describe("recipe route transition", () => {
     expect(wrapper.indexOf("<SiteFooter")).toBeGreaterThan(wrapper.indexOf("</main>"))
   })
 })
-
