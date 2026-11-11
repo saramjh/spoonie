@@ -12,6 +12,7 @@ import { removeUploadedImages } from "@/shared/infra/item-images"
 import type { OptimizedImage } from "@/shared/infra/image-utils"
 import type { Item } from "@/types/item"
 import type { RecipeActivity } from "../contracts"
+import type { PollDraft, PollSaveAction } from "@/features/recipe/domain/item-poll"
 import type { RecipeIngredientInput, RecipeInstructionInput } from "../contracts"
 
 type Db = ReturnType<typeof createSupabaseBrowserClient>
@@ -155,15 +156,17 @@ export async function uploadInstructionImages(supabase: Db, bucketId: string, us
 // 중간 insert가 실패하면 items 수정/생성까지 함께 rollback된다.
 export async function saveRecipeRows<P extends object, I extends RecipeInstructionInput>(
 	supabase: Db,
-	args: { existingId: string | null; itemPayload: P; ingredients: RecipeIngredientInput[]; instructions: I[] }
+	args: { existingId: string | null; itemPayload: P; ingredients: RecipeIngredientInput[]; instructions: I[]; poll: PollDraft | null; pollAction: PollSaveAction }
 ) {
 	const ingredients = args.ingredients.map((ingredient, index) => ({ ...ingredient, order_index: index + 1 }))
 	const instructions = args.instructions.map((instruction, index) => ({ ...instruction, step_number: index + 1 }))
-	const { data, error } = await supabase.rpc("save_recipe_atomic", {
+	const { data, error } = await supabase.rpc("save_item_with_poll_atomic", {
 		p_existing_id: args.existingId,
 		p_item: args.itemPayload,
 		p_ingredients: ingredients,
 		p_instructions: instructions,
+		p_poll: args.poll,
+		p_poll_action: args.pollAction,
 	})
 	if (error) throw new Error(`레시피 ${args.existingId ? "수정" : "생성"} 실패: ${error.message}`, { cause: error })
 	if (!data) throw new Error("레시피 저장 결과를 확인할 수 없습니다.")

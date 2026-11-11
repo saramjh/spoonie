@@ -34,7 +34,7 @@ import { afterCommit } from "@/shared/infra/post-commit"
 import type { PostFormProps } from "@/features/post/contracts"
 import { buildPostItemPayload, citedIdsFromRecipes, postFormDefaults, returnToSourcePath } from "@/features/post/domain/post-form"
 import { loadCitedRecipesForPost, savePostRow } from "@/features/post/data/post-repository"
-import { fetchItemPoll, pollDraftSchema, saveItemPoll } from "@/features/recipe/domain/item-poll"
+import { fetchItemPoll, pollDraftSchema } from "@/features/recipe/domain/item-poll"
 import PollComposer from "@/features/recipe/components/PollComposer"
 
 
@@ -53,7 +53,7 @@ type PostFormValues = z.infer<typeof postSchema>
 /**
  * 레시피드(일반 피드) 생성/수정 폼 컴포넌트
  * 레시피드는 일반적인 피드 게시물로, 참고 레시피를 포함할 수 있습니다
- * 
+ *
  * @param isEditMode - 수정 모드 여부 (true: 수정, false: 생성)
  * @param initialData - 수정 시 초기 데이터 (FeedItem 타입)
  */
@@ -73,7 +73,7 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 	)
 	const [thumbnailIndex, setThumbnailIndex] = useState(() => Math.max(0, Math.min(editing?.thumbnail_index ?? 0, (editing?.image_urls?.length ?? 1) - 1)))
 	const [coverFocal, setCoverFocal] = useState<CoverFocal>(() => normalizeCoverFocal(editing?.cover_focal))
-	
+
 	// 대표 사진 선택은 로컬 미리보기만 변경한다.
 	// 피드 캐시는 DB 저장 성공 후 fullItemPayload로 갱신한다.
 	const handleThumbnailChange = useCallback((newIndex: number) => {
@@ -120,8 +120,8 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 
 	// 폼 에러 핸들러 추가
 	const onError = () => {
-	
-		
+
+
 		toast({
 			title: "입력 오류",
 			description: "필수 항목을 모두 입력해주세요.",
@@ -163,8 +163,8 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
             toast({ title: "투표 정보를 확인할 수 없어요.", description: "투표를 불러온 후 다시 저장해 주세요.", variant: "destructive" })
             return
         }
-	
-		
+
+
 		// isSubmitting은 다음 React 렌더 전에는 갱신되지 않는다.
 		if (submitLock.current) return
 		submitLock.current = true
@@ -175,7 +175,7 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 		let dbCommitted = false
 		let savedItemId: string | null = null
 		let successNotified = false
-        let pollSaveFailed = false
+
 		try {
 			const {
 				data: { user },
@@ -188,15 +188,15 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 
 
 					const bucketId = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET_ITEMS
-			
-			
-			
+
+
+
 			if (!bucketId) {
 				throw new Error("Storage bucket ID가 설정되지 않았습니다.")
 			}
 
 		// image_urls 순서와 thumbnail_index는 함께 저장되어야 한다.
-		
+
 
 		uploadingMedia = true
 		const newImageFiles = mainImages.filter((image) => image.file.size > 0)
@@ -217,24 +217,21 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 				sourceRecipeId,
 				sourceOrigin,
 			})
-			
+
 
 			dbSaveStarted = true
-			const { itemId } = await savePostRow(supabase, { existingId: isEditMode && initialData ? initialData.id : null, itemPayload })
+			const { itemId } = await savePostRow(supabase, {
+                existingId: isEditMode && initialData ? initialData.id : null,
+                itemPayload,
+                poll: values.poll ?? null,
+                pollAction: values.poll ? "set" : isEditMode && savedPoll?.active ? "disable" : "keep",
+            })
 			dbCommitted = true
 			savedItemId = itemId
-            try {
-                if (values.poll || (isEditMode && savedPoll?.active)) {
-                    await saveItemPoll(supabase, itemId, values.poll ?? null)
-                }
-            } catch (error) {
-                pollSaveFailed = true
-                throw error
-            }
       await afterCommit("draft", () => draft.finishPublish()) // DB 성공 후 초안 정리
 
 
-			
+
 			const fullItemPayload = {
 				...itemPayload,
 				id: itemId,
@@ -251,36 +248,36 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 				is_following: initialData?.is_following || false,
 				created_at: initialData?.created_at || new Date().toISOString(),
 			}
-			
+
 			if (isEditMode) {
 
 				await afterCommit("cache", () => cacheManager.updateItem(itemId, fullItemPayload))
-				
+
 				// 저장된 item 캐시가 반영된 뒤 바로 재검증한다. 타이머와 실패 누락을 남기지 않는다.
 				// 서버 저장 성공 후의 캐시 갱신 실패는 작성 실패로 보고하지 않는다.
 				void cacheManager.revalidateHomeFeed().catch((error: unknown) => {
 					console.warn("PostForm: home feed revalidation failed:", error)
 				})
-				
+
 
 			} else {
 				await afterCommit("cache", () => cacheManager.addNewItem(fullItemPayload as Item))
 			}
-			
 
-			
 
-			
+
+
+
 			// DataManager가 모든 캐시 동기화를 처리하므로 추가 작업 불필요
 
 
-			
+
 					toast({
 			title: `레시피드 ${isEditMode ? "수정" : "작성"} 완료!`,
 			description: "레시피드가 성공적으로 처리되었습니다.",
 		})
 			successNotified = true
-			
+
 			if (!isEditMode) {
 				const creationOrigin = sourceRecipeId && sourceOrigin ? `${sourceOrigin}:${sourceRecipeId}` : "manual"
 				void afterCommit("analytics", () => logEvent("recipeed_create", itemId, creationOrigin))
@@ -307,7 +304,7 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 					}
 				}
 			}
-			
+
 			// 레시피에서 나온 기록은 그 레시피로 돌아가 "만들어 본 기록"에 붙은 것을 보여 준다
 			const backToSource = returnToSourcePath(isEditMode, sourceRecipeId, values.cited_recipe_ids)
 			if (backToSource) {
@@ -325,9 +322,7 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 		} catch (error) {
 			if (dbCommitted) {
 				console.warn("Recipeed saved, but a follow-up action failed:", error)
-				if (!successNotified) toast(pollSaveFailed
-                    ? { title: "레시피드는 저장됐지만 투표는 반영되지 않았어요.", description: "수정 화면에서 투표를 다시 확인해 주세요.", variant: "destructive" }
-                    : { title: "레시피드 저장 완료", description: "글은 저장됐습니다. 일부 화면 갱신이 지연될 수 있습니다." })
+				if (!successNotified) toast({ title: "레시피드 저장 완료", description: "글은 저장됐습니다. 일부 화면 갱신이 지연될 수 있습니다." })
 				if (savedItemId) {
 					try { router.replace("/posts/" + savedItemId) } catch (navigationError) { console.warn("Recipeed navigation failed:", navigationError) }
 				}

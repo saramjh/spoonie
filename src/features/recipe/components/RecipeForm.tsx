@@ -39,7 +39,7 @@ import { fetchCitedRecipes, saveRecipeRows, uploadInstructionImages } from "@/fe
 import type { RecipeFormProps } from "@/features/recipe/contracts"
 import { onboardingRecipeDefaults } from "@/features/onboarding/domain/review"
 import { recipeSchema } from "@/features/recipe/domain/recipe-schema"
-import { fetchItemPoll, saveItemPoll } from "@/features/recipe/domain/item-poll"
+import { fetchItemPoll } from "@/features/recipe/domain/item-poll"
 import PollComposer from "@/features/recipe/components/PollComposer"
 import { serializeRecipeDescription } from "@/features/recipe/domain/editorial-footer"
 import type { RecipeFormValues, RecipeSubmitValues } from "@/features/recipe/domain/recipe-schema"
@@ -76,7 +76,7 @@ export default function RecipeForm({
 	const [mainImages, setMainImages] = useState<OptimizedImage[]>([])
 	const [thumbnailIndex, setThumbnailIndex] = useState(0)
 	const [coverFocal, setCoverFocal] = useState<CoverFocal>({ ...CENTER_FOCAL })
-	
+
 	// 작성 화면 안에서는 대표 사진의 로컬 선택만 바꾼다.
 	// 피드 캐시는 DB 저장 성공 후 fullItemPayload로 갱신한다.
 	const handleThumbnailChange = useCallback((newIndex: number) => {
@@ -131,7 +131,7 @@ export default function RecipeForm({
 				const savedThumbnailIndex = initialData.thumbnail_index ?? 0
 				setThumbnailIndex(Math.min(savedThumbnailIndex, fetchedImages.length - 1))
 				setCoverFocal(normalizeCoverFocal(initialData.cover_focal))
-				
+
 			}
 
 			if (initialData.instructions && initialData.instructions.length > 0) {
@@ -199,20 +199,20 @@ export default function RecipeForm({
 	const { fields: instructions, append: appendInstruction, remove: removeInstruction } = useFieldArray({ control: form.control, name: "instructions" })
 
 	const handleIngredientsReorder = (newIngredients: DraggableIngredient[]) => {
-	
-		
+
+
 		// 현재 form 값들을 가져오기
 		const currentValues = form.getValues("ingredients")
 
-		
+
 		// newIngredients 순서에 맞게 currentValues 재정렬 (칸 id로 원래 값을 찾는다)
 		const reorderedValues = reorderIngredients(newIngredients, ingredients.map((field) => field.id), currentValues.map((ingredient) => ({ ...ingredient, amount: Number(ingredient.amount) })))
-		
 
-		
+
+
 		// form에 재정렬된 값들 설정
 		form.setValue("ingredients", reorderedValues, { shouldValidate: true })
-		
+
 
 	}
 
@@ -303,7 +303,7 @@ export default function RecipeForm({
 		let dbCommitted = false
 		let savedItemId: string | null = null
 		let successNotified = false
-        let pollSaveFailed = false
+
 
 		try {
 			const {
@@ -321,7 +321,7 @@ export default function RecipeForm({
 			}
 
 		// image_urls 순서와 thumbnail_index는 함께 저장되어야 한다.
-		
+
 
 		uploadingMedia = true
 		const newImageFiles = mainImages.filter((img) => img.file.size > 0)
@@ -359,18 +359,11 @@ export default function RecipeForm({
 				itemPayload,
 				ingredients: values.ingredients,
 				instructions: instructionsWithImages,
+                poll: values.poll ?? null,
+                pollAction: values.poll ? "set" : isEditMode && savedPoll?.active ? "disable" : "keep",
 			})
 			dbCommitted = true
 			savedItemId = itemId
-            try {
-              if (values.poll || (isEditMode && savedPoll?.active)) {
-                await saveItemPoll(supabase, itemId, values.poll ?? null)
-              }
-            } catch (error) {
-              pollSaveFailed = true
-              throw error
-            }
-
       await afterCommit("draft", () => draft.finishPublish()) // DB 성공 후 초안 정리
 
       // Both create and edit have the same persisted feed shape; only the
@@ -420,8 +413,8 @@ export default function RecipeForm({
 		}
 		// 원본 레시피 상세의 "이어진 레시피"가 바로 보이도록 관계 캐시를 비운다
 		values.cited_recipe_ids?.forEach((id) => globalMutate(`recipe-relations:${id}`))
-		
-		// 참고레시피 알림 발송 
+
+		// 참고레시피 알림 발송
 		if (values.cited_recipe_ids && values.cited_recipe_ids.length > 0) {
 			if (!isEditMode) {
 				// 새로 작성하는 경우: 공개 설정 시에만 알림 발송
@@ -432,13 +425,13 @@ export default function RecipeForm({
 				const wasPrivate = !initialData.is_public
 				const nowPublic = values.is_public
 				if (wasPrivate && nowPublic) {
-					
+
 					notificationService.notifyRecipeCited(itemId, values.cited_recipe_ids, user.id, true)
 						.catch(error => console.error('❌ 참고레시피 알림 발송 실패:', error))
 				}
 			}
 		}
-		
+
 		// 파트너 유입의 첫 Recipe는 저장 결과를 바로 보여 줘, 작성 보상과 다음 공유/관계 행동을 끊지 않는다.
 		if (!isEditMode && entrySource) {
 			router.replace(`/recipes/${itemId}`)
@@ -461,9 +454,7 @@ export default function RecipeForm({
 	} catch (error: unknown) {
 			if (dbCommitted) {
 				console.warn("Recipe saved, but a follow-up action failed:", error)
-				if (!successNotified) toast(pollSaveFailed
-                    ? { title: "레시피는 저장됐지만 투표는 반영되지 않았어요.", description: "수정 화면에서 투표를 다시 확인해 주세요.", variant: "destructive" }
-                    : { title: "레시피 저장 완료", description: "글은 저장됐습니다. 일부 화면 갱신이 지연될 수 있습니다." })
+				if (!successNotified) toast({ title: "레시피 저장 완료", description: "글은 저장됐습니다. 일부 화면 갱신이 지연될 수 있습니다." })
 				if (savedItemId) {
 					try { router.replace("/recipes/" + savedItemId) } catch (navigationError) { console.warn("Recipe navigation failed:", navigationError) }
 				}

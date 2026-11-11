@@ -34,6 +34,7 @@ function setup(kind: "recipe" | "post", options: {
   dbFailure?: "rejected" | "uncertain"
   stepUploadFailure?: boolean
   isEditMode?: boolean
+  atomicPollFailure?: boolean
 } = {}) {
   const calls: string[] = []
   let releaseAuth!: () => void
@@ -90,6 +91,7 @@ function setup(kind: "recipe" | "post", options: {
     buildPostItemPayload: vi.fn(() => ({ content: "test post" })),
     saveRecipeRows: vi.fn(async () => {
       calls.push("recipe-db-attempt")
+      if (options.atomicPollFailure) throw Object.assign(new Error("POLL_INVALID_OPTIONS"), { cause: { code: "22023" } })
       if (options.failFirstSave && calls.filter((x) => x === "recipe-db-attempt").length === 1) throw Error("explicit database rejection")
       if (options.dbFailure) throw Object.assign(new Error("mock database error"), {
         ...(options.dbFailure === "rejected" ? { cause: { code: "23505" } } : {}),
@@ -99,6 +101,7 @@ function setup(kind: "recipe" | "post", options: {
     }),
     savePostRow: vi.fn(async () => {
       calls.push("post-db-attempt")
+      if (options.atomicPollFailure) throw Object.assign(new Error("POLL_INVALID_OPTIONS"), { cause: { code: "22023" } })
       if (options.failFirstSave && calls.filter((x) => x === "post-db-attempt").length === 1) throw Error("explicit database rejection")
       if (options.dbFailure) throw Object.assign(new Error("mock database error"), {
         ...(options.dbFailure === "rejected" ? { cause: { code: "23505" } } : {}),
@@ -175,6 +178,28 @@ describe("recipe optimistic cache payload after a confirmed DB save", () => {
 })
 
 describe("real Recipe/Recipeed onSubmit bodies - mocked auth/storage/DB", () => {
+  for (const kind of ["recipe", "post"] as const) {
+    it(kind + " keeps the draft and never commits partial content when the atomic poll fails", async () => {
+      const { scope, submit, releaseAuth, calls } = setup(kind, { atomicPollFailure: true })
+      const poll = { question: "오늘 어떤 식감이 더 좋으신가요?", options: ["바삭한 식감", "촉촉한 식감"] }
+      const values = kind === "recipe"
+        ? { title: "새 레시피", description: "", ingredients: [], instructions: [], cited_recipe_ids: [], poll }
+        : { content: "새 레시피드", cited_recipe_ids: [], is_public: true, poll }
+      const pending = submit(values)
+      releaseAuth()
+      await pending
+
+      expect(calls).toContain(kind + "-db-attempt")
+      expect(calls).not.toContain(kind + "-db-commit")
+      expect(calls).not.toContain("draft-finished")
+      expect(calls).not.toContain("navigated")
+      expect(scope.submitLock).toEqual({ current: false })
+      expect(scope.cleanupUncommittedImages).toHaveBeenCalledOnce()
+      const writer = scope[kind === "recipe" ? "saveRecipeRows" : "savePostRow"] as ReturnType<typeof vi.fn>
+      expect(writer.mock.calls[0]?.[1]).toMatchObject({ poll, pollAction: "set" })
+    })
+  }
+
   for (const kind of ["recipe", "post"] as const) {
     it(kind + " saves exactly once when two submit events race before React rerenders", async () => {
       const { submit, releaseAuth, calls } = setup(kind)

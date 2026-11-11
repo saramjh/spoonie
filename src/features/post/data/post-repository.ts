@@ -4,6 +4,7 @@
 
 import type { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import type { Item } from "@/types/item"
+import type { PollDraft, PollSaveAction } from "@/features/recipe/domain/item-poll"
 import { fetchCitedRecipes } from "@/features/recipe/data/recipe-repository"
 
 type Db = ReturnType<typeof createSupabaseBrowserClient>
@@ -13,14 +14,20 @@ export async function loadCitedRecipesForPost(supabase: Db, ids: string[]): Prom
 	return (await fetchCitedRecipes(supabase, ids)) ?? []
 }
 
-// 레시피드 items 행을 새로 넣거나 고친다
-export async function savePostRow(supabase: Db, args: { existingId: string | null; itemPayload: object }): Promise<{ itemId: string }> {
-	if (args.existingId) {
-		const { data: updatedItem, error: itemError } = await supabase.from("items").update(args.itemPayload).eq("id", args.existingId).select("*").single()
-		if (itemError) throw new Error(`레시피드 수정 실패: ${itemError.message}`, { cause: itemError })
-		return { itemId: updatedItem.id }
-	}
-	const { data: newItem, error: itemError } = await supabase.from("items").insert(args.itemPayload).select("*").single()
-	if (itemError) throw new Error(`레시피드 생성 실패: ${itemError.message}`, { cause: itemError })
-	return { itemId: newItem.id }
+// Post row and its optional poll must succeed or fail in one PostgreSQL transaction.
+export async function savePostRow(
+  supabase: Db,
+  args: { existingId: string | null; itemPayload: object; poll: PollDraft | null; pollAction: PollSaveAction },
+): Promise<{ itemId: string }> {
+  const { data, error } = await supabase.rpc("save_item_with_poll_atomic", {
+    p_existing_id: args.existingId,
+    p_item: args.itemPayload,
+    p_ingredients: null,
+    p_instructions: null,
+    p_poll: args.poll,
+    p_poll_action: args.pollAction,
+  })
+  if (error) throw new Error("레시피드 " + (args.existingId ? "수정" : "생성") + " 실패: " + error.message, { cause: error })
+  if (!data) throw new Error("레시피드 저장 결과를 확인할 수 없습니다.")
+  return { itemId: String(data) }
 }
