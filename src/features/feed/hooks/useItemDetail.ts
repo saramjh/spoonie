@@ -40,10 +40,11 @@ export function useItemDetail(itemId: string | null, initialItem?: ItemDetail | 
 			})
 	}, [swrKey, initialItem, mutate])
 
-	// 디버깅 로그 추가
-	if (error) {
-		console.error(`❌ useItemDetail: SWR error for item ${itemId}:`, error)
-	}
+	// Logging during render runs again on unrelated state changes. Log only
+	// when the failed request (or its item) actually changes.
+	useEffect(() => {
+		if (error) console.error(`useItemDetail: request failed for ${itemId}:`, error)
+	}, [error, itemId])
 
 	return {
 		item: data,
