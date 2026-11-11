@@ -20,6 +20,7 @@ type OfficialProfile = {
   username: string
   display_name: string | null
   profile_message: string | null
+  avatar_url: string | null
   entity_type: string
   is_profile_public: boolean
 }
@@ -29,7 +30,7 @@ export default async function CuratorsPage() {
   const ids = groups.flatMap(group => group.curators.map(c => c.publicId))
   const { data, error } = await createSupabasePublicClient()
     .from('profiles')
-    .select('public_id, username, display_name, profile_message, entity_type, is_profile_public')
+    .select('public_id, username, display_name, avatar_url, profile_message, entity_type, is_profile_public')
     .in('public_id', ids)
 
   // Profile text is not proof of editorial ownership; an exact verified canonical
@@ -40,7 +41,7 @@ export default async function CuratorsPage() {
   )
   const verified = (entry: { code: string; publicId: string }) => {
     const p = profiles.get(entry.publicId)
-    return p && p.username === 'spoonie_' + entry.code &&
+    return p && (p.username === p.display_name || p.username === 'spoonie_' + entry.code) &&
       p.entity_type === 'organization' && p.is_profile_public === true &&
       p.profile_message?.startsWith('Spoonie 레시피 큐레이터') ? p : null
   }
@@ -51,7 +52,7 @@ export default async function CuratorsPage() {
   return (
     <main className="mx-auto min-h-screen max-w-2xl bg-paper px-4 pb-16 pt-7 text-ink sm:px-7">
       <div className="border-b border-border pb-7">
-        <p className="text-meta font-semibold tracking-wide text-ink-soft">Spoonie EDITORS</p>
+        <p className="text-meta font-semibold text-ink-soft">Spoonie 큐레이터</p>
         <h1 className="mt-2 text-display font-semibold">맛을 소개하는 다양한 시선</h1>
         <p className="mt-3 max-w-lg text-body leading-7 text-ink-soft">
           집에서 만드는 한 끼부터 부드러운 디저트, 기분에 맞는 한 잔까지.
@@ -82,8 +83,10 @@ export default async function CuratorsPage() {
                     aria-label={profile.display_name + ' 큐레이터 프로필 보기'}
                     className="group flex min-h-24 items-center gap-4 py-4 transition-colors hover:bg-paper-tint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                   >
-                    <span aria-hidden className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-border bg-paper-tint text-heading font-semibold text-ink">
-                      {(profile.display_name || '').slice(0,1)}
+                    <span aria-hidden className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-paper-tint">
+                      {profile.avatar_url
+                        ? <img src={profile.avatar_url} alt="" width={56} height={56} className="h-full w-full object-cover" />
+                        : <span className="text-heading font-semibold text-ink">{(profile.display_name || '').slice(0,1)}</span>}
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-label font-semibold">{profile.display_name}</span>

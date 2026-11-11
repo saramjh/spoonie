@@ -9,7 +9,8 @@ vi.mock('@/shared/infra/supabase-public', () => ({ createSupabasePublicClient: v
 const entries = CURATOR_GROUPS.flatMap(group => group.curators.map(c => ({ ...c, group: group.category })))
 const valid = (name: string, code: string, publicId: string) => ({
   public_id: publicId,
-  username: 'spoonie_' + code,
+  username: name,
+  avatar_url: '/curator-avatars/' + code + '.svg',
   display_name: name,
   profile_message: 'Spoonie 레시피 큐레이터 · 집밥\n한 끼를 잘 소개합니다.',
   entity_type: 'organization',
@@ -46,6 +47,8 @@ describe('Spoonie official curator discovery', () => {
     expect((html.match(/프로필 보기/g) || []).length).toBeGreaterThanOrEqual(18)
     expect(html).not.toContain('/profile/fraudulent')
     expect(html).not.toContain('팔로워 100')
+    expect(html).toContain('/curator-avatars/')
+    expect(html).not.toContain('spoonie_')
   })
   it('excludes a profile whose name/handle does not match the verified editorial identity', async () => {
     const trusted = valid('보리', 'bori', entries[0].publicId)

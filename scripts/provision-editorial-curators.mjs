@@ -33,12 +33,12 @@ for(let page=1;page<5;page++){
  if(data.users.length<1000)break;
  assert(page<4,'AUTH_PAGINATION_LIMIT_NO_WRITE');
 }
-const usernames=roster.map(c=>'spoonie_'+c.code);
+const usernames=roster.map(c=>c.name);
 const {data:profiles,error:pe}=await client.from('profiles').select('id,username,public_id').in('username',usernames);
 assert(!pe,'PROFILES_PREFLIGHT_FAILED');
 const existingByEmail=new Map(users.map(u=>[u.email?.toLowerCase(),u]));
 for(const c of roster){
- const email=('curator+'+c.code+'@spoonie.kr').toLowerCase(),username='spoonie_'+c.code;
+ const email=('curator+'+c.code+'@spoonie.kr').toLowerCase(),username=c.name;
  const existing=existingByEmail.get(email);
  assert(!existing||existing.app_metadata?.spoonie_editorial_curator===true&&existing.app_metadata?.spoonie_curator_code===c.code,'EXISTING_AUTH_ACCOUNT_NOT_SPOONIE_EDITORIAL_'+c.code);
  assert(!(profiles||[]).some(p=>p.username===username&&p.id!==existing?.id),'CURATOR_USERNAME_TAKEN_NO_WRITE_'+c.code);
@@ -52,7 +52,7 @@ if(!apply){
 }
 const bound=[];
 for(const c of roster){
- const email='curator+'+c.code+'@spoonie.kr',username='spoonie_'+c.code;
+ const email='curator+'+c.code+'@spoonie.kr',username=c.name;
  let u=existingByEmail.get(email);
  if(!u){
   // This action does not send a signup email. Password is never logged or persisted.
@@ -66,9 +66,9 @@ for(const c of roster){
  assert(!ae&&authCheck.user?.app_metadata?.spoonie_editorial_curator===true&&authCheck.user?.app_metadata?.spoonie_curator_code===c.code,'AUTH_APP_METADATA_READBACK_FAILED_'+c.code);
  const {data:updated,error:ue}=await client.from('profiles').update({
   username,display_name:c.name,entity_type:'organization',profile_message:c.profileMessage,
-  is_profile_public:true
- }).eq('id',u.id).select('id,public_id,username,display_name,entity_type,profile_message').single();
- assert(!ue&&updated?.id===u.id&&updated?.username===username&&updated?.display_name===c.name&&updated?.entity_type==='organization'&&updated?.profile_message===c.profileMessage&&/^[a-z0-9]{6,20}$/.test(updated.public_id),'CURATOR_PROFILE_WRITE_OR_READBACK_FAILED_'+c.code);
+  avatar_url:'/curator-avatars/'+c.code+'.svg',is_profile_public:true
+ }).eq('id',u.id).select('id,public_id,username,display_name,avatar_url,entity_type,profile_message').single();
+ assert(!ue&&updated?.id===u.id&&updated?.username===username&&updated?.display_name===c.name&&updated?.avatar_url==='/curator-avatars/'+c.code+'.svg'&&updated?.entity_type==='organization'&&updated?.profile_message===c.profileMessage&&/^[a-z0-9]{6,20}$/.test(updated.public_id),'CURATOR_PROFILE_WRITE_OR_READBACK_FAILED_'+c.code);
  bound.push({code:c.code,name:c.name,userId:u.id,publicId:updated.public_id,username:updated.username,status:'active'});
 }
 console.log(JSON.stringify({schema:'SPOONIE_EDITORIAL_PROVISION_NATIVE_VERIFIED_V1',count:bound.length,authAndProfilesVerified:true,

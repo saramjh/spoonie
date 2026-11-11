@@ -57,7 +57,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     const displayName = profile.display_name || profile.username || '익명'
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'
     const profileUrl = `${baseUrl}/profile/${profile.public_id}`
-    const profileImageUrl = profile.avatar_url || `${baseUrl}/og-default.png`
+    const profileImageUrl = profile.avatar_url?.startsWith("/") ? `${baseUrl}${profile.avatar_url}` : profile.avatar_url || `${baseUrl}/og-default.png`
     const isOrganization = profile.entity_type === 'organization'
     
     // 프로필 설명 생성 (profile_message 우선, 없으면 통계 기반)
@@ -75,9 +75,10 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     }
     
     // 같은 이름을 두 번 쓰지 않는다: 표시 이름이 사용자 이름과 다를 때만 @사용자이름을 붙인다
-    const seoTitle = profile.display_name && profile.display_name !== profile.username
+    const seoTitle = isOrganization ? `${displayName} - Spoonie`
+      : profile.display_name && profile.display_name !== profile.username
       ? `${profile.display_name} (@${profile.username}) - Spoonie`
-      : isOrganization ? `${displayName} - Spoonie` : `${displayName}님의 요리 기록 - Spoonie`
+      : `${displayName}님의 요리 기록 - Spoonie`
     
     const keywords = [
       displayName,

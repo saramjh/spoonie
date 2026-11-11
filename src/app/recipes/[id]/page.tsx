@@ -45,7 +45,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     }
 
     const profileData = Array.isArray(recipe.profiles) ? recipe.profiles[0] : recipe.profiles
-    const authorName = profileData?.username || '익명'
+    const authorName = profileData?.display_name || profileData?.username || '익명'
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'
     // 공유 이미지: 작성자가 고른 대표 사진. 사진이 없으면 1200×630 기본 이미지
     const coverUrl = recipe.image_urls?.[recipe.thumbnail_index ?? 0] || recipe.image_urls?.[0]
