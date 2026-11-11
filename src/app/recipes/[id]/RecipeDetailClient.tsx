@@ -24,9 +24,10 @@ export default function RecipeDetailClient({ params, initialItem, initialPoll }:
 	// 로딩 상태
 	if (isLoading && !item) return <DetailLoading />
 
-	if (error) {
-		console.error(`DetailPage: Error loading item ${itemId}:`, error)
-		const notFound = error.message?.includes("not found") || error.message?.includes("access denied") || error.code === "PGRST116"
+	// Transient background errors must not discard loaded data. A confirmed 404
+	// or access denial must still hide stale data (e.g. a newly private item).
+	const notFound = Boolean(error && (error.message?.includes("not found") || error.message?.includes("access denied") || error.code === "PGRST116"))
+	if (error && (!item || notFound)) {
 		return notFound ? (
 			<DetailStateMessage
 				title="레시피를 찾을 수 없어요"
