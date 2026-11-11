@@ -82,7 +82,9 @@ async function getInstructionImages(supabase: SupabaseServerClient, recipeIds: s
 }
 
 function uniqueImages(...groups: Array<string[] | null | undefined>): string[] {
+	// Next.js 16.4.2 직렬화는 이미지 URL 안의 XML 특수문자를 이스케이프하지 않는다.
 	return [...new Set(groups.flatMap((group) => group ?? []).filter(Boolean))]
+		.map((url) => url.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))
 }
 
 function lastModified(row: PublicDiscoveryItem): Date {
