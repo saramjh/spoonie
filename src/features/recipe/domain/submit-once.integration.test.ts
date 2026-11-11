@@ -110,6 +110,19 @@ function setup(kind: "recipe" | "post", options: {
       return { itemId: "mock-id" }
     }),
     afterCommit,
+    fetchItemAuthorFields: vi.fn(async (_db: unknown, id: string) => ({
+      display_name: options.isEditMode ? "공개 닉네임" : "정본 프로필 이름",
+      username: options.isEditMode ? "old-handle" : "spoonie-author",
+      avatar_url: "https://assets.invalid/avatar.png",
+      user_public_id: options.isEditMode ? "old-public" : "author-public",
+      author: {
+        id,
+        public_id: options.isEditMode ? "old-public" : "author-public",
+        display_name: options.isEditMode ? "공개 닉네임" : "정본 프로필 이름",
+        username: options.isEditMode ? "old-handle" : "spoonie-author",
+        avatar_url: "https://assets.invalid/avatar.png",
+      },
+    })),
     draft: { finishPublish: async () => { calls.push("draft-finished") } },
     cacheManager: { addNewItem: vi.fn(async () => {}), updateItem: vi.fn(async () => {}), revalidateHomeFeed: async () => {} },
     logEvent: async () => {},
@@ -165,6 +178,29 @@ describe("recipe optimistic cache payload after a confirmed DB save", () => {
       created_at: "2026-10-01T00:00:00Z",
     })
   })
+
+  for (const kind of ["recipe", "post"] as const) {
+    it(kind + " uses canonical profile names in optimistic feed instead of private email", async () => {
+      const { scope, submit, releaseAuth } = setup(kind)
+      const value = kind === "recipe"
+        ? { title: "새 레시피", description: "", ingredients: [], instructions: [], cited_recipe_ids: [] }
+        : { content: "새 레시피드", cited_recipe_ids: [], is_public: true }
+      const pending = submit(value)
+      releaseAuth()
+      await pending
+      const fields = scope.fetchItemAuthorFields as ReturnType<typeof vi.fn>
+      const cache = scope.cacheManager as { addNewItem: ReturnType<typeof vi.fn> }
+      expect(fields).toHaveBeenCalledOnce()
+      expect(cache.addNewItem).toHaveBeenCalledOnce()
+      expect(cache.addNewItem.mock.calls[0]?.[0]).toMatchObject({
+        display_name: "정본 프로필 이름",
+        username: "spoonie-author",
+        user_public_id: "author-public",
+        author: { display_name: "정본 프로필 이름" },
+      })
+      expect(JSON.stringify(cache.addNewItem.mock.calls[0]?.[0])).not.toContain("test@example.invalid")
+    })
+  }
 
   it("inserts new recipes without invoking the edit cache path", async () => {
     const { scope, submit, releaseAuth } = setup("recipe")

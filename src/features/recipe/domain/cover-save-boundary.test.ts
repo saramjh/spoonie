@@ -33,16 +33,12 @@ describe("Recipe/Recipeed cover change save boundary", () => {
       expect(handler).not.toContain("supabase.auth.getUser")
       const committed = source.indexOf("dbCommitted = true")
       const database = source.indexOf("await " + write + "(")
-      const cached = source.indexOf(kind === "Recipe"
-        ? 'await afterCommit("cache", () => isEditMode'
-        : 'await afterCommit("cache", () => cacheManager.updateItem(itemId, fullItemPayload))')
+      const cached = source.indexOf('await afterCommit("cache", async () => {')
       expect(database).toBeGreaterThan(0)
       expect(committed).toBeGreaterThan(database)
       expect(cached).toBeGreaterThan(committed)
-      if (kind === "Recipe") {
-        expect(source).toContain("cacheManager.updateItem(itemId, fullItemPayload)")
-        expect(source).toContain("cacheManager.addNewItem(fullItemPayload as Item)")
-      }
+      expect(source).toContain("cacheManager.updateItem(itemId, fullItemPayload)")
+      expect(source).toContain("cacheManager.addNewItem(fullItemPayload as Item)")
     })
   }
 })

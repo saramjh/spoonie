@@ -23,10 +23,10 @@ async function call(method, path, body) {
   return res.json();
 }
 
-async function listStoragePrefix(prefix) {
+async function listStoragePrefix(prefix, bucket = BUCKET) {
   const objects = [];
   for (let offset = 0; ; offset += PAGE_SIZE) {
-    const page = await call('POST', `/storage/v1/object/list/${BUCKET}`, {
+    const page = await call('POST', `/storage/v1/object/list/${bucket}`, {
       prefix,
       limit: PAGE_SIZE,
       offset,
@@ -77,14 +77,61 @@ async function loadReferencedPaths() {
   return keep;
 }
 
+// Retry media deletion for removed accounts in the existing weekly sweep.
+// Only an explicit 404 from Auth Admin proves the account was removed.
+async function cleanupDeletedUserMedia(objects, referenced, cutoff) {
+  const avatars = (await listStoragePrefix('', 'avatars')).filter(
+    (o) => o.id && o.created_at && new Date(o.created_at).getTime() < cutoff
+  );
+  const avatarOwner = (name) => {
+    const match = name.match(/^([0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12})\.(?:jpg|jpeg|png|webp)$/i);
+    return match?.[1]?.toLowerCase() ?? null;
+  };
+  const candidates = objects.filter(
+    (o) => !referenced.has(o.name) && new Date(o.created_at).getTime() < cutoff
+  );
+  const owners = new Set([
+    ...candidates.map((o) => o.name.split('/')[0].toLowerCase()),
+    ...avatars.map((o) => avatarOwner(o.name)).filter(Boolean),
+  ]);
+  if (owners.size === 0) return new Set();
+  const removedOwners = new Set();
+  for (const userId of owners) {
+    const response = await fetch(SUPABASE_URL + '/auth/v1/admin/users/' + userId, { headers });
+    if (response.status === 404) removedOwners.add(userId);
+    else if (!response.ok) throw new Error('Auth ownership check ' + response.status);
+  }
+  if (removedOwners.size === 0) return new Set();
+
+  // Recheck live references immediately before irreversible deletion.
+  const stillUsed = await loadReferencedPaths();
+  const imagePaths = candidates.filter((o) =>
+    removedOwners.has(o.name.split('/')[0].toLowerCase()) && !stillUsed.has(o.name)
+  ).map((o) => o.name);
+  const avatarPaths = avatars.filter((o) => removedOwners.has(avatarOwner(o.name))).map((o) => o.name);
+  for (const [bucket, paths] of [[BUCKET, imagePaths], ['avatars', avatarPaths]]) {
+    for (let i = 0; i < paths.length; i += 100) {
+      await call('DELETE', '/storage/v1/object/' + bucket, { prefixes: paths.slice(i, i + 100) });
+    }
+  }
+  if (imagePaths.length || avatarPaths.length) {
+    console.log('deleted account cleanup: images ' + imagePaths.length + ', avatars ' + avatarPaths.length);
+  }
+  return new Set(imagePaths);
+}
+
 exports.handler = async () => {
   try {
     const keep = await loadReferencedPaths();
-    if (keep.size === 0) return { statusCode: 200, body: 'skip: no referenced images found' };
-
     const objects = await listAll();
     const cutoff = Date.now() - GRACE_MS;
-    const candidates = objects.filter((o) => o.created_at && !keep.has(o.name) && new Date(o.created_at).getTime() < cutoff).map((o) => o.name);
+    const alreadyRemoved = await cleanupDeletedUserMedia(objects, keep, cutoff);
+    if (keep.size === 0) return { statusCode: 200, body: 'skip: no referenced images found' };
+
+    const candidates = objects.filter((o) =>
+      o.created_at && !keep.has(o.name) && !alreadyRemoved.has(o.name) &&
+      new Date(o.created_at).getTime() < cutoff
+    ).map((o) => o.name);
     if (candidates.length === 0) return { statusCode: 200, body: 'deleted 0' };
 
     const latestKeep = await loadReferencedPaths();
