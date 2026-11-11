@@ -151,6 +151,7 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 
 	// 현재 프로필이 세션 사용자와 같으면 최신 아바터 URL 사용
 	const currentAvatarUrl = isOwner && sessionProfile?.avatar_url ? sessionProfile.avatar_url : profile?.avatar_url
+	const publicProfileName = profile?.entity_type === "organization" && profile.display_name ? profile.display_name : profile?.username
 
 	if (isLoading) {
 		return (
@@ -200,7 +201,7 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 						{currentAvatarUrl && currentAvatarUrl !== "/icon-only.svg" ? (
 							<Image src={currentAvatarUrl} alt="" fill sizes="76px" priority className="object-cover" />
 						) : (
-							<span className="flex h-full w-full items-center justify-center text-title text-ink-soft">{profile?.username?.charAt(0) || "?"}</span>
+							<span className="flex h-full w-full items-center justify-center text-title text-ink-soft">{publicProfileName?.charAt(0) || "?"}</span>
 						)}
 					</div>
 					{isOwner && (
@@ -218,8 +219,8 @@ export default function ProfilePageClient({ params, initialProfile, initialItems
 						</DropdownMenu>
 					)}
 				</div>
-				<h1 className="mt-4 text-title font-bold text-ink">{profile?.username}</h1>
-				{profile?.public_id && <p className="mt-0.5 text-label text-ink-soft">@{profile.public_id}</p>}
+				<h1 className="mt-4 text-title font-bold text-ink">{publicProfileName}</h1>
+				{profile?.public_id && profile?.entity_type !== "organization" && <p className="mt-0.5 text-label text-ink-soft">@{profile.public_id}</p>}
 				{profile?.profile_message && <p className="mt-3 whitespace-pre-wrap break-words text-body text-ink">{profile.profile_message}</p>}
 				{showFollowCounts && (
 					<div className="mt-4 flex items-center gap-4 text-meta text-ink-soft">

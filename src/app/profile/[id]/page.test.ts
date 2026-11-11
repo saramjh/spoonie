@@ -37,6 +37,16 @@ beforeEach(() => {
 	vi.mocked(fetchAllPublicDiscoveryItems).mockResolvedValue([])
 })
 
+describe("Spoonie editorial public profile identity", () => {
+  it("does not expose internal handle in the title when a curator has a Korean display name", async () => {
+    publicClient({ ...profile, username: "spoonie_danbi", display_name: "단비", entity_type: "organization", profile_message: "Spoonie 레시피 큐레이터 · 전통 간식" })
+    const metadata = await generateMetadata(props(profile.public_id))
+    expect(metadata.title).toBe("단비 - Spoonie")
+    expect(JSON.stringify(metadata)).not.toContain("@spoonie_danbi")
+    expect(metadata.openGraph).toBeDefined()
+  })
+})
+
 describe("profile metadata canonical identity", () => {
 	it.each([
 		["sp1a2b3c", "public_id"],

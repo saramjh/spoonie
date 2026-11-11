@@ -352,7 +352,7 @@ export default function ItemDetailView({ item }: ItemDetailViewProps) {
 
 
 
-	const authorName = item.username || "사용자"
+	const authorName = item.display_name || item.username || "사용자"
 	const externalSourceView = isRecipe ? parseRecipeDescription(item.description) : { description: item.description ?? "", source: null }
 	const editorial = externalSourceView.source
 		? { body: externalSourceView.description, note: null }

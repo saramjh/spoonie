@@ -247,13 +247,13 @@ export default function PostCard({
           <IntentLink href={profileHref} aria-hidden tabIndex={-1}>
             <Avatar className="h-9 w-9">
               <AvatarImage src={enrichedItem.avatar_url || undefined} alt="" />
-              <AvatarFallback>{(enrichedItem.username || "?").charAt(0).toUpperCase()}</AvatarFallback>
+              <AvatarFallback>{(enrichedItem.display_name || enrichedItem.username || "?").charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
           </IntentLink>
           <div className="min-w-0">
             {/* 누르는 영역 24px: 위아래로 넓히되 같은 만큼 바깥 여백을 줄여 모양은 그대로 */}
             <IntentLink href={profileHref} className="-my-[1.5px] block truncate py-[1.5px] text-label font-semibold text-ink">
-              {enrichedItem.username || "알 수 없는 사용자"}
+              {enrichedItem.display_name || enrichedItem.username || "알 수 없는 사용자"}
             </IntentLink>
             <p className="text-meta text-ink-soft">
               <span>{isRecipe ? "레시피" : "레시피드"}</span>
@@ -299,7 +299,7 @@ export default function PostCard({
             images={orderedImages}
             frame="feed"
             focalPoint={displayItem.cover_focal}
-            alt={displayItem.title || `${enrichedItem.username || "작성자"}님의 레시피드 사진`}
+            alt={displayItem.title || `${enrichedItem.display_name || enrichedItem.username || "작성자"}님의 레시피드 사진`}
             priority={priority}
             onSingleClick={() => router.push(detailUrl)}
             onDoubleClick={handleDoubleTapLike}
