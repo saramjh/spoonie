@@ -2,31 +2,28 @@
 
 import useSWR from "swr"
 import { fetchAuthorPublicRecipes, fetchCitedRecipeCards, fetchRecipeRelations } from "@/features/recipe/data/related-recipes"
+import { useSessionStore } from "@/store/sessionStore"
+import { viewerCacheKey } from "@/shared/infra/viewer-cache-key"
 
 export function useCitedRecipes(citedRecipeIds: string[] | null | undefined) {
 	// citedRecipeIds가 없거나 빈 배열이면 null을 key로 사용하여 fetch 안함
-	const cacheKey = citedRecipeIds && citedRecipeIds.length > 0 ? `cited-recipes:${[...citedRecipeIds].sort().join(",")}` : null
+	const viewerId = useSessionStore(state => state.session?.id ?? null)
+	const authLoading = useSessionStore(state => state.isInitialLoad)
+	const ids = citedRecipeIds?.length ? [...new Set(citedRecipeIds)].sort().join(",") : null
+	const cacheKey = viewerCacheKey("cited-recipes", ids, viewerId, authLoading)
 
 	const { data, error, isLoading, mutate } = useSWR(cacheKey, () => fetchCitedRecipeCards(citedRecipeIds!), {
-		revalidateOnFocus: false,
-		revalidateOnReconnect: true,
-		dedupingInterval: 15 * 60 * 1000, // 15분 동안 중복 요청 방지 (1시간→15분으로 단축)
-		focusThrottleInterval: 30 * 60 * 1000, // 30분 동안 포커스 throttle (균형)
-		errorRetryCount: 1, // 에러 시 최대 1번 재시도 (서버 부담 감소)
-		refreshInterval: 0, // 자동 새로고침 비활성화
-		refreshWhenHidden: false,
-		refreshWhenOffline: false,
-		// fallbackData를 통한 즉시 응답 (있을 때만)
-		fallbackData: undefined,
-		// 서버 부담 최소화를 위한 조건부 재검증
-		revalidateIfStale: true, // stale 데이터일 때만 재검증
+		revalidateOnFocus: true, // Privacy/access changes should not persist through an entire session.
+		dedupingInterval: 60 * 1000,
+		focusThrottleInterval: 60 * 1000,
+		errorRetryCount: 1,
 	})
 
 
 
 	return {
 		citedRecipes: data || [],
-		isLoading,
+		isLoading: isLoading || Boolean(ids && authLoading),
 		error,
 		// 수동으로 캐시 갱신이 필요한 경우에만 사용
 		refreshCitedRecipes: mutate,
@@ -34,7 +31,9 @@ export function useCitedRecipes(citedRecipeIds: string[] | null | undefined) {
 }
  
 export function useRecipeRelations(recipeId: string | null | undefined) {
-	const { data } = useSWR(recipeId ? `recipe-relations:${recipeId}` : null, () => fetchRecipeRelations(recipeId!), {
+	const viewerId = useSessionStore(state => state.session?.id ?? null)
+	const authLoading = useSessionStore(state => state.isInitialLoad)
+	const { data } = useSWR(viewerCacheKey("recipe-relations", recipeId, viewerId, authLoading), () => fetchRecipeRelations(recipeId!), {
 		revalidateOnFocus: false,
 		dedupingInterval: 5 * 60 * 1000,
 		errorRetryCount: 1,
