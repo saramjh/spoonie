@@ -1,4 +1,3 @@
-import PostCardSkeleton from "@/components/items/PostCardSkeleton"
 import RecipeCardSkeleton from "@/features/recipe/components/RecipeCardSkeleton"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -8,9 +7,22 @@ import { Skeleton } from "@/components/ui/skeleton"
  */
 export function DetailLoading() {
   return (
-    <div className="px-3 pt-3" role="status" aria-label="글을 불러오는 중" aria-busy="true">
-      <p className="mb-2 text-right text-meta text-ink-soft">불러오는 중…</p>
-      <PostCardSkeleton />
+    <div role="status" aria-label="글을 불러오는 중" aria-busy="true" className="min-h-[70vh] bg-paper">
+      <span className="sr-only">불러오는 중…</span>
+      <div className="flex h-14 items-center gap-3 border-b border-border px-3">
+        <Skeleton className="h-9 w-9 rounded-full" />
+        <Skeleton className="h-8 w-8 rounded-full" />
+        <Skeleton className="h-4 w-28" />
+      </div>
+      <Skeleton className="mx-3 mt-3 aspect-[3/2] w-[calc(100%-24px)] rounded-xl" />
+      <div className="space-y-3 px-4 pt-5">
+        <Skeleton className="h-7 w-4/5" />
+        <Skeleton className="h-4 w-1/3" />
+        <div className="space-y-2 pt-3">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+        </div>
+      </div>
     </div>
   )
 }

@@ -4,11 +4,8 @@ import Link, { type LinkProps } from "next/link"
 import { forwardRef, type AnchorHTMLAttributes } from "react"
 import { useRouter } from "next/navigation"
 
-// 콘텐츠 화면으로 가는 링크. 미리 받기 방식을 목적지에 따라 고른다.
-// - 레시피·레시피드 상세, 프로필: 미리 만든 페이지(CDN)라 보이기만 해도 미리 받는다 (서버 함수 실행 없음, 한 건 약 6KB). 누르면 바로 열린다.
-// - 요청마다 서버에서 그리는 화면(앞으로 생길 경우): 보이기만 해도 받으면 링크 수만큼 서버 함수가 실행되므로,
-//   손가락이 닿거나 마우스가 올라가거나 키보드 포커스가 올 때 그 링크 하나만 미리 받는다.
-const PREBUILT = /^\/(?:(?:recipes|posts)\/[0-9a-f-]{36}|profile\/[^/?#]+)(?:[?#]|$)/i
+// 화면에 보이는 모든 피드 링크를 미리 받으면 다수의 Next RSC 요청이 동시에 발생한다.
+// 실제 이동 의도가 드러난 링크(hover, touch, keyboard focus) 한 개만 준비한다.
 type IntentLinkProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps> & LinkProps & { href: string }
 
 export const IntentLink = forwardRef<HTMLAnchorElement, IntentLinkProps>(function IntentLink(
@@ -16,7 +13,6 @@ export const IntentLink = forwardRef<HTMLAnchorElement, IntentLinkProps>(functio
 	ref
 ) {
 	const router = useRouter()
-	if (PREBUILT.test(href)) return <Link ref={ref} href={href} onPointerEnter={onPointerEnter} onTouchStart={onTouchStart} onFocus={onFocus} {...props} />
 	const warm = () => router.prefetch(href)
 	return (
 		<Link

@@ -1,10 +1,9 @@
 "use client"
 
-import { useEffect, useState, ReactNode } from "react"
+import { useEffect, ReactNode } from "react"
 import { revalidateStartingWith } from "@/shared/infra/swr-cache"
 import { usePathname } from "next/navigation"
 import { rememberPath } from "@/shared/lib/surface"
-import SplashScreen from "./SplashScreen"
 import AppWrapper from "./AppWrapper"
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { useSessionStore } from "@/store/sessionStore"
@@ -16,8 +15,7 @@ import { fetchProfileSummary } from "@/features/profile/data/profile-repository"
 // 크롬의 "설치할 수 있음" 신호는 화면이 그려지기 전에 올 수 있어 모듈을 읽을 때 바로 듣는다
 captureInstallPrompt()
 
-const SPLASH_MIN_MS = 1000
-const SPLASH_MAX_MS = 3000
+const AUTH_FALLBACK_MS = 3000
 
 interface ClientLayoutWrapperProps {
   children: ReactNode
@@ -28,9 +26,6 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
   const { initializeFollowState } = useFollowStore()
 
   const pathname = usePathname()
-  // 스플래시는 홈으로 들어올 때만 보여 준다. 공유 링크로 상세에 들어오면 이미 그려진 본문을 가리지 않는다.
-  const [splashRoute] = useState(() => pathname === "/")
-
   // 행동 기록이 "어디서 왔는지"를 알 수 있게 화면 이동을 기억한다
   useEffect(() => {
     rememberPath(pathname)
@@ -51,13 +46,10 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
   useEffect(() => {
     const initializeAuth = async () => {
       if (isInitialLoad) {
-        // 스플래시 최소 표시 시간. 로그인 확인이 끝나면 그 뒤의 팔로우·프로필 조회를 기다리지 않고 닫는다.
-        const startedAt = performance.now()
-        const closeSplash = () => {
-          const wait = Math.max(0, SPLASH_MIN_MS - (performance.now() - startedAt))
-          setTimeout(() => setStoreInitialLoad(false), wait)
-        }
-        const fallbackTimer = setTimeout(() => setStoreInitialLoad(false), SPLASH_MAX_MS)
+        // 서버가 이미 페이지 본문을 보내므로 인증 중에도 콘텐츠를 가리지 않는다.
+        // 네트워크가 응답하지 않을 때만 초기 상태를 풀어 주는 안전 상한이다.
+        const completeInitialization = () => setStoreInitialLoad(false)
+        const fallbackTimer = setTimeout(completeInitialization, AUTH_FALLBACK_MS)
 
         
         try {
@@ -66,7 +58,7 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
           // 1. 세션 확인
           const { data: { user }, error: userError } = await supabase.auth.getUser()
           clearTimeout(fallbackTimer)
-          closeSplash()
+          completeInitialization()
           
           if (userError) {
             // 세션이 없는 것은 비로그인 방문의 정상 상태라 오류로 남기지 않는다
@@ -85,14 +77,11 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
 
             setSession(user)
             
-            // 로그인 직후 전역 팔로우 상태를 한 번 채운다.
-            try {
-              await initializeFollowState(user.id)
-
-            } catch (error) {
+            // 프로필 로드는 팔로우 목록 요청에 종속되지 않는다.
+            void initializeFollowState(user.id).catch((error) => {
               console.error("❌ ClientLayoutWrapper: Follow state initialization failed:", error)
-            }
-            
+            })
+
             // 2. 프로필 로드 (OAuth callback에서 생성되었어야 함)
             const { data: profile, error: profileError } = await supabase
               .from('profiles')
@@ -128,7 +117,7 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
         }
         
         clearTimeout(fallbackTimer)
-        closeSplash()
+        completeInitialization()
       }
     }
 
@@ -174,12 +163,5 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
     return () => window.removeEventListener("popstate", handlePopState)
   }, [])
 
-  // 스플래시는 페이지 위에 겹치는 오버레이로만 그린다.
-  // 페이지를 스플래시로 대체하면 서버 HTML에 본문이 빠져 검색엔진이 빈 페이지를 보게 된다.
-  return (
-    <>
-      <AppWrapper>{children}</AppWrapper>
-      {isInitialLoad && splashRoute && <SplashScreen />}
-    </>
-  )
+  return <AppWrapper>{children}</AppWrapper>
 }

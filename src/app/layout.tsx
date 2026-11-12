@@ -80,12 +80,7 @@ export default function RootLayout({
 				{/* 추가 SEO 메타 태그 */}
 				<meta name="author" content="Spoonie Team" />
 				<meta name="format-detection" content="telephone=no" />
-				{/* 스플래시는 브라우저 세션당 한 번만 (첫 페인트 전에 판단해 깜빡임이 없다) */}
-				<script
-					dangerouslySetInnerHTML={{
-						__html: "try{if(sessionStorage.getItem('spoonie-splash')){document.documentElement.classList.add('splash-seen')}else{sessionStorage.setItem('spoonie-splash','1')}}catch(e){}",
-					}}
-				/>
+
 			</head>
 			<body className="min-h-screen bg-background font-sans antialiased" suppressHydrationWarning={true}>
 				{/* Google Analytics */}

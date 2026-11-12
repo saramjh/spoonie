@@ -321,7 +321,7 @@ export default function PostCard({
         {isRecipe ? (
           <>
             <h2 className="text-title text-ink [text-wrap:balance]">
-              <IntentLink href={detailUrl}>{displayItem.title}</IntentLink>
+              <IntentLink href={detailUrl} prefetch={priority}>{displayItem.title}</IntentLink>
             </h2>
             {(displayItem.servings || cookingTime || !!displayItem.key_ingredients?.length) && (
               <div className="mt-2 space-y-1 text-caption text-ink-soft">
