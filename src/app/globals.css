@@ -98,6 +98,24 @@ svg[data-motion="stir"] .logo-spoon {
 	}
 }
 
+/* 첫 접속 브랜드 인트로는 렌더링되지만 JS 초기화에 실패해도 화면을 영구 차단하지 않는다.
+   최초 홈 진입에서만 1.6초 동안 보이고, 내부 라우트 전환에는 사용하지 않는다. */
+[data-splash] {
+  animation: first-visit-splash-dismiss 1600ms ease-out both;
+}
+@keyframes first-visit-splash-dismiss {
+  0%, 73% { opacity: 1; visibility: visible; pointer-events: auto; }
+  100% { opacity: 0; visibility: hidden; pointer-events: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-splash] { animation-timing-function: steps(1, end); }
+}
+
+/* 인트로를 본 뒤에는 재방문/새로고침 때 브랜드 오버레이를 다시 그리지 않는다. */
+.splash-seen [data-splash] {
+	display: none;
+}
+
 .skeleton-shimmer { position: relative; overflow: hidden; }
 .skeleton-shimmer::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 10%, rgb(var(--paper) / .85) 50%, transparent 90%); transform: translateX(-100%); animation: skeleton-shimmer 1.6s ease-in-out infinite; }
 @keyframes skeleton-shimmer { to { transform: translateX(100%); } }
