@@ -1,6 +1,7 @@
 // 지금 동작을 기록하는 테스트: RecipeForm에서 옮기기 전과 같은 결과가 나와야 한다
 import { describe, expect, it } from "vitest"
 import type { Item, ItemDetail } from "@/types/item"
+import { recipeReferenceIds, recipeToken } from "./inline-recipe-reference"
 import {
 	attachInstructionImages,
 	buildRecipeItemPayload,
@@ -83,6 +84,20 @@ describe("저장 행 만들기", () => {
 			user_id: "u", item_type: "recipe", title: "t", description: "d", servings: 2, cooking_time_minutes: 10, is_public: true,
 			image_urls: ["i"], color_label: null, tags: ["x"], cited_recipe_ids: [], thumbnail_index: 0, cover_focal: { x: 17, y: 83 }, creation_origin: null,
 		})
+	})
+	it("레시피 소개의 인라인 레시피 ID를 저장·수정·외부 출처 복원 중에도 유지한다", () => {
+		const recipeId = "efe00924-c5b4-4d82-8f55-d476848196d6"
+		const prose = "함께 먹기 좋은 " + recipeToken(recipeId) + " 추천"
+		const ctx = { userId: "u", imageUrls: ["i"], thumbnailIndex: 0, coverFocal: { x: 50, y: 50 }, isEditMode: false, forkFromId: undefined }
+		const saved = buildRecipeItemPayload({
+			...values, description: prose,
+			external_source_creator: "외부 원작", external_source_url: "https://example.com/recipe",
+		}, ctx)
+		const restored = editDefaults(item({ description: saved.description }))
+		expect(restored.description).toBe(prose)
+		expect(recipeReferenceIds(restored.description ?? "")).toEqual([recipeId])
+		expect(restored.external_source_creator).toBe("외부 원작")
+		expect(restored.external_source_url).toBe("https://example.com/recipe")
 	})
 	it("기존 description 컬럼에 외부 원작을 한 번만 저장하고 위험한 URL을 거부한다", () => {
 		const creator = "원작 사이트"

@@ -109,7 +109,7 @@ export default function PostCard({
   // 참고 레시피 로딩
   const sourceIds = displayItem.cited_recipe_ids ?? []
   const { citedRecipes: allReferencedRecipes, isLoading: citedRecipesLoading } = useCitedRecipes(
-    Array.from(new Set([...sourceIds, ...recipeReferenceIds(displayItem.content ?? "")]))
+    Array.from(new Set([...sourceIds, ...recipeReferenceIds([displayItem.content ?? "", displayItem.description ?? ""])]))
   )
   const citedRecipes = allReferencedRecipes.filter(recipe => sourceIds.includes(recipe.id))
 
@@ -337,7 +337,7 @@ export default function PostCard({
               </div>
             )}
             {recipeDescription && (
-              <ExpandableText text={recipeDescription} maxLines={2} onExpand={() => router.push(detailUrl)} className="mt-3" />
+              <ExpandableText text={recipeDescription} maxLines={2} onExpand={() => router.push(detailUrl)} className="mt-3" recipes={allReferencedRecipes} />
             )}
             {/* 다른 사람이 실제로 만든 기록: 레시피의 신뢰 증거 */}
             <MadeProof

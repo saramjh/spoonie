@@ -16,6 +16,7 @@ import { ImageOff, Minus, Plus } from "lucide-react"
 import ImageUploader from "@/components/common/ImageUploader"
 import InstructionImageUploader from "@/features/recipe/components/InstructionImageUploader"
 import CitedRecipeSearch from "@/features/recipe/components/CitedRecipeSearch"
+import InlineRecipeEditor from "@/features/recipe/components/InlineRecipeEditor"
 import DraggableIngredientList, { DraggableIngredient } from "@/features/recipe/components/DraggableIngredientList"
 import { OptimizedImage, optimizeImages } from "@/shared/infra/image-utils"
 import { CENTER_FOCAL, normalizeCoverFocal, type CoverFocal } from "@/features/recipe/domain/cover-focal"
@@ -580,7 +581,19 @@ export default function RecipeForm({
 							<Label htmlFor="description" className={fieldLabel}>
 								한 줄 소개 <span className="font-normal text-ink-soft">(선택)</span>
 							</Label>
-							<Textarea id="description" placeholder="어떤 맛인지, 언제 만들면 좋은지" className="mt-1.5 min-h-[72px]" {...form.register("description")} />
+							<Controller
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <InlineRecipeEditor
+                    id="description"
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    placeholder="어떤 맛인지, 언제 만들면 좋은지"
+                    className="mt-1.5"
+                  />
+                )}
+              />
 							<p className="mt-1 text-meta text-ink-soft">자사·협찬 제품이 포함된 Recipe라면 제품과의 관계를 프로필이나 이 소개에 분명히 적어주세요.</p>
 						</div>
 						<div className="grid grid-cols-2 gap-3">
