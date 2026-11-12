@@ -80,6 +80,12 @@ export default function RootLayout({
 				{/* 추가 SEO 메타 태그 */}
 				<meta name="author" content="Spoonie Team" />
 				<meta name="format-detection" content="telephone=no" />
+				{/* 첫 홈 접속 시 SSR 인트로를 보여주되, 이 브라우저 세션에서 본 경우 첫 페인트부터 감춘다. */}
+				<script
+					dangerouslySetInnerHTML={{
+						__html: "try{if(sessionStorage.getItem('spoonie-splash')){document.documentElement.classList.add('splash-seen')}else{sessionStorage.setItem('spoonie-splash','1')}}catch(e){}",
+					}}
+				/>
 
 			</head>
 			<body className="min-h-screen bg-background font-sans antialiased" suppressHydrationWarning={true}>

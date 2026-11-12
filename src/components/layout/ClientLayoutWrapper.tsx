@@ -1,10 +1,11 @@
 "use client"
 
-import { useEffect, ReactNode } from "react"
+import { useEffect, useState, ReactNode } from "react"
 import { revalidateStartingWith } from "@/shared/infra/swr-cache"
 import { usePathname } from "next/navigation"
 import { rememberPath } from "@/shared/lib/surface"
 import AppWrapper from "./AppWrapper"
+import SplashScreen from "./SplashScreen"
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { useSessionStore } from "@/store/sessionStore"
 import { useFollowStore } from "@/features/social/store/followStore"
@@ -16,6 +17,8 @@ import { fetchProfileSummary } from "@/features/profile/data/profile-repository"
 captureInstallPrompt()
 
 const AUTH_FALLBACK_MS = 3000
+// 한 번의 첫 홈 진입에서만 브랜드 인트로를 보여준다. 인증/데이터 로딩과 무관하다.
+const FIRST_VISIT_SPLASH_MS = 1600
 
 interface ClientLayoutWrapperProps {
   children: ReactNode
@@ -26,6 +29,16 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
   const { initializeFollowState } = useFollowStore()
 
   const pathname = usePathname()
+  // 루트 레이아웃은 클라이언트 탐색마다 재마운트되지 않는다.
+  // 직접 연 상세 링크에는 스플래시를 씌우지 않고, 최초 홈 진입에만 표시한다.
+  const [showFirstVisitSplash, setShowFirstVisitSplash] = useState(() => pathname === "/")
+
+  useEffect(() => {
+    if (!showFirstVisitSplash) return
+    const timer = window.setTimeout(() => setShowFirstVisitSplash(false), FIRST_VISIT_SPLASH_MS)
+    return () => window.clearTimeout(timer)
+  }, [showFirstVisitSplash])
+
   // 행동 기록이 "어디서 왔는지"를 알 수 있게 화면 이동을 기억한다
   useEffect(() => {
     rememberPath(pathname)
@@ -163,5 +176,10 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
     return () => window.removeEventListener("popstate", handlePopState)
   }, [])
 
-  return <AppWrapper>{children}</AppWrapper>
+  return (
+    <>
+      <AppWrapper>{children}</AppWrapper>
+      {showFirstVisitSplash && <SplashScreen />}
+    </>
+  )
 }
