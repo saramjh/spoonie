@@ -22,6 +22,7 @@ import { enrichWithCachedAuthor, cacheAuthors } from "@/shared/infra/author-cach
 import { orderImagesForDisplay } from "@/shared/lib/thumbnail"
 import { useItemCache } from "@/hooks/useItemCache"
 import ExpandableText from "@/components/common/ExpandableText"
+import { recipeReferenceIds } from "@/features/recipe/domain/inline-recipe-reference"
 import { cacheManager } from "@/shared/infra/unified-cache-manager"
 import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
 import { IntentLink, MadeProof, RelativeTime, Sheet, SourceRow } from "@/components/kit"
@@ -106,7 +107,11 @@ export default function PostCard({
 
 
   // 참고 레시피 로딩
-  const { citedRecipes, isLoading: citedRecipesLoading } = useCitedRecipes(item.cited_recipe_ids)
+  const sourceIds = displayItem.cited_recipe_ids ?? []
+  const { citedRecipes: allReferencedRecipes, isLoading: citedRecipesLoading } = useCitedRecipes(
+    Array.from(new Set([...sourceIds, ...recipeReferenceIds(displayItem.content ?? "")]))
+  )
+  const citedRecipes = allReferencedRecipes.filter(recipe => sourceIds.includes(recipe.id))
 
   // 작성자 정보 캐시 적용
   const enrichedItem = enrichWithCachedAuthor(item)
@@ -345,7 +350,7 @@ export default function PostCard({
         ) : (
           <>
             {displayItem.title && <p className="mb-2 text-title text-ink">{displayItem.title}</p>}
-            <ExpandableText text={displayItem.content || ""} maxLines={3} onExpand={() => router.push(detailUrl)} className="text-body text-ink" />
+            <ExpandableText text={displayItem.content || ""} maxLines={3} onExpand={() => router.push(detailUrl)} className="text-body text-ink" recipes={allReferencedRecipes} />
           </>
         )}
 

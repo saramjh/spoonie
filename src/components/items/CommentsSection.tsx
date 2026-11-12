@@ -1,10 +1,12 @@
 "use client"
 
 import LinkifiedText from "@/components/common/LinkifiedText"
+import InlineRecipeEditor from "@/features/recipe/components/InlineRecipeEditor"
+import { recipeReferenceIds } from "@/features/recipe/domain/inline-recipe-reference"
+import { useCitedRecipes } from "@/features/recipe/hooks/useCitedRecipes"
 
 import { useEffect, useState, useId } from "react"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
 import { cacheManager } from "@/shared/infra/unified-cache-manager"
@@ -101,6 +103,7 @@ export default function CommentsSection({
     itemId ? `comments_${itemId}` : null,
     () => fetchComments(itemId)
   )
+  const { citedRecipes: inlineRecipes } = useCitedRecipes(recipeReferenceIds((comments ?? []).map(comment => comment.content)))
 
   // 이 게시물의 댓글 추가/삭제(소프트 삭제는 UPDATE)를 구독해 다른 사용자의 댓글을 즉시 반영한다.
   // 댓글 수는 증감 계산 대신 새 목록에서 다시 세어, 내 댓글이 두 번 반영되지 않게 한다.
@@ -259,7 +262,7 @@ export default function CommentsSection({
       <SectionHeading id="comments-heading" count={count || undefined}>댓글</SectionHeading>
       <form data-comment-composer className={cn(composerClass, "mt-3")} onSubmit={(event) => { event.preventDefault(); void handleAddComment() }}>
           <label htmlFor={composerId} className="sr-only">댓글</label>
-          <Textarea id={composerId} rows={2} value={newComment} onChange={(event) => setNewComment(event.target.value)} placeholder="댓글을 남겨 보세요" disabled={isSubmitting} className={composerInputClass} />
+          <InlineRecipeEditor id={composerId} value={newComment} onChange={setNewComment} placeholder="댓글을 남겨 보세요" disabled={isSubmitting} compact className={composerInputClass} />
           <Button type="submit" aria-label="댓글 올리기" size="icon" className="shrink-0" disabled={!newComment.trim() || isSubmitting}><Send className="h-5 w-5" aria-hidden /></Button>
       </form>
 
@@ -318,7 +321,7 @@ export default function CommentsSection({
                 ) : (
                   <>
                     <p className="mt-1 whitespace-pre-wrap break-words text-body text-ink">
-                      <LinkifiedText text={comment.content} />
+                      <LinkifiedText text={comment.content} recipes={inlineRecipes} />
                     </p>
 
                     <Button
@@ -337,7 +340,7 @@ export default function CommentsSection({
                 {replyingTo === comment.id && !comment.is_deleted && (
                   <div className="mt-3 space-y-2">
                     <form className={composerClass} onSubmit={(event) => { event.preventDefault(); void handleReplySubmit(comment.id) }}>
-                      <Textarea rows={2} aria-label={`${comment.user.username}님에게 답글`} placeholder="답글을 남겨 보세요" value={replyTexts[comment.id] || ""} onChange={(event) => setReplyTexts({ ...replyTexts, [comment.id]: event.target.value })} disabled={isSubmittingReply[comment.id]} className={composerInputClass} />
+                      <InlineRecipeEditor aria-label={`${comment.user.username}님에게 답글`} placeholder="답글을 남겨 보세요" value={replyTexts[comment.id] || ""} onChange={(text) => setReplyTexts(current => ({ ...current, [comment.id]: text }))} disabled={isSubmittingReply[comment.id]} compact className={composerInputClass} />
                       <Button type="submit" size="icon" className="shrink-0" aria-label="답글 올리기" disabled={!replyTexts[comment.id]?.trim() || isSubmittingReply[comment.id]}><Send className="h-5 w-5" aria-hidden /></Button>
                     </form>
                     <Button variant="ghost" size="sm" onClick={handleCancelReply} className="text-meta">
@@ -398,7 +401,7 @@ export default function CommentsSection({
                           </p>
                         ) : (
                           <p className="text-ink text-meta whitespace-pre-wrap mt-1 break-words">
-                            <LinkifiedText text={reply.content} />
+                            <LinkifiedText text={reply.content} recipes={inlineRecipes} />
                           </p>
                         )}
                       </div>
