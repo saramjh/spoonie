@@ -16,6 +16,7 @@ import UserCard from '@/features/feed/components/UserCard';
 import type { Item } from '@/types/item';
 import { fetchPopularKeywords, searchItems, searchUsers, SEARCH_PAGE_SIZE, type SearchResult } from '@/features/feed/data/search-optimization';
 import { useFollowStore } from '@/features/social/store/followStore';
+import { useSessionStore } from '@/store/sessionStore';
 import { SectionHeading, StateSheet, UnderlineTabs } from "@/components/kit"
 
 // 검색 결과 종류: 레시피(자산)가 먼저, 레시피드(활동)와 사람이 뒤 (DESIGN.md Interface Grammar 1)
@@ -53,19 +54,19 @@ const convertSearchResultToItem = (searchResult: SearchResult): Item => {
 };
 
 // Each tab is paged on the server. One extra result signals another page.
-function useItemSearchPages(query: string, type: "recipe" | "post") {
+function useItemSearchPages(query: string, type: "recipe" | "post", viewerId: string | null, authLoading: boolean) {
   const { data, error, isLoading, isValidating, mutate, size, setSize } = useSWRInfinite(
     (index, previous: Item[] | null) =>
-      query && (index === 0 || (previous && previous.length > SEARCH_PAGE_SIZE))
-        ? ["search_items", query, type, index] as const : null,
-    ([, term, kind, index]) =>
+      !authLoading && query && (index === 0 || (previous && previous.length > SEARCH_PAGE_SIZE))
+        ? ["search_items", viewerId ?? "guest", query, type, index] as const : null,
+    ([, , term, kind, index]) =>
       searchItems(term, kind, index * SEARCH_PAGE_SIZE)
         .then(rows => rows.filter(row => row.id).map(convertSearchResultToItem)),
     { revalidateOnFocus: false, revalidateFirstPage: false }
   );
   const results = useMemo(() => (data ?? []).flatMap(page => page.slice(0, SEARCH_PAGE_SIZE)), [data]);
   const hasMore = (data?.at(-1)?.length ?? 0) > SEARCH_PAGE_SIZE;
-  return { results, error, isLoading, isValidating, mutate, hasMore, loadMore: () => setSize(size + 1) };
+  return { results, error, isLoading: isLoading || (authLoading && !!query), isValidating, mutate, hasMore, loadMore: () => setSize(size + 1) };
 }
 
 // 검색어가 없을 때의 탐색 목록은 서버가 미리 그린 것(initialExplore)으로 시작한다: 검색엔진이 레시피 링크를 읽고, 첫 화면에 빈칸이 없다
@@ -75,6 +76,9 @@ export default function SearchClient({ initialExplore }: { initialExplore?: Expl
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [tab, setTab] = useState<SearchTab | null>(null); // 고르기 전에는 결과가 있는 첫 종류
   const { setFollowing } = useFollowStore() // 업계 표준: 글로벌 팔로우 상태 동기화
+  // Search RPCs include viewer-specific likes/follows; keep cached results isolated.
+  const viewerId = useSessionStore(state => state.session?.id ?? null);
+  const authLoading = useSessionStore(state => state.isInitialLoad);
 
   const { data: popularKeywords, isLoading: keywordsLoading } = useSWR('popular_keywords', fetchPopularKeywords, {
     revalidateOnFocus: false,
@@ -83,8 +87,8 @@ export default function SearchClient({ initialExplore }: { initialExplore?: Expl
   });
   const { data: explore, isLoading: exploreLoading } = useExplore(initialExplore);
 
-  const recipesSearch = useItemSearchPages(debouncedSearchTerm, 'recipe');
-  const postsSearch = useItemSearchPages(debouncedSearchTerm, 'post');
+  const recipesSearch = useItemSearchPages(debouncedSearchTerm, 'recipe', viewerId, authLoading);
+  const postsSearch = useItemSearchPages(debouncedSearchTerm, 'post', viewerId, authLoading);
   const recipeResults = recipesSearch.results;
   const postResults = postsSearch.results;
 
@@ -98,12 +102,12 @@ export default function SearchClient({ initialExplore }: { initialExplore?: Expl
   }, [searchTerm]);
 
   // 사용자 검색 결과 (유저네임 전용)
-  const userSearchKey = debouncedSearchTerm ? ['search_users', debouncedSearchTerm] : null;
+  const userSearchKey = debouncedSearchTerm && !authLoading ? ['search_users', viewerId ?? 'guest', debouncedSearchTerm] : null;
 
   
   const { data: userSearchResults, isLoading: userSearchLoading, error: userSearchError, mutate: retryUserSearch } = useSWR(
     userSearchKey,
-    ([, query]) => searchUsers(query),
+    ([, , query]) => searchUsers(query),
     {
       revalidateOnFocus: false,
       dedupingInterval: 30000, // 30초간 중복 요청 방지

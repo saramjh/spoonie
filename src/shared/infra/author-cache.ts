@@ -134,9 +134,8 @@ export const cacheAuthors = (items: Parameters<typeof authorCache.setAuthors>[0]
 export const enrichWithCachedAuthor = <T extends Parameters<typeof authorCache.enrichItemWithCachedAuthor>[0]>(item: T) => 
   authorCache.enrichItemWithCachedAuthor(item)
 
-// 메모리 안전: React Hook 기반 캐시 정리로 변경
-// 전역 setInterval 대신 useEffect에서 관리하도록 수정
-// 사용처: components/layout/ClientLayoutWrapper.tsx에서 useAuthorCacheCleanup() 호출
+// ClientLayoutWrapper starts/stops this interval with the app-shell lifecycle.
+// Do not also start it on module import (dev HMR would leave it running after unmount).
 
 let cleanupInterval: NodeJS.Timeout | null = null
 
@@ -154,8 +153,3 @@ export function startAuthorCacheCleanup(): () => void {
     }
   }
 }
-
-// 브라우저 환경에서만 자동 시작 (개발 편의성)
-if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-  startAuthorCacheCleanup()
-} 
