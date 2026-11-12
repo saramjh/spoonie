@@ -34,6 +34,12 @@ export function revalidateStartingWith(prefixes: readonly string[]) {
 }
 
 // 받은 데이터를 그 자리에서 고친다 (서버에 다시 묻지 않는다)
-export function updateStartingWith(prefixes: readonly string[], update: (data: unknown) => unknown) {
-	return Promise.all(cacheKeysStartingWith(prefixes).map((key) => mutate(key, update, { revalidate: false })))
+export function updateStartingWith(
+	prefixes: readonly string[],
+	update: (data: unknown) => unknown,
+	acceptKey?: (key: string) => boolean,
+) {
+	return Promise.all(cacheKeysStartingWith(prefixes)
+		.filter(key => !acceptKey || acceptKey(key.startsWith("$inf$") ? key.slice(5) : key))
+		.map(key => mutate(key, update, { revalidate: false })))
 }

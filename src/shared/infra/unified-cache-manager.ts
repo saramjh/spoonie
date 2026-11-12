@@ -15,6 +15,8 @@ import { revalidateStartingWith, updateStartingWith } from "@/shared/infra/swr-c
 import { setBookmarked, setLiked, shiftCount, type Patch } from "@/features/social/domain/social-state"
 import { fetchLikeServerState, writeBookmark, writeFollow, writeLike } from "@/features/social/data/social-repository"
 import type { Item } from "@/types/item"
+import { itemOverlayKey, viewerOwnsListCache } from "@/shared/infra/viewer-cache-key"
+import { useSessionStore } from "@/store/sessionStore"
 
 // 글 목록을 담는 캐시 키
 const LIST_KEY_PREFIXES = ["items|", "recipes||", "search_page|", "bookmarks_", "user_items_", "explore|"]
@@ -44,10 +46,20 @@ function mapItem(data: unknown, itemId: string, patch: Patch): unknown {
 }
 
 // 목록과 글 하나 캐시를 함께 고친다. 글 하나 캐시가 아직 없으면 seed(부르는 쪽이 가진 글)로 시작한다
-async function patchItem(itemId: string, patch: Patch, seed?: Partial<Item>) {
-	await updateStartingWith(LIST_KEY_PREFIXES, (data) => mapItem(data, itemId, patch))
+async function patchItem(
+	itemId: string, viewerId: string | null, patch: Patch, seed?: Partial<Item>, personal = false,
+) {
+	// A late async result must not patch the next account's visible lists.
+	// Personal likes/bookmarks must not mutate older cached lists belonging to other users.
+	if ((useSessionStore.getState().session?.id ?? null) === viewerId) {
+		await updateStartingWith(
+			LIST_KEY_PREFIXES,
+			(data) => mapItem(data, itemId, patch),
+			personal ? key => viewerOwnsListCache(key, viewerId) : undefined,
+		)
+	}
 	await mutate(
-		`itemDetail|${itemId}`,
+		itemOverlayKey(itemId, viewerId),
 		(current: Item | undefined) => {
 			const base = current ?? (seed && "id" in seed ? (seed as Item) : undefined)
 			return base ? { ...base, ...patch(base) } : current
@@ -71,10 +83,11 @@ function inOrder<T>(key: string, task: () => Promise<T>): Promise<T> {
 const pendingLikeSyncs = new Map<string, { timer?: ReturnType<typeof setTimeout> }>()
 
 function reconcileLike(itemId: string, userId: string, sync: object) {
+	const key = userId + "|" + itemId
 	return fetchLikeServerState(itemId, userId).then((state) => {
 		if (!state) return
-		return inOrder(`like|${itemId}`, async () => {
-			if (pendingLikeSyncs.get(itemId) === sync) await patchItem(itemId, () => state)
+		return inOrder("like|" + key, async () => {
+			if (pendingLikeSyncs.get(key) === sync) await patchItem(itemId, userId, () => state, undefined, true)
 		})
 	})
 }
@@ -89,29 +102,30 @@ const changeFollowCounts = (userId: string, field: "followers" | "following", by
 export const cacheManager = {
 	/** 좋아요 / 취소. DB가 실패하면 화면을 되돌리고 던진다. 3초 뒤 서버 값으로 한 번 더 맞춘다 */
 	like: (itemId: string, userId: string, liked: boolean, seed?: Partial<Item>) => {
-		const previous = pendingLikeSyncs.get(itemId)
+		const key = userId + "|" + itemId
+		const previous = pendingLikeSyncs.get(key)
 		if (previous?.timer) clearTimeout(previous.timer)
 		const sync: { timer?: ReturnType<typeof setTimeout> } = {}
-		pendingLikeSyncs.set(itemId, sync)
-		return inOrder(`like|${itemId}`, async () => {
+		pendingLikeSyncs.set(key, sync)
+		return inOrder("like|" + key, async () => {
 			try {
-				await patchItem(itemId, setLiked(liked), seed)
+				await patchItem(itemId, userId, setLiked(liked), seed, true)
 				const { error } = await writeLike(itemId, userId, liked)
 				if (error) {
-					await patchItem(itemId, setLiked(!liked))
+					await patchItem(itemId, userId, setLiked(!liked), undefined, true)
 					throw error
 				}
-				if (pendingLikeSyncs.get(itemId) === sync) {
+				if (pendingLikeSyncs.get(key) === sync) {
 					sync.timer = setTimeout(() => {
 						void reconcileLike(itemId, userId, sync)
 							.catch((error: unknown) => console.warn("좋아요 상태 재확인 실패:", error))
 							.finally(() => {
-								if (pendingLikeSyncs.get(itemId) === sync) pendingLikeSyncs.delete(itemId)
+								if (pendingLikeSyncs.get(key) === sync) pendingLikeSyncs.delete(key)
 							})
 					}, 3000)
 				}
 			} catch (error) {
-				if (pendingLikeSyncs.get(itemId) === sync) pendingLikeSyncs.delete(itemId)
+				if (pendingLikeSyncs.get(key) === sync) pendingLikeSyncs.delete(key)
 				throw error
 			}
 		})
@@ -119,21 +133,21 @@ export const cacheManager = {
 
 	/** 저장 / 취소. DB가 실패하면 화면을 되돌리고 던진다 */
 	bookmark: (itemId: string, userId: string, bookmarked: boolean, seed?: Partial<Item>) =>
-		inOrder(`bookmark|${itemId}`, async () => {
-			await patchItem(itemId, setBookmarked(bookmarked), seed)
+		inOrder("bookmark|" + userId + "|" + itemId, async () => {
+			await patchItem(itemId, userId, setBookmarked(bookmarked), seed, true)
 			const { error } = await writeBookmark(itemId, userId, bookmarked)
 			if (error) {
-				await patchItem(itemId, setBookmarked(!bookmarked))
+				await patchItem(itemId, userId, setBookmarked(!bookmarked), undefined, true)
 				throw error
 			}
 		}),
 
 	/** 댓글 수만 바꾼다 (댓글 DB 쓰기는 부르는 쪽). 되돌리는 함수를 돌려준다 */
-	comment: async (itemId: string, _userId: string, delta: number, seed?: Partial<Item>) => {
+	comment: async (itemId: string, userId: string, delta: number, seed?: Partial<Item>) => {
 		const by = (d: number): Patch => (item) => ({ comments_count: Math.max(0, (item.comments_count || 0) + d) })
-		await patchItem(itemId, by(delta), seed)
+		await patchItem(itemId, userId, by(delta), seed)
 		return () => {
-			void patchItem(itemId, by(-delta))
+			void patchItem(itemId, userId, by(-delta))
 		}
 	},
 
@@ -155,6 +169,7 @@ export const cacheManager = {
 	updateItem: async (itemId: string, data: Partial<Item>) => {
 		await patchItem(
 			itemId,
+			useSessionStore.getState().session?.id ?? null,
 			(item) => (item.image_urls?.length && !data.image_urls?.length ? { ...data, image_urls: item.image_urls } : data),
 			{ ...data, id: itemId }
 		)
@@ -163,13 +178,14 @@ export const cacheManager = {
 	/** 새 글을 홈 피드와 레시피북 맨 위에 바로 끼워 넣는다 */
 	addNewItem: async (newItem: Item) => {
 		const itemId = newItem.id || newItem.item_id
+		const viewerId = useSessionStore.getState().session?.id ?? null
 		await updateStartingWith(NEWEST_FIRST_LISTS, (data) => {
 			if (!Array.isArray(data)) return data
 			if (data.length === 0) return [[newItem]]
 			if (!Array.isArray(data[0])) return data
 			return [[newItem, ...(data[0] as Item[])], ...data.slice(1)]
-		})
-		await mutate(`itemDetail|${itemId}`, newItem, { revalidate: false })
+		}, key => viewerOwnsListCache(key, viewerId))
+		await mutate(itemOverlayKey(itemId, useSessionStore.getState().session?.id), newItem, { revalidate: false })
 	},
 
 	/**
@@ -187,7 +203,7 @@ export const cacheManager = {
 			return data
 		}
 		await updateStartingWith(LIST_KEY_PREFIXES, prune)
-		await Promise.all(itemIds.map((id) => mutate(`itemDetail|${id}`, undefined, { revalidate: false })))
+		await Promise.all(itemIds.map((id) => mutate(itemOverlayKey(id, useSessionStore.getState().session?.id), undefined, { revalidate: false })))
 		return () => {
 			void revalidateStartingWith(LIST_KEY_PREFIXES)
 		}

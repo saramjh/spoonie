@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
 import { cacheManager } from "@/shared/infra/unified-cache-manager"
+import { itemOverlayKey } from "@/shared/infra/viewer-cache-key"
+import { useSessionStore } from "@/store/sessionStore"
 import { addComment, fetchComments, softDeleteComment } from "@/features/social/data/comment-repository"
 import { Send, Trash2, CornerDownRight } from "lucide-react"
 import { Comment } from "@/types/item"
@@ -117,7 +119,7 @@ export default function CommentsSection({
       if (!fresh) return
       const visibleCount = fresh.filter((comment) => !comment.is_deleted).length
       await mutate(
-        `itemDetail|${itemId}`,
+        itemOverlayKey(itemId, useSessionStore.getState().session?.id),
         (current: Item | undefined) => (current ? { ...current, comments_count: visibleCount } : current),
         { revalidate: false }
       )

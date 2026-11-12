@@ -39,6 +39,8 @@ import { useAuthorRecipes, useCitedRecipes, useRecipeRelations } from "@/feature
 import { orderImagesForDisplay } from "@/shared/lib/thumbnail"
 import { useItemCache } from "@/hooks/useItemCache"
 import { cacheManager } from "@/shared/infra/unified-cache-manager"
+import { itemOverlayKey } from "@/shared/infra/viewer-cache-key"
+import { useSessionStore } from "@/store/sessionStore"
 import { IntentLink, MadeProof, Photo, RelativeTime, SectionHeading, Sheet, SourceRow } from "@/components/kit"
 import { revalidateItemPage } from "@/shared/infra/revalidate-item"
 import { logEvent } from "@/shared/infra/events"
@@ -46,7 +48,6 @@ import { cameFrom } from "@/shared/lib/surface"
 import { collectItemImageUrls, removeItemImages } from "@/shared/infra/item-images"
 import { deleteOwnItem } from "@/features/feed/data/item-detail"
 import { topicHref } from "@/shared/lib/topics"
-import { fetchProfileSummary } from "@/features/profile/data/profile-repository"
 import { postSourceHref } from "@/features/post/domain/post-form"
 
 interface ItemDetailViewProps {
@@ -70,6 +71,18 @@ export default function ItemDetailView({ item, initialPoll }: ItemDetailViewProp
 	const { toast } = useToast()
 	const supabase = createSupabaseBrowserClient()
 	const { mutate } = useSWRConfig()
+  // The app shell already owns auth and profile. A second getUser/profile read here
+  // kept the previous account in state after an in-place sign-out/sign-in.
+  const sessionUser = useSessionStore(state => state.session)
+  const sessionProfile = useSessionStore(state => state.profile)
+  const isAuthLoading = useSessionStore(state => state.isInitialLoad)
+  const viewerId = sessionUser?.id ?? null
+  const viewerProfile = sessionProfile?.id === viewerId ? sessionProfile : null
+  const currentUser: CurrentUser | null = sessionUser ? {
+    id: sessionUser.id,
+    avatar_url: viewerProfile?.avatar_url ?? null,
+    display_name: viewerProfile?.display_name || viewerProfile?.username || "사용자",
+  } : null
 
 	// early return 제거 - hooks 호출 순서 보장
 	const isRecipe = item?.item_type === "recipe"
@@ -118,8 +131,6 @@ export default function ItemDetailView({ item, initialPoll }: ItemDetailViewProp
 	const authorRecipes = useAuthorRecipes(item?.user_id, item?.item_id || item?.id)
 
 	// 댓글 수는 mutation 직후 갱신되는 개별 캐시 값을 사용한다.
-	const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
-	const [isAuthLoading, setIsAuthLoading] = useState(true)
 	const [photoPromptState, setPhotoPromptState] = useState<{ recipeId: string | null; isRecent: boolean }>({ recipeId: null, isRecent: false })
 	const [showDeleteModal, setShowDeleteModal] = useState(false)
 	const [isDeleting, setIsDeleting] = useState(false)
@@ -138,7 +149,7 @@ export default function ItemDetailView({ item, initialPoll }: ItemDetailViewProp
 	useEffect(() => {
 		if (!stableItemId || !item) return
 		mutate(
-			`itemDetail|${stableItemId}`,
+			itemOverlayKey(stableItemId, viewerId),
 			(prev: Item | undefined) =>
 				prev
 					? {
@@ -153,7 +164,7 @@ export default function ItemDetailView({ item, initialPoll }: ItemDetailViewProp
 		)
 		// item의 사용자 기준 값이 바뀔 때만 (다시 받기 완료 시점)
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [stableItemId, item?.likes_count, item?.is_liked, item?.comments_count, (item as Item & { is_bookmarked?: boolean })?.is_bookmarked])
+	}, [stableItemId, viewerId, item?.likes_count, item?.is_liked, item?.comments_count, (item as Item & { is_bookmarked?: boolean })?.is_bookmarked])
 
 	// 게시 시각은 hydration 이후 판정해 서버와 브라우저의 렌더 결과를 일치시킨다.
 	useEffect(() => {
@@ -168,26 +179,6 @@ export default function ItemDetailView({ item, initialPoll }: ItemDetailViewProp
 		}, 0)
 		return () => window.clearTimeout(timer)
 	}, [isRecipe, stableItemId, item?.created_at, item?.is_public])
-
-	// 현재 사용자 조회 useEffect
-	useEffect(() => {
-		const fetchCurrentUser = async () => {
-			setIsAuthLoading(true)
-			const {
-				data: { user },
-			} = await supabase.auth.getUser()
-			if (user) {
-				const profile = await fetchProfileSummary(supabase, user.id)
-				setCurrentUser({
-					id: user.id,
-					avatar_url: profile?.avatar_url || null,
-					    display_name: profile?.display_name || profile?.username || "사용자",
-				})
-			}
-			setIsAuthLoading(false)
-		}
-		fetchCurrentUser()
-	}, [supabase])
 
 	// 상세 열람 기록: auth 확인 뒤 비회원까지 GA4에 남긴다.
 	// 로그인 사용자는 events.ts가 Supabase에도 쓰며, 본인 글 열람은 분석에서 제외한다.

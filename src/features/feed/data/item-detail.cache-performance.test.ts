@@ -1,10 +1,10 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi, afterEach } from "vitest"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { fetchItemDetail } from "./item-detail"
 
 const itemId = "7a267c1d-b768-4694-bf9d-2b54d0a3e0a4"
 
-function fakeDetailDb(viewerId: string | null) {
+function fakeDetailDb(viewerId: string | null, failure?: "likes" | "bookmarks") {
   const calls: Array<{ table: string; column: string; options?: unknown; filters: Array<[string, unknown]> }> = []
   const db = {
     auth: { getUser: async () => ({ data: { user: viewerId ? { id: viewerId } : null } }) },
@@ -14,11 +14,14 @@ function fakeDetailDb(viewerId: string | null) {
       const result = () => {
         if (table === "items") return { data: { id: itemId, item_type: "post", user_id: "author", author: null }, error: null }
         if (table === "likes") {
-          if (entry.filters.some(([column]) => column === "user_id")) return { data: { user_id: viewerId }, error: null }
+          if (entry.filters.some(([column]) => column === "user_id"))
+            return failure === "likes" ? { data: null, error: { message: "Personal like lookup unavailable" } } : { data: { user_id: viewerId }, error: null }
           return { data: null, count: 42, error: null }
         }
         if (table === "comments") return { data: null, count: 3, error: null }
-        if (table === "bookmarks") return { data: { item_id: itemId }, error: null }
+        if (table === "bookmarks") return failure === "bookmarks"
+          ? { data: null, error: { message: "Personal bookmark lookup unavailable" } }
+          : { data: { item_id: itemId }, error: null }
         return { data: [], error: null }
       }
       const chain = {
@@ -36,6 +39,8 @@ function fakeDetailDb(viewerId: string | null) {
   } as unknown as SupabaseClient
   return { db, calls }
 }
+
+afterEach(() => vi.restoreAllMocks())
 
 describe("detail fetch uses count-only RLS reads instead of duplicate list payloads", () => {
   it("returns exact counters for guests without returning the comment list or user IDs", async () => {
@@ -66,5 +71,29 @@ describe("detail fetch uses count-only RLS reads instead of duplicate list paylo
     expect(likeQueries).toHaveLength(2)
     expect(likeQueries[1].filters).toEqual([["item_id", itemId], ["user_id", "viewer-a"]])
     expect(calls.find(call => call.table === "bookmarks")?.filters).toEqual([["item_id", itemId], ["user_id", "viewer-a"]])
+  })
+})
+
+describe("personalized detail lookup failure resilience", () => {
+  it("keeps the recipe readable when the viewer-specific like lookup fails", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const { db } = fakeDetailDb("viewer-a", "likes")
+    const item = await fetchItemDetail(db, itemId)
+    expect(item.id).toBe(itemId)
+    expect(item.likes_count).toBe(42)
+    expect(item.comments_count).toBe(3)
+    expect(item.is_liked).toBe(false)
+    expect(item.is_bookmarked).toBe(true)
+    expect(warn).toHaveBeenCalledOnce()
+  })
+  it("keeps the recipe readable when the viewer-specific bookmark lookup fails", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const { db } = fakeDetailDb("viewer-a", "bookmarks")
+    const item = await fetchItemDetail(db, itemId)
+    expect(item.id).toBe(itemId)
+    expect(item.likes_count).toBe(42)
+    expect(item.is_liked).toBe(true)
+    expect(item.is_bookmarked).toBe(false)
+    expect(warn).toHaveBeenCalledOnce()
   })
 })

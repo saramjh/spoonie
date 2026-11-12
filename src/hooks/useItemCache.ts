@@ -4,9 +4,13 @@ import useSWR from 'swr'
 import { Item } from '@/types/item'
 
 import { useEffect } from 'react'
+import { useSessionStore } from '@/store/sessionStore'
+import { itemOverlayKey } from '@/shared/infra/viewer-cache-key'
 
 export function useItemCache(itemId: string, fallbackData: Item) {
-  const { data: cachedItem, mutate } = useSWR(`itemDetail|${itemId}`, null, {
+  const viewerId = useSessionStore(state => state.session?.id ?? null)
+  const authLoading = useSessionStore(state => state.isInitialLoad)
+  const { data: cachedItem, mutate } = useSWR(!authLoading ? itemOverlayKey(itemId, viewerId) : null, null, {
     fallbackData,
     revalidateOnFocus: false,
     revalidateOnReconnect: false,

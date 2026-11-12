@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 const mock = vi.hoisted(() => ({
   rows: new Map<string, Record<string, unknown>>(),
+  viewerId: "u" as string | null,
   writeLike: vi.fn(async () => ({ error: null as Error | null })),
   fetchLike: vi.fn(async () => null as { is_liked: boolean; likes_count: number } | null),
 }))
@@ -12,6 +13,9 @@ vi.mock("swr", () => ({
     mock.rows.set(key, next as Record<string, unknown>)
     return next
   }),
+}))
+vi.mock("@/store/sessionStore", () => ({
+  useSessionStore: { getState: () => ({ session: mock.viewerId ? { id: mock.viewerId } : null }) },
 }))
 vi.mock("@/shared/infra/swr-cache", () => ({
   revalidateStartingWith: vi.fn(async () => []),
@@ -24,14 +28,18 @@ vi.mock("@/features/social/data/social-repository", () => ({
   writeFollow: vi.fn(async () => ({ error: null })),
 }))
 import { cacheManager } from "./unified-cache-manager"
+import { itemOverlayKey } from "./viewer-cache-key"
+import { updateStartingWith } from "./swr-cache"
 
 const seed = (id: string) => ({ id, likes_count: 0, is_liked: false })
-const cached = (id: string) => mock.rows.get("itemDetail|" + id)
+const cached = (id: string, userId = "u") => mock.rows.get(itemOverlayKey(id, userId))
 const flush = () => new Promise<void>(resolve => setImmediate(resolve))
 
 beforeEach(() => {
   vi.useFakeTimers()
   mock.rows.clear()
+  mock.viewerId = "u"
+  vi.mocked(updateStartingWith).mockClear()
   mock.writeLike.mockReset()
   mock.writeLike.mockResolvedValue({ error: null })
   mock.fetchLike.mockReset()
@@ -81,5 +89,40 @@ describe("cacheManager.like", () => {
     expect(mock.fetchLike).not.toHaveBeenCalled()
     await cacheManager.like(id, "u", true)
     expect(cached(id)?.is_liked).toBe(true)
+  })
+})
+
+describe("viewer-specific optimistic cache isolation", () => {
+  it("does not let another account reuse liked/bookmarked UI state", async () => {
+    const id = "viewer-separation"
+    mock.viewerId = "alice"
+    await cacheManager.like(id, "alice", true, seed(id) as never)
+    const [, , allowKey] = vi.mocked(updateStartingWith).mock.calls.at(-1)!
+    expect(allowKey?.("items|0|alice")).toBe(true)
+    expect(allowKey?.("items|0|bob")).toBe(false)
+    expect(allowKey?.("explore|v2")).toBe(false)
+    expect(cached(id, "alice")?.is_liked).toBe(true)
+    mock.viewerId = "bob"
+    await cacheManager.like(id, "bob", false, seed(id) as never)
+    expect(cached(id, "bob")?.is_liked).toBe(false)
+    expect(cached(id, "alice")?.is_liked).toBe(true)
+  })
+
+  it("does not patch the next viewer's lists when the previous viewer's response arrives late", async () => {
+    const id = "late-viewer-reconcile"
+    let finishOld: (value: { is_liked: boolean; likes_count: number }) => void = () => {}
+    mock.fetchLike.mockImplementationOnce(() => new Promise(resolve => { finishOld = resolve }))
+    mock.viewerId = "alice"
+    await cacheManager.like(id, "alice", true, seed(id) as never)
+    await vi.advanceTimersByTimeAsync(3000)
+    mock.viewerId = "bob"
+    await cacheManager.like(id, "bob", true, seed(id) as never)
+    const beforeLate = vi.mocked(updateStartingWith).mock.calls.length
+    vi.useRealTimers()
+    finishOld({ is_liked: false, likes_count: 0 })
+    await flush()
+    expect(cached(id, "bob")?.is_liked).toBe(true)
+    expect(cached(id, "alice")?.is_liked).toBe(false)
+    expect(vi.mocked(updateStartingWith)).toHaveBeenCalledTimes(beforeLate)
   })
 })
