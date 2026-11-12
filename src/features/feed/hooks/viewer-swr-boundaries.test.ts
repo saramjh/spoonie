@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import useSWR from "swr"
 import { useItemDetail } from "./useItemDetail"
 import { useCitedRecipes, useRecipeRelations } from "@/features/recipe/hooks/useCitedRecipes"
+import { useItemCache } from "@/hooks/useItemCache"
 
 const viewer = vi.hoisted(() => ({ id: null as string | null, loading: true }))
 vi.mock("@/store/sessionStore", () => ({
@@ -19,6 +20,7 @@ function Inspect() {
   useItemDetail("item-a", null)
   useCitedRecipes(["recipe-z", "recipe-a"])
   useRecipeRelations("recipe-a")
+  useItemCache("item-a", { id: "item-a", likes_count: 0, is_liked: false } as never)
   return createElement("span", null, "ok")
 }
 function getKeys() {
@@ -31,7 +33,7 @@ afterEach(() => { viewer.id = null; viewer.loading = true })
 
 describe("viewer scoped SWR hook integration", () => {
   it("suppresses private-data fetches while checking the active viewer", () => {
-    expect(getKeys()).toEqual([null, null, null])
+    expect(getKeys()).toEqual([null, null, null, null])
   })
   it("changes all RLS data cache entries when the viewer changes", () => {
     viewer.loading = false
@@ -40,10 +42,21 @@ describe("viewer scoped SWR hook integration", () => {
       ["item_details", "alice", "item-a"],
       ["cited-recipes", "alice", "recipe-a,recipe-z"],
       ["recipe-relations", "alice", "recipe-a"],
+      "itemDetail|alice|item-a",
     ])
     viewer.id = "bob"
-    expect(getKeys().map(key => Array.isArray(key) ? key[1] : null)).toEqual(["bob", "bob", "bob"])
+    expect(getKeys()).toEqual([
+      ["item_details", "bob", "item-a"],
+      ["cited-recipes", "bob", "recipe-a,recipe-z"],
+      ["recipe-relations", "bob", "recipe-a"],
+      "itemDetail|bob|item-a",
+    ])
     viewer.id = null
-    expect(getKeys().map(key => Array.isArray(key) ? key[1] : null)).toEqual(["guest", "guest", "guest"])
+    expect(getKeys()).toEqual([
+      ["item_details", "guest", "item-a"],
+      ["cited-recipes", "guest", "recipe-a,recipe-z"],
+      ["recipe-relations", "guest", "recipe-a"],
+      "itemDetail|guest|item-a",
+    ])
   })
 })

@@ -80,10 +80,13 @@ export async function fetchItemDetail(supabase: SupabaseClient, itemId: string, 
 				supabase.from("bookmarks").select("item_id").eq("item_id", itemId)
 					.eq("user_id", currentUserId).maybeSingle(),
 			])
-			if (myLikeError) throw myLikeError
-			if (myBookmarkError) throw myBookmarkError
-			isLiked = !!myLike
-			isBookmarked = !!myBookmark
+			// Personal badges are optional. A failed lookup must not turn an
+			// otherwise accessible public recipe into a full-page network error.
+			// RLS for the actual item is still enforced by the items query above.
+			if (myLikeError) console.warn("Detail like status unavailable:", myLikeError)
+			else isLiked = !!myLike
+			if (myBookmarkError) console.warn("Detail bookmark status unavailable:", myBookmarkError)
+			else isBookmarked = !!myBookmark
 		}
 		const isRecipeItem = itemData.item_type === "recipe"
 		// Ingredients and instructions are essential Recipe data. A failed query is
