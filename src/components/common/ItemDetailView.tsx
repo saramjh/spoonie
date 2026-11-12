@@ -108,7 +108,7 @@ export default function ItemDetailView({ item, initialPoll }: ItemDetailViewProp
 	// cited_recipe_ids 처리 - 캐싱된 훅 사용
 	const sourceIds = item?.cited_recipe_ids ?? []
 	const { citedRecipes: allReferencedRecipes, isLoading: citedRecipesLoading } = useCitedRecipes(
-		Array.from(new Set([...sourceIds, ...recipeReferenceIds(item?.content ?? "")]))
+		Array.from(new Set([...sourceIds, ...recipeReferenceIds([item?.content ?? "", item?.description ?? ""])]))
 	)
 	const citedRecipes = allReferencedRecipes.filter(recipe => sourceIds.includes(recipe.id))
 	const relations = useRecipeRelations(isRecipe ? item?.item_id || item?.id : null)
@@ -529,7 +529,7 @@ export default function ItemDetailView({ item, initialPoll }: ItemDetailViewProp
 										</a>
 									)}
 									<RecipeActivity recipeId={stableItemId} userId={currentUser?.id} />
-									{visibleEditorialBody && <p className="mt-[10px] whitespace-pre-wrap break-words text-body text-ink"><LinkifiedText text={visibleEditorialBody} /></p>}
+									{visibleEditorialBody && <p className="mt-[10px] whitespace-pre-wrap break-words text-body text-ink"><LinkifiedText text={visibleEditorialBody} recipes={allReferencedRecipes} /></p>}
 									{externalSourceView.source && (
 										<aside aria-label="외부 원작 출처" className="mt-4 border-t border-border pt-3 text-meta text-ink-soft">
 											<p className="font-medium text-ink">외부 원작 레시피</p>
