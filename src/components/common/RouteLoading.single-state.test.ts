@@ -25,6 +25,10 @@ describe("single loading surface for Spoonie routes", () => {
     expect(html).toContain("불러오는 중…")
     expect(html).toContain("skeleton-shimmer")
     expect(html).toContain('aria-busy="true"')
+    // 화면 전환 중 실제 상세 페이지의 헤더·3:2 이미지 공간이 유지돼야 한다.
+    expect(html).toContain("h-14")
+    expect(html).toContain("aspect-[3/2]")
+    expect(html).not.toContain("px-4 py-3")
   })
 
   it("uses the same card skeleton in the recipe-book Suspense and loading state", () => {

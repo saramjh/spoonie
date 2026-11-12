@@ -98,11 +98,6 @@ svg[data-motion="stir"] .logo-spoon {
 	}
 }
 
-/* 스플래시는 세션당 한 번: 두 번째 홈 진입부터는 그리지 않는다 (layout.tsx 인라인 스크립트) */
-.splash-seen [data-splash] {
-	display: none;
-}
-
 .skeleton-shimmer { position: relative; overflow: hidden; }
 .skeleton-shimmer::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 10%, rgb(var(--paper) / .85) 50%, transparent 90%); transform: translateX(-100%); animation: skeleton-shimmer 1.6s ease-in-out infinite; }
 @keyframes skeleton-shimmer { to { transform: translateX(100%); } }

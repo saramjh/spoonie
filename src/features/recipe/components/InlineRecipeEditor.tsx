@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { EditorContent, NodeViewWrapper, ReactNodeViewRenderer, useEditor, type NodeViewProps } from "@tiptap/react"
 import { Node, type Editor } from "@tiptap/core"
 import Document from "@tiptap/extension-document"
@@ -8,7 +8,7 @@ import Paragraph from "@tiptap/extension-paragraph"
 import Text from "@tiptap/extension-text"
 import HardBreak from "@tiptap/extension-hard-break"
 import { UndoRedo } from "@tiptap/extensions"
-import { ChefHat, Plus } from "lucide-react"
+import { ChefHat } from "lucide-react"
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { useCitedRecipes } from "@/features/recipe/hooks/useCitedRecipes"
 import { searchCitableRecipes } from "@/features/recipe/data/recipe-repository"
@@ -95,8 +95,11 @@ export default function InlineRecipeEditor({
   const [search, setSearch] = useState<{ key: string; rows: Item[]; loading: boolean; error: boolean }>({ key: "", rows: [], loading: false, error: false })
   const queryKey = trigger ? trigger.from + ":" + trigger.query : ""
   const results = useMemo(() => search.key === queryKey ? search.rows : [], [search, queryKey])
-  const loading = search.key === queryKey && search.loading
+  // 검색어가 바뀐 직후의 debounce 동안 '결과 없음'을 잘못 보여주지 않는다.
+  const loading = !!trigger && trigger.query.trim().length >= 2 && (search.key !== queryKey || search.loading)
   const failed = search.key === queryKey && search.error
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [popup, setPopup] = useState({ above: false, maxHeight: 240 })
   const [activeIndex, setActiveIndex] = useState(0)
   const dismissed = useRef<string | null>(null)
   const latest = useRef<{ trigger: Trigger | null; results: Item[]; activeIndex: number; insert: (item: Item) => void }>({
@@ -122,6 +125,31 @@ export default function InlineRecipeEditor({
     }
     setTrigger(current => current?.from === next?.from && current?.to === next?.to && current?.query === next?.query ? current : next)
   }, [])
+
+  // 가상 키보드나 하단 고정바 때문에 결과가 가려지지 않게, 열린 동안에만 위치를 측정한다.
+  useLayoutEffect(() => {
+    if (!trigger) return
+    const measure = () => {
+      const rect = containerRef.current?.getBoundingClientRect()
+      if (!rect) return
+      const top = window.visualViewport?.offsetTop ?? 0
+      const bottom = top + (window.visualViewport?.height ?? window.innerHeight)
+      const below = Math.max(0, bottom - rect.bottom - 8)
+      const aboveSpace = Math.max(0, rect.top - top - 8)
+      const above = below < 280 && aboveSpace > below
+      const maxHeight = Math.max(64, Math.min(240, Math.floor(above ? aboveSpace : below)))
+      setPopup(current => current.above === above && current.maxHeight === maxHeight ? current : { above, maxHeight })
+    }
+    measure()
+    window.addEventListener("scroll", measure, true)
+    window.visualViewport?.addEventListener("resize", measure)
+    window.visualViewport?.addEventListener("scroll", measure)
+    return () => {
+      window.removeEventListener("scroll", measure, true)
+      window.visualViewport?.removeEventListener("resize", measure)
+      window.visualViewport?.removeEventListener("scroll", measure)
+    }
+  }, [trigger])
 
   const editor = useEditor({
     extensions: [Document, Paragraph, Text, HardBreak, UndoRedo, RecipeMentionNode],
@@ -239,7 +267,7 @@ export default function InlineRecipeEditor({
   }, [trigger])
 
   return (
-    <div className={cn("relative min-w-0 flex-1", className)}>
+    <div ref={containerRef} className={cn("relative min-w-0 flex-1", className)}>
       <div
         className={cn("relative rounded-lg border border-ink/25 bg-paper px-3 py-2 text-body text-ink focus-within:ring-2 focus-within:ring-ring", compact && "border-0 bg-transparent px-1 py-1.5 focus-within:ring-0")}
         onCompositionEnd={() => { if (editor) updateTrigger(editor) }}
@@ -247,19 +275,29 @@ export default function InlineRecipeEditor({
         <EditorContent editor={editor} />
         {!value && !editor?.isFocused && <span className="pointer-events-none absolute left-3 top-2 text-ink-soft" aria-hidden>{placeholder}</span>}
       </div>
-      <div className="mt-1 flex items-center justify-between gap-2">
-        <span className="text-caption text-ink-soft">[[ 레시피명으로 인용</span>
+      <div className={cn("mt-1.5 flex justify-end", compact && "mt-1")}>
         <button
           type="button"
-          className="inline-flex min-h-8 items-center gap-1 rounded-md px-2 text-caption font-medium text-orange-ink hover:bg-paper-tint focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+          aria-label="레시피 인용"
+          title="[[를 입력해도 레시피를 연결할 수 있어요"
+          className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-border bg-paper px-2.5 py-1 text-caption font-medium text-ink-soft transition-colors hover:border-ink/30 hover:bg-paper-tint hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
           onClick={() => editor?.chain().focus().insertContent("[[").run()}
           disabled={disabled || !editor}
-        ><Plus className="h-3.5 w-3.5" aria-hidden /> 레시피 인용</button>
+        >
+          <ChefHat className="h-3.5 w-3.5 text-orange-ink" aria-hidden />
+          <span>레시피 인용</span>
+          <kbd aria-hidden className="rounded-[5px] border border-border bg-paper-tint px-1.5 py-0.5 font-mono text-[11px] leading-none text-ink-soft">[[</kbd>
+        </button>
       </div>
       {trigger && (
-        <div role="listbox" aria-label="인용할 레시피" className="absolute inset-x-0 top-full z-30 mt-1 max-h-60 overflow-y-auto rounded-lg border border-border bg-paper p-1 shadow-md">
+        <div
+          role="listbox"
+          aria-label="인용할 레시피"
+          className={cn("absolute inset-x-0 z-30 overflow-y-auto rounded-lg border border-border bg-paper p-1 shadow-md", popup.above ? "bottom-full mb-1" : "top-full mt-1")}
+          style={{ maxHeight: popup.maxHeight }}
+        >
           {trigger.query.trim().length < 2 && <p className="px-2 py-2 text-caption text-ink-soft">레시피 이름을 두 글자 이상 입력하세요.</p>}
-          {loading && <p role="status" className="px-2 py-2 text-caption text-ink-soft">레시피 검색 중…</p>}
+          {loading && <p role="status" className="px-3 py-2 text-caption text-ink-soft">레시피 찾는 중…</p>}
           {!loading && failed && <p role="alert" className="px-2 py-2 text-caption text-ink-soft">검색 연결을 확인해 주세요.</p>}
           {!loading && !failed && trigger.query.trim().length >= 2 && results.length === 0 && <p className="px-2 py-2 text-caption text-ink-soft">검색된 레시피가 없어요.</p>}
           {!loading && results.map((recipe, index) =>
