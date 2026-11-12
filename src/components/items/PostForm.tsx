@@ -243,12 +243,12 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
                 created_at: initialData?.created_at || new Date().toISOString(),
               }
               if (isEditMode) {
-                await cacheManager.updateItem(itemId, fullItemPayload)
+                await cacheManager.updateItem(itemId, fullItemPayload, initialData?.is_public, user.id)
                 void cacheManager.revalidateHomeFeed().catch((error: unknown) => {
                   console.warn("PostForm: home feed revalidation failed:", error)
                 })
               } else {
-                await cacheManager.addNewItem(fullItemPayload as Item)
+                await cacheManager.addNewItem(fullItemPayload as Item, user.id)
               }
             })
 

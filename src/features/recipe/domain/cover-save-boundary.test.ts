@@ -37,8 +37,8 @@ describe("Recipe/Recipeed cover change save boundary", () => {
       expect(database).toBeGreaterThan(0)
       expect(committed).toBeGreaterThan(database)
       expect(cached).toBeGreaterThan(committed)
-      expect(source).toContain("cacheManager.updateItem(itemId, fullItemPayload)")
-      expect(source).toContain("cacheManager.addNewItem(fullItemPayload as Item)")
+      expect(source).toContain("cacheManager.updateItem(itemId, fullItemPayload, initialData?.is_public, user.id)")
+      expect(source).toContain("cacheManager.addNewItem(fullItemPayload as Item, user.id)")
     })
   }
 })
