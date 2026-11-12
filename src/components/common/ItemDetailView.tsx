@@ -16,6 +16,7 @@ import LoginPromptSheet from "@/components/auth/LoginPromptSheet"
 import BottomNavBar from "@/components/layout/BottomNavBar"
 import ImageCarousel from "@/components/common/ImageCarousel"
 import LinkifiedText from "@/components/common/LinkifiedText"
+import { recipeReferenceIds } from "@/features/recipe/domain/inline-recipe-reference"
 import { publicContentTitle } from "@/features/discovery/domain/search-exposure"
 import RecipeContentView from "@/features/recipe/components/RecipeContentView"
 import { RecipeActivity } from "@/features/recipe/components/RecipeActivity"
@@ -105,7 +106,11 @@ export default function ItemDetailView({ item, initialPoll }: ItemDetailViewProp
 	// SWR 호출 - 조건부 렌더링 전에 호출
 
 	// cited_recipe_ids 처리 - 캐싱된 훅 사용
-	const { citedRecipes, isLoading: citedRecipesLoading } = useCitedRecipes(item?.cited_recipe_ids)
+	const sourceIds = item?.cited_recipe_ids ?? []
+	const { citedRecipes: allReferencedRecipes, isLoading: citedRecipesLoading } = useCitedRecipes(
+		Array.from(new Set([...sourceIds, ...recipeReferenceIds(item?.content ?? "")]))
+	)
+	const citedRecipes = allReferencedRecipes.filter(recipe => sourceIds.includes(recipe.id))
 	const relations = useRecipeRelations(isRecipe ? item?.item_id || item?.id : null)
 	// 레시피드: 같은 레시피로 만든 다른 기록 (출처 레시피의 관계에서 이 글을 뺀 것)
 	const sourceRelations = useRecipeRelations(!isRecipe ? item?.cited_recipe_ids?.[0] : null)
@@ -549,7 +554,7 @@ export default function ItemDetailView({ item, initialPoll }: ItemDetailViewProp
 								<>
 									{/* 레시피드는 사진과 글이 주인공이라 제목을 키우지 않는다 (DESIGN.md Interface Grammar 1) */}
 									{item.title && <h1 className="mb-1.5 text-heading text-ink">{item.title}</h1>}
-									<p className="whitespace-pre-wrap break-words text-body text-ink"><LinkifiedText text={item.content} /></p>
+									<p className="whitespace-pre-wrap break-words text-body text-ink"><LinkifiedText text={item.content} recipes={allReferencedRecipes} /></p>
 								</>
 							)}
 

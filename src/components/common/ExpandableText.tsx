@@ -2,6 +2,8 @@
 
 import { useState } from "react"
 import { cn } from "@/lib/utils"
+import LinkifiedText from "@/components/common/LinkifiedText"
+import type { Item } from "@/types/item"
 
 interface ExpandableTextProps {
   text: string
@@ -9,6 +11,7 @@ interface ExpandableTextProps {
   maxCharacters?: number
   // 글자 크기·색·줄 간격은 부르는 쪽이 정한다 (기본값보다 우선)
   className?: string
+  recipes?: Item[]
   // 있으면 "더보기"가 펼치는 대신 이것을 부른다 (예: 상세로 이동)
   onExpand?: () => void
 }
@@ -19,7 +22,7 @@ const CLAMP = { 2: "line-clamp-2", 3: "line-clamp-3" } as const
 /**
  * 긴 글을 몇 줄로 접고 "더보기"를 단다. 줄바꿈은 그대로 두고, 한국어 줄바꿈 규칙(keep-all)은 전역 설정을 따른다.
  */
-export default function ExpandableText({ text, maxLines = 2, maxCharacters = 120, className, onExpand }: ExpandableTextProps) {
+export default function ExpandableText({ text, maxLines = 2, maxCharacters = 120, className, onExpand, recipes }: ExpandableTextProps) {
   const [isExpanded, setIsExpanded] = useState(false)
 
   if (!text) return null
@@ -35,7 +38,7 @@ export default function ExpandableText({ text, maxLines = 2, maxCharacters = 120
 
   return (
     <div>
-      <p className={cn("whitespace-pre-line text-body text-ink", className, shouldTruncate && CLAMP[maxLines])}>{text}</p>
+      <p className={cn("whitespace-pre-line text-body text-ink", className, shouldTruncate && CLAMP[maxLines])}>{text.toLowerCase().includes("[[recipe:") ? <LinkifiedText text={text} recipes={recipes} /> : text}</p>
       {shouldTruncate && (
         <button type="button" onClick={handleExpand} className="mt-1 text-label font-medium text-orange-ink">
           더보기

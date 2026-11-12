@@ -9,7 +9,6 @@ import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { Button } from "@/components/ui/button"
 import { Drawer, DrawerContent, DrawerTitle, DrawerDescription } from "@/components/ui/drawer"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import ImageUploader from "@/components/common/ImageUploader"
@@ -20,6 +19,7 @@ import { ImageOff } from "lucide-react"
 import { useComposerDraft } from "@/hooks/useComposerDraft"
 import type { Item } from "@/types/item"
 import CitedRecipeSearch from "@/features/recipe/components/CitedRecipeSearch"
+import InlineRecipeEditor from "@/features/recipe/components/InlineRecipeEditor"
 
 import { resolveImageUploadOrder, uploadImagesOptimized } from "@/shared/infra/image-optimization"
 import { cacheManager } from "@/shared/infra/unified-cache-manager"
@@ -428,12 +428,18 @@ export default function PostForm({ userId, isEditMode = false, initialData, onNa
 							<Label htmlFor="post-content" className={fieldLabel}>
 								글
 							</Label>
-							<Textarea
-								id="post-content"
-								{...form.register("content")}
-								placeholder={sourceRecipeId ? "어떻게 만들었는지, 바꾼 점이나 맛은 어땠는지" : "요리 이야기를 들려 주세요"}
-								rows={6}
-								className="mt-1.5 resize-none text-body"
+							<Controller
+								control={form.control}
+								name="content"
+								render={({ field }) => (
+									<InlineRecipeEditor
+										id="post-content"
+										value={field.value ?? ""}
+										onChange={field.onChange}
+										placeholder={sourceRecipeId ? "어떻게 만들었는지, 바꾼 점이나 맛은 어땠는지" : "요리 이야기를 들려 주세요"}
+										className="mt-1.5"
+									/>
+								)}
 							/>
 							{errors.content && <p className={errorText}>{errors.content.message}</p>}
 							<p className="mt-1 text-meta text-ink-soft">자사·협찬 제품을 다루는 글이라면 제품과의 관계를 프로필이나 본문에 분명히 적어주세요.</p>
