@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, ReactNode } from "react"
+import { useEffect, useRef, useState, ReactNode } from "react"
 import { revalidateStartingWith } from "@/shared/infra/swr-cache"
 import { usePathname } from "next/navigation"
 import { rememberPath } from "@/shared/lib/surface"
@@ -27,6 +27,7 @@ interface ClientLayoutWrapperProps {
 export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperProps) {
   const { isInitialLoad, setSession, setProfile, setInitialLoad: setStoreInitialLoad } = useSessionStore()
   const { initializeFollowState } = useFollowStore()
+  const authGeneration = useRef(0)
 
   const pathname = usePathname()
   // 루트 레이아웃은 클라이언트 탐색마다 재마운트되지 않는다.
@@ -62,6 +63,7 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
         // 서버가 이미 페이지 본문을 보내므로 인증 중에도 콘텐츠를 가리지 않는다.
         // 네트워크가 응답하지 않을 때만 초기 상태를 풀어 주는 안전 상한이다.
         const completeInitialization = () => setStoreInitialLoad(false)
+        const generation = authGeneration.current
         const fallbackTimer = setTimeout(completeInitialization, AUTH_FALLBACK_MS)
 
         
@@ -72,7 +74,9 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
           const { data: { user }, error: userError } = await supabase.auth.getUser()
           clearTimeout(fallbackTimer)
           completeInitialization()
-          
+          // A later sign-out/account switch takes precedence over this initial request.
+          if (authGeneration.current !== generation) return
+
           if (userError) {
             // 세션이 없는 것은 비로그인 방문의 정상 상태라 오류로 남기지 않는다
             if (userError.name !== "AuthSessionMissingError") console.error("❌ ClientLayoutWrapper: Auth error:", userError)
@@ -89,7 +93,8 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
           } else if (user) {
 
             setSession(user)
-            
+            setProfile(null)
+
             // 프로필 로드는 팔로우 목록 요청에 종속되지 않는다.
             void initializeFollowState(user.id).catch((error) => {
               console.error("❌ ClientLayoutWrapper: Follow state initialization failed:", error)
@@ -102,6 +107,7 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
               .eq('id', user.id)
               .single()
             
+            if (authGeneration.current !== generation || useSessionStore.getState().session?.id !== user.id) return
             if (profileError) {
               console.error("❌ ClientLayoutWrapper: Profile loading failed:", profileError)
               
@@ -124,9 +130,11 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
           }
           
         } catch (error) {
-          console.error("❌ ClientLayoutWrapper: Auth initialization error:", error)
-          setSession(null)
-          setProfile(null)
+          if (authGeneration.current === generation) {
+            console.error("❌ ClientLayoutWrapper: Auth initialization error:", error)
+            setSession(null)
+            setProfile(null)
+          }
         }
         
         clearTimeout(fallbackTimer)
@@ -143,6 +151,7 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
     const supabase = createSupabaseBrowserClient()
     const { data } = supabase.auth.onAuthStateChange((event, authSession) => {
       if (event === "SIGNED_OUT") {
+        authGeneration.current++
         setSession(null)
         setProfile(null)
         useFollowStore.setState({
@@ -154,12 +163,21 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
       if (event !== "SIGNED_IN" || !authSession?.user) return
       const user = authSession.user
       if (useSessionStore.getState().session?.id === user.id) return
+      const generation = ++authGeneration.current
+      setProfile(null)
       setSession(user)
       // 이벤트 처리기 안에서 Supabase를 다시 부르면 막힐 수 있어 다음 차례로 미룬다
       setTimeout(async () => {
         void initializeFollowState(user.id).catch((error) => console.error("❌ Follow state initialization failed:", error))
-        const profile = await fetchProfileSummary(supabase, user.id)
-        setProfile(profile ?? null)
+        try {
+          const profile = await fetchProfileSummary(supabase, user.id)
+          if (authGeneration.current === generation && useSessionStore.getState().session?.id === user.id) setProfile(profile ?? null)
+        } catch (error) {
+          if (authGeneration.current === generation && useSessionStore.getState().session?.id === user.id) {
+            console.error("ClientLayoutWrapper: Profile load failed:", error)
+            setProfile(null)
+          }
+        }
       }, 0)
     })
     return () => data.subscription.unsubscribe()

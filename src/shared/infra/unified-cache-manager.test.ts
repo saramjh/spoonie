@@ -126,3 +126,38 @@ describe("viewer-specific optimistic cache isolation", () => {
     expect(vi.mocked(updateStartingWith)).toHaveBeenCalledTimes(beforeLate)
   })
 })
+
+
+describe("privacy transition cache safety", () => {
+  it("removes newly private content from cached public, guest, and other-account lists", async () => {
+    const item = { id: "privacy-1", item_id: "privacy-1", user_id: "alice", is_public: true, item_type: "recipe", title: "draft" }
+    mock.viewerId = "alice"
+    await cacheManager.updateItem(item.id, { is_public: false, title: "private" }, true, "alice")
+    const apply = (key: string) => vi.mocked(updateStartingWith).mock.calls.reduce<unknown>((data, [prefixes, patch, allow]) => {
+      return prefixes.some(prefix => key.startsWith(prefix)) && (!allow || allow(key)) ? patch(data) : data
+    }, [[item]])
+    for (const key of ["items|0|guest", "items|0|bob", "recipes||all_recipes||0||new||desc||||all||none||guest", "search_page|recipe", "explore|v2"]) {
+      const pages = apply(key) as { id: string }[][]
+      expect(pages.flat().some(row => row.id === item.id), key).toBe(false)
+    }
+    const ownPrivate = apply("recipes||my_recipes||0||new||desc||||all||none||alice") as { id: string; is_public: boolean }[][]
+    expect(ownPrivate[0][0]).toMatchObject({ id: item.id, is_public: false })
+  })
+})
+
+
+describe("late save completion under account changes", () => {
+  it("never inserts an old account's newly saved content into the current account's feed", async () => {
+    mock.viewerId = "bob"
+    await cacheManager.addNewItem({ id: "late-alice-new", item_id: "late-alice-new", user_id: "alice", is_public: false } as never, "alice")
+    expect(updateStartingWith).not.toHaveBeenCalled()
+    expect(cached("late-alice-new", "bob")).toBeUndefined()
+  })
+  it("updates only the original writer's overlay after an account switch", async () => {
+    mock.viewerId = "bob"
+    await cacheManager.updateItem("late-alice-edit", { title: "private title", is_public: false }, false, "alice")
+    expect(cached("late-alice-edit", "bob")).toBeUndefined()
+    expect(cached("late-alice-edit", "alice")?.title).toBe("private title")
+    expect(updateStartingWith).not.toHaveBeenCalled()
+  })
+})

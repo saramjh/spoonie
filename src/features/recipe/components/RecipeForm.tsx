@@ -383,8 +383,8 @@ export default function RecipeForm({
         is_following: initialData?.is_following || false,
         created_at: initialData?.created_at || new Date().toISOString(),
       }
-        if (isEditMode) await cacheManager.updateItem(itemId, fullItemPayload)
-        else await cacheManager.addNewItem(fullItemPayload as Item)
+        if (isEditMode) await cacheManager.updateItem(itemId, fullItemPayload, initialData?.is_public, user.id)
+        else await cacheManager.addNewItem(fullItemPayload as Item, user.id)
       })
 
 		toast({ title: `레시피 ${isEditMode ? "수정" : "작성"} 완료`, description: `성공적으로 ${isEditMode ? "수정" : "등록"}되었습니다.` })

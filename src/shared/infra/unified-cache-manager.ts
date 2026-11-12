@@ -45,6 +45,17 @@ function mapItem(data: unknown, itemId: string, patch: Patch): unknown {
 	return data
 }
 
+// 공개 범위가 줄거나 삭제되면 옛 화면 캐시에 남은 항목을 제거한다.
+function pruneItems(data: unknown, itemIds: string[]): unknown {
+	const gone = (row: unknown) => itemIds.some(id => sameItem(row, id))
+	if (Array.isArray(data)) return data.map(page => (Array.isArray(page) ? page.filter(row => !gone(row)) : page)).filter(row => Array.isArray(row) || !gone(row))
+	if (data && typeof data === "object" && "recipes" in data && "made" in data) {
+		const explore = data as { recipes: unknown[]; made: unknown[] }
+		return { ...explore, recipes: explore.recipes.filter(row => !gone(row)), made: explore.made.filter(row => !gone(row)) }
+	}
+	return data
+}
+
 // 목록과 글 하나 캐시를 함께 고친다. 글 하나 캐시가 아직 없으면 seed(부르는 쪽이 가진 글)로 시작한다
 async function patchItem(
 	itemId: string, viewerId: string | null, patch: Patch, seed?: Partial<Item>, personal = false,
@@ -166,26 +177,42 @@ export const cacheManager = {
 		}),
 
 	/** 글 내용을 고친 뒤(수정·대표 사진) 화면 캐시에 바로 반영. 새 값에 사진이 없으면 있던 사진을 지킨다 */
-	updateItem: async (itemId: string, data: Partial<Item>) => {
+	updateItem: async (itemId: string, data: Partial<Item>, wasPublic: boolean | undefined, viewerId: string) => {
+		if (wasPublic && data.is_public === false) {
+			// Keep the owner's private inventory; remove revoked content from public and other viewers' lists.
+			await updateStartingWith(LIST_KEY_PREFIXES, rows => pruneItems(rows, [itemId]), key => {
+				if (!viewerId) return true
+				if (key.startsWith("recipes||my_recipes||") && key.endsWith("||" + viewerId)) return false
+				if (key === "user_items_" + viewerId + "_" + viewerId) return false
+				return key !== "bookmarks_" + viewerId
+			})
+			// Also invalidate cached detail/optimistic state for a previous viewer of this browser.
+			await mutate(key =>
+				(typeof key === "string" && key.startsWith("itemDetail|") && key.endsWith("|" + itemId) && key !== itemOverlayKey(itemId, viewerId)) ||
+				(Array.isArray(key) && key[0] === "item_details" && key[2] === itemId && key[1] !== (viewerId ?? "guest")),
+				undefined, { revalidate: false },
+			)
+		}
 		await patchItem(
 			itemId,
-			useSessionStore.getState().session?.id ?? null,
+			viewerId,
 			(item) => (item.image_urls?.length && !data.image_urls?.length ? { ...data, image_urls: item.image_urls } : data),
 			{ ...data, id: itemId }
 		)
 	},
 
 	/** 새 글을 홈 피드와 레시피북 맨 위에 바로 끼워 넣는다 */
-	addNewItem: async (newItem: Item) => {
+	addNewItem: async (newItem: Item, viewerId: string) => {
+		// A post-save callback from an old session must never seed the next viewer's feed.
+		if (useSessionStore.getState().session?.id !== viewerId) return
 		const itemId = newItem.id || newItem.item_id
-		const viewerId = useSessionStore.getState().session?.id ?? null
 		await updateStartingWith(NEWEST_FIRST_LISTS, (data) => {
 			if (!Array.isArray(data)) return data
 			if (data.length === 0) return [[newItem]]
 			if (!Array.isArray(data[0])) return data
 			return [[newItem, ...(data[0] as Item[])], ...data.slice(1)]
 		}, key => viewerOwnsListCache(key, viewerId))
-		await mutate(itemOverlayKey(itemId, useSessionStore.getState().session?.id), newItem, { revalidate: false })
+		await mutate(itemOverlayKey(itemId, viewerId), newItem, { revalidate: false })
 	},
 
 	/**
@@ -193,16 +220,7 @@ export const cacheManager = {
 	 * 실패하면 돌려받은 함수를 불러 목록을 서버에서 다시 받는다 (지운 줄 알았던 글이 돌아온다).
 	 */
 	deleteItems: async (itemIds: string[]) => {
-		const gone = (row: unknown) => itemIds.some((id) => sameItem(row, id))
-		const prune = (data: unknown): unknown => {
-			if (Array.isArray(data)) return data.map((page) => (Array.isArray(page) ? page.filter((row) => !gone(row)) : page)).filter((row) => Array.isArray(row) || !gone(row))
-			if (data && typeof data === "object" && "recipes" in data && "made" in data) {
-				const explore = data as { recipes: unknown[]; made: unknown[] }
-				return { ...explore, recipes: explore.recipes.filter((row) => !gone(row)), made: explore.made.filter((row) => !gone(row)) }
-			}
-			return data
-		}
-		await updateStartingWith(LIST_KEY_PREFIXES, prune)
+		await updateStartingWith(LIST_KEY_PREFIXES, data => pruneItems(data, itemIds))
 		await Promise.all(itemIds.map((id) => mutate(itemOverlayKey(id, useSessionStore.getState().session?.id), undefined, { revalidate: false })))
 		return () => {
 			void revalidateStartingWith(LIST_KEY_PREFIXES)

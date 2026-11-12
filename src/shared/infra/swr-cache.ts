@@ -9,6 +9,23 @@ import { cache } from "swr/_internal"
  * 여기서는 기본 캐시의 키를 직접 훑어, 무한 스크롤 목록은 '$inf$' 키로, 나머지는 그 키 그대로 고른다.
  * (앱은 SWRConfig provider 없이 기본 캐시를 쓴다)
  */
+// SWRInfinite의 $inf$키는 첫 페이지 하나뿐이지만, 페이지 1+도 별도 SWR 키가 생긴다.
+// 실제 useSWRInfinite 키 형태(items|페이지|viewer / recipes||탭||페이지||필터…)를 첫 페이지 키로 정규화한다.
+function infiniteFirstPageKey(key: string): string {
+	if (key.startsWith("items|")) {
+		const parts = key.split("|")
+		if (parts.length === 3 && /^\d+$/.test(parts[1])) return `items|0|${parts[2]}`
+	}
+	if (key.startsWith("recipes||")) {
+		const parts = key.split("||")
+		if (parts.length >= 4 && /^\d+$/.test(parts[2])) {
+			parts[2] = "0"
+			return parts.join("||")
+		}
+	}
+	return key
+}
+
 function cacheKeysMatching(match: (bareKey: string) => boolean): string[] {
 	const store = cache as Map<string, unknown>
 	const keys: string[] = []
@@ -17,8 +34,8 @@ function cacheKeysMatching(match: (bareKey: string) => boolean): string[] {
 		const infinite = key.startsWith("$inf$")
 		const bare = infinite ? key.slice(5) : key
 		if (!match(bare)) continue
-		// 무한 스크롤의 각 페이지 키(items|0|…)는 목록 키가 모아서 다루므로 건너뛴다
-		if (!infinite && store.has(`$inf$${key}`)) continue
+		// 전체 무한 목록 캐시가 있으면 개별 페이지 캐시는 중복 변경·재검증하지 않는다.
+		if (!infinite && store.has(`$inf$${infiniteFirstPageKey(key)}`)) continue
 		keys.push(key)
 	}
 	return keys
