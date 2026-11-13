@@ -5,10 +5,20 @@ import type { ItemDetail } from "@/types/item"
  * 레시피드용 schema.org SocialMediaPosting.
  * 레시피드는 레시피 파생 활동에 한정되지 않는 일반 음식·요리·주방 소셜 콘텐츠다.
  */
-export default function PostSchema({ item, baseUrl }: { item: ItemDetail; baseUrl: string }) {
+type PublicPostComment = {
+  content: string
+  created_at: string
+  user: { display_name: string | null; username: string | null; public_id: string | null } | null
+}
+
+export default function PostSchema({ item, baseUrl, comments }: {
+  item: ItemDetail
+  baseUrl: string
+  comments: PublicPostComment[]
+}) {
   const authorName = item.display_name || item.username || "사용자"
   const body = item.content || item.description
-  const comments = (item.comments_data || []).filter((comment) => !comment.is_deleted)
+  const visibleComments = comments.filter((comment) => comment.content.trim())
   const sharedContent = (item.cited_recipe_ids || []).filter(Boolean).map((id) => ({
     "@type": "WebPage",
     url: `${baseUrl}/recipes/${id}`,
@@ -30,14 +40,14 @@ export default function PostSchema({ item, baseUrl }: { item: ItemDetail; baseUr
       name: authorName,
       ...(item.user_public_id && { url: `${baseUrl}/profile/${item.user_public_id}` }),
     },
-    commentCount: comments.length,
-    ...(comments.length > 0 && {
-      comment: comments.slice(0, 50).map((comment) => ({
+    commentCount: item.comments_count ?? 0,
+    ...(visibleComments.length > 0 && {
+      comment: visibleComments.map((comment) => ({
         "@type": "Comment",
         text: comment.content,
         datePublished: comment.created_at,
         author: {
-          "@type": comment.user?.entity_type === "organization" ? "Organization" : "Person",
+          "@type": "Person",
           name: comment.user?.display_name || comment.user?.username || "사용자",
           ...(comment.user?.public_id && { url: `${baseUrl}/profile/${comment.user.public_id}` }),
         },

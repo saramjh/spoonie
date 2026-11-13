@@ -155,6 +155,22 @@ export default async function PostDetailPage(props: Props) {
   const initialPoll = initialItem?.is_public
     ? await fetchItemPoll(createSupabasePublicClient(), params.id).catch(() => null)
     : null
+  // JSON-LD comments must reflect real visible public replies, not the count-only
+  // detail payload. Only fetch for posts with replies; cap markup size at 50.
+  const schemaComments = initialItem?.is_public && (initialItem.comments_count ?? 0) > 0
+    ? await createSupabasePublicClient()
+        .from('comments')
+        .select('content, created_at, user:profiles!user_id(display_name, username, public_id)')
+        .eq('item_id', params.id)
+        .eq('is_deleted', false)
+        .order('created_at', { ascending: true })
+        .limit(50)
+    : null
+  if (schemaComments?.error) console.error('Post schema comments unavailable:', schemaComments.error)
+  const publicComments = (schemaComments?.data ?? []).map((comment) => ({
+    ...comment,
+    user: Array.isArray(comment.user) ? comment.user[0] ?? null : comment.user,
+  }))
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spoonie.kr'
   const breadcrumbs = initialItem?.title
@@ -164,7 +180,7 @@ export default async function PostDetailPage(props: Props) {
   return (
     <>
       <BreadcrumbSchema items={breadcrumbs} />
-      {initialItem && <PostSchema item={initialItem} baseUrl={baseUrl} />}
+      {initialItem && <PostSchema item={initialItem} baseUrl={baseUrl} comments={publicComments} />}
       <PostDetailClient params={params} initialItem={initialItem} initialPoll={initialPoll} />
     </>
   )
