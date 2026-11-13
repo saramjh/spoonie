@@ -7,7 +7,9 @@ const SUPABASE_HOST = "dtyiyzfftsewpckfkqmo.supabase.co"
 
 const pwaConfig = withPWA({
 	dest: "public",
-	register: true,
+	// Workbox-window auto-register dereferences an undefined registration when SW is blocked.
+	// Existing ServiceWorkerUpdater performs guarded native registration instead.
+	register: false,
 	skipWaiting: true,
 	reloadOnOnline: true,
 	// 글꼴 조각(92개)은 설치 시 미리 받지 않고, 실제로 쓰는 글자 범위만 받아 캐시한다

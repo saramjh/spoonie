@@ -19,7 +19,7 @@ export default function ServiceWorkerUpdater() {
   const refreshRequested = useRef(false)
 
   useEffect(() => {
-    if (!("serviceWorker" in navigator)) return
+    if (process.env.NODE_ENV !== "production" || !("serviceWorker" in navigator)) return
     let active = true
     const hadController = Boolean(navigator.serviceWorker.controller)
     let newWorker: ServiceWorker | null = null
@@ -54,8 +54,10 @@ export default function ServiceWorkerUpdater() {
     }
     navigator.serviceWorker.addEventListener("controllerchange", controllerChanged)
     document.addEventListener("visibilitychange", visibilityChanged)
-    void navigator.serviceWorker.ready.then((reg) => {
-      if (!active) return
+    // Workbox's injected auto-register assumes the browser never returns an undefined
+    // registration; that breaks on SW-blocked browsers. Register natively and guard it.
+    void navigator.serviceWorker.register("/sw.js", { scope: "/" }).then((reg) => {
+      if (!active || !reg) return
       registration.current = reg
       if (reg.waiting && hadController) prompt()
       reg.addEventListener("updatefound", updateFound)
