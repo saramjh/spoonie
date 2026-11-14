@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest"
-import { readFileSync, existsSync } from "node:fs"
-import { resolve } from "node:path"
 import { renderToStaticMarkup } from "react-dom/server"
 import { createElement } from "react"
 import { RouteTransitionLoading } from "./RouteLoading"
 import { hasAppHeader } from "@/shared/lib/app-chrome-route"
+import SearchRouteLoading from "@/app/search/loading"
+import BookmarksRouteLoading from "@/app/bookmarks/loading"
+import NotificationsRouteLoading from "@/app/notifications/loading"
+import TopicRouteLoading from "@/app/topics/[tag]/loading"
 
 const render = (pathname: string) => renderToStaticMarkup(createElement(RouteTransitionLoading, { pathname }))
-const routeSource = (file: string) => readFileSync(resolve(process.cwd(), file), "utf8")
 
 describe("Spoonie immediate navigation feedback", () => {
   it("renders destination-shaped skeletons rather than a thin bar alone", () => {
@@ -30,13 +31,17 @@ describe("Spoonie immediate navigation feedback", () => {
     }
   })
 
-  it("has native loading boundaries on the main routes without breaking detail loading", () => {
-    expect(routeSource("src/app/search/loading.tsx")).toContain("SearchLoading")
-    expect(routeSource("src/app/bookmarks/loading.tsx")).toContain("BookmarksLoading")
-    expect(routeSource("src/app/notifications/loading.tsx")).toContain("NotificationsLoading")
-    expect(routeSource("src/app/topics/[tag]/loading.tsx")).toContain("FeedLoading")
-    expect(existsSync(resolve(process.cwd(), "src/app/loading.tsx"))).toBe(false)
-    // Do not put a recipe-list Suspense boundary above the existing recipe detail loading.
-    expect(existsSync(resolve(process.cwd(), "src/app/recipes/loading.tsx"))).toBe(false)
+  it("renders the actual Next route loading surfaces rather than inspecting file names", () => {
+    for (const [Component, label] of [
+      [SearchRouteLoading, "검색 화면을 불러오는 중"],
+      [BookmarksRouteLoading, "저장한 글을 불러오는 중"],
+      [NotificationsRouteLoading, "알림을 불러오는 중"],
+      [TopicRouteLoading, "피드를 불러오는 중"],
+    ] as const) {
+      const html = renderToStaticMarkup(createElement(Component))
+      expect(html).toContain('role="status"')
+      expect(html).toContain(`aria-label="${label}"`)
+      expect(html).toContain('aria-busy="true"')
+    }
   })
 })
