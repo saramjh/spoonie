@@ -1,5 +1,5 @@
 import Image from "next/image"
-import Link from "next/link"
+import Link from "@/components/kit/NavigationLink"
 
 import { buttonVariants } from "@/components/ui/button"
 import { PageHeader } from "@/components/kit"

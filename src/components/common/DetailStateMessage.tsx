@@ -1,4 +1,4 @@
-import Link from "next/link"
+import Link from "@/components/kit/NavigationLink"
 import { Button } from "@/components/ui/button"
 import { StateSheet } from "@/components/kit"
 

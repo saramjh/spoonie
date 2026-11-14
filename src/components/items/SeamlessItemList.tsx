@@ -10,7 +10,7 @@ import PostCardSkeleton from "./PostCardSkeleton"
 
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { Button } from "@/components/ui/button"
-import Link from "next/link"
+import Link from "@/components/kit/NavigationLink"
 import { useSessionStore } from "@/store/sessionStore"
 import type { ServerFeedData } from "@/features/feed/data/server-data"
 import { usePageVisibility } from "@/hooks/usePageVisibility"

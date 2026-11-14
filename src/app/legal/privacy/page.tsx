@@ -1,4 +1,4 @@
-import Link from "next/link"
+import Link from "@/components/kit/NavigationLink"
 import { PageHeader } from "@/components/kit"
 
 export default function PrivacyPolicyPage() {

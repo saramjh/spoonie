@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import Link from "@/components/kit/NavigationLink"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
 import { Home, Book, Search, Plus, User, Loader2 } from "lucide-react"

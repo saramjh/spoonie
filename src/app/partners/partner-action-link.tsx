@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import Link from "@/components/kit/NavigationLink"
 import type { ComponentProps, ReactNode } from "react"
 
 type GtagWindow = Window & {

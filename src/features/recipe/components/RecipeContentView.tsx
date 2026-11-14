@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Check, CircleDot, Circle, Minus, Plus, CircleHelp, Scale, ChevronRight, RotateCcw, Play } from "lucide-react"
-import Link from "next/link"
+import Link from "@/components/kit/NavigationLink"
 import { Ingredient, RecipeStep } from "@/types/item"
 import { formatAmount } from "@/features/recipe/domain/recipe-amount"
 import { initialReferenceIndex, parseAmountInput, selectReference, scaleForReference, type Reference } from "@/features/recipe/domain/recipe-adjustment"

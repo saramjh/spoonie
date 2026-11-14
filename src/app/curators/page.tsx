@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
+import Link from "@/components/kit/NavigationLink"
 import { createSupabasePublicClient } from '@/shared/infra/supabase-public'
 import { CURATOR_GROUPS } from './curator-ids'
 

@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import Link from "next/link"
+import Link from "@/components/kit/NavigationLink"
 import { PageHeader, StateSheet } from "@/components/kit"
 import { buttonVariants } from "@/components/ui/button"
 import { loadUserOnboardingRequests } from "@/features/onboarding/data/onboarding-admin"

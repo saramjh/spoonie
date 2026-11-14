@@ -9,7 +9,7 @@ import { BookmarkButton } from "@/components/items/BookmarkButton"
 import { fetchBookmarks } from "@/features/social/data/bookmark-repository"
 import { useSessionStore } from "@/store/sessionStore"
 import useSWR from "swr"
-import Link from "next/link"
+import Link from "@/components/kit/NavigationLink"
 import { StateSheet } from "@/components/kit"
 
 export default function BookmarksPage() {

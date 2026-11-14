@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { usePathname, useSearchParams } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { NAVIGATION_START_EVENT } from "@/shared/lib/navigation"
 import { hasAppHeader } from "@/shared/lib/app-chrome-route"
 import { RouteTransitionLoading } from "@/components/common/RouteLoading"
@@ -13,9 +13,10 @@ const MAX_VISIBLE_MS = 10000
 /** Keep the top progress cue, but immediately replace stale content with a destination skeleton until the route commits. */
 export default function NavigationProgress() {
   const pathname = usePathname()
+  const router = useRouter()
   const searchParams = useSearchParams()
   const [progress, setProgress] = useState<number | null>(null)
-  const [pendingRoute, setPendingRoute] = useState<{ pathname: string; top: number } | null>(null)
+  const [pendingRoute, setPendingRoute] = useState<{ href: string; pathname: string; top: number; timedOut: boolean } | null>(null)
   const timers = useRef<{ tick?: ReturnType<typeof setInterval>; limit?: ReturnType<typeof setTimeout> }>({})
 
   const clearTimers = () => {
@@ -32,27 +33,35 @@ export default function NavigationProgress() {
   const start = (href?: string) => {
     clearTimers()
     let nextPath: string | null = null
+    let nextHref: string | null = null
     if (href) {
       try {
         const target = new URL(href, window.location.href)
         // Query-only updates keep the current form/list instead of flashing a full skeleton.
         if (target.origin === window.location.origin && target.pathname !== renderedLocation.current.split("?")[0]) {
           nextPath = target.pathname
+          nextHref = target.pathname + target.search + target.hash
         }
       } catch { /* The router will report invalid destinations. */ }
     }
     const header = document.querySelector("header[data-app-chrome]")
     const headerTop = header ? Math.max(0, header.getBoundingClientRect().bottom) : 0
-    setPendingRoute(nextPath ? {
+    setPendingRoute(nextPath && nextHref ? {
+      href: nextHref,
       pathname: nextPath,
       top: hasAppHeader(nextPath) ? headerTop : 0,
+      timedOut: false,
     } : null)
     setProgress(8)
     // 끝을 알 수 없으므로 90%에 점점 가까워지게만 올린다
     timers.current.tick = setInterval(() => {
       setProgress((p) => (p === null ? null : p + (90 - p) * 0.08))
     }, 200)
-    timers.current.limit = setTimeout(finish, MAX_VISIBLE_MS)
+    timers.current.limit = setTimeout(() => {
+      clearInterval(timers.current.tick)
+      if (nextPath) setPendingRoute((pending) => pending ? { ...pending, timedOut: true } : null)
+      else finish()
+    }, MAX_VISIBLE_MS)
   }
 
   // 주소가 바뀌면 이동 완료: 렌더 중에 한 번만 맞춘다 (effect에서 바꾸면 렌더가 한 번 더 일어난다)
@@ -93,23 +102,6 @@ export default function NavigationProgress() {
   useEffect(() => {
     const onStart = (event: Event) => start((event as CustomEvent<{ href?: string }>).detail?.href)
 
-    // 내부 링크 클릭 감지 (Next Link 포함)
-    const onClick = (event: MouseEvent) => {
-      // window 버블 단계에서 감지한다.
-      // - Next Link는 preventDefault만 호출하므로 여기까지 도달한다 (defaultPrevented는 무시).
-      // - 좋아요/북마크처럼 링크 안에서 stopPropagation으로 이동을 막은 클릭은 여기 도달하지 않는다.
-      if (event.button !== 0 || event.cancelBubble) return
-      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
-      const anchor = (event.target as Element | null)?.closest?.("a")
-      if (!anchor || !anchor.href) return
-      if (anchor.target && anchor.target !== "_self") return
-      if (anchor.hasAttribute("download")) return
-      const url = new URL(anchor.href, window.location.href)
-      if (url.origin !== window.location.origin) return
-      if (url.pathname === window.location.pathname && url.search === window.location.search) return
-      start(url.pathname + url.search)
-    }
-
     // 뒤로/앞으로 가기. 캐시된 화면은 이벤트 처리 중에 이미 그려질 수 있으므로 그 경우는 건너뛴다.
     const onPopState = () => {
       const { pathname: path, search } = window.location
@@ -118,11 +110,9 @@ export default function NavigationProgress() {
     }
 
     window.addEventListener(NAVIGATION_START_EVENT, onStart)
-    window.addEventListener("click", onClick)
     window.addEventListener("popstate", onPopState)
     return () => {
       window.removeEventListener(NAVIGATION_START_EVENT, onStart)
-      window.removeEventListener("click", onClick)
       window.removeEventListener("popstate", onPopState)
       clearTimers()
     }
@@ -145,7 +135,23 @@ export default function NavigationProgress() {
               <div className="flex gap-3"><Skeleton className="h-8 w-8 rounded-full" /><Skeleton className="h-8 w-8 rounded-full" /></div>
             </div>
           )}
-          <RouteTransitionLoading pathname={pendingRoute.pathname} />
+          {pendingRoute.timedOut ? (
+            <div role="alert" className="space-y-4 px-5 py-10 text-center">
+              <p className="text-label font-semibold text-ink">화면 이동이 지연되고 있습니다.</p>
+              <p className="text-body text-ink-soft">연결을 확인한 뒤 다시 시도하거나 이전 화면으로 돌아갈 수 있습니다.</p>
+              <div className="flex justify-center gap-2">
+                <button type="button" className="min-h-11 rounded-lg border border-border px-4 text-label" onClick={() => {
+                  router.replace(location, { scroll: false })
+                  finish()
+                }}>이전 화면 유지</button>
+                <button type="button" className="min-h-11 rounded-lg bg-brand px-4 text-label font-semibold text-white" onClick={() => {
+                  const href = pendingRoute.href
+                  start(href)
+                  router.push(href)
+                }}>다시 시도</button>
+              </div>
+            </div>
+          ) : <RouteTransitionLoading pathname={pendingRoute.pathname} />}
         </div>
       )}
       <div aria-hidden="true" data-nav-progress className="pointer-events-none fixed inset-x-0 top-0 z-[110] h-[3px]">

@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Drawer, DrawerContent, DrawerTitle, DrawerDescription } from '@/components/ui/drawer'
 import { useRouter } from '@/shared/lib/navigation'
-import Link from 'next/link'
+import Link from "@/components/kit/NavigationLink"
 import PushNotificationSettings from '@/features/notification/components/PushNotificationSettings'
 import { NOTIFICATION_RECEIVED_EVENT } from '@/shared/infra/realtime-events';
 import { CheckBox, Sheet, StateSheet } from "@/components/kit"

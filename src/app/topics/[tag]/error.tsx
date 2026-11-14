@@ -2,7 +2,7 @@
 
 import { AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import Link from "next/link"
+import Link from "@/components/kit/NavigationLink"
 
 // The topic page has a public server-side data dependency. A transient
 // failure must preserve the approved screen, not expose Next's raw 500 UI.
