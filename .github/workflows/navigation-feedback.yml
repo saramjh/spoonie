@@ -1,0 +1,70 @@
+name: Navigation feedback (browser)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - 'src/**'
+      - 'scripts/qa/navigation-feedback.browser.cjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/navigation-feedback.yml'
+
+permissions:
+  contents: read
+  statuses: read
+
+concurrency:
+  group: navigation-feedback-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  navigation:
+    name: Real navigation / canceled links / timeout recovery
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: ./node_modules/.bin/playwright-core install --with-deps chromium
+      - name: Wait for this commit's Netlify deploy preview
+        id: preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="https://deploy-preview-${PR_NUMBER}--spoonie-web.netlify.app"
+          for attempt in $(seq 1 60); do
+            result="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${PR_HEAD_SHA}/status")"
+            status="$(jq -c '[.statuses[] | select(.context == "netlify/spoonie-web/deploy-preview")] | .[0] // {}' <<<"$result")"
+            state="$(jq -r '.state // "pending"' <<<"$status")"
+            url="$(jq -r '.target_url // ""' <<<"$status")"
+            if [[ "$state" == success ]]; then
+              if [[ "$url" != "$expected" ]]; then
+                echo "Unexpected deploy URL for this commit: $url" >&2
+                exit 1
+              fi
+              echo "url=$url" >> "$GITHUB_OUTPUT"
+              echo "Verified Netlify preview for commit $PR_HEAD_SHA"
+              exit 0
+            fi
+            if [[ "$state" == failure || "$state" == error ]]; then
+              echo "Netlify preview failed for commit $PR_HEAD_SHA" >&2
+              exit 1
+            fi
+            echo "Waiting for Netlify on $PR_HEAD_SHA ($attempt/60: $state)"
+            sleep 10
+          done
+          echo "Netlify preview did not complete for the PR head commit" >&2
+          exit 1
+      - name: Run real browser regression against deployed PR code
+        env:
+          SPOONIE_QA_URL: ${{ steps.preview.outputs.url }}
+        run: npm run test:navigation
