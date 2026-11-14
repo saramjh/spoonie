@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { IntentLink } from "@/components/kit/IntentLink"
+import Link from "@/components/kit/NavigationLink"
 import { createSupabasePublicClient } from '@/shared/infra/supabase-public'
 import { CURATOR_GROUPS } from './curator-ids'
 
@@ -78,7 +78,7 @@ export default async function CuratorsPage() {
               const [,intro = ''] = (profile.profile_message || '').split('\n',2)
               return (
                 <li key={profile.public_id}>
-                  <IntentLink
+                  <Link
                     href={'/profile/' + profile.public_id}
                     aria-label={profile.display_name + ' 큐레이터 프로필 보기'}
                     className="group flex min-h-24 items-center gap-4 py-4 transition-colors hover:bg-paper-tint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
@@ -96,7 +96,7 @@ export default async function CuratorsPage() {
                       {intro && <span className="mt-1 block text-body leading-6 text-ink-soft">{intro}</span>}
                     </span>
                     <span className="shrink-0 text-meta font-semibold text-ink-soft group-hover:text-ink">프로필 보기</span>
-                  </IntentLink>
+                  </Link>
                 </li>
               )
             })}
