@@ -15,7 +15,7 @@ export default function NavigationProgress() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [progress, setProgress] = useState<number | null>(null)
-  const [pendingRoute, setPendingRoute] = useState<{ pathname: string; top: number; needsHeader: boolean } | null>(null)
+  const [pendingRoute, setPendingRoute] = useState<{ pathname: string; top: number } | null>(null)
   const timers = useRef<{ tick?: ReturnType<typeof setInterval>; limit?: ReturnType<typeof setTimeout> }>({})
 
   const clearTimers = () => {
@@ -43,11 +43,9 @@ export default function NavigationProgress() {
     }
     const header = document.querySelector("header[data-app-chrome]")
     const headerTop = header ? Math.max(0, header.getBoundingClientRect().bottom) : 0
-    const showHeader = Boolean(nextPath && hasAppHeader(nextPath))
     setPendingRoute(nextPath ? {
       pathname: nextPath,
-      top: showHeader ? headerTop : 0,
-      needsHeader: showHeader && headerTop === 0,
+      top: hasAppHeader(nextPath) ? headerTop : 0,
     } : null)
     setProgress(8)
     // 끝을 알 수 없으므로 90%에 점점 가까워지게만 올린다
@@ -72,6 +70,16 @@ export default function NavigationProgress() {
   useEffect(() => {
     renderedLocation.current = location
   }, [location])
+
+  // The outgoing main is covered by a destination skeleton. Keep its form
+  // controls out of keyboard focus until that pending navigation ends.
+  useEffect(() => {
+    if (!pendingRoute) return
+    const outgoingMain = document.querySelector("main") as HTMLElement | null
+    if (!outgoingMain) return
+    outgoingMain.inert = true
+    return () => { outgoingMain.inert = false }
+  }, [pendingRoute])
 
   // 다 차면 진행 타이머를 멈추고 잠깐 뒤에 감춘다
   useEffect(() => {
@@ -131,7 +139,7 @@ export default function NavigationProgress() {
           className="fixed inset-x-0 bottom-0 z-[45] mx-auto w-full max-w-md overflow-hidden bg-paper"
           style={{ top: pendingRoute.top }}
         >
-          {pendingRoute.needsHeader && (
+          {pendingRoute.top === 0 && hasAppHeader(pendingRoute.pathname) && (
             <div className="flex h-[54px] items-center justify-between border-b border-border px-4" aria-hidden="true">
               <Skeleton className="h-7 w-24" />
               <div className="flex gap-3"><Skeleton className="h-8 w-8 rounded-full" /><Skeleton className="h-8 w-8 rounded-full" /></div>

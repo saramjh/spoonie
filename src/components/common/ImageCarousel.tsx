@@ -161,7 +161,7 @@ export default function ImageCarousel({
                   }}
                   onMouseLeave={(e) => {
                     e.preventDefault()
-                    setIsTouching(false)
+                    if (!clickTimer) setIsTouching(false)
                   }}
                   onClick={handleImageClick}
                 />
