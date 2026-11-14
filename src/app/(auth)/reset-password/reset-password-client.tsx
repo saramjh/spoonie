@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
+import Link from "@/components/kit/NavigationLink"
 import AuthScreen from "@/components/auth/AuthScreen"
 import { useRouter } from "@/shared/lib/navigation"
 import { useForm } from "react-hook-form"

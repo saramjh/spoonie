@@ -1,6 +1,7 @@
 "use client"
 
-import Link, { type LinkProps } from "next/link"
+import Link from "./NavigationLink"
+import type { LinkProps } from "next/link"
 import { forwardRef, type AnchorHTMLAttributes } from "react"
 import { useRouter } from "next/navigation"
 

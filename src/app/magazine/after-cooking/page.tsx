@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import Link from "next/link"
+import Link from "@/components/kit/NavigationLink"
 import Image from "next/image"
 import { PageHeader } from "@/components/kit"
 import { serializeJsonLd } from "@/shared/lib/json-ld"

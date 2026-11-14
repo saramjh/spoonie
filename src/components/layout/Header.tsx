@@ -1,6 +1,6 @@
 'use client'
 
-import Link from "next/link";
+import Link from "@/components/kit/NavigationLink";
 import { useRouter } from "@/shared/lib/navigation"
 import { Button } from "@/components/ui/button";
 import { Bell, Bookmark } from "lucide-react";

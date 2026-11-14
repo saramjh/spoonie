@@ -33,7 +33,7 @@ import { useToast } from "@/hooks/use-toast"
 import { createSupabaseBrowserClient } from "@/shared/infra/supabase-client"
 import { useSWRConfig } from "swr"
 import { Item, ItemDetail } from "@/types/item"
-import Link from "next/link"
+import Link from "@/components/kit/NavigationLink"
 
 import { useAuthorRecipes, useCitedRecipes, useRecipeRelations } from "@/features/recipe/hooks/useCitedRecipes"
 import { orderImagesForDisplay } from "@/shared/lib/thumbnail"

@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import Link from "@/components/kit/NavigationLink"
 import { useState, type FormEvent } from "react"
 import { Check } from "lucide-react"
 

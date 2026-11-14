@@ -5,7 +5,7 @@ import { useRouter as useNextRouter } from "next/navigation"
 
 /**
  * 화면 전환 시작 이벤트. NavigationProgress가 대상 경로의 스켈레톤과 상단 진행 막대를 켠다.
- * 링크 클릭과 뒤로 가기는 NavigationProgress가 직접 감지하고, 코드에서 호출하는
+ * 링크는 NavigationLink의 onNavigate를 통해 실제 이동 직전에 알리고,
  * router.push/replace는 이 모듈의 useRouter를 통해 알린다.
  */
 export const NAVIGATION_START_EVENT = "spoonie:navigation-start"
@@ -29,7 +29,7 @@ if (typeof window !== "undefined" && !browserNavigation()) {
   }
 }
 
-function signalNavigationStart(href: string) {
+export function signalNavigationStart(href: string) {
   if (typeof window === "undefined") return
   try {
     const target = new URL(href, window.location.href)

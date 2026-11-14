@@ -1,7 +1,7 @@
 "use client"
 
 import { Suspense, useState, useEffect, useCallback, useRef } from "react"
-import Link from "next/link"
+import Link from "@/components/kit/NavigationLink"
 import { useSearchParams } from "next/navigation"
 import { useRouter } from "@/shared/lib/navigation"
 import { Button } from "@/components/ui/button"

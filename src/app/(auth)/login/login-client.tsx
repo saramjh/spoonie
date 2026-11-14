@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import Link from "@/components/kit/NavigationLink"
 import AuthScreen from "@/components/auth/AuthScreen"
 import { useState } from "react"
 import { Loader2 } from "lucide-react"

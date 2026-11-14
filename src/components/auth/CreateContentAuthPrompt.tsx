@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import Link from "@/components/kit/NavigationLink"
 import { Button } from "@/components/ui/button"
 import { PageHeader, Photo, Sheet } from "@/components/kit"
 import BottomNavBar from "@/components/layout/BottomNavBar"
