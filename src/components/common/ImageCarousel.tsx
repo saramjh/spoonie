@@ -91,6 +91,7 @@ export default function ImageCarousel({
     if (clickTimer) {
       clearTimeout(clickTimer)
       setClickTimer(null)
+      setIsTouching(false)
       
       // 더블클릭 - 좋아요 처리
       if (onDoubleClick) {
@@ -102,8 +103,10 @@ export default function ImageCarousel({
         }
       }
     } else {
-      // 단일클릭 - 300ms 후 처리
+      // 더블탭을 판별하는 300ms 동안에도 첫 탭의 눌림 상태를 유지한다.
+      setIsTouching(true)
       const timer = setTimeout(() => {
+        setIsTouching(false)
         if (onSingleClick) {
           onSingleClick()
         }

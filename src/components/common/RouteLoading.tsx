@@ -1,3 +1,4 @@
+import PostCardSkeleton from "@/components/items/PostCardSkeleton"
 import RecipeCardSkeleton from "@/features/recipe/components/RecipeCardSkeleton"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -58,6 +59,81 @@ export function RecipeBookLoading() {
       <div className="grid grid-cols-2 gap-x-3 gap-y-[18px]">
         {Array.from({ length: 6 }, (_, index) => <RecipeCardSkeleton key={index} />)}
       </div>
+    </div>
+  )
+}
+
+/** Keep the destination's real layout visible while its server/client data is pending. */
+export function FeedLoading() {
+  return (
+    <div role="status" aria-label="피드를 불러오는 중" aria-busy="true" className="space-y-4 bg-paper py-3">
+      <span className="sr-only">피드를 불러오는 중…</span>
+      {Array.from({ length: 2 }, (_, index) => <PostCardSkeleton key={index} />)}
+    </div>
+  )
+}
+
+export function SearchLoading() {
+  return (
+    <div role="status" aria-label="검색 화면을 불러오는 중" aria-busy="true" className="space-y-5 px-3 pb-20 pt-3">
+      <span className="sr-only">검색 화면을 불러오는 중…</span>
+      <div className="flex gap-2">
+        <Skeleton className="h-12 min-w-0 flex-1" />
+        <Skeleton className="h-12 w-11" />
+      </div>
+      <div className="flex gap-2">
+        <Skeleton className="h-8 w-24 rounded-full" />
+        <Skeleton className="h-8 w-20 rounded-full" />
+        <Skeleton className="h-8 w-16 rounded-full" />
+      </div>
+      <div className="space-y-2">
+        <Skeleton className="mb-3 h-6 w-24" />
+        {Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-[88px] w-full rounded-[3px]" />)}
+      </div>
+    </div>
+  )
+}
+
+export function BookmarksLoading() {
+  return (
+    <div role="status" aria-label="저장한 글을 불러오는 중" aria-busy="true" className="space-y-4 bg-paper px-3.5 pt-4">
+      <span className="sr-only">저장한 글을 불러오는 중…</span>
+      <Skeleton className="h-8 w-28" />
+      {Array.from({ length: 2 }, (_, index) => <PostCardSkeleton key={index} />)}
+    </div>
+  )
+}
+
+export function NotificationsLoading() {
+  return (
+    <div role="status" aria-label="알림을 불러오는 중" aria-busy="true" className="space-y-3 bg-paper px-4 pt-5">
+      <span className="sr-only">알림을 불러오는 중…</span>
+      <Skeleton className="mb-5 h-7 w-16" />
+      {Array.from({ length: 4 }, (_, index) => (
+        <div key={index} className="flex items-center gap-3 border-b border-border py-3">
+          <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
+          <div className="flex-1 space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-3 w-24" /></div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/** One fallback for non-feed routes that do not have a dedicated skeleton. */
+export function RouteTransitionLoading({ pathname }: { pathname: string }) {
+  if (/^\/(?:recipes|posts)\/[0-9a-f-]{36}$/i.test(pathname)) return <DetailLoading />
+  if (/^\/profile\/[^/]+$/.test(pathname)) return <ProfileLoading />
+  if (pathname === "/recipes") return <RecipeBookLoading />
+  if (pathname === "/search") return <SearchLoading />
+  if (pathname === "/bookmarks") return <BookmarksLoading />
+  if (pathname === "/notifications") return <NotificationsLoading />
+  if (pathname === "/" || pathname.startsWith("/topics/")) return <FeedLoading />
+  return (
+    <div role="status" aria-label="화면을 불러오는 중" aria-busy="true" className="space-y-4 px-4 pt-6">
+      <span className="sr-only">화면을 불러오는 중…</span>
+      <Skeleton className="h-7 w-1/2" />
+      <Skeleton className="h-4 w-3/4" />
+      <Skeleton className="h-32 w-full" />
     </div>
   )
 }

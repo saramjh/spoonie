@@ -5,9 +5,8 @@ import BottomNavBar from "./BottomNavBar"
 import Header from "./Header"
 import { usePullToRefresh } from "@/hooks/usePullToRefresh"
 import { canPullToRefresh } from "@/shared/lib/pull-to-refresh-route"
+import { hasAppHeader } from "@/shared/lib/app-chrome-route"
 import { SamsungInstallNotice } from "@/components/install/InstallApp"
-
-const SUB_SCREEN = /^\/(?:(?:recipes|posts)\/[^/]+|profile\/[^/]+\/edit|offline|magazine(?:\/[^/]*)?|legal\/(?:terms|privacy|policy))(?:\/|$)/
 
 export default function AppWrapper({ children }: { children: React.ReactNode }) {
 	const pathname = usePathname()
@@ -18,7 +17,7 @@ export default function AppWrapper({ children }: { children: React.ReactNode }) 
 	// 상세·작성·수정은 개별 뒤로가기를 사용한다. 저장·알림은 목업의 전역 로고 막대를 재사용한다.
 	const isPartnerLanding = pathname === "/partners" || pathname.startsWith("/partners/")
 	const isFocusedAuth = pathname === "/login" || pathname === "/signup" || pathname === "/forgot-password" || pathname === "/reset-password"
-	const noHeader = SUB_SCREEN.test(pathname) || isPartnerLanding || isFocusedAuth
+	const noHeader = !hasAppHeader(pathname)
 
 	const noBottomNav = isFocusedAuth || isPartnerLanding || /^\/profile\/[^/]+\/edit(?:\/|$)/.test(pathname) || (pathname.startsWith("/recipes/") && pathname !== "/recipes") || (pathname.startsWith("/posts/") && pathname !== "/posts")
 
