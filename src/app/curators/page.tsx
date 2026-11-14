@@ -50,7 +50,7 @@ export default async function CuratorsPage() {
   })).filter(group => group.profiles.length > 0)
 
   return (
-    <main className="mx-auto min-h-screen max-w-2xl bg-paper px-4 pb-16 pt-7 text-ink sm:px-7">
+    <div className="mx-auto min-h-screen max-w-2xl bg-paper px-4 pb-16 pt-7 text-ink sm:px-7">
       <div className="border-b border-border pb-7">
         <p className="text-meta font-semibold text-ink-soft">Spoonie 큐레이터</p>
         <h1 className="mt-2 text-display font-semibold">맛을 소개하는 다양한 시선</h1>
@@ -107,6 +107,6 @@ export default async function CuratorsPage() {
         큐레이터는 Spoonie가 운영하는 레시피 소개 계정입니다.
         실제 레시피 원작자와 원본 출처는 각각의 레시피에서 별도로 안내합니다.
       </p>
-    </main>
+    </div>
   )
 }
