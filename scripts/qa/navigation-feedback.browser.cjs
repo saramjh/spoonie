@@ -8,7 +8,17 @@ const executablePath = process.env.CHROME_EXECUTABLE || undefined
 async function main() {
   const browser = await chromium.launch({ headless: true, executablePath })
   try {
-    const context = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block' })
+    const qaContext = async () => {
+      const context = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block' })
+      // Netlify's deploy-preview editor is not part of Spoonie and blocks clicks.
+      await context.addInitScript(() => {
+        const removeDrawer = () => document.querySelectorAll('[data-netlify-deploy-id]').forEach((node) => node.remove())
+        new MutationObserver(removeDrawer).observe(document, { childList: true, subtree: true })
+        removeDrawer()
+      })
+      return context
+    }
+    const context = await qaContext()
     const page = await context.newPage()
     const errors = []
     page.on('pageerror', (error) => errors.push(error.message))
@@ -20,7 +30,7 @@ async function main() {
       await route.continue().catch(() => {})
     })
     await page.goto(`${base}/search`, { waitUntil: 'domcontentloaded', timeout: 30000 })
-    await page.waitForTimeout(1600)
+    await page.waitForTimeout(3500)
     await page.getByRole('navigation', { name: '주요 메뉴' }).getByRole('link', { name: '레시피북' }).click()
     await page.waitForTimeout(90)
     const route = new URL(page.url()).pathname
@@ -39,7 +49,7 @@ async function main() {
     console.log('PASS history: back/forward retain the correct routes')
 
     await page.goto(`${base}/search`, { waitUntil: 'domcontentloaded' })
-    await page.waitForTimeout(1600)
+    await page.waitForTimeout(3500)
     // A canceled plain anchor is not a navigation; global click guessing must not fire.
     const accepted = await page.evaluate(() => {
       const anchor = document.createElement('a')
@@ -73,11 +83,11 @@ async function main() {
     console.log('PASS timeout: visible recovery options, canceled overlay, input restored')
     await context.close()
 
-    const retryContext = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block' })
+    const retryContext = await qaContext()
     const retryPage = await retryContext.newPage()
     retryPage.on('pageerror', (error) => errors.push(error.message))
     await retryPage.goto(`${base}/search`, { waitUntil: 'domcontentloaded' })
-    await retryPage.waitForTimeout(1600)
+    await retryPage.waitForTimeout(3500)
     await retryPage.clock.install()
     await retryPage.evaluate(() => window.dispatchEvent(new CustomEvent('spoonie:navigation-start', { detail: { href: '/bookmarks' } })))
     await retryPage.locator('[data-route-feedback]').waitFor({ state: 'visible', timeout: 3000 })
@@ -88,7 +98,7 @@ async function main() {
     console.log('PASS timeout retry: real destination navigation completes')
     await retryContext.close()
 
-    const photos = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block' })
+    const photos = await qaContext()
     const feed = await photos.newPage()
     feed.on('pageerror', (error) => errors.push(error.message))
     await feed.goto(`${base}/`, { waitUntil: 'domcontentloaded', timeout: 30000 })
