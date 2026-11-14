@@ -223,7 +223,7 @@ function RecipesPageContent() {
 					]}
 				/>
 
-			<main className="flex-1 overflow-y-auto px-3.5 py-4 max-w-7xl mx-auto w-full">
+			<div className="flex-1 overflow-y-auto px-3.5 py-4 max-w-7xl mx-auto w-full">
 				{/* 도구 줄: 검색 / 필터 / 보기 방식 / 선택. 고르는 동안에는 같은 높이·같은 자리에서 "고른 수 · 지우기 · 완료"로 바뀐다
 				    (줄 높이가 같아 켜고 끌 때 아래 목록이 움직이지 않는다. "선택"과 "완료"는 같은 오른쪽 끝) */}
 				<div className="mb-4 flex h-[50px] items-center gap-2">
@@ -384,7 +384,7 @@ function RecipesPageContent() {
 				<div ref={observerElem} className="h-px" />
 
 				{isReachingEnd && !isEmpty && recipes.length >= PAGE_SIZE && <p className="py-6 text-center text-meta text-ink-soft">여기까지예요</p>}
-			</main>
+			</div>
 
 			<FilterModal isOpen={isFilterModalOpen} onClose={() => setIsFilterModalOpen(false)} />
 			</div>

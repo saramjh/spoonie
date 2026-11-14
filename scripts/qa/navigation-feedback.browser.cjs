@@ -114,6 +114,17 @@ async function main() {
     await feed.waitForURL((url) => /^\/(recipes|posts)\//.test(url.pathname), { timeout: 20000 })
     console.log('PASS photo single tap: pressed feedback persists, then navigates')
     await photos.close()
+
+    // AppWrapper owns the single document main landmark. Nested route-level
+    // mains break landmark navigation for screen readers and automated tests.
+    const landmarks = await qaContext()
+    const curators = await landmarks.newPage()
+    curators.on('pageerror', (error) => errors.push(error.message))
+    await curators.goto(`${base}/curators`, { waitUntil: 'domcontentloaded', timeout: 30000 })
+    assert.equal(await curators.locator('main').count(), 1)
+    assert.equal(await curators.locator('main main').count(), 0)
+    console.log('PASS curators: one semantic main landmark')
+    await landmarks.close()
     assert.deepEqual(errors, [])
     console.log('PASS navigation browser suite: no uncaught page exceptions')
   } finally {

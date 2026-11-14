@@ -375,7 +375,7 @@ export default function ProfileEditor({
         <PageHeader title="프로필 수정" leading="cancel" />
       )}
 
-      <main className={mode === "full" ? "px-3 pt-3" : ""}>
+      <div className={mode === "full" ? "px-3 pt-3" : ""}>
         <section className="space-y-6 bg-paper px-4 pb-6 pt-6">
           <div className="flex items-center gap-4">
             <div className="relative h-[88px] w-[88px] flex-shrink-0 overflow-hidden rounded-full bg-border">
@@ -460,7 +460,7 @@ export default function ProfileEditor({
             <p className="mt-2 text-meta text-ink-soft">150자 이내로 입력해 주세요.</p>
           </div>
         </section>
-      </main>
+      </div>
 
       <div className={mode === "modal" ? "pt-3" : "fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md border-t border-border bg-paper px-3 pb-[max(env(safe-area-inset-bottom),12px)] pt-3"}>
         <Button onClick={handleOptimisticSave} disabled={!canSave || optimisticUpdates.size > 0} className="h-12 w-full text-body">
