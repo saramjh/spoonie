@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import { useRouter as useNextRouter } from "next/navigation"
 
 /**
- * 화면 전환 시작을 알리는 이벤트. NavigationProgress가 받아서 상단 진행 막대를 켠다.
+ * 화면 전환 시작 이벤트. NavigationProgress가 대상 경로의 스켈레톤과 상단 진행 막대를 켠다.
  * 링크 클릭과 뒤로 가기는 NavigationProgress가 직접 감지하고, 코드에서 호출하는
  * router.push/replace는 이 모듈의 useRouter를 통해 알린다.
  */
@@ -39,7 +39,7 @@ function signalNavigationStart(href: string) {
   } catch {
     return
   }
-  window.dispatchEvent(new Event(NAVIGATION_START_EVENT))
+  window.dispatchEvent(new CustomEvent(NAVIGATION_START_EVENT, { detail: { href } }))
 }
 
 /** 앱의 화면 전환과 내부 뒤로 가기를 처리하는 Next.js 라우터. */
