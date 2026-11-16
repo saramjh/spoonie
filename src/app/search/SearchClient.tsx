@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -66,7 +66,7 @@ function useItemSearchPages(query: string, type: "recipe" | "post", viewerId: st
   );
   const results = useMemo(() => (data ?? []).flatMap(page => page.slice(0, SEARCH_PAGE_SIZE)), [data]);
   const hasMore = (data?.at(-1)?.length ?? 0) > SEARCH_PAGE_SIZE;
-  return { results, error, isLoading: isLoading || (authLoading && !!query), isValidating, mutate, hasMore, loadMore: () => setSize(size + 1) };
+  return { results, error, isLoading: isLoading || (authLoading && !!query), isValidating, mutate, hasMore, hasLoaded: data !== undefined, loadMore: () => setSize(size + 1) };
 }
 
 // 검색어가 없을 때의 탐색 목록은 서버가 미리 그린 것(initialExplore)으로 시작한다: 검색엔진이 레시피 링크를 읽고, 첫 화면에 빈칸이 없다
@@ -92,14 +92,55 @@ export default function SearchClient({ initialExplore }: { initialExplore?: Expl
   const recipeResults = recipesSearch.results;
   const postResults = postsSearch.results;
 
-  // 검색어 디바운싱
+  // Preserve the search source in the URL so detail → Back restores the query
+  // and selected result type even when App Router remounts this page.
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm.trim());
+    let active = true;
+    const restore = () => {
+      if (!active) return;
+      const params = new URLSearchParams(window.location.search);
+      const query = params.get('q') ?? '';
+      const selected = params.get('tab');
+      setSearchTerm(query);
+      setDebouncedSearchTerm(query.trim());
+      setTab(selected === 'recipe' || selected === 'post' || selected === 'users' ? selected : null);
+    };
+    // Restore after hydration; the static explorer HTML stays server-rendered.
+    queueMicrotask(restore);
+    window.addEventListener('popstate', restore);
+    return () => {
+      active = false;
+      window.removeEventListener('popstate', restore);
+    };
+  }, []);
+
+  const commitSearch = useCallback((term: string) => {
+    const query = term.trim();
+    const url = new URL(window.location.href);
+    const changed = (url.searchParams.get('q') ?? '') !== query;
+    setDebouncedSearchTerm(query);
+    if (changed) {
       setTab(null);
-    }, 300);
+      if (query) url.searchParams.set('q', query);
+      else url.searchParams.delete('q');
+      url.searchParams.delete('tab');
+      window.history.replaceState(window.history.state, '', url);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handler = setTimeout(() => commitSearch(searchTerm), 300);
     return () => clearTimeout(handler);
-  }, [searchTerm]);
+  }, [searchTerm, commitSearch]);
+
+  const changeTab = (selected: SearchTab) => {
+    setTab(selected);
+    const url = new URL(window.location.href);
+    if (url.searchParams.has('q')) {
+      url.searchParams.set('tab', selected);
+      window.history.replaceState(window.history.state, '', url);
+    }
+  };
 
   // 사용자 검색 결과 (유저네임 전용)
   const userSearchKey = debouncedSearchTerm && !authLoading ? ['search_users', viewerId ?? 'guest', debouncedSearchTerm] : null;
@@ -149,8 +190,7 @@ export default function SearchClient({ initialExplore }: { initialExplore?: Expl
       <div className="px-3 pb-20 pt-3">
       <form role="search" className="mb-5 flex items-center gap-2" onSubmit={(event) => {
         event.preventDefault()
-        setDebouncedSearchTerm(searchTerm.trim())
-        setTab(null)
+        commitSearch(searchTerm)
       }}>
         <div className="relative min-w-0 flex-1">
           <Input
@@ -182,11 +222,11 @@ export default function SearchClient({ initialExplore }: { initialExplore?: Expl
             className="mb-3 bg-transparent"
             stretch={false}
             value={activeTab}
-            onChange={setTab}
+            onChange={changeTab}
             items={[
-              { key: 'recipe', label: '레시피', count: recipesSearch.hasMore ? undefined : recipeResults.length },
-              { key: 'post', label: '레시피드', count: postsSearch.hasMore ? undefined : postResults.length },
-              { key: 'users', label: '사람', count: userResults.length },
+              { key: 'recipe', label: '레시피', count: recipesSearch.hasLoaded ? `${recipeResults.length}${recipesSearch.hasMore ? '+' : ''}` : undefined },
+              { key: 'post', label: '레시피드', count: postsSearch.hasLoaded ? `${postResults.length}${postsSearch.hasMore ? '+' : ''}` : undefined },
+              { key: 'users', label: '사람', count: userSearchResults ? userResults.length : undefined },
             ]}
           />
 

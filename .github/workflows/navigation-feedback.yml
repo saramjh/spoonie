@@ -6,6 +6,7 @@ on:
     paths:
       - 'src/**'
       - 'scripts/qa/navigation-feedback.browser.cjs'
+      - 'scripts/qa/search-pwa.browser.cjs'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/navigation-feedback.yml'
@@ -20,7 +21,7 @@ concurrency:
 
 jobs:
   navigation:
-    name: Real navigation / canceled links / timeout recovery
+    name: Navigation, search state and PWA updates
     runs-on: ubuntu-latest
     timeout-minutes: 18
     steps:
@@ -67,4 +68,6 @@ jobs:
       - name: Run real browser regression against deployed PR code
         env:
           SPOONIE_QA_URL: ${{ steps.preview.outputs.url }}
-        run: npm run test:navigation
+        run: |
+          npm run test:navigation
+          npm run test:search-pwa

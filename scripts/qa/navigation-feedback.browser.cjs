@@ -105,12 +105,14 @@ async function main() {
     await feed.waitForTimeout(3600)
     const image = feed.locator('article [class*="absolute"][class*="inset-0"][class*="cursor-pointer"]').first()
     await image.waitFor({ state: 'visible', timeout: 12000 })
+    // Freeze the 300ms single/double-tap timer so loaded CI hosts cannot
+    // expire it between the click and mouse-leave assertions.
+    await feed.clock.install()
     await image.click()
-    await feed.waitForTimeout(65)
     assert.equal(await feed.locator('article [class~="bg-ink/10"]').count(), 1)
     await feed.mouse.move(2, 2)
-    await feed.waitForTimeout(70)
     assert.equal(await feed.locator('article [class~="bg-ink/10"]').count(), 1)
+    await feed.clock.fastForward(350)
     await feed.waitForURL((url) => /^\/(recipes|posts)\//.test(url.pathname), { timeout: 20000 })
     console.log('PASS photo single tap: pressed feedback persists, then navigates')
     await photos.close()
