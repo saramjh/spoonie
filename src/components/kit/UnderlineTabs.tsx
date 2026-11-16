@@ -20,7 +20,7 @@ export function getNextTabIndex(index: number, length: number, key: string): num
 export interface TabItem<K extends string> {
 	key: K
 	label: ReactNode
-	count?: number
+	count?: number | string
 	description?: string
 	id?: string
 	controls?: string

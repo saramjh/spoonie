@@ -4,12 +4,13 @@ import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerTitle } from "@/components/ui/drawer"
 import { X } from "lucide-react"
+import { isStandalone } from "@/shared/lib/install"
 
 // Only show a real update when an existing installation receives a newer
 // service worker. Never interrupt an editing screen or drop a local draft.
 function isComposing(pathname: string) {
   return /^\/(?:recipes|posts)\/new\/?$/.test(pathname)
-    || /^\/(?:recipes|posts)\/[^/]+\/edit\/?$/.test(pathname)
+    || /^\/(?:recipes|posts|profile)\/[^/]+\/edit\/?$/.test(pathname)
 }
 
 export default function ServiceWorkerUpdater() {
@@ -24,6 +25,16 @@ export default function ServiceWorkerUpdater() {
     const hadController = Boolean(navigator.serviceWorker.controller)
     let newWorker: ServiceWorker | null = null
     let removeListeners = () => {}
+    let lastUpdateCheck = 0
+    const standalone = isStandalone()
+    const canReload = () => !isComposing(window.location.pathname)
+      && !document.activeElement?.matches('input, textarea, [contenteditable="true"]')
+    const checkForUpdate = () => {
+      if (!active || document.visibilityState !== 'visible' || !registration.current) return
+      if (Date.now() - lastUpdateCheck < 60_000) return
+      lastUpdateCheck = Date.now()
+      void registration.current.update().catch(() => {})
+    }
 
     const prompt = () => {
       if (active && hadController) setAvailable(true)
@@ -39,29 +50,26 @@ export default function ServiceWorkerUpdater() {
     }
     const controllerChanged = () => {
       if (!hadController) return
-      if (refreshRequested.current && !isComposing(window.location.pathname)) {
+      if ((refreshRequested.current || standalone) && canReload() && document.visibilityState === 'visible') {
         window.location.reload()
       } else if (active) {
         setAvailable(true)
       }
     }
-    const visibilityChanged = () => {
-      // Background refresh is allowed only outside a composer; never refresh
-      // as a side effect of opening an OS photo/camera chooser.
-      if (document.visibilityState === "hidden" && refreshRequested.current && !isComposing(window.location.pathname)) {
-        window.location.reload()
-      }
-    }
+    const resumed = () => checkForUpdate()
     navigator.serviceWorker.addEventListener("controllerchange", controllerChanged)
-    document.addEventListener("visibilitychange", visibilityChanged)
+    document.addEventListener("visibilitychange", resumed)
+    window.addEventListener("pageshow", resumed)
+    window.addEventListener("online", checkForUpdate)
     // Workbox's injected auto-register assumes the browser never returns an undefined
     // registration; that breaks on SW-blocked browsers. Register natively and guard it.
-    void navigator.serviceWorker.register("/sw.js", { scope: "/" }).then((reg) => {
+    void navigator.serviceWorker.register("/sw.js", { scope: "/", updateViaCache: "none" }).then((reg) => {
       if (!active || !reg) return
       registration.current = reg
       if (reg.waiting && hadController) prompt()
       reg.addEventListener("updatefound", updateFound)
       updateFound()
+      checkForUpdate()
       removeListeners = () => {
         reg.removeEventListener("updatefound", updateFound)
         newWorker?.removeEventListener("statechange", stateChanged)
@@ -71,7 +79,9 @@ export default function ServiceWorkerUpdater() {
       active = false
       removeListeners()
       navigator.serviceWorker.removeEventListener("controllerchange", controllerChanged)
-      document.removeEventListener("visibilitychange", visibilityChanged)
+      document.removeEventListener("visibilitychange", resumed)
+      window.removeEventListener("pageshow", resumed)
+      window.removeEventListener("online", checkForUpdate)
     }
   }, [])
 
