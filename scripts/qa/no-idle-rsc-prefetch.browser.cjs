@@ -4,6 +4,15 @@ const { chromium } = require('playwright-core')
 const origin = process.env.SPOONIE_QA_URL
 if (!origin) throw new Error('SPOONIE_QA_URL is required')
 
+// Wait for the actual Next/React event handler before testing hover/touch.
+// A visible server-rendered card is not proof of client hydration.
+const waitForIntentHydration = (page) => page.waitForFunction(() => {
+  const link = document.querySelector('a[href^="/recipes/"]')
+  return !!link && Object.keys(link).some(key =>
+    key.startsWith('__reactProps') && typeof link[key].onPointerEnter === 'function'
+  )
+}, null, { timeout: 20000 })
+
 async function main() {
   const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROME_EXECUTABLE || undefined })
   try {
@@ -28,6 +37,7 @@ async function main() {
 
     const recipeLink = page.locator('a[href^="/recipes/"]').first()
     await recipeLink.waitFor({ state: 'visible', timeout: 14000 })
+    await waitForIntentHydration(page)
     await recipeLink.hover()
     await page.waitForTimeout(1000)
     assert.ok(prefetches.some(x => x.pathname.startsWith('/recipes/')),
@@ -39,6 +49,43 @@ async function main() {
     console.log('PASS click: recipe detail still navigates')
     assert.deepEqual(errors, [])
     await context.close()
+
+    // Touching a card while scrolling is not an intent to open its destination.
+    const mobile = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, serviceWorkers: 'block' })
+    const touchPage = await mobile.newPage()
+    const touchPrefetches = []
+    touchPage.on('request', req => {
+      const u = new URL(req.url())
+      if (u.origin === new URL(origin).origin && (req.headers()['next-router-prefetch'] || u.searchParams.has('_rsc'))) {
+        touchPrefetches.push(u.pathname)
+      }
+    })
+    await touchPage.goto(`${origin}/`, { waitUntil: 'domcontentloaded', timeout: 30000 })
+    const touchLink = touchPage.locator('a[href^="/recipes/"]').first()
+    await touchLink.waitFor({ state: 'visible', timeout: 17000 })
+    await touchLink.scrollIntoViewIfNeeded()
+    await waitForIntentHydration(touchPage)
+    touchPrefetches.length = 0
+    await touchLink.dispatchEvent('touchstart', { bubbles: true, cancelable: true })
+    await touchPage.waitForTimeout(1100)
+    assert.deepEqual(touchPrefetches, [], 'Touchstart before a possible scroll must not prefetch an unopened recipe')
+    const rect = await touchLink.boundingBox()
+    const x = Math.round(rect.x + rect.width / 2)
+    const y = Math.round(rect.y + Math.min(70, rect.height * 0.45))
+    const cdp = await mobile.newCDPSession(touchPage)
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y, id: 1 }] })
+    for (let i = 1; i <= 5; i++) {
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x, y: y - i * 28, id: 1 }] })
+    }
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+    await touchPage.waitForTimeout(1100)
+    assert.equal(new URL(touchPage.url()).pathname, '/', 'Swiping a card must not navigate')
+    assert.deepEqual(touchPrefetches, [], `Swiping an unopened recipe must not spend server RSC requests: ${JSON.stringify(touchPrefetches)}`)
+    console.log('PASS touch scroll: zero unused RSC prefetches')
+    await touchLink.tap()
+    await touchPage.waitForURL(u => u.pathname.startsWith('/recipes/'), { timeout: 20000 })
+    console.log('PASS touch tap: recipe detail still navigates')
+    await mobile.close()
   } finally { await browser.close() }
 }
 main().catch(error => { console.error(error.stack || error); process.exitCode = 1 })
