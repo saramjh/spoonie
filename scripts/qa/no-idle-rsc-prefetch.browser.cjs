@@ -4,6 +4,15 @@ const { chromium } = require('playwright-core')
 const origin = process.env.SPOONIE_QA_URL
 if (!origin) throw new Error('SPOONIE_QA_URL is required')
 
+// Wait for the actual Next/React event handler before testing hover/touch.
+// A visible server-rendered card is not proof of client hydration.
+const waitForIntentHydration = (page) => page.waitForFunction(() => {
+  const link = document.querySelector('a[href^="/recipes/"]')
+  return !!link && Object.keys(link).some(key =>
+    key.startsWith('__reactProps') && typeof link[key].onPointerEnter === 'function'
+  )
+}, null, { timeout: 20000 })
+
 async function main() {
   const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROME_EXECUTABLE || undefined })
   try {
@@ -28,6 +37,7 @@ async function main() {
 
     const recipeLink = page.locator('a[href^="/recipes/"]').first()
     await recipeLink.waitFor({ state: 'visible', timeout: 14000 })
+    await waitForIntentHydration(page)
     await recipeLink.hover()
     await page.waitForTimeout(1000)
     assert.ok(prefetches.some(x => x.pathname.startsWith('/recipes/')),
@@ -54,7 +64,7 @@ async function main() {
     const touchLink = touchPage.locator('a[href^="/recipes/"]').first()
     await touchLink.waitFor({ state: 'visible', timeout: 17000 })
     await touchLink.scrollIntoViewIfNeeded()
-    await touchPage.waitForTimeout(2700)
+    await waitForIntentHydration(touchPage)
     touchPrefetches.length = 0
     await touchLink.dispatchEvent('touchstart', { bubbles: true, cancelable: true })
     await touchPage.waitForTimeout(1100)
