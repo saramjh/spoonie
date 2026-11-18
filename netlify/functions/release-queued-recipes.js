@@ -310,40 +310,10 @@ async function drainInstagramQueue(startedAt = Date.now(), maxItems = 2) {
   return results;
 }
 
-const MIN_GAP_MS = 50 * 60 * 1000;
-
-exports.handler = async () => {
-  const startedAt = Date.now();
-  try {
-    const [last] = await call('GET', 'release_queue?select=released_at&released_at=not.is.null&order=released_at.desc&limit=1');
-    const recentlyReleased = last && Date.now() - new Date(last.released_at).getTime() < MIN_GAP_MS;
-    const [next] = recentlyReleased ? [] : await call('GET', 'release_queue?select=item_id&released_at=is.null&order=release_order.asc&limit=1');
-    if (next) {
-      const now = new Date().toISOString();
-      const [item] = await call('PATCH', `items?id=eq.${next.item_id}`, { is_public: true, created_at: now, updated_at: now });
-      await call('PATCH', `release_queue?item_id=eq.${next.item_id}`, { released_at: now });
-      console.log('released', next.item_id, item && item.title);
-      try {
-        console.log('revalidated', JSON.stringify(await revalidatePublished(next.item_id)));
-      } catch (error) {
-        console.error('release revalidation failed', error);
-      }
-    } else {
-      console.log(recentlyReleased ? 'skip release: released less than 50 minutes ago' : 'queue empty');
-    }
-
-    // 인스타그램: 공개됐지만 아직 안 올라간 것 하나 (실패해도 공개는 되돌리지 않는다)
-    // 한 번에 하나만 올려 backlog가 연속 게시되지 않게 한다.
-    const results = LEGACY_RECIPE_INSTAGRAM_SOCIAL_HOLD
-      ? [{ skipped: 'prm_editorial_approval_required' }]
-      : await drainInstagramQueue(startedAt, 1);
-    console.log('instagram', JSON.stringify(results));
-    return { statusCode: 200, body: JSON.stringify({ released: next ? next.item_id : null, instagram: results }) };
-  } catch (error) {
-    console.error('release failed', error);
-    return { statusCode: 500, body: String(error) };
-  }
-};
+// Legacy cron removed. This now-unscheduled endpoint must never become an
+// unauthenticated public recipe publisher. The existing metric helpers below
+// remain for collect-instagram-insights.
+exports.handler = async () => ({ statusCode: 410, body: 'legacy recipe scheduled publishing retired' });
 
 // 로컬 점검용 (실행하지 않음)
 exports._postPendingToInstagram = postPendingToInstagram;

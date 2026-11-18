@@ -1,13 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { _drainInstagramQueue } = require('./release-queued-recipes');
-
-exports.handler = async () => {
-  try {
-    const instagram = await _drainInstagramQueue(Date.now(), 1);
-    console.log('instagram retry', JSON.stringify(instagram));
-    return { statusCode: 200, body: JSON.stringify({ instagram }) };
-  } catch (error) {
-    console.error('instagram retry failed', error);
-    return { statusCode: 500, body: String(error) };
-  }
-};
+// Legacy automatic Instagram retry removed; the original approved publisher owns posts.
+// Keep the former URL fail-closed after removing its Netlify schedule.
+exports.handler = async () => ({ statusCode: 410, body: 'legacy recipe Instagram retries retired' });
