@@ -16,7 +16,8 @@
     "type-check": "tsc --noEmit",
     "test": "vitest run && node --test scripts/qa/sweep-orphan-images.check.cjs",
     "test:navigation": "node scripts/qa/navigation-feedback.browser.cjs",
-    "test:search-pwa": "node scripts/qa/search-pwa.browser.cjs"
+    "test:search-pwa": "node scripts/qa/search-pwa.browser.cjs",
+    "test:idle-prefetch": "node scripts/qa/no-idle-rsc-prefetch.browser.cjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

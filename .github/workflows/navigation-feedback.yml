@@ -7,6 +7,7 @@ on:
       - 'src/**'
       - 'scripts/qa/navigation-feedback.browser.cjs'
       - 'scripts/qa/search-pwa.browser.cjs'
+      - 'scripts/qa/no-idle-rsc-prefetch.browser.cjs'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/navigation-feedback.yml'
@@ -71,3 +72,4 @@ jobs:
         run: |
           npm run test:navigation
           npm run test:search-pwa
+          npm run test:idle-prefetch

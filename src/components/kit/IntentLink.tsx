@@ -5,9 +5,8 @@ import type { LinkProps } from "next/link"
 import { forwardRef, type AnchorHTMLAttributes } from "react"
 import { useRouter } from "next/navigation"
 
-// 실제로 바로 열 가능성이 높은 화면 안의 레시피/레시피드 상세만 미리 준비한다.
-// 피드마다 반복되는 프로필은 의도를 보였을 때만 요청해 선제 RSC 트래픽을 줄인다.
-const EAGER_DETAIL = /^\/(?:recipes|posts)\/[0-9a-f-]{36}(?:[?#]|$)/i
+// 레시피·레시피드·프로필은 실제 의도(hover, focus, touch)를 보일 때만 준비한다.
+// 목록에 렌더된 수십 링크를 미리 요청하면 조회하지 않은 서버 RSC 호출까지 과금될 수 있다.
 type IntentLinkProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps> & LinkProps & { href: string }
 
 export const IntentLink = forwardRef<HTMLAnchorElement, IntentLinkProps>(function IntentLink(
@@ -15,9 +14,6 @@ export const IntentLink = forwardRef<HTMLAnchorElement, IntentLinkProps>(functio
 	ref
 ) {
 	const router = useRouter()
-	if (EAGER_DETAIL.test(href)) {
-		return <Link ref={ref} href={href} onPointerEnter={onPointerEnter} onTouchStart={onTouchStart} onFocus={onFocus} {...props} />
-	}
 	const warm = () => router.prefetch(href)
 	return (
 		<Link
